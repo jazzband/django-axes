@@ -1,0 +1,82 @@
+django-axes is a very simple way for you to keep track of failed login attempts, both for the Django admin and for the rest of your site.
+
+==Requirements==
+
+`django-axes` requires Django 1.0 or later.  The application is intended to work around the Django admin and the regular `django.contrib.auth` login-powered pages.
+
+==Installation==
+
+Download `django-axes` using *one* of the following methods:
+
+===easy_install===
+
+You can download the package from the [http://pypi.python.org/pypi/django-axes/ CheeseShop] or use
+
+{{{
+easy_install django-axes
+}}}
+
+to download and install `django-axes`.
+
+===Package Download===
+
+Download the latest `.tar.gz` file from the downloads section and extract it somewhere you'll remember.  Use `python setup.py install` to install it.
+
+===Checkout from Subversion===
+
+Execute the following command (or use the equivalent function in a GUI such as TortoiseSVN), and make sure you're checking `django-axes` out somewhere on the `PYTHONPATH`.
+
+{{{
+svn co http://django-axes.googlecode.com/svn/trunk/axes axes
+}}}
+
+===Verifying Installation===
+
+The easiest way to ensure that you have successfully installed `django-axes` is to execute a command such as:
+
+{{{
+python -c "import axes; print axes.get_version()"
+}}}
+
+If that command completes with some sort of version number, you're probably good to go.  If you see error outout, you need to check your installation (I'd start with your `PYTHONPATH`).
+
+==Configuration==
+
+First of all, you must add this project to your list of `INSTALLED_APPS` in `settings.py`:
+
+{{{
+INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    ...
+    'axes',
+    ...
+)
+}}}
+
+Next, install the `FailedLoginMiddleware` middleware:
+
+{{{
+MIDDLEWARE_CLASSES = (
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.FailedLoginMiddleware'
+)
+}}}
+
+Run `manage.py syncdb`.  This creates the appropriate tables in your database that are necessary for operation.
+
+===Customizing Axes===
+
+You have a couple options available to you to customize `django-axes` a bit.  These should be defined in your `settings.py` file.
+
+  * `LOGIN_FAILURE_LIMIT`: The number of login attempts allowed before a record is created for the failed logins.  Default: `3`
+  * `LOGIN_FAILURE_RESET`: Determines whether or not the number of failed attempts will be reset after a failed login record is created.  If set to `False`, the application should maintain the number of failed login attempts for a particular user from the time the server starts/restarts.  If set to `True`, the records should all equate to `LOGIN_FAILURE_LIMIT`.  Default: `True`
+
+==Usage==
+
+Using `django-axes` is extremely simple.  Once you install the application and the middleware, all you need to do is periodically check the Access Attempts section of the admin.
