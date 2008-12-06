@@ -1,4 +1,7 @@
-django-axes is a very simple way for you to keep track of failed login attempts, both for the Django admin and for the rest of your site.
+django-axes is a very simple way for you to keep track of failed login attempts, both for the Django admin and for the rest of your site.  The name is sort of a geeky pun, since `axes` can be read interpretted as:
+
+  # "access", as in monitoring access attempts
+  # "axes", as in tools you can use hack (generally on wood).  In this case, however, the "hacking" part of it can be taken a bit further: `django-axes` is intended to help you *stop* people from hacking (popular media definition) your website.  Hilarious, right?  That's what I thougth too!
 
 ==Requirements==
 
@@ -24,7 +27,7 @@ Download the latest `.tar.gz` file from the downloads section and extract it som
 
 ===Checkout from Subversion===
 
-Execute the following command (or use the equivalent function in a GUI such as TortoiseSVN), and make sure you're checking `django-axes` out somewhere on the `PYTHONPATH`.
+Execute the following command (or use the equivalent function in a GUI such as TortoiseSVN or Versions), and make sure you're checking `django-axes` out somewhere on the `PYTHONPATH`.
 
 {{{
 svn co http://django-axes.googlecode.com/svn/trunk/axes axes
@@ -79,4 +82,4 @@ You have a couple options available to you to customize `django-axes` a bit.  Th
 
 ==Usage==
 
-Using `django-axes` is extremely simple.  Once you install the application and the middleware, all you need to do is periodically check the Access Attempts section of the admin.
+Using `django-axes` is extremely simple.  Once you install the application and the middleware, all you need to do is periodically check the Access Attempts section of the admin.  A log file is also created for you to keep track of the events surrounding failed login attempts.  This log file can be found in your Django project directory, by the name of `axes.log`.  In the future I plan on offering a way to customize options for logging a bit more.

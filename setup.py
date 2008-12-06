@@ -46,7 +46,7 @@ setup(
     data_files=data_files,
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description="""
-django-axes is a very simple way for you to keep track of failed login attempts, both for the Django admin and for the rest of your site.
+django-axes is a very simple way for you to keep track of failed login attempts, both for the Django admin and for the rest of your site.  All you need to do is install the application, a middleware, and syncdb!
 """,
     keywords='django, security, authentication',
     classifiers=[
