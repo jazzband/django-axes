@@ -25,12 +25,21 @@ to download and install `django-axes`.
 
 Download the latest `.tar.gz` file from the downloads section and extract it somewhere you'll remember.  Use `python setup.py install` to install it.
 
-===Checkout from Subversion===
+===Checkout from Mercurial===
 
-Execute the following command (or use the equivalent function in a GUI such as TortoiseSVN or Versions), and make sure you're checking `django-axes` out somewhere on the `PYTHONPATH`.
+Execute the following command (or use the equivalent function in a GUI such as TortoiseHg), and make sure you're checking `django-axes` out somewhere on the `PYTHONPATH`.
 
 {{{
-svn co http://django-axes.googlecode.com/svn/trunk/axes axes
+hg clone http://django-axes.googlecode.com/hg django-axes
+hg clone http://bitbucket.org/codekoala/django-axes
+}}}
+
+===Checkout from GitHub===
+
+Execute the following command, and make sure you're checking `django-axes` out somewhere on the `PYTHONPATH`.
+
+{{{
+git clone git://github.com/codekoala/django-axes.git
 }}}
 
 ===Verifying Installation===
