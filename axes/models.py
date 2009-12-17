@@ -1,10 +1,11 @@
 from django.db import models
 from django.conf import settings
 
-if hasattr(settings, 'LOGIN_FAILURE_RESET'):
-    FAILURES_DESC = 'Failed Logins Since Server Started'
-else:
-    FAILURES_DESC = 'Failed Logins'
+FAILURES_DESC = 'Failed Logins'
+
+#XXX TODO
+# set unique by user_agent, ip
+# make user agent, ip indexed fields
 
 class AccessAttempt(models.Model):
     user_agent = models.CharField(max_length=255)

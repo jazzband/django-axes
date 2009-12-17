@@ -1,7 +1,7 @@
 django-axes is a very simple way for you to keep track of failed login attempts, both for the Django admin and for the rest of your site.  The name is sort of a geeky pun, since `axes` can be read interpretted as:
 
   # "access", as in monitoring access attempts
-  # "axes", as in tools you can use hack (generally on wood).  In this case, however, the "hacking" part of it can be taken a bit further: `django-axes` is intended to help you *stop* people from hacking (popular media definition) your website.  Hilarious, right?  That's what I thougth too!
+  # "axes", as in tools you can use hack (generally on wood).  In this case, however, the "hacking" part of it can be taken a bit further: `django-axes` is intended to help you *stop* people from hacking (popular media definition) your website.  Hilarious, right?  That's what I thought too!
 
 ==Requirements==
 
@@ -77,9 +77,12 @@ Run `manage.py syncdb`.  This creates the appropriate tables in your database th
 
 You have a couple options available to you to customize `django-axes` a bit.  These should be defined in your `settings.py` file.
 
-  * `LOGIN_FAILURE_LIMIT`: The number of login attempts allowed before a record is created for the failed logins.  Default: `3`
-  * `LOGIN_FAILURE_RESET`: Determines whether or not the number of failed attempts will be reset after a failed login record is created.  If set to `False`, the application should maintain the number of failed login attempts for a particular user from the time the server starts/restarts.  If set to `True`, the records should all equate to `LOGIN_FAILURE_LIMIT`.  Default: `True`
+  * `AXES_LOGIN_FAILURE_LIMIT`: The number of login attempts allowed before a record is created for the failed logins.  Default: `3`
+  * `AXES_LOCK_OUT_AT_FAILURE`: After the number of allowed login attempts are exceeded, should we lock out this IP (and optional user agent)?  Default: `True`
+  * `AXES_USE_USER_AGENT`: If True, lock out / log based on an IP address AND a user agent.  This means requests from different user agents but from the same IP are treated differently.  Default: `False`
 
 ==Usage==
 
 Using `django-axes` is extremely simple.  Once you install the application and the middleware, all you need to do is periodically check the Access Attempts section of the admin.  A log file is also created for you to keep track of the events surrounding failed login attempts.  This log file can be found in your Django project directory, by the name of `axes.log`.  In the future I plan on offering a way to customize options for logging a bit more.
+
+By default, django-axes will lock out repeated attempts from the same IP address.  You can allow this IP to attempt again by deleting the relevant AccessAttempt records in the admin.
