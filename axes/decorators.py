@@ -24,6 +24,13 @@ if hasattr(settings, 'AXES_USE_USER_AGENT'):
 else:
     USE_USER_AGENT = False
 
+if hasattr(settings, 'AXES_COOLOFF_TIME'):
+    COOLOFF_TIME = settings.AXES_COOLOFF_TIME
+    if isinstance(COOLOFF_TIME, int):
+        COOLOFF_TIME = datetime.timedelta(hours=COOLOFF_TIME)
+else:
+    COOLOFF_TIME = None
+
 def query2str(items):
     return '\n'.join(['%s=%s' % (k, v) for k,v in items])
 
@@ -47,8 +54,14 @@ def get_user_attempt(request):
         attempts = AccessAttempt.objects.filter(
             ip_address=ip
         )
-    if attempts:
-        return attempts[0]
+    if not attempts:
+        return None
+    attempt = attempts[0]
+    if COOLOFF_TIME:
+        if attempt.attempt_time + COOLOFF_TIME < datetime.datetime.now():
+            attempt.delete()
+            return None
+    return attempt
 
 def watch_login(func):
     """
@@ -131,8 +144,13 @@ def watch_login(func):
             # if they're past the number of attempts allowed
             if failures > FAILURE_LIMIT:
                 if LOCK_OUT_AT_FAILURE:
-                    response = HttpResponse("Account locked: too many login attempts.  "
-                                            "Contact an admin to unlock your account."
+                    if COOLOFF_TIME:
+                        response = HttpResponse("Account locked: too many login attempts.  "
+                                                "Please try again later."
+                                                )
+                    else:
+                        response = HttpResponse("Account locked: too many login attempts.  "
+                                                "Contact an admin to unlock your account."
                                                  )
                     # We log them out in case they actually managed to enter
                     # the correct password.
