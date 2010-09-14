@@ -89,6 +89,7 @@ You have a couple options available to you to customize `django-axes` a bit.  Th
   * `AXES_LOGIN_FAILURE_LIMIT`: The number of login attempts allowed before a record is created for the failed logins.  Default: `3`
   * `AXES_LOCK_OUT_AT_FAILURE`: After the number of allowed login attempts are exceeded, should we lock out this IP (and optional user agent)?  Default: `True`
   * `AXES_USE_USER_AGENT`: If True, lock out / log based on an IP address AND a user agent.  This means requests from different user agents but from the same IP are treated differently.  Default: `False`
+  * `AXES_COOLOFF_TIME`: If set, defines a period of inactivity after which old failed login attempts will be forgotten. Can be set to a python timedelta object or an integer. If an integer, will be interpreted as a number of hours.
 
 ==Usage==
 
