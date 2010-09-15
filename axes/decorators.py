@@ -87,76 +87,81 @@ def watch_login(func):
             return response
 
         if request.method == 'POST':
-            failures = 0
             # see if the login was successful
             login_unsuccessful = (
                 response and
                 not response.has_header('location') and
                 response.status_code != 302
             )
-            attempt = get_user_attempt(request)
-            
-            if attempt:
-                failures = attempt.failures_since_start
+            if check_request(request, login_unsuccessful):
+                return response
 
-            # no matter what, we want to lock them out
-            # if they're past the number of attempts allowed
-            if failures > FAILURE_LIMIT:
-                if LOCK_OUT_AT_FAILURE:
-                    if COOLOFF_TIME:
-                        response = HttpResponse("Account locked: too many login attempts.  "
-                                                "Please try again later."
-                                                )
-                    else:
-                        response = HttpResponse("Account locked: too many login attempts.  "
-                                                "Contact an admin to unlock your account."
-                                                 )
-                    # We log them out in case they actually managed to enter
-                    # the correct password.
-                    logout(request)
-                    return response
-
-            if login_unsuccessful:
-                # add a failed attempt for this user
-                failures += 1
-                log.info('-' * 79)
-
-            # Create an AccessAttempt record if the login wasn't successful
-            if login_unsuccessful:
-                # has already attempted, update the info
-                if attempt:
-                    log.info('=================================')
-                    log.info('Updating access attempt record...')
-                    log.info('=================================')
-                    attempt.get_data = '%s\n---------\n%s' % (
-                        attempt.get_data,
-                        query2str(request.GET.items()),
-                    )
-                    attempt.post_data = '%s\n---------\n%s' % (
-                        attempt.post_data,
-                        query2str(request.POST.items())
-                    )
-                    attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
-                    attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
-                    attempt.failures_since_start = failures
-                    attempt.attempt_time = datetime.datetime.now()
-                    attempt.save()
-                else:
-                    log.info('=================================')
-                    log.info('Creating access attempt record...')
-                    log.info('=================================')
-                    ip = request.META.get('REMOTE_ADDR', '')
-                    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
-                    attempt = AccessAttempt.objects.create(
-                        user_agent=ua,
-                        ip_address=ip,
-                        get_data=query2str(request.GET.items()),
-                        post_data=query2str(request.POST.items()),
-                        http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
-                        path_info=request.META.get('PATH_INFO', '<unknown>'),
-                        failures_since_start=failures
-                    )
-
-
+            if COOLOFF_TIME:
+                return HttpResponse("Account locked: too many login attempts.  "
+                                    "Please try again later."
+                                    )
+            else:
+                return HttpResponse("Account locked: too many login attempts.  "
+                                    "Contact an admin to unlock your account."
+                                    )
         return response
+
     return decorated_login
+
+def check_request(request, login_unsuccessful):
+    failures = 0
+    attempt = get_user_attempt(request)
+
+    if attempt:
+        failures = attempt.failures_since_start
+
+    # no matter what, we want to lock them out
+    # if they're past the number of attempts allowed
+    if failures > FAILURE_LIMIT:
+        if LOCK_OUT_AT_FAILURE:
+            # We log them out in case they actually managed to enter
+            # the correct password.
+            logout(request)
+
+            return False
+
+    if login_unsuccessful:
+        # add a failed attempt for this user
+        failures += 1
+        log.info('-' * 79)
+
+        # Create an AccessAttempt record if the login wasn't successful
+        # has already attempted, update the info
+        if attempt:
+            log.info('=================================')
+            log.info('Updating access attempt record...')
+            log.info('=================================')
+            attempt.get_data = '%s\n---------\n%s' % (
+                attempt.get_data,
+                query2str(request.GET.items()),
+            )
+            attempt.post_data = '%s\n---------\n%s' % (
+                attempt.post_data,
+                query2str(request.POST.items())
+            )
+            attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
+            attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
+            attempt.failures_since_start = failures
+            attempt.attempt_time = datetime.datetime.now()
+            attempt.save()
+        else:
+            log.info('=================================')
+            log.info('Creating access attempt record...')
+            log.info('=================================')
+            ip = request.META.get('REMOTE_ADDR', '')
+            ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+            attempt = AccessAttempt.objects.create(
+                user_agent=ua,
+                ip_address=ip,
+                get_data=query2str(request.GET.items()),
+                post_data=query2str(request.POST.items()),
+                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+                path_info=request.META.get('PATH_INFO', '<unknown>'),
+                failures_since_start=failures
+            )
+    return True
