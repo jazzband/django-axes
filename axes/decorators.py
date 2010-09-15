@@ -99,6 +99,23 @@ def watch_login(func):
             if attempt:
                 failures = attempt.failures_since_start
 
+            # no matter what, we want to lock them out
+            # if they're past the number of attempts allowed
+            if failures > FAILURE_LIMIT:
+                if LOCK_OUT_AT_FAILURE:
+                    if COOLOFF_TIME:
+                        response = HttpResponse("Account locked: too many login attempts.  "
+                                                "Please try again later."
+                                                )
+                    else:
+                        response = HttpResponse("Account locked: too many login attempts.  "
+                                                "Contact an admin to unlock your account."
+                                                 )
+                    # We log them out in case they actually managed to enter
+                    # the correct password.
+                    logout(request)
+                    return response
+
             if login_unsuccessful:
                 # add a failed attempt for this user
                 failures += 1
@@ -140,21 +157,6 @@ def watch_login(func):
                         failures_since_start=failures
                     )
 
-            # no matter what, we want to lock them out
-            # if they're past the number of attempts allowed
-            if failures > FAILURE_LIMIT:
-                if LOCK_OUT_AT_FAILURE:
-                    if COOLOFF_TIME:
-                        response = HttpResponse("Account locked: too many login attempts.  "
-                                                "Please try again later."
-                                                )
-                    else:
-                        response = HttpResponse("Account locked: too many login attempts.  "
-                                                "Contact an admin to unlock your account."
-                                                 )
-                    # We log them out in case they actually managed to enter
-                    # the correct password.
-                    logout(request)
 
         return response
     return decorated_login
