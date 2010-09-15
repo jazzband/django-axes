@@ -9,7 +9,7 @@ from django.core.cache import cache
 
 # see if the user has overridden the failure limit
 if hasattr(settings, 'AXES_LOGIN_FAILURE_LIMIT'):
-    FAILURE_LIMIT = settings.LOGIN_FAILURE_LIMIT
+    FAILURE_LIMIT = settings.AXES_LOGIN_FAILURE_LIMIT
 else:
     FAILURE_LIMIT = 3
 
