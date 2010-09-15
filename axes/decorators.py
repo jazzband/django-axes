@@ -31,10 +31,15 @@ try:
 except:
     COOLOFF_TIME = None
 
+try:
+    LOGGER = settings.AXES_LOGGER
+except:
+    LOGGER = 'axes.watch_login'
+
 def query2str(items):
     return '\n'.join(['%s=%s' % (k, v) for k,v in items])
 
-log = logging.getLogger('axes.watch_login')
+log = logging.getLogger(LOGGER)
 log.info('BEGIN LOG')
 log.info('Using django-axes ' + axes.get_version())
 
