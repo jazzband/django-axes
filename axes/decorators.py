@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.contrib.auth import logout
+from django.shortcuts import render_to_response
 from axes.models import AccessAttempt
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template import RequestContext
 import axes
 import datetime
 import logging
@@ -35,6 +37,16 @@ try:
     LOGGER = settings.AXES_LOGGER
 except:
     LOGGER = 'axes.watch_login'
+
+try:
+    LOCKOUT_TEMPLATE = settings.AXES_LOCKOUT_TEMPLATE
+except:
+    LOCKOUT_TEMPLATE = None
+
+try:
+    LOCKOUT_URL = settings.AXES_LOCKOUT_URL
+except:
+    LOCKOUT_URL = None
 
 def query2str(items):
     return '\n'.join(['%s=%s' % (k, v) for k,v in items])
@@ -101,6 +113,13 @@ def watch_login(func):
             if check_request(request, login_unsuccessful):
                 return response
 
+            if LOCKOUT_TEMPLATE:
+                context = RequestContext(request)
+                context['cooloff_time'] = COOLOFF_TIME
+                context['failure_limit'] = FAILURE_LIMIT
+                return render_to_response(LOCKOUT_TEMPLATE, context)
+            if LOCKOUT_URL:
+                return HttpResponseRedirect(LOCKOUT_URL)
             if COOLOFF_TIME:
                 return HttpResponse("Account locked: too many login attempts.  "
                                     "Please try again later."
