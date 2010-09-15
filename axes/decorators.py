@@ -8,27 +8,27 @@ import logging
 from django.core.cache import cache
 
 # see if the user has overridden the failure limit
-if hasattr(settings, 'AXES_LOGIN_FAILURE_LIMIT'):
+try:
     FAILURE_LIMIT = settings.AXES_LOGIN_FAILURE_LIMIT
-else:
+except:
     FAILURE_LIMIT = 3
 
 # see if the user has set axes to lock out logins after failure limit
-if hasattr(settings, 'AXES_LOCK_OUT_AT_FAILURE'):
+try:
     LOCK_OUT_AT_FAILURE = settings.AXES_LOCK_OUT_AT_FAILURE
-else:
+except:
     LOCK_OUT_AT_FAILURE = True
 
-if hasattr(settings, 'AXES_USE_USER_AGENT'):
+try:
     USE_USER_AGENT = settings.AXES_USE_USER_AGENT
-else:
+except:
     USE_USER_AGENT = False
 
-if hasattr(settings, 'AXES_COOLOFF_TIME'):
+try:
     COOLOFF_TIME = settings.AXES_COOLOFF_TIME
     if isinstance(COOLOFF_TIME, int):
         COOLOFF_TIME = datetime.timedelta(hours=COOLOFF_TIME)
-else:
+except:
     COOLOFF_TIME = None
 
 def query2str(items):
