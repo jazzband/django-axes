@@ -57,7 +57,7 @@ def query2str(items):
     return '\n'.join(['%s=%s' % (k, v) for k,v in items])
 
 log = logging.getLogger(LOGGER)
-log.info('BEGIN LOG')
+log.info('AXES: BEGIN LOG')
 log.info('Using django-axes ' + axes.get_version())
 
 def get_user_attempt(request):
@@ -93,7 +93,7 @@ def watch_login(func):
     def decorated_login(request, *args, **kwargs):
         # share some useful information
         if func.__name__ != 'decorated_login' and VERBOSE:
-            log.info('Calling decorated function: %s' % func)
+            log.info('AXES: Calling decorated function: %s' % func)
             if args: log.info('args: %s' % args)
             if kwargs: log.info('kwargs: %s' % kwargs)
 
@@ -151,20 +151,17 @@ def check_request(request, login_unsuccessful):
             # We log them out in case they actually managed to enter
             # the correct password.
             logout(request)
-
+            log.info('AXES: locked out %s after repeated login attempts.' %
+                     attempt.ip_address)
             return False
 
     if login_unsuccessful:
         # add a failed attempt for this user
         failures += 1
-        log.info('-' * 79)
 
         # Create an AccessAttempt record if the login wasn't successful
         # has already attempted, update the info
         if attempt:
-            log.info('=================================')
-            log.info('Updating access attempt record...')
-            log.info('=================================')
             attempt.get_data = '%s\n---------\n%s' % (
                 attempt.get_data,
                 query2str(request.GET.items()),
@@ -178,10 +175,10 @@ def check_request(request, login_unsuccessful):
             attempt.failures_since_start = failures
             attempt.attempt_time = datetime.datetime.now()
             attempt.save()
+            log.info('AXES: Repeated login failure by %s. Updating access '
+                     'record. Count = %s' %
+                     (attempt.ip_address, failures))
         else:
-            log.info('=================================')
-            log.info('Creating access attempt record...')
-            log.info('=================================')
             ip = request.META.get('REMOTE_ADDR', '')
             ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
             attempt = AccessAttempt.objects.create(
@@ -193,4 +190,6 @@ def check_request(request, login_unsuccessful):
                 path_info=request.META.get('PATH_INFO', '<unknown>'),
                 failures_since_start=failures
             )
+            log.info('AXES: New login failure by %s. Creating access record.' %
+                     ip)
     return True
