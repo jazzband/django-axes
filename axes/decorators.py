@@ -48,6 +48,11 @@ try:
 except:
     LOCKOUT_URL = None
 
+try:
+    VERBOSE = settings.AXES_VERBOSE
+except:
+    VERBOSE = True
+
 def query2str(items):
     return '\n'.join(['%s=%s' % (k, v) for k,v in items])
 
@@ -87,7 +92,7 @@ def watch_login(func):
 
     def decorated_login(request, *args, **kwargs):
         # share some useful information
-        if func.__name__ != 'decorated_login':
+        if func.__name__ != 'decorated_login' and VERBOSE:
             log.info('Calling decorated function: %s' % func)
             if args: log.info('args: %s' % args)
             if kwargs: log.info('kwargs: %s' % kwargs)
