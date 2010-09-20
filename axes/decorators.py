@@ -57,8 +57,9 @@ def query2str(items):
     return '\n'.join(['%s=%s' % (k, v) for k,v in items])
 
 log = logging.getLogger(LOGGER)
-log.info('AXES: BEGIN LOG')
-log.info('Using django-axes ' + axes.get_version())
+if VERBOSE:
+    log.info('AXES: BEGIN LOG')
+    log.info('Using django-axes ' + axes.get_version())
 
 def get_user_attempt(request):
     """
