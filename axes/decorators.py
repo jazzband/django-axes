@@ -193,4 +193,8 @@ def check_request(request, login_unsuccessful):
             )
             log.info('AXES: New login failure by %s. Creating access record.' %
                      ip)
+    else:
+        #user logged in -- forget the failed attempts
+        if attempt:
+            attempt.delete()
     return True
