@@ -152,7 +152,7 @@ def check_request(request, login_unsuccessful):
             # We log them out in case they actually managed to enter
             # the correct password.
             logout(request)
-            log.info('AXES: locked out %s after repeated login attempts.' %
+            log.warn('AXES: locked out %s after repeated login attempts.' %
                      attempt.ip_address)
             return False
 
