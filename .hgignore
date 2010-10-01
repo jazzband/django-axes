@@ -1,5 +1,7 @@
 syntax: glob
+django_axes.egg-info
 *.pyc
 build
+dist
 *.swp
 .git

@@ -1,3 +1,5 @@
+django_axes.egg-info
 *.pyc
 build
+dist
 .hg
