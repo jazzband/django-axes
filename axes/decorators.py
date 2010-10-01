@@ -1,57 +1,33 @@
+from datetime import datetime, timedelta
+import logging
+
 from django.conf import settings
 from django.contrib.auth import logout
-from django.shortcuts import render_to_response
-from axes.models import AccessAttempt
-from django.http import HttpResponse, HttpResponseRedirect
-from django.template import RequestContext
-import axes
-import datetime
-import logging
 from django.core.cache import cache
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+
+from axes.models import AccessAttempt
+import axes
 
 # see if the user has overridden the failure limit
-try:
-    FAILURE_LIMIT = settings.AXES_LOGIN_FAILURE_LIMIT
-except:
-    FAILURE_LIMIT = 3
+FAILURE_LIMIT = getattr(settings, 'AXES_LOGIN_FAILURE_LIMIT', 3)
 
 # see if the user has set axes to lock out logins after failure limit
-try:
-    LOCK_OUT_AT_FAILURE = settings.AXES_LOCK_OUT_AT_FAILURE
-except:
-    LOCK_OUT_AT_FAILURE = True
+LOCK_OUT_AT_FAILURE = getattr(settings, 'AXES_LOCK_OUT_AT_FAILURE', True)
 
-try:
-    USE_USER_AGENT = settings.AXES_USE_USER_AGENT
-except:
-    USE_USER_AGENT = False
+USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 
-try:
-    COOLOFF_TIME = settings.AXES_COOLOFF_TIME
-    if isinstance(COOLOFF_TIME, int):
-        COOLOFF_TIME = datetime.timedelta(hours=COOLOFF_TIME)
-except:
-    COOLOFF_TIME = None
+COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
+if isinstance(COOLOFF_TIME, int):
+    COOLOFF_TIME = timedelta(hours=COOLOFF_TIME)
 
-try:
-    LOGGER = settings.AXES_LOGGER
-except:
-    LOGGER = 'axes.watch_login'
+LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 
-try:
-    LOCKOUT_TEMPLATE = settings.AXES_LOCKOUT_TEMPLATE
-except:
-    LOCKOUT_TEMPLATE = None
-
-try:
-    LOCKOUT_URL = settings.AXES_LOCKOUT_URL
-except:
-    LOCKOUT_URL = None
-
-try:
-    VERBOSE = settings.AXES_VERBOSE
-except:
-    VERBOSE = True
+LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
+LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
+VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
 def query2str(items):
     return '\n'.join(['%s=%s' % (k, v) for k,v in items])
@@ -77,13 +53,15 @@ def get_user_attempt(request):
         attempts = AccessAttempt.objects.filter(
             ip_address=ip
         )
+
     if not attempts:
         return None
+
     attempt = attempts[0]
-    if COOLOFF_TIME:
-        if attempt.attempt_time + COOLOFF_TIME < datetime.datetime.now():
-            attempt.delete()
-            return None
+    if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < datetime.now():
+        attempt.delete()
+        return None
+
     return attempt
 
 def watch_login(func):
@@ -94,7 +72,7 @@ def watch_login(func):
     def decorated_login(request, *args, **kwargs):
         # share some useful information
         if func.__name__ != 'decorated_login' and VERBOSE:
-            log.info('AXES: Calling decorated function: %s' % func)
+            log.info('AXES: Calling decorated function: %s' % func.__name__)
             if args: log.info('args: %s' % args)
             if kwargs: log.info('kwargs: %s' % kwargs)
 
@@ -120,20 +98,21 @@ def watch_login(func):
                 return response
 
             if LOCKOUT_TEMPLATE:
-                context = RequestContext(request)
-                context['cooloff_time'] = COOLOFF_TIME
-                context['failure_limit'] = FAILURE_LIMIT
+                context = RequestContext(request, {
+                    'cooloff_time': COOLOFF_TIME,
+                    'failure_limit': FAILURE_LIMIT,
+                })
                 return render_to_response(LOCKOUT_TEMPLATE, context)
+
             if LOCKOUT_URL:
                 return HttpResponseRedirect(LOCKOUT_URL)
+
             if COOLOFF_TIME:
                 return HttpResponse("Account locked: too many login attempts.  "
-                                    "Please try again later."
-                                    )
+                                    "Please try again later.")
             else:
                 return HttpResponse("Account locked: too many login attempts.  "
-                                    "Contact an admin to unlock your account."
-                                    )
+                                    "Contact an admin to unlock your account.")
         return response
 
     return decorated_login
@@ -147,14 +126,13 @@ def check_request(request, login_unsuccessful):
 
     # no matter what, we want to lock them out
     # if they're past the number of attempts allowed
-    if failures > FAILURE_LIMIT:
-        if LOCK_OUT_AT_FAILURE:
-            # We log them out in case they actually managed to enter
-            # the correct password.
-            logout(request)
-            log.warn('AXES: locked out %s after repeated login attempts.' %
-                     attempt.ip_address)
-            return False
+    if failures > FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+        # We log them out in case they actually managed to enter
+        # the correct password.
+        logout(request)
+        log.warn('AXES: locked out %s after repeated login attempts.' %
+                 attempt.ip_address)
+        return False
 
     if login_unsuccessful:
         # add a failed attempt for this user
@@ -174,7 +152,7 @@ def check_request(request, login_unsuccessful):
             attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
             attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
             attempt.failures_since_start = failures
-            attempt.attempt_time = datetime.datetime.now()
+            attempt.attempt_time = datetime.now()
             attempt.save()
             log.info('AXES: Repeated login failure by %s. Updating access '
                      'record. Count = %s' %
@@ -194,7 +172,8 @@ def check_request(request, login_unsuccessful):
             log.info('AXES: New login failure by %s. Creating access record.' %
                      ip)
     else:
-        #user logged in -- forget the failed attempts
+        # user logged in -- forget the failed attempts
         if attempt:
             attempt.delete()
+
     return True

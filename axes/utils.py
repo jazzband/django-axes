@@ -4,8 +4,7 @@ def reset(ip=None, silent=False):
     if not ip:
         attempts = AccessAttempt.objects.all()
         if attempts:
-            for attempt in AccessAttempt.objects.all():
-                attempt.delete()
+            attempts.delete()
         else:
             if not silent:
                 print 'No attempts found.'
@@ -17,3 +16,4 @@ def reset(ip=None, silent=False):
                 print 'No matching attempt found.'
         else:
             attempt.delete()
+
