@@ -10,48 +10,24 @@ import logging
 from django.core.cache import cache
 
 # see if the user has overridden the failure limit
-try:
-    FAILURE_LIMIT = settings.AXES_LOGIN_FAILURE_LIMIT
-except:
-    FAILURE_LIMIT = 3
+FAILURE_LIMIT = getattr(settings, 'AXES_LOGIN_FAILURE_LIMIT', 3)
 
 # see if the user has set axes to lock out logins after failure limit
-try:
-    LOCK_OUT_AT_FAILURE = settings.AXES_LOCK_OUT_AT_FAILURE
-except:
-    LOCK_OUT_AT_FAILURE = True
+LOCK_OUT_AT_FAILURE = getattr(settings, 'AXES_LOCK_OUT_AT_FAILURE', True)
 
-try:
-    USE_USER_AGENT = settings.AXES_USE_USER_AGENT
-except:
-    USE_USER_AGENT = False
+USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 
-try:
-    COOLOFF_TIME = settings.AXES_COOLOFF_TIME
-    if isinstance(COOLOFF_TIME, int):
-        COOLOFF_TIME = datetime.timedelta(hours=COOLOFF_TIME)
-except:
-    COOLOFF_TIME = None
+COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
+if isinstance(COOLOFF_TIME, int):
+    COOLOFF_TIME = datetime.timedelta(hours=COOLOFF_TIME)
 
-try:
-    LOGGER = settings.AXES_LOGGER
-except:
-    LOGGER = 'axes.watch_login'
+LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 
-try:
-    LOCKOUT_TEMPLATE = settings.AXES_LOCKOUT_TEMPLATE
-except:
-    LOCKOUT_TEMPLATE = None
+LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
 
-try:
-    LOCKOUT_URL = settings.AXES_LOCKOUT_URL
-except:
-    LOCKOUT_URL = None
+LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
 
-try:
-    VERBOSE = settings.AXES_VERBOSE
-except:
-    VERBOSE = True
+VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
 def query2str(items):
     return '\n'.join(['%s=%s' % (k, v) for k,v in items])
