@@ -111,14 +111,15 @@ These should be defined in your ``settings.py`` file.
   * ``AXES_COOLOFF_TIME``: If set, defines a period of inactivity after which
     old failed login attempts will be forgotten. Can be set to a python
     timedelta object or an integer. If an integer, will be interpreted as a
-    number of hours.
+    number of hours.  Default: ``None``
   * ``AXES_LOGGER``: If set, specifies a logging mechanism for axes to use.
+    Default: ``'axes.watch_login'``
   * ``AXES_LOCKOUT_TEMPLATE``: If set, specifies a template to render when a
     user is locked out. Template receives cooloff_time and failure_limit as
-    context variables.
+    context variables. Default: ``None``
   * ``AXES_LOCKOUT_URL``: If set, specifies a URL to redirect to on lockout. If
     both AXES_LOCKOUT_TEMPLATE and AXES_LOCKOUT_URL are set, the template will
-    be used.
+    be used. Default: ``None``
   * ``AXES_VERBOSE``: If ``True``, you'll see slightly more logging for Axes.
     Default: ``True``
 
@@ -135,3 +136,11 @@ future I plan on offering a way to customize options for logging a bit more.
 By default, django-axes will lock out repeated attempts from the same IP
 address.  You can allow this IP to attempt again by deleting the relevant
 ``AccessAttempt`` records in the admin.
+
+You can also use the ``reset`` function in ``axes.utils``
+Run ``manage.py shell`` and then ``from axes.utils import reset``.
+ * ``reset()`` will reset all lockouts and access records.
+ * ``reset(ip)`` will clear lockout/records for ip
+
+``reset`` will print a message to std out if there is nothing to reset,
+unless called with ``silent = True``
