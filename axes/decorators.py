@@ -97,25 +97,28 @@ def watch_login(func):
             if check_request(request, login_unsuccessful):
                 return response
 
-            if LOCKOUT_TEMPLATE:
-                context = RequestContext(request, {
-                    'cooloff_time': COOLOFF_TIME,
-                    'failure_limit': FAILURE_LIMIT,
-                })
-                return render_to_response(LOCKOUT_TEMPLATE, context)
-
-            if LOCKOUT_URL:
-                return HttpResponseRedirect(LOCKOUT_URL)
-
-            if COOLOFF_TIME:
-                return HttpResponse("Account locked: too many login attempts.  "
-                                    "Please try again later.")
-            else:
-                return HttpResponse("Account locked: too many login attempts.  "
-                                    "Contact an admin to unlock your account.")
+            return lockout_response(request)
         return response
 
     return decorated_login
+
+def lockout_response(request):
+    if LOCKOUT_TEMPLATE:
+        context = RequestContext(request, {
+            'cooloff_time': COOLOFF_TIME,
+            'failure_limit': FAILURE_LIMIT,
+        })
+        return render_to_response(LOCKOUT_TEMPLATE, context)
+
+    if LOCKOUT_URL:
+        return HttpResponseRedirect(LOCKOUT_URL)
+
+    if COOLOFF_TIME:
+        return HttpResponse("Account locked: too many login attempts.  "
+                            "Please try again later.")
+    else:
+        return HttpResponse("Account locked: too many login attempts.  "
+                            "Contact an admin to unlock your account.")
 
 def check_request(request, login_unsuccessful):
     failures = 0
