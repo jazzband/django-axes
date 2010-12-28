@@ -3,7 +3,6 @@
 
 from setuptools import setup, find_packages
 import axes
-import sys, os
 
 setup(
     name='django-axes',
@@ -11,7 +10,7 @@ setup(
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description=open('README.rst', 'r').read(),
     keywords='django, security, authentication',
-    author='Josh VanderLinden, Philip Neustrom',
+    author='Josh VanderLinden, Philip Neustrom, Michael Blume',
     author_email='codekoala@gmail.com',
     url='http://bitbucket.org/codekoala/django-axes/',
     license='MIT',
@@ -31,5 +30,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware',
         'Topic :: Security',
         'Topic :: System :: Logging',
-    ]
+    ],
+    zip_safe=False,
 )
