@@ -38,7 +38,17 @@ LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
 VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
 def query2str(items):
-    return '\n'.join(['%s=%s' % (k, v) for k,v in items])
+    """Turns a dictionary into an easy-to-read list of key-value pairs.
+
+    If there's a field called "password" it will be excluded from the output.
+    """
+
+    kvs = []
+    for k, v in items:
+        if k != 'password':
+            kvs.append(u'%s=%s' % (k, v))
+
+    return '\n'.join(kvs)
 
 log = logging.getLogger(LOGGER)
 if VERBOSE:
