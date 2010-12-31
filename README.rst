@@ -144,8 +144,9 @@ address.  You can allow this IP to attempt again by deleting the relevant
 
 You can also use the ``reset`` function in ``axes.utils``
 Run ``manage.py shell`` and then ``from axes.utils import reset``.
- * ``reset()`` will reset all lockouts and access records.
- * ``reset(ip)`` will clear lockout/records for ip
+
+* ``reset()`` will reset all lockouts and access records.
+* ``reset(ip)`` will clear lockout/records for ip
 
 ``reset`` will print a message to std out if there is nothing to reset,
 unless called with ``silent = True``
