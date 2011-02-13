@@ -7,8 +7,6 @@ class Command(BaseCommand):
             "IP, resets only for that IP")
 
     def handle(self, *args, **kwargs):
-        if kwargs:
-            raise CommandError("Reset does not take named arguments")
         if args:
             for ip in args:
                 reset(ip)
