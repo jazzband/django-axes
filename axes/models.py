@@ -19,6 +19,7 @@ class AccessAttempt(models.Model):
     def __unicode__(self):
         return u'Attempted Access: %s' % self.attempt_time
 
+    @property
     def failures(self):
         return self.failures_since_start
 
