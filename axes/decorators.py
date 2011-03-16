@@ -122,11 +122,12 @@ def watch_login(func):
 
 def lockout_response(request):
     if LOCKOUT_TEMPLATE:
-        context = RequestContext(request, {
+        context = {
             'cooloff_time': COOLOFF_TIME,
             'failure_limit': FAILURE_LIMIT,
-        })
-        return render_to_response(LOCKOUT_TEMPLATE, context)
+        }
+        return render_to_response(LOCKOUT_TEMPLATE, context,
+                                  context_instance = RequestContext(request))
 
     if LOCKOUT_URL:
         return HttpResponseRedirect(LOCKOUT_URL)
