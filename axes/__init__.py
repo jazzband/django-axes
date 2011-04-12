@@ -1,3 +1,7 @@
+import logging
+import os
+from django.conf import settings
+
 VERSION = (1, 2, 4, 'rc1')
 
 
@@ -5,11 +9,12 @@ def get_version():
     return '%s.%s.%s-%s' % VERSION
 
 try:
-    from django.conf import settings
-    import logging
-    import os
-
     LOGFILE = os.path.join(settings.DIRNAME, 'axes.log')
+except (ImportError, AttributeError):
+    # if we have any problems, we most likely don't have a settings module
+    # loaded
+    pass
+else:
     log_format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
     logging.basicConfig(level=logging.DEBUG,
                         format=log_format,
@@ -29,7 +34,3 @@ try:
 
     # add the handler to the root logger
     logging.getLogger('').addHandler(fileLog)
-except:
-    # if we have any problems, we most likely don't have a settings module
-    # loaded
-    pass
