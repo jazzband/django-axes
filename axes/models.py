@@ -6,6 +6,7 @@ FAILURES_DESC = 'Failed Logins'
 # set unique by user_agent, ip
 # make user agent, ip indexed fields
 
+
 class AccessAttempt(models.Model):
     user_agent = models.CharField(max_length=255)
     ip_address = models.IPAddressField('IP Address')

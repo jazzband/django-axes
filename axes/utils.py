@@ -1,5 +1,6 @@
 from axes.models import AccessAttempt
 
+
 def reset(ip=None, silent=False):
     if not ip:
         attempts = AccessAttempt.objects.all()
@@ -16,4 +17,3 @@ def reset(ip=None, silent=False):
                 print 'No matching attempt found.'
         else:
             attempt.delete()
-

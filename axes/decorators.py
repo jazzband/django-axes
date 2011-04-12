@@ -37,6 +37,7 @@ LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
 LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
 VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
+
 def query2str(items):
     """Turns a dictionary into an easy-to-read list of key-value pairs.
 
@@ -54,6 +55,7 @@ log = logging.getLogger(LOGGER)
 if VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('Using django-axes ' + axes.get_version())
+
 
 def get_user_attempt(request):
     """
@@ -82,6 +84,7 @@ def get_user_attempt(request):
 
     return attempt
 
+
 def watch_login(func):
     """
     Used to decorate the django.contrib.admin.site.login method.
@@ -91,8 +94,10 @@ def watch_login(func):
         # share some useful information
         if func.__name__ != 'decorated_login' and VERBOSE:
             log.info('AXES: Calling decorated function: %s' % func.__name__)
-            if args: log.info('args: %s' % args)
-            if kwargs: log.info('kwargs: %s' % kwargs)
+            if args:
+                log.info('args: %s' % args)
+            if kwargs:
+                log.info('kwargs: %s' % kwargs)
 
         # call the login function
         response = func(request, *args, **kwargs)
@@ -120,6 +125,7 @@ def watch_login(func):
 
     return decorated_login
 
+
 def lockout_response(request):
     if LOCKOUT_TEMPLATE:
         context = {
@@ -127,7 +133,7 @@ def lockout_response(request):
             'failure_limit': FAILURE_LIMIT,
         }
         return render_to_response(LOCKOUT_TEMPLATE, context,
-                                  context_instance = RequestContext(request))
+                                  context_instance=RequestContext(request))
 
     if LOCKOUT_URL:
         return HttpResponseRedirect(LOCKOUT_URL)
@@ -138,6 +144,7 @@ def lockout_response(request):
     else:
         return HttpResponse("Account locked: too many login attempts.  "
                             "Contact an admin to unlock your account.")
+
 
 def check_request(request, login_unsuccessful):
     failures = 0
@@ -200,8 +207,10 @@ def check_request(request, login_unsuccessful):
 
     return True
 
-ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. Note that both fields are case-sensitive.")
+ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
+                              "Note that both fields are case-sensitive.")
 LOGIN_FORM_KEY = 'this_is_the_login_form'
+
 
 def _display_login_form(request, error_message=''):
     request.session.set_test_cookie()
@@ -210,6 +219,7 @@ def _display_login_form(request, error_message=''):
         'app_path': request.get_full_path(),
         'error_message': error_message
     }, context_instance=template.RequestContext(request))
+
 
 def staff_member_required(view_func):
     """
@@ -232,8 +242,8 @@ def staff_member_required(view_func):
            documentation and/or other materials provided with the distribution.
 
         3. Neither the name of Django nor the names of its contributors may be
-           used to endorse or promote products derived from this software without
-           specific prior written permission.
+           used to endorse or promote products derived from this software
+           without specific prior written permission.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
     AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
