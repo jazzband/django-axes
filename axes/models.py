@@ -6,16 +6,18 @@ FAILURES_DESC = 'Failed Logins'
 # set unique by user_agent, ip
 # make user agent, ip indexed fields
 
-
 class AccessAttempt(models.Model):
     user_agent = models.CharField(max_length=255)
-    ip_address = models.IPAddressField('IP Address')
+    ip_address = models.IPAddressField('IP Address', null=True)
+    username = models.CharField(max_length=255, null=True)
+    trusted = models.BooleanField(default=False) # Once a user logs in from an ip, that combination is trusted and not locked out in case of a distributed attack
+    failures_since_start = models.PositiveIntegerField(FAILURES_DESC)
+    attempt_time = models.DateTimeField(auto_now_add=True)
+    
     get_data = models.TextField('GET Data')
     post_data = models.TextField('POST Data')
     http_accept = models.CharField('HTTP Accept', max_length=255)
     path_info = models.CharField('Path', max_length=255)
-    failures_since_start = models.PositiveIntegerField(FAILURES_DESC)
-    attempt_time = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return u'Attempted Access: %s' % self.attempt_time
