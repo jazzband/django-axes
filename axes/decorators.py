@@ -237,7 +237,7 @@ def check_request(request, login_unsuccessful):
                 attempt.delete()
             else:
                 trusted_record_exists = True
-                attempt.failures=0
+                attempt.failures_since_start=0
                 attempt.save()
         if trusted_record_exists is False:
             create_new_trusted_record(request)
