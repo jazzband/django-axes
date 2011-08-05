@@ -13,7 +13,7 @@ def reset(ip=None, username=None, silent=False):
         try:
             # no need to reset trusted records.  If they fail, they go to untrusted
             attempts = AccessAttempt.objects.filter(ip_address=ip, trusted=False)
-            if len(username):
+            if username:
                 attempts = attempts | AccessAttempt.objects.filter(username=username, trusted=False)
         except:
             if not silent:

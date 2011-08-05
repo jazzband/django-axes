@@ -96,11 +96,11 @@ def get_user_attempts(request):
     if len(attempts) == 0:
         if USE_USER_AGENT:
             attempts = AccessAttempt.objects.filter(user_agent=ua, ip_address=ip, trusted=False) 
-            if len(username)>0 and not ip_in_whitelist(ip):
+            if username and not ip_in_whitelist(ip):
                 attempts = attempts | AccessAttempt.objects.filter( user_agent=ua, username=username, trusted=False)
         else:
             attempts = AccessAttempt.objects.filter(ip_address=ip, trusted=False)
-            if len(username)>0 and not ip_in_whitelist(ip):
+            if username and not ip_in_whitelist(ip):
                 attempts = attempts | AccessAttempt.objects.filter(username=username, trusted=False)
             
     for attempt in attempts:
@@ -130,7 +130,7 @@ def watch_login(func):
             
         # if the request is currently under lockout, do not proceed to the login function
         # go directly to lockout url, do not pass go, do not collect messages about this login attempt
-        if request.method == 'POST' and is_already_locked(request):
+        if is_already_locked(request):
             return lockout_response(request)
             
         # call the login function
@@ -295,7 +295,7 @@ def create_new_trusted_record(request):
     ip = request.META.get('REMOTE_ADDR', '')
     username = request.POST.get('username', None)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')    
-    if len(username):
+    if username:
         attempt = AccessAttempt.objects.create(
             user_agent=ua,
             ip_address=ip,
