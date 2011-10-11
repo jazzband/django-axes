@@ -37,7 +37,6 @@ LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
 LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
 VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
-
 def query2str(items):
     """Turns a dictionary into an easy-to-read list of key-value pairs.
 
@@ -56,52 +55,51 @@ if VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('Using django-axes ' + axes.get_version())
 
-
-def get_user_attempt(request):
-    """
-    Returns access attempt record if it exists.
-    Otherwise return None.
-    """
+def get_accesses(request):
     ip = request.META.get('REMOTE_ADDR', '')
+    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+    
+    time_horizon = datetime.now() - COOLOFF_TIME
+    
+    user_accesses = AccessAttempt.objects.filter(ip_address=ip).filter(attempt_time__gte=time_horizon)
+    
     if USE_USER_AGENT:
-        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
-        attempts = AccessAttempt.objects.filter(
-            user_agent=ua,
-            ip_address=ip
-        )
-    else:
-        attempts = AccessAttempt.objects.filter(
-            ip_address=ip
-        )
+        user_accesses = user_accesses.filter(user_agent=ua)
+        
+    return user_accesses
 
-    if not attempts:
-        return None
-
-    attempt = attempts[0]
-    if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < datetime.now():
-        attempt.delete()
-        return None
-
+def create_access_record(request, status):
+    ip = request.META.get('REMOTE_ADDR', '')
+    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+    
+    attempt = AccessAttempt.objects.create(
+                user_agent=ua,
+                ip_address=ip,
+                get_data=query2str(request.GET.items()),
+                post_data=query2str(request.POST.items()),
+                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+                path_info=request.META.get('PATH_INFO', '<unknown>'),
+                status=status,
+            )
     return attempt
-
+    
 
 def watch_login(func):
     """
     Used to decorate the django.contrib.admin.site.login method.
     """
-
+    
     def decorated_login(request, *args, **kwargs):
+        print "RUNNING DECORATED!"
         # share some useful information
         if func.__name__ != 'decorated_login' and VERBOSE:
             log.info('AXES: Calling decorated function: %s' % func.__name__)
-            if args:
-                log.info('args: %s' % args)
-            if kwargs:
-                log.info('kwargs: %s' % kwargs)
+            if args: log.info('args: %s' % args)
+            if kwargs: log.info('kwargs: %s' % kwargs)
 
         # call the login function
         response = func(request, *args, **kwargs)
-
+        
         if func.__name__ == 'decorated_login':
             # if we're dealing with this function itself, don't bother checking
             # for invalid login attempts.  I suppose there's a bunch of
@@ -125,15 +123,13 @@ def watch_login(func):
 
     return decorated_login
 
-
 def lockout_response(request):
     if LOCKOUT_TEMPLATE:
-        context = {
+        context = RequestContext(request, {
             'cooloff_time': COOLOFF_TIME,
             'failure_limit': FAILURE_LIMIT,
-        }
-        return render_to_response(LOCKOUT_TEMPLATE, context,
-                                  context_instance=RequestContext(request))
+        })
+        return render_to_response(LOCKOUT_TEMPLATE, context)
 
     if LOCKOUT_URL:
         return HttpResponseRedirect(LOCKOUT_URL)
@@ -147,68 +143,44 @@ def lockout_response(request):
 
 
 def check_request(request, login_unsuccessful):
-    failures = 0
-    attempt = get_user_attempt(request)
-
-    if attempt:
-        failures = attempt.failures_since_start
-
-    # no matter what, we want to lock them out
-    # if they're past the number of attempts allowed
-    if failures > FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
-        # We log them out in case they actually managed to enter
-        # the correct password.
+    print "DOING CHECK!"
+    accesses = get_accesses(request)
+    lockout = accesses.filter(status=AccessAttempt.LOCKOUT).count() > 0
+    
+    if lockout:
+        #we can just log this and move on
+        access = create_access_record(request, AccessAttempt.LOCKOUT)
+        log.warn('AXES: %s is locked out but still trying.' % request.META.get('REMOTE_ADDR', ''))
         logout(request)
-        log.warn('AXES: locked out %s after repeated login attempts.' %
-                 attempt.ip_address)
         return False
-
+        
     if login_unsuccessful:
-        # add a failed attempt for this user
-        failures += 1
+        
+        #they're not previously locked out, but this attempt might push them over
+        access = create_access_record(request, AccessAttempt.FAILED)
+        failures = accesses.filter(status=AccessAttempt.FAILED).count()
 
-        # Create an AccessAttempt record if the login wasn't successful
-        # has already attempted, update the info
-        if attempt:
-            attempt.get_data = '%s\n---------\n%s' % (
-                attempt.get_data,
-                query2str(request.GET.items()),
-            )
-            attempt.post_data = '%s\n---------\n%s' % (
-                attempt.post_data,
-                query2str(request.POST.items())
-            )
-            attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
-            attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
-            attempt.failures_since_start = failures
-            attempt.attempt_time = datetime.now()
-            attempt.save()
-            log.info('AXES: Repeated login failure by %s. Updating access '
-                     'record. Count = %s' %
-                     (attempt.ip_address, failures))
+        # no matter what, we want to lock them out
+        # if they're past the number of attempts allowed
+        if failures > FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+            # We log them out in case they actually managed to enter
+            # the correct password.
+            access.status = AccessAttempt.LOCKOUT
+            access.save()
+            log.warn('AXES: locked out %s after repeated login attempts.' % request.META.get('REMOTE_ADDR', ''))
+            logout(request)
+            return False
+
         else:
-            ip = request.META.get('REMOTE_ADDR', '')
-            ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
-            attempt = AccessAttempt.objects.create(
-                user_agent=ua,
-                ip_address=ip,
-                get_data=query2str(request.GET.items()),
-                post_data=query2str(request.POST.items()),
-                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
-                path_info=request.META.get('PATH_INFO', '<unknown>'),
-                failures_since_start=failures
-            )
-            log.info('AXES: New login failure by %s. Creating access record.' %
-                     ip)
+            #they failed again, but they're not locked out yet
+            return True
     else:
-        # user logged in -- forget the failed attempts
-        if attempt:
-            attempt.delete()
+        #they didn't fail, so let them login
+        create_access_record(request, AccessAttempt.SUCCESS)
+        return True
+        
 
-    return True
-
-ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
-                              "Note that both fields are case-sensitive.")
+ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. Note that both fields are case-sensitive.")
 LOGIN_FORM_KEY = 'this_is_the_login_form'
 
 
@@ -219,7 +191,6 @@ def _display_login_form(request, error_message=''):
         'app_path': request.get_full_path(),
         'error_message': error_message
     }, context_instance=template.RequestContext(request))
-
 
 def staff_member_required(view_func):
     """
@@ -242,8 +213,8 @@ def staff_member_required(view_func):
            documentation and/or other materials provided with the distribution.
 
         3. Neither the name of Django nor the names of its contributors may be
-           used to endorse or promote products derived from this software
-           without specific prior written permission.
+           used to endorse or promote products derived from this software without
+           specific prior written permission.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
     AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
