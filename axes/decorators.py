@@ -57,8 +57,8 @@ if VERBOSE:
 
 def get_accesses(request):
     ip = request.META.get('REMOTE_ADDR', '')
-    if ip == "127.0.0.1":
-        ip = request.META['HTTP_X_REAL_IP']
+    if ip == '127.0.0.1':
+        ip = request.META.get('HTTP_X_REAL_IP', '127.0.0.1')
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
     
     time_horizon = datetime.now() - COOLOFF_TIME
