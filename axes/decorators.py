@@ -80,12 +80,12 @@ def create_access_record(request, status):
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
     
     attempt = AccessAttempt.objects.create(
-                user_agent=ua,
+                user_agent=ua[0:254],
                 ip_address=ip,
                 get_data=query2str(request.GET.items()),
                 post_data=query2str(request.POST.items()),
-                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
-                path_info=request.META.get('PATH_INFO', '<unknown>'),
+                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>')[0:254],
+                path_info=request.META.get('PATH_INFO', '<unknown>')[0:254],
                 status=status,
             )
     return attempt
