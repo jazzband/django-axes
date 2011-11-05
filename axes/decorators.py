@@ -54,11 +54,16 @@ log = logging.getLogger(LOGGER)
 if VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('Using django-axes ' + axes.get_version())
-
-def get_accesses(request):
+    
+def get_ip(request):
     ip = request.META.get('REMOTE_ADDR', '')
     if ip == '127.0.0.1':
         ip = request.META.get('HTTP_X_REAL_IP', '127.0.0.1')
+        
+    return ip
+
+def get_accesses(request):
+    ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
     
     time_horizon = datetime.now() - COOLOFF_TIME
@@ -71,7 +76,7 @@ def get_accesses(request):
     return user_accesses
 
 def create_access_record(request, status):
-    ip = request.META.get('REMOTE_ADDR', '')
+    ip = ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
     
     attempt = AccessAttempt.objects.create(
@@ -152,7 +157,7 @@ def check_request(request, login_unsuccessful):
     if lockout:
         #we can just log this and move on
         access = create_access_record(request, AccessAttempt.LOCKOUT)
-        log.warn('AXES: %s is locked out but still trying.' % request.META.get('REMOTE_ADDR', ''))
+        log.warn('AXES: %s is locked out but still trying.' % get_ip(request))
         logout(request)
         return False
         
@@ -169,7 +174,7 @@ def check_request(request, login_unsuccessful):
             # the correct password.
             access.status = AccessAttempt.LOCKOUT
             access.save()
-            log.warn('AXES: locked out %s after repeated login attempts.' % request.META.get('REMOTE_ADDR', ''))
+            log.warn('AXES: locked out %s after repeated login attempts.' % get_ip(request))
             logout(request)
             return False
 
