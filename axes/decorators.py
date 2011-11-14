@@ -68,7 +68,7 @@ def get_accesses(request):
     
     time_horizon = datetime.now() - COOLOFF_TIME
     
-    user_accesses = AccessAttempt.objects.filter(ip_address=ip).filter(attempt_time__gte=time_horizon)
+    user_accesses = AccessAttempt.objects.filter(ip_address=ip, attempt_time__gte=time_horizon)
     
     if USE_USER_AGENT:
         user_accesses = user_accesses.filter(user_agent=ua)
@@ -97,7 +97,6 @@ def watch_login(func):
     """
     
     def decorated_login(request, *args, **kwargs):
-        print "RUNNING DECORATED!"
         # share some useful information
         if func.__name__ != 'decorated_login' and VERBOSE:
             log.info('AXES: Calling decorated function: %s' % func.__name__)
@@ -150,7 +149,6 @@ def lockout_response(request):
 
 
 def check_request(request, login_unsuccessful):
-    print "DOING CHECK!"
     accesses = get_accesses(request)
     lockout = accesses.filter(status=AccessAttempt.LOCKOUT).count() > 0
     

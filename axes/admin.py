@@ -3,7 +3,7 @@ from axes.models import AccessAttempt
 
 class AccessAttemptAdmin(admin.ModelAdmin):
     list_display = ('attempt_time', 'ip_address', 'user_agent', 'path_info', 'status')
-    list_filter = ['attempt_time', 'ip_address', 'path_info', 'status']
+    list_filter = ['attempt_time', 'path_info', 'status']
     search_fields = ['ip_address', 'user_agent', 'path_info']
     date_hierarchy = 'attempt_time'
     fieldsets = (
