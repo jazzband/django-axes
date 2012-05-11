@@ -16,6 +16,11 @@ from django import template
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy, ugettext as _
 
+# Need to use django timezone support for datetime if the site is using
+# timezones
+if settings.USE_TZ:
+    from django.utils.timezone import utc
+
 from axes.models import AccessAttempt
 import axes
 
@@ -78,7 +83,8 @@ def get_user_attempt(request):
         return None
 
     attempt = attempts[0]
-    if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < datetime.now():
+    current_time = datetime.utcnow().replace(tzinfo=utc) if settings.USE_TZ else datetime.now()
+    if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < current_time:
         attempt.delete()
         return None
 
@@ -181,7 +187,7 @@ def check_request(request, login_unsuccessful):
             attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
             attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
             attempt.failures_since_start = failures
-            attempt.attempt_time = datetime.now()
+            attempt.attempt_time = datetime.utcnow().replace(tzinfo=utc) if settings.USE_TZ else datetime.now()
             attempt.save()
             log.info('AXES: Repeated login failure by %s. Updating access '
                      'record. Count = %s' %
