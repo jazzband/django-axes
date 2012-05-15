@@ -10,13 +10,12 @@ from decorators import FAILURE_LIMIT
 # Only run tests if they have axes in middleware
 
 # Basically a functional test
-
-
 class AccessAttemptTest(TestCase):
     NOT_GONNA_BE_PASSWORD = "sfdlermmvnLsefrlg0c9gjjPxmvLlkdf2#"
     NOT_GONNA_BE_USERNAME = "whywouldyouohwhy"
 
     def setUp(self):
+        settings.AXES_LOCKOUT_URL = None
         for i in range(0, random.randrange(10, 50)):
             username = "person%s" % i
             email = "%s@example.org" % username
@@ -42,7 +41,7 @@ class AccessAttemptTest(TestCase):
         return response
 
     def test_login_max(self, correct_username=False):
-        for i in range(0, FAILURE_LIMIT):
+        for i in range(0, FAILURE_LIMIT-1):
             response = self._attempt_login(correct_username=correct_username)
             self.assertContains(response, "this_is_the_login_form")
         # So, we shouldn't have gotten a lock-out yet.
@@ -51,7 +50,7 @@ class AccessAttemptTest(TestCase):
         self.assertContains(response, "Account locked")
 
     def test_login_max_with_more(self, correct_username=False):
-        for i in range(0, FAILURE_LIMIT):
+        for i in range(0, FAILURE_LIMIT-1):
             response = self._attempt_login(correct_username=correct_username)
             self.assertContains(response, "this_is_the_login_form")
         # So, we shouldn't have gotten a lock-out yet.

@@ -34,10 +34,17 @@ if isinstance(COOLOFF_TIME, int):
 LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 
 LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
-LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
 VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
+# whitelist and blacklist
+# todo: convert the strings to IPv4 on startup to avoid type conversion during processing
+ONLY_WHITELIST = getattr(settings, 'AXES_ONLY_ALLOW_WHITELIST', False)
+IP_WHITELIST = getattr(settings, 'AXES_IP_WHITELIST', None)
+IP_BLACKLIST = getattr(settings, 'AXES_IP_BLACKLIST', None)
 
+def get_lockout_url():
+    return getattr(settings, 'AXES_LOCKOUT_URL', None)
+    
 def query2str(items):
     """Turns a dictionary into an easy-to-read list of key-value pairs.
 
@@ -51,39 +58,56 @@ def query2str(items):
 
     return '\n'.join(kvs)
 
+def ip_in_whitelist(ip):
+    if IP_WHITELIST is not None:
+        return ip in IP_WHITELIST
+    else:
+        return False
+
+def ip_in_blacklist(ip):
+    if IP_BLACKLIST is not None:
+        return ip in IP_BLACKLIST
+    else:
+        return False
+
 log = logging.getLogger(LOGGER)
 if VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('Using django-axes ' + axes.get_version())
 
-
-def get_user_attempt(request):
+def get_user_attempts(request):
     """
     Returns access attempt record if it exists.
     Otherwise return None.
     """
     ip = request.META.get('REMOTE_ADDR', '')
+    username = request.POST.get('username', None)
+        
     if USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
         attempts = AccessAttempt.objects.filter(
-            user_agent=ua,
-            ip_address=ip
+            user_agent=ua, ip_address=ip, username=username, trusted=True
         )
     else:
         attempts = AccessAttempt.objects.filter(
-            ip_address=ip
+            ip_address=ip, username=username, trusted=True
         )
 
-    if not attempts:
-        return None
+    if len(attempts) == 0:
+        if USE_USER_AGENT:
+            attempts = AccessAttempt.objects.filter(user_agent=ua, ip_address=ip, trusted=False) 
+            if username and not ip_in_whitelist(ip):
+                attempts = attempts | AccessAttempt.objects.filter( user_agent=ua, username=username, trusted=False)
+        else:
+            attempts = AccessAttempt.objects.filter(ip_address=ip, trusted=False)
+            if username and not ip_in_whitelist(ip):
+                attempts = attempts | AccessAttempt.objects.filter(username=username, trusted=False)
+            
+    for attempt in attempts:
+        if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < datetime.now() and attempt.trusted is False:
+            attempt.delete()
 
-    attempt = attempts[0]
-    if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < datetime.now():
-        attempt.delete()
-        return None
-
-    return attempt
-
+    return attempts
 
 def watch_login(func):
     """
@@ -94,11 +118,21 @@ def watch_login(func):
         # share some useful information
         if func.__name__ != 'decorated_login' and VERBOSE:
             log.info('AXES: Calling decorated function: %s' % func.__name__)
-            if args:
-                log.info('args: %s' % args)
-            if kwargs:
-                log.info('kwargs: %s' % kwargs)
+            if args: log.info('args: %s' % args)
+            if kwargs: log.info('kwargs: %s' % kwargs)
 
+        # TODO: create a class to hold the attempts records and perform checks with its methods?
+        # or just store attempts=get_user_attempts here and pass it to the functions
+        # also no need to keep accessing these:
+        # ip = request.META.get('REMOTE_ADDR', '')
+        # ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+        # username = request.POST.get('username', None)        
+            
+        # if the request is currently under lockout, do not proceed to the login function
+        # go directly to lockout url, do not pass go, do not collect messages about this login attempt
+        if is_already_locked(request):
+            return lockout_response(request)
+            
         # call the login function
         response = func(request, *args, **kwargs)
 
@@ -125,7 +159,6 @@ def watch_login(func):
 
     return decorated_login
 
-
 def lockout_response(request):
     if LOCKOUT_TEMPLATE:
         context = {
@@ -133,8 +166,9 @@ def lockout_response(request):
             'failure_limit': FAILURE_LIMIT,
         }
         return render_to_response(LOCKOUT_TEMPLATE, context,
-                                  context_instance=RequestContext(request))
+                                  context_instance = RequestContext(request))
 
+    LOCKOUT_URL = get_lockout_url()
     if LOCKOUT_URL:
         return HttpResponseRedirect(LOCKOUT_URL)
 
@@ -145,72 +179,138 @@ def lockout_response(request):
         return HttpResponse("Account locked: too many login attempts.  "
                             "Contact an admin to unlock your account.")
 
+def is_already_locked(request):
+    ip = request.META.get('REMOTE_ADDR', '')
+    
+    if ONLY_WHITELIST:
+        if not ip_in_whitelist(ip):
+            return True
+        
+    if ip_in_blacklist(ip):
+        return True
+    
+    attempts = get_user_attempts(request)
+    for attempt in attempts:
+        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+            return True
+    return False
 
 def check_request(request, login_unsuccessful):
     failures = 0
-    attempt = get_user_attempt(request)
+    attempts = get_user_attempts(request)
 
-    if attempt:
-        failures = attempt.failures_since_start
-
+    for attempt in attempts:
+        failures = max(failures, attempt.failures_since_start)
+        
+    if login_unsuccessful:
+        # add a failed attempt for this user
+        failures += 1
+                
+        # Create an AccessAttempt record if the login wasn't successful
+        # has already attempted, update the info
+        if len(attempts):
+            for attempt in attempts:
+                attempt.get_data = '%s\n---------\n%s' % (
+                    attempt.get_data,
+                    query2str(request.GET.items()),
+                )
+                attempt.post_data = '%s\n---------\n%s' % (
+                    attempt.post_data,
+                    query2str(request.POST.items())
+                )
+                attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
+                attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
+                attempt.failures_since_start = failures
+                attempt.attempt_time = datetime.now()
+                attempt.save()
+                log.info('AXES: Repeated login failure by %s. Updating access '
+                         'record. Count = %s' %
+                         (attempt.ip_address, failures))
+        else:
+            create_new_failure_records(request, failures)
+    else:
+        # user logged in -- forget the failed attempts
+        failures = 0
+        trusted_record_exists = False
+        for attempt in attempts:
+            if not attempt.trusted:
+                attempt.delete()
+            else:
+                trusted_record_exists = True
+                attempt.failures_since_start=0
+                attempt.save()
+        if trusted_record_exists is False:
+            create_new_trusted_record(request)
+            
     # no matter what, we want to lock them out
     # if they're past the number of attempts allowed
-    if failures > FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+    if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
         # We log them out in case they actually managed to enter
         # the correct password.
         logout(request)
         log.warn('AXES: locked out %s after repeated login attempts.' %
                  attempt.ip_address)
+        
+        # if a trusted login has violated lockout, revoke trust
+        for attempt in attempts:
+            if attempt.trusted:
+                attempt.delete()
+                create_new_failure_records(request, failures)
+                
         return False
-
-    if login_unsuccessful:
-        # add a failed attempt for this user
-        failures += 1
-
-        # Create an AccessAttempt record if the login wasn't successful
-        # has already attempted, update the info
-        if attempt:
-            attempt.get_data = '%s\n---------\n%s' % (
-                attempt.get_data,
-                query2str(request.GET.items()),
-            )
-            attempt.post_data = '%s\n---------\n%s' % (
-                attempt.post_data,
-                query2str(request.POST.items())
-            )
-            attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
-            attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
-            attempt.failures_since_start = failures
-            attempt.attempt_time = datetime.now()
-            attempt.save()
-            log.info('AXES: Repeated login failure by %s. Updating access '
-                     'record. Count = %s' %
-                     (attempt.ip_address, failures))
-        else:
-            ip = request.META.get('REMOTE_ADDR', '')
-            ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
-            attempt = AccessAttempt.objects.create(
-                user_agent=ua,
-                ip_address=ip,
-                get_data=query2str(request.GET.items()),
-                post_data=query2str(request.POST.items()),
-                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
-                path_info=request.META.get('PATH_INFO', '<unknown>'),
-                failures_since_start=failures
-            )
-            log.info('AXES: New login failure by %s. Creating access record.' %
-                     ip)
-    else:
-        # user logged in -- forget the failed attempts
-        if attempt:
-            attempt.delete()
 
     return True
 
-ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
-                              "Note that both fields are case-sensitive.")
-LOGIN_FORM_KEY = 'this_is_the_login_form'
+def create_new_failure_records(request, failures):
+    ip = request.META.get('REMOTE_ADDR', '')
+    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+    username = request.POST.get('username', None)
+    
+    # record failed attempt from this ip
+    attempt_ip = AccessAttempt.objects.create(
+        user_agent=ua,
+        ip_address=ip,
+        username=None,
+        get_data=query2str(request.GET.items()),
+        post_data=query2str(request.POST.items()),
+        http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+        path_info=request.META.get('PATH_INFO', '<unknown>'),
+        failures_since_start=failures
+    )
+    
+    # record failed attempt on this username from untrusted ip
+    attempt_usr = AccessAttempt.objects.create(
+        user_agent=ua,
+        username=username,
+        ip_address=None,
+        get_data=query2str(request.GET.items()),
+        post_data=query2str(request.POST.items()),
+        http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+        path_info=request.META.get('PATH_INFO', '<unknown>'),
+        failures_since_start=failures
+    )
+    log.info('AXES: New login failure by %s. Creating access record.' % ip)
 
+def create_new_trusted_record(request):
+    ip = request.META.get('REMOTE_ADDR', '')
+    username = request.POST.get('username', None)
+    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')    
+    if username:
+        attempt = AccessAttempt.objects.create(
+            user_agent=ua,
+            ip_address=ip,
+            username=username,
+            get_data=query2str(request.GET.items()),
+            post_data=query2str(request.POST.items()),
+            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+            path_info=request.META.get('PATH_INFO', '<unknown>'),
+            failures_since_start=0,
+            trusted = True
+        )
+    
+    
+ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. Note that both fields are case-sensitive.")
+LOGIN_FORM_KEY = 'this_is_the_login_form'
 
 def _display_login_form(request, error_message=''):
     request.session.set_test_cookie()
@@ -219,7 +319,6 @@ def _display_login_form(request, error_message=''):
         'app_path': request.get_full_path(),
         'error_message': error_message
     }, context_instance=template.RequestContext(request))
-
 
 def staff_member_required(view_func):
     """
@@ -242,8 +341,8 @@ def staff_member_required(view_func):
            documentation and/or other materials provided with the distribution.
 
         3. Neither the name of Django nor the names of its contributors may be
-           used to endorse or promote products derived from this software
-           without specific prior written permission.
+           used to endorse or promote products derived from this software without
+           specific prior written permission.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
     AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
