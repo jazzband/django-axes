@@ -16,6 +16,11 @@ from django import template
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy, ugettext as _
 
+# Need to use django timezone support for datetime if the site is using
+# timezones
+if settings.USE_TZ:
+    from django.utils.timezone import utc
+
 from axes.models import AccessAttempt
 import axes
 
@@ -36,6 +41,17 @@ LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
 LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
 VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
+
+
+def get_current_time():
+    """
+    Returns the current time setting the django timezone if the site is using
+    timezones.
+    """
+    if settings.USE_TZ:
+        return datetime.utcnow().replace(tzinfo=utc)
+    else:
+        return datetime.now()
 
 
 def query2str(items):
@@ -78,7 +94,8 @@ def get_user_attempt(request):
         return None
 
     attempt = attempts[0]
-    if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < datetime.now():
+    current_time = get_current_time()
+    if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < current_time:
         attempt.delete()
         return None
 
@@ -181,7 +198,7 @@ def check_request(request, login_unsuccessful):
             attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
             attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
             attempt.failures_since_start = failures
-            attempt.attempt_time = datetime.now()
+            attempt.attempt_time = get_current_time()
             attempt.save()
             log.info('AXES: Repeated login failure by %s. Updating access '
                      'record. Count = %s' %
