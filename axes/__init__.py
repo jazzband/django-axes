@@ -2,7 +2,7 @@ import logging
 import os
 from django.conf import settings
 
-VERSION = (1, 2, 4, 'rc1')
+VERSION = (1, 2, 5, 'rc1')
 
 
 def get_version():
