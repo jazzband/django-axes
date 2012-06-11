@@ -16,9 +16,12 @@ from django import template
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy, ugettext as _
 
+# Can't depend on this setting existing for django < 1.3
+USE_TZ = getattr(settings, 'USE_TZ', False)
+
 # Need to use django timezone support for datetime if the site is using
 # timezones
-if settings.USE_TZ:
+if USE_TZ:
     from django.utils.timezone import utc
 
 from axes.models import AccessAttempt
@@ -48,7 +51,7 @@ def get_current_time():
     Returns the current time setting the django timezone if the site is using
     timezones.
     """
-    if settings.USE_TZ:
+    if USE_TZ:
         return datetime.utcnow().replace(tzinfo=utc)
     else:
         return datetime.now()
