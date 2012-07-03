@@ -3,7 +3,7 @@ try:
 except ImportError:
     from django.utils.functional import wraps  # Python 2.4 fallback.
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from django.conf import settings
@@ -16,13 +16,12 @@ from django import template
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy, ugettext as _
 
-# Can't depend on this setting existing for django < 1.3
-USE_TZ = getattr(settings, 'USE_TZ', False)
-
-# Need to use django timezone support for datetime if the site is using
-# timezones
-if USE_TZ:
-    from django.utils.timezone import utc
+# Use the timezone support in Django >= 1.4 if it's available.
+try:
+    from django.utils import timezone as datetime
+except ImportError:
+    # Fallback for Django < 1.4.
+    from datetime import datetime
 
 from axes.models import AccessAttempt
 import axes
@@ -44,17 +43,6 @@ LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
 LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
 VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
-
-
-def get_current_time():
-    """
-    Returns the current time setting the django timezone if the site is using
-    timezones.
-    """
-    if USE_TZ:
-        return datetime.utcnow().replace(tzinfo=utc)
-    else:
-        return datetime.now()
 
 
 def query2str(items):
@@ -97,7 +85,7 @@ def get_user_attempt(request):
         return None
 
     attempt = attempts[0]
-    current_time = get_current_time()
+    current_time = datetime.now()
     if COOLOFF_TIME and attempt.attempt_time + COOLOFF_TIME < current_time:
         attempt.delete()
         return None
@@ -201,7 +189,7 @@ def check_request(request, login_unsuccessful):
             attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
             attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
             attempt.failures_since_start = failures
-            attempt.attempt_time = get_current_time()
+            attempt.attempt_time = datetime.now()
             attempt.save()
             log.info('AXES: Repeated login failure by %s. Updating access '
                      'record. Count = %s' %
