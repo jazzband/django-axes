@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
 
 FAILURES_DESC = 'Failed Logins'
 
@@ -26,6 +27,18 @@ class AccessAttempt(models.Model):
     path_info = models.CharField('Path', max_length=255)
     attempt_time = models.DateTimeField(auto_now_add=True)
     status = models.IntegerField(choices=STATUS, default=SUCCESS)
+    user = models.ForeignKey(User,null=True)
+
+    def save(self,*args,**kwargs):
+        for line in self.post_data.split('\n'):
+            tup = line.split('=')
+            if tup[0] == 'username':
+                try:
+                    self.user = User.objects.get(username=tup[1])
+                except User.DoesNotExist:
+                    pass
+                break
+        return super(AccessAttempt,self).save(*args,**kwargs)
 
     def __unicode__(self):
         return u'Attempted Access: %s' % self.attempt_time
