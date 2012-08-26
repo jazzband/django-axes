@@ -9,7 +9,12 @@ FAILURES_DESC = 'Failed Logins'
 
 class AccessAttempt(models.Model):
     user_agent = models.CharField(max_length=255)
-    ip_address = models.IPAddressField('IP Address')
+    ip_address = models.IPAddressField('IP Address', null=True)
+    username = models.CharField(max_length=255, null=True)
+
+    # Once a user logs in from an ip, that combination is trusted and not
+    # locked out in case of a distributed attack
+    trusted = models.BooleanField(default=False)
     get_data = models.TextField('GET Data')
     post_data = models.TextField('POST Data')
     http_accept = models.CharField('HTTP Accept', max_length=255)
