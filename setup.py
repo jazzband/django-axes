@@ -4,6 +4,8 @@
 from setuptools import setup, find_packages
 import axes
 
+required = ['django>=1.3',]
+
 setup(
     name='django-axes',
     version=axes.get_version(),
@@ -14,6 +16,7 @@ setup(
     author_email='codekoala@gmail.com',
     url='http://bitbucket.org/codekoala/django-axes/',
     license='MIT',
+    install_requires=required,
     package_dir={'axes': 'axes'},
     include_package_data=True,
     packages=find_packages(),
