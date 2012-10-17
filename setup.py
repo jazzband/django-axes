@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 import axes
 
-required = ['django>=1.3',]
+required = ['Django>=1.3',]
 
 setup(
     name='django-axes',
