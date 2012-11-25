@@ -23,7 +23,7 @@ except ImportError:
     # Fallback for Django < 1.4.
     from datetime import datetime
 
-from axes.models import AccessAttempt
+from axes.models import AccessAttempt, AccessLog
 import axes
 
 # see if the user has overridden the failure limit
@@ -225,7 +225,20 @@ def is_already_locked(request):
     return False
 
 
+def log_access_request(request, login_unsuccessful):
+    """ Log the access attempt """
+    access_log = AccessLog()
+    access_log.user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')
+    access_log.ip_address = request.META.get('REMOTE_ADDR', '')
+    access_log.username = request.POST.get('username', None)
+    access_log.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
+    access_log.path_info = request.META.get('PATH_INFO', '<unknown>')
+    access_log.trusted = login_unsuccessful
+    access_log.save()
+
+
 def check_request(request, login_unsuccessful):
+    log_access_request(request, login_unsuccessful)
     failures = 0
     attempts = get_user_attempts(request)
 
