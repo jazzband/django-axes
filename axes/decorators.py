@@ -24,6 +24,7 @@ except ImportError:
     from datetime import datetime
 
 from axes.models import AccessAttempt, AccessLog
+from axes.signals import user_locked_out
 import axes
 
 # see if the user has overridden the failure limit
@@ -239,6 +240,8 @@ def log_access_request(request, login_unsuccessful):
 
 def check_request(request, login_unsuccessful):
     log_access_request(request, login_unsuccessful)
+    ip_address = request.META.get('REMOTE_ADDR', '')
+    username = request.POST.get('username', None)
     failures = 0
     attempts = get_user_attempts(request)
 
@@ -293,7 +296,9 @@ def check_request(request, login_unsuccessful):
         # password
         logout(request)
         log.warn('AXES: locked out %s after repeated login attempts.' %
-                 (attempt.ip_address,))
+                 (ip_address,))
+        # send signal when someone is locked out.
+        user_locked_out.send(request=request, username=username)
 
         # if a trusted login has violated lockout, revoke trust
         for attempt in [a for a in attempts if a.trusted]:
