@@ -92,6 +92,28 @@ if VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('Using django-axes ' + axes.get_version())
 
+def is_user_lockable(request):
+    """ Check if the user has a profile with nolockout
+    If so, then return the value to see if this user is special
+    and doesn't get their account locked out """
+    username = request.POST.get('username', None)
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        # not a valid user
+        return True
+    try:
+        profile = user.get_profile()
+    except:
+        # no profile
+        return True
+
+    if hasattr(profile, 'nolockout'):
+        # need to revert since we need to return
+        # false for users that can't be blocked
+        return not profile.nolockout
+    else:
+        return True
 
 def get_user_attempts(request):
     """
@@ -289,9 +311,10 @@ def check_request(request, login_unsuccessful):
         if trusted_record_exists is False:
             create_new_trusted_record(request)
 
+    user_lockable = is_user_lockable(request)
     # no matter what, we want to lock them out if they're past the number of
-    # attempts allowed
-    if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+    # attempts allowed, unless the user is set to notlockable
+    if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
         # We log them out in case they actually managed to enter the correct
         # password
         logout(request)
