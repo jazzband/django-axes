@@ -298,7 +298,8 @@ def check_request(request, login_unsuccessful):
         log.warn('AXES: locked out %s after repeated login attempts.' %
                  (ip_address,))
         # send signal when someone is locked out.
-        user_locked_out.send(request=request, username=username)
+        user_locked_out.send(request=request, username=username,
+            ip_address=ip_address)
 
         # if a trusted login has violated lockout, revoke trust
         for attempt in [a for a in attempts if a.trusted]:
