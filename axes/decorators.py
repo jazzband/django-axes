@@ -120,7 +120,6 @@ def get_user_attempts(request):
     Returns access attempt record if it exists.
     Otherwise return None.
     """
-
     ip = request.META.get('REMOTE_ADDR', '')
     username = request.POST.get('username', None)
 
@@ -200,6 +199,7 @@ def watch_login(func):
                 not response.has_header('location') and
                 response.status_code != 302
             )
+            log_access_request(request, login_unsuccessful)
             if check_request(request, login_unsuccessful):
                 return response
 
@@ -241,8 +241,9 @@ def is_already_locked(request):
         return True
 
     attempts = get_user_attempts(request)
+    user_lockable = is_user_lockable(request)
     for attempt in attempts:
-        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
             return True
 
     return False
@@ -256,12 +257,11 @@ def log_access_request(request, login_unsuccessful):
     access_log.username = request.POST.get('username', None)
     access_log.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
     access_log.path_info = request.META.get('PATH_INFO', '<unknown>')
-    access_log.trusted = login_unsuccessful
+    access_log.trusted = not login_unsuccessful
     access_log.save()
 
 
 def check_request(request, login_unsuccessful):
-    log_access_request(request, login_unsuccessful)
     ip_address = request.META.get('REMOTE_ADDR', '')
     username = request.POST.get('username', None)
     failures = 0
@@ -321,8 +321,7 @@ def check_request(request, login_unsuccessful):
         log.warn('AXES: locked out %s after repeated login attempts.' %
                  (ip_address,))
         # send signal when someone is locked out.
-        user_locked_out.send(request=request, username=username,
-            ip_address=ip_address)
+        user_locked_out.send("axes", request=request, username=username, ip_address=ip_address)
 
         # if a trusted login has violated lockout, revoke trust
         for attempt in [a for a in attempts if a.trusted]:
