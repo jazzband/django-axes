@@ -1,13 +1,12 @@
 from django.db import models
-
+import signals
 FAILURES_DESC = 'Failed Logins'
 
 #XXX TODO
 # set unique by user_agent, ip
 # make user agent, ip indexed fields
 
-
-class AccessAttempt(models.Model):
+class CommonAccess(models.Model):
     user_agent = models.CharField(max_length=255)
     ip_address = models.IPAddressField('IP Address', null=True)
     username = models.CharField(max_length=255, null=True)
@@ -15,12 +14,18 @@ class AccessAttempt(models.Model):
     # Once a user logs in from an ip, that combination is trusted and not
     # locked out in case of a distributed attack
     trusted = models.BooleanField(default=False)
-    get_data = models.TextField('GET Data')
-    post_data = models.TextField('POST Data')
     http_accept = models.CharField('HTTP Accept', max_length=255)
     path_info = models.CharField('Path', max_length=255)
-    failures_since_start = models.PositiveIntegerField(FAILURES_DESC)
     attempt_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+        ordering = ['-attempt_time']
+
+class AccessAttempt(CommonAccess):
+    get_data = models.TextField('GET Data')
+    post_data = models.TextField('POST Data')
+    failures_since_start = models.PositiveIntegerField(FAILURES_DESC)
 
     def __unicode__(self):
         return u'Attempted Access: %s' % self.attempt_time
@@ -29,5 +34,8 @@ class AccessAttempt(models.Model):
     def failures(self):
         return self.failures_since_start
 
-    class Meta:
-        ordering = ['-attempt_time']
+class AccessLog(CommonAccess):
+    logout_time = models.DateTimeField(null=True, blank=True)
+
+    def __unicode__(self):
+        return u'Access Log for %s @ %s' % (self.user, self.attempt_time)
