@@ -23,7 +23,8 @@ except ImportError:
     # Fallback for Django < 1.4.
     from datetime import datetime
 
-from axes.models import AccessAttempt
+from axes.models import AccessAttempt, AccessLog
+from axes.signals import user_locked_out
 import axes
 
 # see if the user has overridden the failure limit
@@ -91,13 +92,34 @@ if VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('Using django-axes ' + axes.get_version())
 
+def is_user_lockable(request):
+    """ Check if the user has a profile with nolockout
+    If so, then return the value to see if this user is special
+    and doesn't get their account locked out """
+    username = request.POST.get('username', None)
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        # not a valid user
+        return True
+    try:
+        profile = user.get_profile()
+    except:
+        # no profile
+        return True
+
+    if hasattr(profile, 'nolockout'):
+        # need to revert since we need to return
+        # false for users that can't be blocked
+        return not profile.nolockout
+    else:
+        return True
 
 def get_user_attempts(request):
     """
     Returns access attempt record if it exists.
     Otherwise return None.
     """
-
     ip = request.META.get('REMOTE_ADDR', '')
     username = request.POST.get('username', None)
 
@@ -177,6 +199,7 @@ def watch_login(func):
                 not response.has_header('location') and
                 response.status_code != 302
             )
+            log_access_request(request, login_unsuccessful)
             if check_request(request, login_unsuccessful):
                 return response
 
@@ -218,14 +241,29 @@ def is_already_locked(request):
         return True
 
     attempts = get_user_attempts(request)
+    user_lockable = is_user_lockable(request)
     for attempt in attempts:
-        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
             return True
 
     return False
 
 
+def log_access_request(request, login_unsuccessful):
+    """ Log the access attempt """
+    access_log = AccessLog()
+    access_log.user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')
+    access_log.ip_address = request.META.get('REMOTE_ADDR', '')
+    access_log.username = request.POST.get('username', None)
+    access_log.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
+    access_log.path_info = request.META.get('PATH_INFO', '<unknown>')
+    access_log.trusted = not login_unsuccessful
+    access_log.save()
+
+
 def check_request(request, login_unsuccessful):
+    ip_address = request.META.get('REMOTE_ADDR', '')
+    username = request.POST.get('username', None)
     failures = 0
     attempts = get_user_attempts(request)
 
@@ -273,14 +311,17 @@ def check_request(request, login_unsuccessful):
         if trusted_record_exists is False:
             create_new_trusted_record(request)
 
+    user_lockable = is_user_lockable(request)
     # no matter what, we want to lock them out if they're past the number of
-    # attempts allowed
-    if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+    # attempts allowed, unless the user is set to notlockable
+    if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
         # We log them out in case they actually managed to enter the correct
         # password
         logout(request)
         log.warn('AXES: locked out %s after repeated login attempts.' %
-                 (attempt.ip_address,))
+                 (ip_address,))
+        # send signal when someone is locked out.
+        user_locked_out.send("axes", request=request, username=username, ip_address=ip_address)
 
         # if a trusted login has violated lockout, revoke trust
         for attempt in [a for a in attempts if a.trusted]:
