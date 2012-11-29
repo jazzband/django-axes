@@ -1,0 +1,29 @@
+
+Changes
+=======
+
+1.2.5 (2012-11-28)
+------------------
+
+- Fix setup.py
+  [aclark4life]
+
+- Added ability to flag user accounts as unlockable.
+  [kencochrane]
+
+- Added ipaddress as a param to the user_locked_out signal.
+  [kencochrane]
+
+- Added a signal receiver for user_logged_out.
+  [kencochrane]
+
+- Added a signal for when a user gets locked out.
+  [kencochrane]
+
+- Added AccessLog model to log all access attempts.
+  [kencochrane]
+
+< 1.2.5
+-------
+
+- XXX Fix me
