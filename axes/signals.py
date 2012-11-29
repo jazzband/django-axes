@@ -19,8 +19,12 @@ def log_user_lockout(sender, request, user, signal, *args, **kwargs):
     if not user:
         return
 
-    access_log = AccessLog.objects.filter(username=user.username,
-                    logout_time__isnull=True).order_by("-attempt_time")[0]
+    access_log = None
+    access_logs = AccessLog.objects.filter(username=user.username,
+                    logout_time__isnull=True).order_by("-attempt_time")
+
+    if len(access_logs) > 0:
+        access_log = access_logs[0]
 
     if access_log:
         access_log.logout_time = now()
