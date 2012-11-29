@@ -38,4 +38,4 @@ class AccessLog(CommonAccess):
     logout_time = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
-        return u'Access Log for %s @ %s' % (self.user, self.attempt_time)
+        return u'Access Log for %s @ %s' % (self.username, self.attempt_time)
