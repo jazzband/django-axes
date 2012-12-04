@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-axes',
-    version='1.2.5',
+    version='1.2.6',
 #    version=axes.get_version(),
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description=(open('README.rst', 'r').read() + '\n' +

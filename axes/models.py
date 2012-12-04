@@ -1,5 +1,5 @@
 from django.db import models
-import signals
+#import signals
 FAILURES_DESC = 'Failed Logins'
 
 #XXX TODO

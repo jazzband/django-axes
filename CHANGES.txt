@@ -1,12 +1,17 @@
-
 Changes
 =======
+
+1.2.6 (2012-12-04)
+------------------
+
+- Remove unused import
+  [aclark]
 
 1.2.5 (2012-11-28)
 ------------------
 
 - Fix setup.py
-  [aclark4life]
+  [aclark]
 
 - Added ability to flag user accounts as unlockable.
   [kencochrane]
