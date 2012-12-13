@@ -35,16 +35,6 @@ Package Download
 Download the latest ``.tar.gz`` file from the downloads section and extract it
 somewhere you'll remember.  Use ``python setup.py install`` to install it.
 
-Checkout from Mercurial
------------------------
-
-Execute the following command (or use the equivalent function in a GUI such as
-TortoiseHg), and make sure you're checking ``django-axes`` out somewhere on the
-``PYTHONPATH``::
-
-    hg clone http://django-axes.googlecode.com/hg django-axes
-    hg clone http://bitbucket.org/codekoala/django-axes
-
 Checkout from GitHub
 --------------------
 
