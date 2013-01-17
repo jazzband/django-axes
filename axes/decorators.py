@@ -266,7 +266,7 @@ def log_access_request(request, login_unsuccessful):
     """ Log the access attempt """
     access_log = AccessLog()
     access_log.user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')
-    access_log.ip_address = get_io()
+    access_log.ip_address = get_ip()
     access_log.username = request.POST.get('username', None)
     access_log.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
     access_log.path_info = request.META.get('PATH_INFO', '<unknown>')
