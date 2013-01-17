@@ -266,7 +266,7 @@ def log_access_request(request, login_unsuccessful):
     """ Log the access attempt """
     access_log = AccessLog()
     access_log.user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')
-    access_log.ip_address = get_ip()
+    access_log.ip_address = get_ip(request)
     access_log.username = request.POST.get('username', None)
     access_log.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
     access_log.path_info = request.META.get('PATH_INFO', '<unknown>')
@@ -275,7 +275,7 @@ def log_access_request(request, login_unsuccessful):
 
 
 def check_request(request, login_unsuccessful):
-    ip_address = get_ip()
+    ip_address = get_ip(request)
     username = request.POST.get('username', None)
     failures = 0
     attempts = get_user_attempts(request)
@@ -347,7 +347,7 @@ def check_request(request, login_unsuccessful):
 
 
 def create_new_failure_records(request, failures):
-    ip = get_ip()
+    ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
     username = request.POST.get('username', None)
 
@@ -376,7 +376,7 @@ def create_new_failure_records(request, failures):
 
 
 def create_new_trusted_record(request):
-    ip = get_ip()
+    ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
     username = request.POST.get('username', None)
 
