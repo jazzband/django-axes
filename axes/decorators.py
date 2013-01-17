@@ -61,6 +61,12 @@ ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
 LOGIN_FORM_KEY = 'this_is_the_login_form'
 
 
+def get_ip(request):
+    if not BEHIND_REVERSE_PROXY:
+        ip = request.META.get('REMOTE_ADDR', '')
+    else:
+        ip = request.META.get(REVERSE_PROXY_HEADER, '')
+
 def get_lockout_url():
     return getattr(settings, 'AXES_LOCKOUT_URL', None)
 
@@ -126,10 +132,7 @@ def get_user_attempts(request):
     Returns access attempt record if it exists.
     Otherwise return None.
     """
-    if not BEHIND_REVERSE_PROXY:
-        ip = request.META.get('REMOTE_ADDR', '')
-    else:
-        ip = request.META.get(REVERSE_PROXY_HEADER, '')
+    ip = get_ip(request)
         
     username = request.POST.get('username', None)
 
@@ -241,7 +244,7 @@ def lockout_response(request):
 
 
 def is_already_locked(request):
-    ip = request.META.get('REMOTE_ADDR', '')
+    ip = get_ip(request)
 
     if ONLY_WHITELIST:
         if not ip_in_whitelist(ip):
@@ -263,7 +266,7 @@ def log_access_request(request, login_unsuccessful):
     """ Log the access attempt """
     access_log = AccessLog()
     access_log.user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')
-    access_log.ip_address = request.META.get('REMOTE_ADDR', '')
+    access_log.ip_address = get_io()
     access_log.username = request.POST.get('username', None)
     access_log.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
     access_log.path_info = request.META.get('PATH_INFO', '<unknown>')
@@ -272,7 +275,7 @@ def log_access_request(request, login_unsuccessful):
 
 
 def check_request(request, login_unsuccessful):
-    ip_address = request.META.get('REMOTE_ADDR', '')
+    ip_address = get_ip()
     username = request.POST.get('username', None)
     failures = 0
     attempts = get_user_attempts(request)
@@ -344,7 +347,7 @@ def check_request(request, login_unsuccessful):
 
 
 def create_new_failure_records(request, failures):
-    ip = request.META.get('REMOTE_ADDR', '')
+    ip = get_ip()
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
     username = request.POST.get('username', None)
 
@@ -373,7 +376,7 @@ def create_new_failure_records(request, failures):
 
 
 def create_new_trusted_record(request):
-    ip = request.META.get('REMOTE_ADDR', '')
+    ip = get_ip()
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
     username = request.POST.get('username', None)
 
