@@ -65,7 +65,13 @@ def get_ip(request):
     if not BEHIND_REVERSE_PROXY:
         ip = request.META.get('REMOTE_ADDR', '')
     else:
+        logging.debug('Axes is configured to be behind reverse proxy...looking for header value %s', REVERSE_PROXY_HEADER)
         ip = request.META.get(REVERSE_PROXY_HEADER, '')
+        if ip == '':
+            raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
+                          'an HTTP header value {0}. Check your proxy server settings '\
+                          'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
+    return ip
 
 def get_lockout_url():
     return getattr(settings, 'AXES_LOCKOUT_URL', None)
