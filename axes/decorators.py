@@ -35,6 +35,12 @@ LOCK_OUT_AT_FAILURE = getattr(settings, 'AXES_LOCK_OUT_AT_FAILURE', True)
 
 USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 
+#see if the django app is sitting behind a reverse proxy 
+BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
+#if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
+REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
+
+
 COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
 if isinstance(COOLOFF_TIME, int):
     COOLOFF_TIME = timedelta(hours=COOLOFF_TIME)
@@ -120,7 +126,11 @@ def get_user_attempts(request):
     Returns access attempt record if it exists.
     Otherwise return None.
     """
-    ip = request.META.get('REMOTE_ADDR', '')
+    if not BEHIND_REVERSE_PROXY:
+        ip = request.META.get('REMOTE_ADDR', '')
+    else:
+        ip = request.META.get(REVERSE_PROXY_HEADER, '')
+        
     username = request.POST.get('username', None)
 
     if USE_USER_AGENT:
