@@ -14,7 +14,7 @@ class CommonAccess(models.Model):
     # Once a user logs in from an ip, that combination is trusted and not
     # locked out in case of a distributed attack
     trusted = models.BooleanField(default=False)
-    http_accept = models.CharField('HTTP Accept', max_length=255)
+    http_accept = models.CharField('HTTP Accept', max_length=1025)
     path_info = models.CharField('Path', max_length=255)
     attempt_time = models.DateTimeField(auto_now_add=True)
 
