@@ -28,7 +28,7 @@ class AccessAttemptTest(TestCase):
         for i in range(0, random.randrange(10, 50)):
             username = "person%s" % i
             email = "%s@example.org" % username
-            u = User.objects.create_user(email=email, username=username)
+            u = User.objects.create_user(email=email, username=username, password=username)
             u.is_staff = True
             u.save()
 
@@ -56,7 +56,7 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT - 1):
             response = self._attempt_login(existing_username=existing_username)
             # Check if we are in the same login page
-            self.assertEquals(response.status_code, 200)
+            self.assertIn('this_is_the_login_form', response.content)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
@@ -70,7 +70,7 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT - 1):
             response = self._attempt_login(existing_username=existing_username)
             # Check if we are in the same login page
-            self.assertEquals(response.status_code, 200)
+            self.assertIn('this_is_the_login_form', response.content)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
@@ -81,3 +81,11 @@ class AccessAttemptTest(TestCase):
 
     def test_with_real_username_max_with_more(self):
         self.test_login_max_with_more_attempts(existing_username=True)
+
+    def test_valid_login(self):
+        valid_username = self._random_username(existing_username=True)
+        response = self.client.post(reverse('admin:index'), {
+            'username': valid_username,
+            'password': valid_username
+        })
+        self.assertNotIn('authentication_form', response.context)
