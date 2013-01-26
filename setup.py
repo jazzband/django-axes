@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
-#import axes
+import axes
 
 setup(
     name='django-axes',
-    version='1.2.7',
-#    version=axes.get_version(),
+    version=axes.get_version(),
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description=(open('README.rst', 'r').read() + '\n' +
         open('CHANGES.txt', 'r').read()),

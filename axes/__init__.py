@@ -1,14 +1,15 @@
-import logging
 import os
-from django.conf import settings
+import logging
 
-VERSION = (1, 2, 5, 'rc1')
+
+VERSION = (1, 2, 8)
 
 
 def get_version():
-    return '%s.%s.%s-%s' % VERSION
+    return '%s.%s.%s' % VERSION
 
 try:
+    from django.conf import settings
     LOGFILE = os.path.join(settings.DIRNAME, 'axes.log')
 except (ImportError, AttributeError):
     # if we have any problems, we most likely don't have a settings module
