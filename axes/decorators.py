@@ -71,6 +71,7 @@ def get_ip(request):
             raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
                           'an HTTP header value {0}. Check your proxy server settings '\
                           'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
+            ip = request.META.get('REMOTE_ADDR', '')
     return ip
 
 def get_lockout_url():
@@ -372,11 +373,12 @@ def create_new_failure_records(request, failures):
     AccessAttempt.objects.create(**params)
 
     # record failed attempt on this username from untrusted IP
-    params.update({
-        'ip_address': None,
-        'username': username,
-    })
-    AccessAttempt.objects.create(**params)
+    if not BEHIND_REVERSE_PROXY:
+        params.update({
+            'ip_address': None,
+            'username': username,
+        })
+        AccessAttempt.objects.create(**params)
 
     log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
 
