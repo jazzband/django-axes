@@ -39,7 +39,8 @@ USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
 #if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
 REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
-
+#for users behind a firewall with only one ip address, it may not be wise to lock out by host/ip address
+LOCK_OUT_BY_HOST = getattr(settings, 'AXES_LOCKOUT_BY_HOST', True)
 
 COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
 if isinstance(COOLOFF_TIME, int):
@@ -154,7 +155,7 @@ def get_user_attempts(request):
         )
 
     if len(attempts) == 0:
-        params = {'ip_address': ip, 'trusted': False}
+        params = {'ip_address': ip, 'trusted': False, 'username' :username}
         if USE_USER_AGENT:
             params['user_agent'] = ua
 
@@ -198,6 +199,7 @@ def watch_login(func):
         # if the request is currently under lockout, do not proceed to the
         # login function, go directly to lockout url, do not pass go, do not
         # collect messages about this login attempt
+        
         if is_already_locked(request):
             return lockout_response(request)
 
@@ -251,23 +253,25 @@ def lockout_response(request):
 
 
 def is_already_locked(request):
-    ip = get_ip(request)
-
-    if ONLY_WHITELIST:
-        if not ip_in_whitelist(ip):
+    if LOCK_OUT_BY_HOST:
+        ip = get_ip(request)
+    
+        if ONLY_WHITELIST:
+            if not ip_in_whitelist(ip):
+                return True
+    
+        if ip_in_blacklist(ip):
             return True
-
-    if ip_in_blacklist(ip):
-        return True
-
-    attempts = get_user_attempts(request)
-    user_lockable = is_user_lockable(request)
-    for attempt in attempts:
-        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
-            return True
-
-    return False
-
+    
+        attempts = get_user_attempts(request)
+        user_lockable = is_user_lockable(request)
+        for attempt in attempts:
+            if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
+                return True
+    
+        return False
+    else:
+        return False
 
 def log_access_request(request, login_unsuccessful):
     """ Log the access attempt """
@@ -315,7 +319,7 @@ def check_request(request, login_unsuccessful):
                          'record. Count = %s' %
                          (attempt.ip_address, failures))
         else:
-            create_new_failure_records(request, failures)
+            create_new_failure_records(request, failures, username)
     else:
         # user logged in -- forget the failed attempts
         failures = 0
@@ -346,22 +350,22 @@ def check_request(request, login_unsuccessful):
         # if a trusted login has violated lockout, revoke trust
         for attempt in [a for a in attempts if a.trusted]:
             attempt.delete()
-            create_new_failure_records(request, failures)
+            create_new_failure_records(request, failures, username)
 
         return False
 
     return True
 
 
-def create_new_failure_records(request, failures):
+def create_new_failure_records(request, failures, username=None):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
-    username = request.POST.get('username', None)
+    username = request.POST.get('username', username)
 
     params = {
         'user_agent': ua,
         'ip_address': ip,
-        'username': None,
+        'username': username,
         'get_data': query2str(request.GET.items()),
         'post_data': query2str(request.POST.items()),
         'http_accept': request.META.get('HTTP_ACCEPT', '<unknown>'),
@@ -371,14 +375,6 @@ def create_new_failure_records(request, failures):
 
     # record failed attempt from this IP
     AccessAttempt.objects.create(**params)
-
-    # record failed attempt on this username from untrusted IP
-    if not BEHIND_REVERSE_PROXY:
-        params.update({
-            'ip_address': None,
-            'username': username,
-        })
-        AccessAttempt.objects.create(**params)
 
     log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
 
