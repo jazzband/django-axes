@@ -1,69 +1,91 @@
-from django.test import TestCase, Client
-from django.conf import settings
-from django.contrib import admin
-import random
-from django.contrib.auth.models import User
-
-from models import AccessAttempt
-from decorators import FAILURE_LIMIT
-
 # Only run tests if they have axes in middleware
 
 # Basically a functional test
 
+import random
+import string
 
+from django.test import TestCase
+from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
+
+
+FAILURE_LIMIT = 3
+
+
+@override_settings(
+    AXES_LOGIN_FAILURE_LIMIT=FAILURE_LIMIT,
+    AXES_LOCKOUT_URL=None,
+    AXES_USE_USER_AGENT=False,
+    AXES_COOLOFF_TIME=None,
+    AXES_LOCKOUT_TEMPLATE=None,
+)
 class AccessAttemptTest(TestCase):
-    NOT_GONNA_BE_PASSWORD = "sfdlermmvnLsefrlg0c9gjjPxmvLlkdf2#"
-    NOT_GONNA_BE_USERNAME = "whywouldyouohwhy"
+    """Test case using custom settings for testing"""
 
     def setUp(self):
-        settings.AXES_LOCKOUT_URL = None
         for i in range(0, random.randrange(10, 50)):
             username = "person%s" % i
             email = "%s@example.org" % username
-            u = User.objects.create_user(email=email, username=username)
+            u = User.objects.create_user(email=email, username=username, password=username)
             u.is_staff = True
             u.save()
 
-    def _gen_bad_password(self):
-        return AccessAttemptTest.NOT_GONNA_BE_PASSWORD + str(random.random())
+    def _generate_random_string(self):
+        """Generates a random string"""
+        return ''.join(random.choice(string.ascii_uppercase + string.digits)
+            for x in range(20))
 
-    def _random_username(self, correct_username=False):
-        if not correct_username:
-            return (AccessAttemptTest.NOT_GONNA_BE_USERNAME +
-                    str(random.random()))[:30]
-        else:
-            return random.choice(User.objects.filter(is_staff=True))
+    def _random_username(self, existing_username=False):
+        """Returns a username, existing or not depending on params"""
+        if existing_username:
+            return User.objects.order_by('?')[0].username
 
-    def _attempt_login(self, correct_username=False, user=""):
-        response = self.client.post(
-        '/admin/', {'username': self._random_username(correct_username),
-                    'password': self._gen_bad_password()}
-         )
+        return self._generate_random_string()
+
+    def _attempt_login(self, existing_username=False):
+        response = self.client.post(reverse('admin:index'), {
+            'username': self._random_username(existing_username),
+            'password': self._generate_random_string()
+        })
+
         return response
 
-    def test_login_max(self, correct_username=False):
+    def test_login_max(self, existing_username=False):
         for i in range(0, FAILURE_LIMIT - 1):
-            response = self._attempt_login(correct_username=correct_username)
-            self.assertContains(response, "this_is_the_login_form")
+            response = self._attempt_login(existing_username=existing_username)
+            # Check if we are in the same login page
+            self.assertIn('this_is_the_login_form', response.content)
+
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self._attempt_login()
-        self.assertContains(response, "Account locked")
+        self.assertContains(response, 'Account locked')
 
-    def test_login_max_with_more(self, correct_username=False):
+    def test_with_real_username_max(self):
+        self.test_login_max(existing_username=True)
+
+    def test_login_max_with_more_attempts(self, existing_username=False):
         for i in range(0, FAILURE_LIMIT - 1):
-            response = self._attempt_login(correct_username=correct_username)
-            self.assertContains(response, "this_is_the_login_form")
+            response = self._attempt_login(existing_username=existing_username)
+            # Check if we are in the same login page
+            self.assertIn('this_is_the_login_form', response.content)
+
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         for i in range(0, random.randrange(1, 100)):
             # try to log in a bunch of times
             response = self._attempt_login()
-            self.assertContains(response, "Account locked")
-
-    def test_with_real_username_max(self):
-        self.test_login_max(correct_username=True)
+            self.assertContains(response, 'Account locked')
 
     def test_with_real_username_max_with_more(self):
-        self.test_login_max_with_more(correct_username=True)
+        self.test_login_max_with_more_attempts(existing_username=True)
+
+    def test_valid_login(self):
+        valid_username = self._random_username(existing_username=True)
+        response = self.client.post(reverse('admin:index'), {
+            'username': valid_username,
+            'password': valid_username
+        })
+        self.assertNotIn('authentication_form', response.context)
