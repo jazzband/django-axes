@@ -6,7 +6,7 @@ VERSION = (1, 2, 9)
 
 
 def get_version():
-    return '%s.%s.%s-%s' % VERSION
+    return '%s.%s.%s' % VERSION
 
 try:
     LOGFILE = os.path.join(settings.DIRNAME, 'axes.log')
@@ -15,22 +15,29 @@ except (ImportError, AttributeError):
     # loaded
     pass
 else:
-    log_format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-    logging.basicConfig(level=logging.DEBUG,
-                        format=log_format,
-                        datefmt='%a, %d %b %Y %H:%M:%S',
-                        filename=LOGFILE,
-                        filemode='w')
+    try:
+        # check for existing logging configuration
+        # valid for Django>=1.3
+        if settings.LOGGING:
+            pass
+    except:
+        log_format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+        logging.basicConfig(level=logging.DEBUG,
+                            format=log_format,
+                            datefmt='%a, %d %b %Y %H:%M:%S',
+                            filename=LOGFILE,
+                            filemode='w')
 
-    fileLog = logging.FileHandler(LOGFILE, 'w')
-    fileLog.setLevel(logging.DEBUG)
+        fileLog = logging.FileHandler(LOGFILE, 'w')
+        fileLog.setLevel(logging.DEBUG)
 
-    # set a format which is simpler for console use
-    console_format = '%(asctime)s %(name)-12s: %(levelname)-8s %(message)s'
-    formatter = logging.Formatter(console_format)
+        # set a format which is simpler for console use
+        console_format = '%(asctime)s %(name)-12s: %(levelname)-8s %(message)s'
+        formatter = logging.Formatter(console_format)
 
-    # tell the handler to use this format
-    fileLog.setFormatter(formatter)
+        # tell the handler to use this format
+        fileLog.setFormatter(formatter)
 
-    # add the handler to the root logger
-    logging.getLogger('').addHandler(fileLog)
+        # add the handler to the root logger
+        logging.getLogger('').addHandler(fileLog)
+
