@@ -1,6 +1,16 @@
 Changes
 =======
 
+1.2.8 (2013-02-20)
+------------------
+
+- Add to and improve test cases [camilonova]
+
+1.2.8 (2013-01-23)
+------------------
+
+- Increased http accept header length [jslatts]
+
 1.2.7 (2013-01-17)
 ------------------
 
