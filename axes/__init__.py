@@ -1,6 +1,5 @@
 import logging
 import os
-from django.conf import settings
 
 VERSION = (1, 2, 9)
 
@@ -9,35 +8,35 @@ def get_version():
     return '%s.%s.%s' % VERSION
 
 try:
-    LOGFILE = os.path.join(settings.DIRNAME, 'axes.log')
-except (ImportError, AttributeError):
+    # check for existing logging configuration
+    # valid for Django>=1.3
+    from django.conf import settings
+    if settings.LOGGING:
+        pass
+except ImportError:
     # if we have any problems, we most likely don't have a settings module
     # loaded
     pass
-else:
-    try:
-        # check for existing logging configuration
-        # valid for Django>=1.3
-        if settings.LOGGING:
-            pass
-    except:
-        log_format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-        logging.basicConfig(level=logging.DEBUG,
-                            format=log_format,
-                            datefmt='%a, %d %b %Y %H:%M:%S',
-                            filename=LOGFILE,
-                            filemode='w')
+except AttributeError:
+    # fallback configuration if there is no logging configuration
+    LOGFILE = os.path.join(settings.DIRNAME, 'axes.log')
 
-        fileLog = logging.FileHandler(LOGFILE, 'w')
-        fileLog.setLevel(logging.DEBUG)
+    log_format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+    logging.basicConfig(level=logging.DEBUG,
+                        format=log_format,
+                        datefmt='%a, %d %b %Y %H:%M:%S',
+                        filename=LOGFILE,
+                        filemode='w')
 
-        # set a format which is simpler for console use
-        console_format = '%(asctime)s %(name)-12s: %(levelname)-8s %(message)s'
-        formatter = logging.Formatter(console_format)
+    fileLog = logging.FileHandler(LOGFILE, 'w')
+    fileLog.setLevel(logging.DEBUG)
 
-        # tell the handler to use this format
-        fileLog.setFormatter(formatter)
+    # set a format which is simpler for console use
+    console_format = '%(asctime)s %(name)-12s: %(levelname)-8s %(message)s'
+    formatter = logging.Formatter(console_format)
 
-        # add the handler to the root logger
-        logging.getLogger('').addHandler(fileLog)
+    # tell the handler to use this format
+    fileLog.setFormatter(formatter)
 
+    # add the handler to the root logger
+    logging.getLogger('').addHandler(fileLog)
