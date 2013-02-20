@@ -1,20 +1,26 @@
 import logging
 import os
-from django.conf import settings
 
 VERSION = (1, 2, 9)
 
 
 def get_version():
-    return '%s.%s.%s-%s' % VERSION
+    return '%s.%s.%s' % VERSION
 
 try:
-    LOGFILE = os.path.join(settings.DIRNAME, 'axes.log')
-except (ImportError, AttributeError):
+    # check for existing logging configuration
+    # valid for Django>=1.3
+    from django.conf import settings
+    if settings.LOGGING:
+        pass
+except ImportError:
     # if we have any problems, we most likely don't have a settings module
     # loaded
     pass
-else:
+except AttributeError:
+    # fallback configuration if there is no logging configuration
+    LOGFILE = os.path.join(settings.DIRNAME, 'axes.log')
+
     log_format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
     logging.basicConfig(level=logging.DEBUG,
                         format=log_format,
