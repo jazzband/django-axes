@@ -1,7 +1,12 @@
 Changes
 =======
 
-1.2.8 (2013-02-20)
+1.3.0 (2013-02-27)
+------------------
+
+- Bug fix: get_version() format string [csghormley]
+
+1.2.9 (2013-02-20)
 ------------------
 
 - Add to and improve test cases [camilonova]
