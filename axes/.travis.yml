@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+env:
+  - DJANGO_VERSION=1.4.5
+  - DJANGO_VERSION=1.5
+install: 
+  - pip install --use-mirrors Django==$DJANGO_VERSION
+script: 
+  - django-admin.py test axes --settings=axes.test_settings
