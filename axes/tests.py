@@ -10,32 +10,19 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
+from axes.decorators import FAILURE_LIMIT
+from axes.decorators import LOGIN_FORM_KEY
 
-FAILURE_LIMIT = 3
 
-
-@override_settings(
-    AXES_LOGIN_FAILURE_LIMIT=FAILURE_LIMIT,
-    AXES_LOCKOUT_URL=None,
-    AXES_USE_USER_AGENT=False,
-    AXES_COOLOFF_TIME=None,
-    AXES_LOCKOUT_TEMPLATE=None,
-)
 class AccessAttemptTest(TestCase):
-    """Test case using custom settings for testing"""
-
-    def setUp(self):
-        for i in range(0, random.randrange(10, 50)):
-            username = "person%s" % i
-            email = "%s@example.org" % username
-            u = User.objects.create_user(email=email, username=username, password=username)
-            u.is_staff = True
-            u.save()
+    """Test case using custom settings for testing
+    """
+    LOCKED_MESSAGE = 'Account locked: too many login attempts.'
 
     def _generate_random_string(self):
         """Generates a random string"""
-        return ''.join(random.choice(string.ascii_uppercase + string.digits)
-            for x in range(20))
+        chars = string.ascii_uppercase + string.digits
+        return ''.join(random.choice(chars) for x in range(20))
 
     def _random_username(self, existing_username=False):
         """Returns a username, existing or not depending on params"""
@@ -44,40 +31,52 @@ class AccessAttemptTest(TestCase):
 
         return self._generate_random_string()
 
-    def _attempt_login(self, existing_username=False):
+    def _login(self, existing_username=False):
         response = self.client.post(reverse('admin:index'), {
             'username': self._random_username(existing_username),
-            'password': self._generate_random_string()
+            'password': self._generate_random_string(),
         })
 
         return response
 
+    def setUp(self):
+        for i in range(0, random.randrange(10, 50)):
+            username = "person%s" % i
+            email = "%s@example.org" % username
+            u = User.objects.create_user(
+                username=username,
+                password=username,
+                email=email,
+            )
+            u.is_staff = True
+            u.save()
+
     def test_login_max(self, existing_username=False):
         for i in range(0, FAILURE_LIMIT - 1):
-            response = self._attempt_login(existing_username=existing_username)
+            response = self._login(existing_username=existing_username)
             # Check if we are in the same login page
-            self.assertIn('this_is_the_login_form', response.content)
+            self.assertContains(response, LOGIN_FORM_KEY)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
-        response = self._attempt_login()
-        self.assertContains(response, 'Account locked')
+        response = self._login()
+        self.assertContains(response, self.LOCKED_MESSAGE)
 
     def test_with_real_username_max(self):
         self.test_login_max(existing_username=True)
 
     def test_login_max_with_more_attempts(self, existing_username=False):
-        for i in range(0, FAILURE_LIMIT - 1):
-            response = self._attempt_login(existing_username=existing_username)
+        for i in range(0, FAILURE_LIMIT - 2):
+            response = self._login(existing_username=existing_username)
             # Check if we are in the same login page
-            self.assertIn('this_is_the_login_form', response.content)
+            self.assertContains(response, LOGIN_FORM_KEY)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         for i in range(0, random.randrange(1, 100)):
             # try to log in a bunch of times
-            response = self._attempt_login()
-            self.assertContains(response, 'Account locked')
+            response = self._login()
+        self.assertContains(response, self.LOCKED_MESSAGE)
 
     def test_with_real_username_max_with_more(self):
         self.test_login_max_with_more_attempts(existing_username=True)
@@ -88,4 +87,4 @@ class AccessAttemptTest(TestCase):
             'username': valid_username,
             'password': valid_username
         })
-        self.assertNotIn('authentication_form', response.context)
+        self.assertNotIn(LOGIN_FORM_KEY, response.context)
