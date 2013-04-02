@@ -8,7 +8,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from django.db.models.loading import get_model
 from django import http
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -27,6 +27,9 @@ from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 import axes
 
+# user model compatible with Django 1.5
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
+
 # see if the user has overridden the failure limit
 FAILURE_LIMIT = getattr(settings, 'AXES_LOGIN_FAILURE_LIMIT', 3)
 
@@ -35,11 +38,11 @@ LOCK_OUT_AT_FAILURE = getattr(settings, 'AXES_LOCK_OUT_AT_FAILURE', True)
 
 USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 
-#see if the django app is sitting behind a reverse proxy 
+# see if the django app is sitting behind a reverse proxy 
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
-#if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
-REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
 
+# if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
+REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
 
 COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
 if isinstance(COOLOFF_TIME, int):
@@ -112,15 +115,28 @@ if VERBOSE:
 
 
 def is_user_lockable(request):
-    """ Check if the user has a profile with nolockout
+    """Check if the user has a profile with nolockout
     If so, then return the value to see if this user is special
-    and doesn't get their account locked out """
-    username = request.POST.get('username', None)
+    and doesn't get their account locked out
+    """
+    UserModel = get_model(*AUTH_USER_MODEL.split('.', 1))
+
     try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
+        field = getattr(UserModel, 'USERNAME_FIELD', 'username')
+        kwargs = {
+            field: request.POST.get('username')
+        }
+        user = UserModel.objects.get(**kwargs)
+    except UserModel.DoesNotExist:
         # not a valid user
         return True
+
+    # Django 1.5 does not support profile anymore, ask directly to user
+    if hasattr(user, 'nolockout'):
+        # need to revert since we need to return
+        # false for users that can't be blocked
+        return not user.nolockout
+
     try:
         profile = user.get_profile()
     except:
