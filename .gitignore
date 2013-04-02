@@ -3,3 +3,4 @@ django_axes.egg-info
 build
 dist
 .hg
+.DS_Store
