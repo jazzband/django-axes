@@ -94,21 +94,22 @@ def query2str(items):
 def ip_in_whitelist(ip):
     if IP_WHITELIST is not None:
         return ip in IP_WHITELIST
-    else:
-        return False
+
+    return False
 
 
 def ip_in_blacklist(ip):
     if IP_BLACKLIST is not None:
         return ip in IP_BLACKLIST
-    else:
-        return False
+
+    return False
 
 
 log = logging.getLogger(LOGGER)
 if VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('Using django-axes ' + axes.get_version())
+
 
 def is_user_lockable(request):
     """ Check if the user has a profile with nolockout
@@ -133,9 +134,9 @@ def is_user_lockable(request):
     else:
         return True
 
+
 def get_user_attempts(request):
-    """
-    Returns access attempt record if it exists.
+    """Returns access attempt record if it exists.
     Otherwise return None.
     """
     ip = get_ip(request)
@@ -152,7 +153,7 @@ def get_user_attempts(request):
             ip_address=ip, username=username, trusted=True
         )
 
-    if len(attempts) == 0:
+    if not attempts:
         params = {'ip_address': ip, 'trusted': False}
         if USE_USER_AGENT:
             params['user_agent'] = ua
@@ -218,11 +219,20 @@ def watch_login(func):
                 not response.has_header('location') and
                 response.status_code != 302
             )
-            log_access_request(request, login_unsuccessful)
+
+            access_log = AccessLog.objects.create(
+                user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>'),
+                ip_address=get_ip(request),
+                username=request.POST.get('username', None),
+                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+                path_info=request.META.get('PATH_INFO', '<unknown>'),
+                trusted=not login_unsuccessful,
+            )
             if check_request(request, login_unsuccessful):
                 return response
 
             return lockout_response(request)
+
         return response
 
     return decorated_login
@@ -266,18 +276,6 @@ def is_already_locked(request):
             return True
 
     return False
-
-
-def log_access_request(request, login_unsuccessful):
-    """ Log the access attempt """
-    access_log = AccessLog()
-    access_log.user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')
-    access_log.ip_address = get_ip(request)
-    access_log.username = request.POST.get('username', None)
-    access_log.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
-    access_log.path_info = request.META.get('PATH_INFO', '<unknown>')
-    access_log.trusted = not login_unsuccessful
-    access_log.save()
 
 
 def check_request(request, login_unsuccessful):
