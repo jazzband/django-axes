@@ -30,11 +30,11 @@ class AccessAttemptTest(TestCase):
 
         return self._generate_random_string()
 
-    def _login(self, existing_username=False):
+    def _login(self, existing_username=False, user_agent='test-browser'):
         response = self.client.post(reverse('admin:index'), {
             'username': self._random_username(existing_username),
             'password': self._generate_random_string(),
-        })
+        }, HTTP_USER_AGENT=user_agent)
 
         return response
 
@@ -101,3 +101,28 @@ class AccessAttemptTest(TestCase):
             'password': valid_username
         })
         self.assertNotIn(LOGIN_FORM_KEY, response.context)
+
+    def test_long_user_agent_valid(self):
+        """Tests if can handle a long user agent
+        """
+        long_user_agent = 'ie6' * 1024
+        valid_username = self._random_username(existing_username=True)
+        response = self.client.post(reverse('admin:index'), {
+            'username': valid_username,
+            'password': valid_username
+        }, HTTP_USER_AGENT=long_user_agent)
+        self.assertNotIn(LOGIN_FORM_KEY, response.context)
+
+    def test_long_user_agent_not_valid(self):
+        """Tests if can handle a long user agent with failure
+        """
+        long_user_agent = 'ie6' * 1024
+        for i in range(0, FAILURE_LIMIT):
+            response = self._login(
+                existing_username=False,
+                user_agent=long_user_agent,
+            )
+            self.assertContains(response, LOGIN_FORM_KEY)
+
+        response = self._login()
+        self.assertContains(response, self.LOCKED_MESSAGE)
