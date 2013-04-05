@@ -98,12 +98,7 @@ Next, install the ``FailedLoginMiddleware`` middleware::
         'axes.middleware.FailedLoginMiddleware'
     )
 
-Finally, if you're using Django's @staff_member_required, you'll want to start
-importing this from axes rather than from Django::
-
-    from axes.decorators import staff_member_required
-
-Run ``manage.py syncdb``.  This creates the appropriate tables in your database
+Run ``python manage.py syncdb``.  This creates the appropriate tables in your database
 that are necessary for operation.
 
 Customizing Axes
