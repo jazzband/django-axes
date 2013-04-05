@@ -160,7 +160,7 @@ def get_user_attempts(request):
     username = request.POST.get('username', None)
 
     if USE_USER_AGENT:
-        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
         attempts = AccessAttempt.objects.filter(
             user_agent=ua, ip_address=ip, username=username, trusted=True
         )
@@ -237,7 +237,7 @@ def watch_login(func):
             )
 
             access_log = AccessLog.objects.create(
-                user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>'),
+                user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
                 ip_address=get_ip(request),
                 username=request.POST.get('username', None),
                 http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
@@ -368,7 +368,7 @@ def check_request(request, login_unsuccessful):
 
 def create_new_failure_records(request, failures):
     ip = get_ip(request)
-    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     username = request.POST.get('username', None)
 
     params = {
@@ -397,7 +397,7 @@ def create_new_failure_records(request, failures):
 
 def create_new_trusted_record(request):
     ip = get_ip(request)
-    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+    ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     username = request.POST.get('username', None)
 
     if not username:
