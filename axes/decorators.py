@@ -191,7 +191,7 @@ def watch_login(func):
         if func.__name__ != 'decorated_login' and VERBOSE:
             log.info('AXES: Calling decorated function: %s' % func.__name__)
             if args:
-                log.info('args: %s' % args)
+                log.info('args: %s' % str(args))
             if kwargs:
                 log.info('kwargs: %s' % kwargs)
 
