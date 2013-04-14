@@ -20,7 +20,7 @@ def log_user_lockout(sender, request, user, signal, *args, **kwargs):
         return
 
     access_log = None
-    access_logs = AccessLog.objects.filter(username=user.username,
+    access_logs = AccessLog.objects.filter(username=_get_username(user),
                     logout_time__isnull=True).order_by("-attempt_time")
 
     if len(access_logs) > 0:
@@ -29,3 +29,8 @@ def log_user_lockout(sender, request, user, signal, *args, **kwargs):
     if access_log:
         access_log.logout_time = now()
         access_log.save()
+
+def _get_username(user):
+    """With Django 1.5 for username can be used another field, for example e-mail."""
+    return getattr(user, 'username', user.get_username())
+
