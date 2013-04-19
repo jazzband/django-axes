@@ -1,8 +1,0 @@
-README
-setup.py
-axes/__init__.py
-axes/admin.py
-axes/decorators.py
-axes/middleware.py
-axes/models.py
-axes/views.py

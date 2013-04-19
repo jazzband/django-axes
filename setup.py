@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-axes',
-    version='1.3.0',
+    version='1.3.1',
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description=(open('README.rst', 'r').read() + '\n' +
         open('CHANGES.txt', 'r').read()),
@@ -28,6 +28,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
         'Topic :: Internet :: Log Analysis',
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware',
         'Topic :: Security',
