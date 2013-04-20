@@ -133,7 +133,7 @@ def is_user_lockable(request):
 
     try:
         profile = user.get_profile()
-    except SiteProfileNotAvailable, ObjectDoesNotExist:
+    except (SiteProfileNotAvailable, ObjectDoesNotExist):
         # no profile
         return True
 

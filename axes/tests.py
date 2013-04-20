@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 
 from axes.decorators import FAILURE_LIMIT
 from axes.decorators import LOGIN_FORM_KEY
+from axes.models import AccessLog
 
 
 class AccessAttemptTest(TestCase):
@@ -103,7 +104,26 @@ class AccessAttemptTest(TestCase):
             'password': valid_username,
             'this_is_the_login_form': 1,
         })
+
         self.assertNotIn(LOGIN_FORM_KEY, response.content)
+
+    def test_valid_logout(self):
+        """Tests a valid logout and make sure the logout_time is updated
+        """
+        valid_username = self._random_username(existing_username=True)
+        response = self.client.post(reverse('admin:index'), {
+            'username': valid_username,
+            'password': valid_username,
+            'this_is_the_login_form': 1,
+        }, follow=True)
+
+        self.assertEquals(AccessLog.objects.latest('id').logout_time, None)
+
+        response = self.client.get(reverse('admin:logout'))
+
+        self.assertNotEquals(AccessLog.objects.latest('id').logout_time, None)
+
+        self.assertIn('Logged out', response.content)
 
     def test_long_user_agent_valid(self):
         """Tests if can handle a long user agent
