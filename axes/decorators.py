@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth import logout
 from django.db.models.loading import get_model
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import SiteProfileNotAvailable
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -132,7 +133,7 @@ def is_user_lockable(request):
 
     try:
         profile = user.get_profile()
-    except ObjectDoesNotExist:
+    except SiteProfileNotAvailable, ObjectDoesNotExist:
         # no profile
         return True
 
