@@ -6,6 +6,7 @@ from django import template
 from django.conf import settings
 from django.contrib.auth import logout
 from django.db.models.loading import get_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -119,7 +120,7 @@ def is_user_lockable(request):
             field: request.POST.get('username')
         }
         user = UserModel.objects.get(**kwargs)
-    except UserModel.DoesNotExist:
+    except ObjectDoesNotExist:
         # not a valid user
         return True
 
@@ -131,7 +132,7 @@ def is_user_lockable(request):
 
     try:
         profile = user.get_profile()
-    except:
+    except ObjectDoesNotExist:
         # no profile
         return True
 
@@ -406,12 +407,3 @@ def create_new_trusted_record(request):
         failures_since_start=0,
         trusted=True
     )
-
-
-def _display_login_form(request, error_message=''):
-    request.session.set_test_cookie()
-    return render_to_response('admin/login.html', {
-        'title': _('Log in'),
-        'app_path': request.get_full_path(),
-        'error_message': error_message
-    }, context_instance=template.RequestContext(request))
