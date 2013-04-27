@@ -3,9 +3,11 @@
 
 from setuptools import setup, find_packages
 
+version = __import__('axes').get_version()
+
 setup(
     name='django-axes',
-    version='1.3.1',
+    version=version,
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description=(open('README.rst', 'r').read() + '\n' +
         open('CHANGES.txt', 'r').read()),
@@ -20,7 +22,7 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
