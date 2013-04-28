@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 
 from axes.decorators import FAILURE_LIMIT
 from axes.decorators import LOGIN_FORM_KEY
+from axes.models import AccessLog
 
 
 class AccessAttemptTest(TestCase):
@@ -34,6 +35,7 @@ class AccessAttemptTest(TestCase):
         response = self.client.post(reverse('admin:index'), {
             'username': self._random_username(existing_username),
             'password': self._generate_random_string(),
+            'this_is_the_login_form': 1,
         }, HTTP_USER_AGENT=user_agent)
 
         return response
@@ -42,8 +44,8 @@ class AccessAttemptTest(TestCase):
         """Creates users for testing the login
         """
         for i in range(0, random.randrange(10, 50)):
-            username = "person%s" % i
-            email = "%s@example.org" % username
+            username = 'person%s' % i
+            email = '%s@example.org' % username
             u = User.objects.create_user(
                 username=username,
                 password=username,
@@ -59,12 +61,12 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT):
             response = self._login(existing_username=existing_username)
             # Check if we are in the same login page
-            self.assertContains(response, LOGIN_FORM_KEY)
+            self.assertIn(LOGIN_FORM_KEY, response.content)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self._login()
-        self.assertContains(response, self.LOCKED_MESSAGE)
+        self.assertIn(self.LOCKED_MESSAGE, response.content)
 
     def test_with_real_username_max(self):
         """Tests the login lock with a real username
@@ -78,14 +80,15 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT):
             response = self._login(existing_username=existing_username)
             # Check if we are in the same login page
-            self.assertContains(response, LOGIN_FORM_KEY)
+            self.assertIn(LOGIN_FORM_KEY, response.content)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         for i in range(0, random.randrange(1, 100)):
             # try to log in a bunch of times
             response = self._login()
-        self.assertContains(response, self.LOCKED_MESSAGE)
+
+        self.assertIn(self.LOCKED_MESSAGE, response.content)
 
     def test_with_real_username_max_with_more(self):
         """Tests the login lock for a bunch of times with a real username
@@ -98,9 +101,29 @@ class AccessAttemptTest(TestCase):
         valid_username = self._random_username(existing_username=True)
         response = self.client.post(reverse('admin:index'), {
             'username': valid_username,
-            'password': valid_username
+            'password': valid_username,
+            'this_is_the_login_form': 1,
         })
-        self.assertNotIn(LOGIN_FORM_KEY, response.context)
+
+        self.assertNotIn(LOGIN_FORM_KEY, response.content)
+
+    def test_valid_logout(self):
+        """Tests a valid logout and make sure the logout_time is updated
+        """
+        valid_username = self._random_username(existing_username=True)
+        response = self.client.post(reverse('admin:index'), {
+            'username': valid_username,
+            'password': valid_username,
+            'this_is_the_login_form': 1,
+        }, follow=True)
+
+        self.assertEquals(AccessLog.objects.latest('id').logout_time, None)
+
+        response = self.client.get(reverse('admin:logout'))
+
+        self.assertNotEquals(AccessLog.objects.latest('id').logout_time, None)
+
+        self.assertIn('Logged out', response.content)
 
     def test_long_user_agent_valid(self):
         """Tests if can handle a long user agent
@@ -109,9 +132,11 @@ class AccessAttemptTest(TestCase):
         valid_username = self._random_username(existing_username=True)
         response = self.client.post(reverse('admin:index'), {
             'username': valid_username,
-            'password': valid_username
+            'password': valid_username,
+            'this_is_the_login_form': 1,
         }, HTTP_USER_AGENT=long_user_agent)
-        self.assertNotIn(LOGIN_FORM_KEY, response.context)
+
+        self.assertNotIn(LOGIN_FORM_KEY, response.content)
 
     def test_long_user_agent_not_valid(self):
         """Tests if can handle a long user agent with failure
@@ -125,4 +150,4 @@ class AccessAttemptTest(TestCase):
             self.assertContains(response, LOGIN_FORM_KEY)
 
         response = self._login()
-        self.assertContains(response, self.LOCKED_MESSAGE)
+        self.assertIn(self.LOCKED_MESSAGE, response.content)

@@ -5,7 +5,8 @@ from datetime import timedelta
 from django import template
 from django.conf import settings
 from django.contrib.auth import logout
-from django.db.models.loading import get_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import SiteProfileNotAvailable
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -13,14 +14,18 @@ from django.template import RequestContext
 from django.utils import timezone as datetime
 from django.utils.translation import ugettext_lazy, ugettext as _
 
+try:
+    from django.contrib.auth import get_user_model
+except ImportError: # django < 1.5
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
+
 from axes.models import AccessLog
 from axes.models import AccessAttempt
 from axes.signals import user_locked_out
 import axes
 
-
-# user model compatible with Django 1.5
-AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 # see if the user has overridden the failure limit
 FAILURE_LIMIT = getattr(settings, 'AXES_LOGIN_FAILURE_LIMIT', 3)
@@ -111,15 +116,13 @@ def is_user_lockable(request):
     If so, then return the value to see if this user is special
     and doesn't get their account locked out
     """
-    UserModel = get_model(*AUTH_USER_MODEL.split('.', 1))
-
     try:
-        field = getattr(UserModel, 'USERNAME_FIELD', 'username')
+        field = getattr(User, 'USERNAME_FIELD', 'username')
         kwargs = {
             field: request.POST.get('username')
         }
-        user = UserModel.objects.get(**kwargs)
-    except UserModel.DoesNotExist:
+        user = User.objects.get(**kwargs)
+    except User.DoesNotExist:
         # not a valid user
         return True
 
@@ -131,7 +134,7 @@ def is_user_lockable(request):
 
     try:
         profile = user.get_profile()
-    except:
+    except (SiteProfileNotAvailable, ObjectDoesNotExist):
         # no profile
         return True
 
@@ -406,12 +409,3 @@ def create_new_trusted_record(request):
         failures_since_start=0,
         trusted=True
     )
-
-
-def _display_login_form(request, error_message=''):
-    request.session.set_test_cookie()
-    return render_to_response('admin/login.html', {
-        'title': _('Log in'),
-        'app_path': request.get_full_path(),
-        'error_message': error_message
-    }, context_instance=template.RequestContext(request))

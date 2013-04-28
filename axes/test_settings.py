@@ -35,18 +35,6 @@ INSTALLED_APPS = [
 
 SECRET_KEY = 'too-secret-for-test'
 
-LOGGING = {
-    'version': 1,
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['console'],
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            },
-        }
-    }
+LOGIN_REDIRECT_URL = '/admin'
 
-# AXES_LOGIN_FAILURE_LIMIT = 1
+AXES_LOGIN_FAILURE_LIMIT = 10
