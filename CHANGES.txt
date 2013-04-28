@@ -1,6 +1,19 @@
 Changes
 =======
 
+1.3.2 (2013-03-28)
+------------------
+
+- Fix an issue when a user logout [camilonova]
+- Match pypi version [camilonova]
+- Better User model import method [camilonova]
+- Use only one place to get the version number [camilonova]
+- Fixed an issue when a user on django 1.4 logout [camilonova]
+- Handle exception if there is not user profile model set [camilonova]
+- Made some cleanup and remove a pokemon exception handling [camilonova]
+- Improved tests so it really looks for the rabbit in the hole [camilonova]
+- Match pypi version [camilonova]
+
 1.3.1 (2013-03-19)
 ------------------
 
