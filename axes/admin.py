@@ -9,6 +9,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         'attempt_time',
         'ip_address',
         'user_agent',
+        'username',
         'path_info',
         'failures_since_start',
     )
@@ -16,11 +17,13 @@ class AccessAttemptAdmin(admin.ModelAdmin):
     list_filter = [
         'attempt_time',
         'ip_address',
+        'username',
         'path_info',
     ]
 
     search_fields = [
         'ip_address',
+        'username',
         'user_agent',
         'path_info',
     ]
@@ -47,6 +50,7 @@ class AccessLogAdmin(admin.ModelAdmin):
         'attempt_time',
         'logout_time',
         'ip_address',
+        'username',
         'user_agent',
         'path_info',
     )
@@ -55,12 +59,14 @@ class AccessLogAdmin(admin.ModelAdmin):
         'attempt_time',
         'logout_time',
         'ip_address',
+        'username',
         'path_info',
     ]
 
     search_fields = [
         'ip_address',
         'user_agent',
+        'username',
         'path_info',
     ]
 
