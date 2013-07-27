@@ -9,6 +9,7 @@ from django.test.utils import override_settings
 from axes.decorators import FAILURE_LIMIT
 from axes.decorators import LOGIN_FORM_KEY
 from axes.models import AccessLog
+from axes.utils import reset
 
 
 class AccessAttemptTest(TestCase):
@@ -151,3 +152,27 @@ class AccessAttemptTest(TestCase):
 
         response = self._login()
         self.assertIn(self.LOCKED_MESSAGE, response.content)
+
+    def test_reset_ip(self):
+        """Tests if can reset an ip address
+        """
+        # Make a lockout
+        self.test_with_real_username_max()
+
+        # Reset the ip so we can try again
+        reset(ip='127.0.0.1')
+
+        # Make a login attempt again
+        self.test_with_real_username_max()
+
+    def test_reset_all(self):
+        """Tests if can reset all attempts
+        """
+        # Make a lockout
+        self.test_with_real_username_max()
+
+        # Reset all attempts so we can try again
+        reset()
+
+        # Make a login attempt again
+        self.test_with_real_username_max()
