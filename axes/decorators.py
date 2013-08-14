@@ -176,9 +176,13 @@ def get_user_attempts(request):
 
     if COOLOFF_TIME:
         for attempt in attempts:
-            if attempt.attempt_time + COOLOFF_TIME < datetime.now() \
-               and attempt.trusted is False:
-                attempt.delete()
+            if attempt.attempt_time + COOLOFF_TIME < datetime.now():
+                if attempt.trusted:
+                    attempt.failures_since_start = 0
+                    attempt.save()
+                else:
+                    attempt.delete()
+                    objects_deleted = True
 
     return attempts
 
