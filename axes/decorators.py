@@ -144,13 +144,12 @@ def is_user_lockable(request):
     else:
         return True
 
-
-def get_user_attempts(request):
+def _get_user_attempts(request):
     """Returns access attempt record if it exists.
     Otherwise return None.
     """
     ip = get_ip(request)
-        
+
     username = request.POST.get('username', None)
 
     if USE_USER_AGENT:
@@ -174,6 +173,12 @@ def get_user_attempts(request):
             params['username'] = username
             attempts |= AccessAttempt.objects.filter(**params)
 
+    return attempts
+
+def get_user_attempts(request):
+    objects_deleted = False
+    attempts = _get_user_attempts(request)
+
     if COOLOFF_TIME:
         for attempt in attempts:
             if attempt.attempt_time + COOLOFF_TIME < datetime.now():
@@ -183,6 +188,11 @@ def get_user_attempts(request):
                 else:
                     attempt.delete()
                     objects_deleted = True
+
+    # If objects were deleted, we need to update the queryset to reflect this,
+    # so force a reload.
+    if objects_deleted:
+        attempts = _get_user_attempts(request)
 
     return attempts
 
