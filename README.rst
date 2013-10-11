@@ -135,10 +135,7 @@ Usage
 
 Using ``django-axes`` is extremely simple.  Once you install the application
 and the middleware, all you need to do is periodically check the Access
-Attempts section of the admin.  A log file is also created for you to keep
-track of the events surrounding failed login attempts.  This log file can be
-found in your Django project directory, by the name of ``axes.log``.  In the
-future I plan on offering a way to customize options for logging a bit more.
+Attempts section of the admin.
 
 By default, django-axes will lock out repeated attempts from the same IP
 address.  You can allow this IP to attempt again by deleting the relevant
