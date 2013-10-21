@@ -63,16 +63,24 @@ LOGIN_FORM_KEY = 'this_is_the_login_form'
 
 
 def get_ip(request):
-    if not BEHIND_REVERSE_PROXY:
-        ip = request.META.get('REMOTE_ADDR', '')
-    else:
-        logging.debug('Axes is configured to be behind reverse proxy...looking for header value %s', REVERSE_PROXY_HEADER)
-        ip = request.META.get(REVERSE_PROXY_HEADER, '')
-        if ip == '':
-            raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
-                          'an HTTP header value {0}. Check your proxy server settings '\
-                          'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
-            ip = request.META.get('REMOTE_ADDR', '')
+    '''
+    Checks for the defined reverse proxy header in the HTTP header using the key
+    defined in settings value AXES_REVERSE_PROXY_HEADER.  If found in the header 
+    this value is used, if not, an attempt to fall back to the standard REMOTE_ADDR
+    key.  If neither is found None is returned.
+    
+    @return: A string value containing the value found in the request.META dictionary 
+    using the key defined in settings.AXES_REVERSE_PROXY_HEADER or the value under 
+    the standard REMOTE_ADDR key.
+    '''
+    ip = request.META.get(REVERSE_PROXY_HEADER)
+    if not ip:
+        ip = request.META.get('REMOTE_ADDR')
+    if not ip:
+        raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
+                      'an HTTP header value {0}. Check your proxy server settings '\
+                      'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
+        ip = request.META.get('REMOTE_ADDR', '')    
     return ip
 
 def get_lockout_url():
