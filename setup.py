@@ -16,7 +16,7 @@ setup(
     author_email='codekoala@gmail.com',
     maintainer='Alex Clark',
     maintainer_email='aclark@aclark.net',
-    url='https://github.com/codekoala/django-axes',
+    url='https://github.com/django-security/django-axes',
     license='MIT',
     package_dir={'axes': 'axes'},
     include_package_data=True,
