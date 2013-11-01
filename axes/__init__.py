@@ -1,5 +1,7 @@
 try:
-    __version__ = __import__('pkg_resources').get_distribution('clamd').version
+    __version__ = __import__('pkg_resources').get_distribution(
+        'django-axes'
+    ).version
 except:
     __version__ = ''
 
