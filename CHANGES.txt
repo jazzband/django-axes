@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.3.4 (unreleased)
+------------------
+
+- Update README.rst for PyPI [marty] [camilonova] [graingert]
+- Add cooloff period [visualspace]
+
+
 1.3.3 (2013-07-05)
 ------------------
 
