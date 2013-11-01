@@ -1,7 +1,7 @@
 Changes
 =======
 
-1.3.5 (unreleased)
+1.3.5 (2013-11-01)
 ------------------
 
 - Fix an issue with __version__ loading the wrong version [graingert]
