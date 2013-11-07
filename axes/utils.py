@@ -1,25 +1,20 @@
 from axes.models import AccessAttempt
 
 
-def reset(ip=None, username=None, silent=False):
-    # no need to reset trusted records. If they fail, they go to untrusted
-    params = {
-        'trusted': False,
-    }
+def reset(ip=None, username=None):
+    """Reset records that match ip or username, and
+    return the count of removed attempts.
+    """
+    count = 0
 
+    attempts = AccessAttempt.objects.all()
     if ip:
-        params['ip_address'] = ip
-
-    attempts = AccessAttempt.objects.filter(**params)
+        attempts = attempts.filter(ip_address=ip)
     if username:
-        if 'ip_address' in params:
-            del params['ip_address']
-
-        params['username'] = username
-        attempts |= AccessAttempt.objects.filter(**params)
+        attempts = attempts.filter(username=username)
 
     if attempts:
+        count = attempts.count()
         attempts.delete()
-    else:
-        if not silent:
-            print 'No attempts found.'
+
+    return count
