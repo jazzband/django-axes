@@ -7,6 +7,7 @@ from django.test.client import Client
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 
+from axes.decorators import COOLOFF_TIME
 from axes.decorators import FAILURE_LIMIT
 from axes.decorators import LOGIN_FORM_KEY
 from axes.models import AccessLog
@@ -118,7 +119,6 @@ class AccessAttemptTest(TestCase):
         })
 
         return response
-
 
     def _unsuccessful_login(self, username):
         c = Client()
