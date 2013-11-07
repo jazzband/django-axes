@@ -1,9 +1,9 @@
 Django Axes
 ===========
 
-.. image:: https://secure.travis-ci.org/codekoala/django-axes.png?branch=master
+.. image:: https://secure.travis-ci.org/django-security/django-axes.png?branch=master
     :alt: Build Status
-    :target: http://travis-ci.org/codekoala/django-axes
+    :target: http://travis-ci.org/django-security/django-axes
 
 ``django-axes`` is a very simple way for you to keep track of failed login
 attempts, both for the Django admin and for the rest of your site.  The name is
@@ -135,10 +135,7 @@ Usage
 
 Using ``django-axes`` is extremely simple.  Once you install the application
 and the middleware, all you need to do is periodically check the Access
-Attempts section of the admin.  A log file is also created for you to keep
-track of the events surrounding failed login attempts.  This log file can be
-found in your Django project directory, by the name of ``axes.log``.  In the
-future I plan on offering a way to customize options for logging a bit more.
+Attempts section of the admin.
 
 By default, django-axes will lock out repeated attempts from the same IP
 address.  You can allow this IP to attempt again by deleting the relevant

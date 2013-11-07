@@ -3,11 +3,9 @@
 
 from setuptools import setup, find_packages
 
-version = __import__('axes').get_version()
-
 setup(
     name='django-axes',
-    version=version,
+    version='1.3.6.dev0',
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description=(open('README.rst', 'r').read() + '\n' +
         open('CHANGES.txt', 'r').read()),
@@ -16,7 +14,7 @@ setup(
     author_email='codekoala@gmail.com',
     maintainer='Alex Clark',
     maintainer_email='aclark@aclark.net',
-    url='https://github.com/codekoala/django-axes',
+    url='https://github.com/django-security/django-axes',
     license='MIT',
     package_dir={'axes': 'axes'},
     include_package_data=True,

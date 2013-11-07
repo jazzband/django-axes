@@ -1,10 +1,11 @@
 import random
 import string
+import time
 
 from django.test import TestCase
+from django.test.client import Client
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 
 from axes.decorators import FAILURE_LIMIT
 from axes.decorators import LOGIN_FORM_KEY
@@ -107,6 +108,60 @@ class AccessAttemptTest(TestCase):
         })
 
         self.assertNotIn(LOGIN_FORM_KEY, response.content)
+
+    def _successful_login(self, username, password):
+        c = Client()
+        response = c.post('/admin/', {
+            'username': username,
+            'password': username,
+            'this_is_the_login_form': 1,
+        })
+
+        return response
+
+
+    def _unsuccessful_login(self, username):
+        c = Client()
+        response = c.post('/admin/', {
+            'username': username,
+            'password': 'wrong',
+            'this_is_the_login_form': 1,
+        })
+
+        return response
+
+    def test_cooling_off_for_trusted_user(self):
+        valid_username = self._random_username(existing_username=True)
+
+        # Test successful login, this makes the user trusted.
+        response = self._successful_login(valid_username, valid_username)
+        self.assertNotIn(LOGIN_FORM_KEY, response.content)
+
+        self.test_cooling_off(username=valid_username)
+
+    def test_cooling_off(self, username=None):
+        if username:
+            valid_username = username
+        else:
+            valid_username = self._random_username(existing_username=True)
+
+        # Test unsuccessful login and stop just before lockout happens
+        for i in range(0, FAILURE_LIMIT):
+            response = self._unsuccessful_login(valid_username)
+
+            # Check if we are in the same login page
+            self.assertIn(LOGIN_FORM_KEY, response.content)
+
+        # Lock out the user
+        response = self._unsuccessful_login(valid_username)
+        self.assertIn(self.LOCKED_MESSAGE, response.content)
+
+        # Wait for the cooling off period
+        time.sleep(COOLOFF_TIME.total_seconds())
+
+        # It should be possible to login again, make sure it is.
+        response = self._successful_login(valid_username, valid_username)
+        self.assertNotIn(self.LOCKED_MESSAGE, response.content)
 
     def test_valid_logout(self):
         """Tests a valid logout and make sure the logout_time is updated

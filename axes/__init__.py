@@ -1,6 +1,10 @@
-
-VERSION = (1, 3, 3)
+try:
+    __version__ = __import__('pkg_resources').get_distribution(
+        'django-axes'
+    ).version
+except:
+    __version__ = ''
 
 
 def get_version():
-    return '%s.%s.%s' % VERSION
+    return __version__
