@@ -18,7 +18,7 @@ sort of a geeky pun, since ``axes`` can be read interpreted as:
 Requirements
 ============
 
-``django-axes`` requires Django 1.0 or later.  The application is intended to
+``django-axes`` requires Django 1.4 or later.  The application is intended to
 work around the Django admin and the regular ``django.contrib.auth``
 login-powered pages.
 
@@ -37,7 +37,7 @@ You can install the latest stable package running this command::
 
 Also you can install the development version running this command::
 
-    $ pip install -e git+http://github.com/codekoala/django-axes.git#egg=django_axes-dev
+    $ pip install -e git+http://github.com/django-security/django-axes.git#egg=django_axes-dev
 
 Setuptools
 ----------
@@ -45,18 +45,6 @@ Setuptools
 You can install the latest stable package running::
 
     $ easy_install django-axes
-
-Verifying Installation
-----------------------
-
-The easiest way to ensure that you have successfully installed ``django-axes``
-is to execute a command such as::
-
-    python -c "import axes; print axes.get_version()"
-
-If that command completes with some sort of version number, you're probably
-good to go.  If you see error output, you need to check your installation (I'd
-start with your ``PYTHONPATH``).
 
 
 Development
