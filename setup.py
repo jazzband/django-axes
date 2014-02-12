@@ -16,6 +16,9 @@ setup(
     maintainer_email='aclark@aclark.net',
     url='https://github.com/django-security/django-axes',
     license='MIT',
+    install_requires=[
+        'Django>=1.4.2'
+    ],
     package_dir={'axes': 'axes'},
     include_package_data=True,
     packages=find_packages(),
