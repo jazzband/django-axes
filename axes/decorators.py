@@ -24,7 +24,7 @@ from axes.models import AccessLog
 from axes.models import AccessAttempt
 from axes.signals import user_locked_out
 import axes
-import six
+from django.utils import six
 
 
 # see if the user has overridden the failure limit
