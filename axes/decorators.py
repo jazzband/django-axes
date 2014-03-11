@@ -24,6 +24,7 @@ from axes.models import AccessLog
 from axes.models import AccessAttempt
 from axes.signals import user_locked_out
 import axes
+import json
 
 
 # see if the user has overridden the failure limit
@@ -58,6 +59,7 @@ IP_BLACKLIST = getattr(settings, 'AXES_IP_BLACKLIST', None)
 ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
                               "Note that both fields are case-sensitive.")
 LOGIN_FORM_KEY = 'this_is_the_login_form'
+LOGIN_FORM_PATH = getattr(settings, 'AXES_LOGIN_FORM_PATH', 'django.contrib.auth.forms.AuthenticationForm')
 
 
 def get_ip(request):
@@ -196,7 +198,6 @@ def get_user_attempts(request):
 
     return attempts
 
-
 def watch_login(func):
     """
     Used to decorate the django.contrib.admin.site.login method.
@@ -223,7 +224,7 @@ def watch_login(func):
         # login function, go directly to lockout url, do not pass go, do not
         # collect messages about this login attempt
         if is_already_locked(request):
-            return lockout_response(request)
+            return lockout_response(request, populate_login_form=True)
 
         # call the login function
         response = func(request, *args, **kwargs)
@@ -243,7 +244,6 @@ def watch_login(func):
                 not response.has_header('location') and
                 response.status_code != 302
             )
-
             access_log = AccessLog.objects.create(
                 user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
                 ip_address=get_ip(request),
@@ -255,19 +255,23 @@ def watch_login(func):
             if check_request(request, login_unsuccessful):
                 return response
 
-            return lockout_response(request)
+            return lockout_response(request, populate_login_form=True)
 
         return response
 
     return decorated_login
 
 
-def lockout_response(request):
+def lockout_response(request, populate_login_form=False):
     if LOCKOUT_TEMPLATE:
         context = {
             'cooloff_time': COOLOFF_TIME,
             'failure_limit': FAILURE_LIMIT,
         }
+
+        if populate_login_form:
+            context['form'] = get_login_form(request)
+
         return render_to_response(LOCKOUT_TEMPLATE, context,
                                   context_instance=RequestContext(request))
 
@@ -281,6 +285,24 @@ def lockout_response(request):
     else:
         return HttpResponse("Account locked: too many login attempts.  "
                             "Contact an admin to unlock your account.")
+
+
+def get_login_form(request):
+    login_form_path_components = LOGIN_FORM_PATH.split('.')
+    module_path = '.'.join(login_form_path_components[:-1])
+    klassname = login_form_path_components[-1]
+    mod = __import__(module_path, fromlist=[klassname])
+    klass = getattr(mod, klassname)
+
+    # setting a clearly fake password means that we
+    # show the 'invalid username/password' match on the login template
+    fake_data = {
+        'username': request.POST['username'],
+        'password': request.POST['password'] + 'nopenopenope' # guarantees that the password won't match
+    }
+    login_form = klass(data=fake_data)
+
+    return login_form
 
 
 def is_already_locked(request):
