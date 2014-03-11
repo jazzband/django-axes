@@ -2,9 +2,9 @@ from utils import VERBOSE
 from utils import log
 from utils import is_already_locked
 from utils import lockout_response
-from models import AccessLog
-from utils import get_ip
+from utils import create_access_log
 from utils import check_request
+from utils import is_login_unsuccessful
 
 def watch_login(func):
     """
@@ -47,19 +47,11 @@ def watch_login(func):
 
         if request.method == 'POST':
             # see if the login was successful
-            login_unsuccessful = (
-                response and
-                not response.has_header('location') and
-                response.status_code != 302
-            )
-            access_log = AccessLog.objects.create(
-                user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
-                ip_address=get_ip(request),
-                username=request.POST.get('username', None),
-                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
-                path_info=request.META.get('PATH_INFO', '<unknown>'),
-                trusted=not login_unsuccessful,
-            )
+            login_unsuccessful = is_login_unsuccessful(response)
+
+            # create a log of a login attempt
+            create_access_log(request, login_unsuccessful)
+
             if check_request(request, login_unsuccessful):
                 return response
 

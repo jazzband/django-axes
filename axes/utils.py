@@ -398,3 +398,20 @@ def create_new_trusted_record(request):
         failures_since_start=0,
         trusted=True
     )
+
+def create_access_log(request, login_unsuccessful):
+    AccessLog.objects.create(
+        user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
+        ip_address=get_ip(request),
+        username=request.POST.get('username', None),
+        http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+        path_info=request.META.get('PATH_INFO', '<unknown>'),
+        trusted=not login_unsuccessful,
+    )
+
+def is_login_unsuccessful(login_function_response):
+    return (
+        login_function_response and
+        not login_function_response.has_header('location') and
+        login_function_response.status_code != 302
+    )
