@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 from setuptools import setup, find_packages
+
+try:
+    readme = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read() + '\n' + \
+             open(os.path.join(os.path.dirname(__file__), 'CHANGES.rst')).read()
+except:
+    readme = ''
 
 setup(
     name='django-axes',
     version='1.3.6',
     description="Keep track of failed login attempts in Django-powered sites.",
-    long_description=(open('README.rst', 'r').read() + '\n' +
-        open('CHANGES.txt', 'r').read()),
+    long_description=readme,
     keywords='django, security, authentication',
     author='Josh VanderLinden, Philip Neustrom, Michael Blume',
     author_email='codekoala@gmail.com',
