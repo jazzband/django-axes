@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import six
 
 class CommonAccess(models.Model):
     user_agent = models.CharField(
@@ -59,7 +59,7 @@ class AccessAttempt(CommonAccess):
         return self.failures_since_start
 
     def __unicode__(self):
-        return u'Attempted Access: %s' % self.attempt_time
+        return six.u('Attempted Access: %s') % self.attempt_time
 
 
 class AccessLog(CommonAccess):
@@ -69,4 +69,4 @@ class AccessLog(CommonAccess):
     )
 
     def __unicode__(self):
-        return u'Access Log for %s @ %s' % (self.username, self.attempt_time)
+        return six.u('Access Log for %s @ %s') % (self.username, self.attempt_time)

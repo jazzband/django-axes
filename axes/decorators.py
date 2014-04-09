@@ -24,6 +24,7 @@ from axes.models import AccessLog
 from axes.models import AccessAttempt
 from axes.signals import user_locked_out
 import axes
+from django.utils import six
 
 
 # see if the user has overridden the failure limit
@@ -85,7 +86,7 @@ def query2str(items):
     kvs = []
     for k, v in items:
         if k != 'password':
-            kvs.append(u'%s=%s' % (k, v))
+            kvs.append(six.u('%s=%s') % (k, v))
 
     return '\n'.join(kvs)
 
