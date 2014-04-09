@@ -1,16 +1,17 @@
 language: python
 python:
-  - "2.7"
-  - "3.3"
+  - 2.6
+  - 2.7
+  - 3.3
 env:
-  - PYTHONPATH=$PYTHONPATH:$PWD DJANGO_VERSION=1.4.10
-  - PYTHONPATH=$PYTHONPATH:$PWD DJANGO_VERSION=1.5.5
+  - PYTHONPATH=$PYTHONPATH:$PWD DJANGO_VERSION=1.4
+  - PYTHONPATH=$PYTHONPATH:$PWD DJANGO_VERSION=1.5
   - PYTHONPATH=$PYTHONPATH:$PWD DJANGO_VERSION=1.6
 matrix:
     exclude:
-        - python: "3.3"
-          env: PYTHONPATH=$PYTHONPATH:$PWD DJANGO_VERSION=1.4.10
-install: 
+        - python: 3.3
+          env: PYTHONPATH=$PYTHONPATH:$PWD DJANGO_VERSION=1.4
+install:
   - pip install --use-mirrors Django==$DJANGO_VERSION
-script: 
+script:
   - django-admin.py test axes --settings=axes.test_settings
