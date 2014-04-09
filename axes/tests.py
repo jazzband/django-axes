@@ -64,12 +64,12 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT):
             response = self._login(existing_username=existing_username)
             # Check if we are in the same login page
-            self.assertIn(LOGIN_FORM_KEY, response.content)
+            self.assertIn(LOGIN_FORM_KEY, response.content.decode('utf-8'))
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self._login()
-        self.assertIn(self.LOCKED_MESSAGE, response.content)
+        self.assertIn(self.LOCKED_MESSAGE, response.content.decode('utf-8'))
 
     def test_with_real_username_max(self):
         """Tests the login lock with a real username
@@ -83,7 +83,7 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT):
             response = self._login(existing_username=existing_username)
             # Check if we are in the same login page
-            self.assertIn(LOGIN_FORM_KEY, response.content)
+            self.assertIn(LOGIN_FORM_KEY, response.content.decode('utf-8'))
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
@@ -91,7 +91,7 @@ class AccessAttemptTest(TestCase):
             # try to log in a bunch of times
             response = self._login()
 
-        self.assertIn(self.LOCKED_MESSAGE, response.content)
+        self.assertIn(self.LOCKED_MESSAGE, response.content.decode('utf-8'))
 
     def test_with_real_username_max_with_more(self):
         """Tests the login lock for a bunch of times with a real username
@@ -108,7 +108,7 @@ class AccessAttemptTest(TestCase):
             'this_is_the_login_form': 1,
         })
 
-        self.assertNotIn(LOGIN_FORM_KEY, response.content)
+        self.assertNotIn(LOGIN_FORM_KEY, response.content.decode('utf-8'))
 
     def _successful_login(self, username, password):
         c = Client()
@@ -135,7 +135,7 @@ class AccessAttemptTest(TestCase):
 
         # Test successful login, this makes the user trusted.
         response = self._successful_login(valid_username, valid_username)
-        self.assertNotIn(LOGIN_FORM_KEY, response.content)
+        self.assertNotIn(LOGIN_FORM_KEY, response.content.decode('utf-8'))
 
         self.test_cooling_off(username=valid_username)
 
@@ -150,18 +150,18 @@ class AccessAttemptTest(TestCase):
             response = self._unsuccessful_login(valid_username)
 
             # Check if we are in the same login page
-            self.assertIn(LOGIN_FORM_KEY, response.content)
+            self.assertIn(LOGIN_FORM_KEY, response.content.decode('utf-8'))
 
         # Lock out the user
         response = self._unsuccessful_login(valid_username)
-        self.assertIn(self.LOCKED_MESSAGE, response.content)
+        self.assertIn(self.LOCKED_MESSAGE, response.content.decode('utf-8'))
 
         # Wait for the cooling off period
         time.sleep(COOLOFF_TIME.total_seconds())
 
         # It should be possible to login again, make sure it is.
         response = self._successful_login(valid_username, valid_username)
-        self.assertNotIn(self.LOCKED_MESSAGE, response.content)
+        self.assertNotIn(self.LOCKED_MESSAGE, response.content.decode('utf-8'))
 
     def test_valid_logout(self):
         """Tests a valid logout and make sure the logout_time is updated
@@ -179,7 +179,7 @@ class AccessAttemptTest(TestCase):
 
         self.assertNotEquals(AccessLog.objects.latest('id').logout_time, None)
 
-        self.assertIn('Logged out', response.content)
+        self.assertIn('Logged out', response.content.decode('utf-8'))
 
     def test_long_user_agent_valid(self):
         """Tests if can handle a long user agent
@@ -192,7 +192,7 @@ class AccessAttemptTest(TestCase):
             'this_is_the_login_form': 1,
         }, HTTP_USER_AGENT=long_user_agent)
 
-        self.assertNotIn(LOGIN_FORM_KEY, response.content)
+        self.assertNotIn(LOGIN_FORM_KEY, response.content.decode('utf-8'))
 
     def test_long_user_agent_not_valid(self):
         """Tests if can handle a long user agent with failure
@@ -206,7 +206,7 @@ class AccessAttemptTest(TestCase):
             self.assertContains(response, LOGIN_FORM_KEY)
 
         response = self._login()
-        self.assertIn(self.LOCKED_MESSAGE, response.content)
+        self.assertIn(self.LOCKED_MESSAGE, response.content.decode('utf-8'))
 
     def test_reset_ip(self):
         """Tests if can reset an ip address

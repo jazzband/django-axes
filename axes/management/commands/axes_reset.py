@@ -18,6 +18,6 @@ class Command(BaseCommand):
             count = reset()
 
         if count:
-            print '{0} attempts removed.'.format(count)
+            print('{0} attempts removed.'.format(count))
         else:
-            print 'No attempts found.'
+            print('No attempts found.')
