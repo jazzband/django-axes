@@ -62,7 +62,6 @@ IP_BLACKLIST = getattr(settings, 'AXES_IP_BLACKLIST', None)
 
 ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
                               "Note that both fields are case-sensitive.")
-LOGIN_FORM_KEY = 'this_is_the_login_form'
 
 
 def get_ip(request):
