@@ -5,7 +5,6 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth import logout
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import SiteProfileNotAvailable
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -19,6 +18,11 @@ except ImportError:  # django < 1.5
     from django.contrib.auth.models import User
 else:
     User = get_user_model()
+
+try:
+    from django.contrib.auth.models import SiteProfileNotAvailable
+except ImportError: # django >= 1.7
+    SiteProfileNotAvailable = type('SiteProfileNotAvailable', (Exception,), {})
 
 from axes.models import AccessLog
 from axes.models import AccessAttempt
