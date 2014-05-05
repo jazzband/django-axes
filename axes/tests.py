@@ -112,7 +112,7 @@ class AccessAttemptTest(TestCase):
 
     def _successful_login(self, username, password):
         c = Client()
-        response = c.post('/admin/', {
+        response = c.post(reverse('admin:index'), {
             'username': username,
             'password': username,
             'this_is_the_login_form': 1,
@@ -122,7 +122,7 @@ class AccessAttemptTest(TestCase):
 
     def _unsuccessful_login(self, username):
         c = Client()
-        response = c.post('/admin/', {
+        response = c.post(reverse('admin:index'), {
             'username': username,
             'password': 'wrong',
             'this_is_the_login_form': 1,
