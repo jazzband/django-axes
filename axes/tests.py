@@ -5,13 +5,22 @@ import time
 from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
+from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
 
 from axes.decorators import COOLOFF_TIME
 from axes.decorators import FAILURE_LIMIT
-from axes.decorators import LOGIN_FORM_KEY
 from axes.models import AccessLog
 from axes.utils import reset
+
+
+# Django >= 1.7 compatibility
+try:
+    ADMIN_LOGIN_URL = reverse('admin:login')
+    LOGIN_FORM_KEY = '<form action="/admin/login/" method="post" id="login-form">'
+except NoReverseMatch:
+    ADMIN_LOGIN_URL = reverse('admin:index')
+    LOGIN_FORM_KEY = 'this_is_the_login_form'
 
 
 class AccessAttemptTest(TestCase):
@@ -35,7 +44,7 @@ class AccessAttemptTest(TestCase):
         return self._generate_random_string()
 
     def _login(self, existing_username=False, user_agent='test-browser'):
-        response = self.client.post(reverse('admin:index'), {
+        response = self.client.post(ADMIN_LOGIN_URL, {
             'username': self._random_username(existing_username),
             'password': self._generate_random_string(),
             'this_is_the_login_form': 1,
@@ -102,7 +111,7 @@ class AccessAttemptTest(TestCase):
         """Tests a valid login for a real username
         """
         valid_username = self._random_username(existing_username=True)
-        response = self.client.post(reverse('admin:index'), {
+        response = self.client.post(ADMIN_LOGIN_URL, {
             'username': valid_username,
             'password': valid_username,
             'this_is_the_login_form': 1,
@@ -167,7 +176,7 @@ class AccessAttemptTest(TestCase):
         """Tests a valid logout and make sure the logout_time is updated
         """
         valid_username = self._random_username(existing_username=True)
-        response = self.client.post(reverse('admin:index'), {
+        self.client.post(ADMIN_LOGIN_URL, {
             'username': valid_username,
             'password': valid_username,
             'this_is_the_login_form': 1,
