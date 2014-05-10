@@ -25,52 +25,45 @@ except NoReverseMatch:
 class AccessAttemptTest(TestCase):
     """Test case using custom settings for testing
     """
+    VALID_USERNAME = 'valid'
     LOCKED_MESSAGE = 'Account locked: too many login attempts.'
 
-    def _generate_random_string(self):
-        """Generates a random string
+    def _get_random_string(self):
+        """Returns a random string
         """
         chars = string.ascii_uppercase + string.digits
 
         return ''.join(random.choice(chars) for x in range(20))
 
-    def _random_username(self, existing_username=False):
-        """Returns a username, existing or not depending on params
+    def _login(self, is_valid=False, user_agent='test-browser'):
+        """Login a user. A valid credential is used when is_valid is True,
+        otherwise it will use a random string to make a failed login.
         """
-        if existing_username:
-            return User.objects.order_by('?')[0].username
+        username = self.VALID_USERNAME if is_valid else self._get_random_string()
 
-        return self._generate_random_string()
-
-    def _login(self, existing_username=False, user_agent='test-browser'):
         response = self.client.post(ADMIN_LOGIN_URL, {
-            'username': self._random_username(existing_username),
-            'password': self._generate_random_string(),
+            'username': username,
+            'password': username,
             'this_is_the_login_form': 1,
         }, HTTP_USER_AGENT=user_agent)
 
         return response
 
     def setUp(self):
-        """Creates users for testing the login
+        """Create a valid user for login
         """
-        for i in range(0, random.randrange(10, 50)):
-            username = 'person%s' % i
-            email = '%s@example.org' % username
-            u = User.objects.create_user(
-                username=username,
-                password=username,
-                email=email,
-            )
-            u.is_staff = True
-            u.save()
+        user = User.objects.create_superuser(
+            username=self.VALID_USERNAME,
+            email='test@example.com',
+            password=self.VALID_USERNAME,
+        )
 
-    def test_login_max(self, existing_username=False):
+    def test_failure_limit_once(self):
         """Tests the login lock trying to login one more time
         than failure limit
         """
         for i in range(0, FAILURE_LIMIT):
-            response = self._login(existing_username=existing_username)
+            response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
 
@@ -79,161 +72,94 @@ class AccessAttemptTest(TestCase):
         response = self._login()
         self.assertContains(response, self.LOCKED_MESSAGE)
 
-    def test_with_real_username_max(self):
-        """Tests the login lock with a real username
-        """
-        self.test_login_max(existing_username=True)
-
-    def test_login_max_with_more_attempts(self, existing_username=False):
+    def test_failure_limit_many(self):
         """Tests the login lock trying to login a lot of times more
         than failure limit
         """
         for i in range(0, FAILURE_LIMIT):
-            response = self._login(existing_username=existing_username)
+            response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, LOGIN_FORM_KEY)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
-        for i in range(0, random.randrange(1, 100)):
+        for i in range(0, random.randrange(1, 10)):
             # try to log in a bunch of times
             response = self._login()
-
-        self.assertContains(response, self.LOCKED_MESSAGE)
-
-    def test_with_real_username_max_with_more(self):
-        """Tests the login lock for a bunch of times with a real username
-        """
-        self.test_login_max_with_more_attempts(existing_username=True)
+            self.assertContains(response, self.LOCKED_MESSAGE)
 
     def test_valid_login(self):
         """Tests a valid login for a real username
         """
-        valid_username = self._random_username(existing_username=True)
-        response = self.client.post(ADMIN_LOGIN_URL, {
-            'username': valid_username,
-            'password': valid_username,
-            'this_is_the_login_form': 1,
-        })
-
+        response = self._login(is_valid=True)
         self.assertNotContains(response, LOGIN_FORM_KEY, status_code=302)
 
-    def _successful_login(self, username, password):
-        response = self.client.post(ADMIN_LOGIN_URL, {
-            'username': username,
-            'password': username,
-            'this_is_the_login_form': 1,
-        })
+    def test_valid_logout(self):
+        """Tests a valid logout and make sure the logout_time is updated
+        """
+        response = self._login(is_valid=True)
+        self.assertEquals(AccessLog.objects.latest('id').logout_time, None)
 
-        return response
+        response = self.client.get(reverse('admin:logout'))
+        self.assertNotEquals(AccessLog.objects.latest('id').logout_time, None)
+        self.assertContains(response, 'Logged out')
 
-    def _unsuccessful_login(self, username):
-        response = self.client.post(ADMIN_LOGIN_URL, {
-            'username': username,
-            'password': 'wrong',
-            'this_is_the_login_form': 1,
-        })
-
-        return response
-
-    def test_cooling_off_for_trusted_user(self):
-        valid_username = self._random_username(existing_username=True)
-
-        # Test successful login, this makes the user trusted.
-        response = self._successful_login(valid_username, valid_username)
-        self.assertNotContains(response, LOGIN_FORM_KEY, status_code=302)
-
-        self.test_cooling_off(username=valid_username)
-
-    def test_cooling_off(self, username=None):
-        if username:
-            valid_username = username
-        else:
-            valid_username = self._random_username(existing_username=True)
-
-        # Test unsuccessful login and stop just before lockout happens
-        for i in range(0, FAILURE_LIMIT):
-            response = self._unsuccessful_login(valid_username)
-
-            # Check if we are in the same login page
-            self.assertContains(response, LOGIN_FORM_KEY)
-
-        # Lock out the user
-        response = self._unsuccessful_login(valid_username)
-        self.assertContains(response, self.LOCKED_MESSAGE)
+    def test_cooling_off(self):
+        """Tests if the cooling time allows a user to login
+        """
+        self.test_failure_limit_once()
 
         # Wait for the cooling off period
         time.sleep(COOLOFF_TIME.total_seconds())
 
         # It should be possible to login again, make sure it is.
-        response = self._successful_login(valid_username, valid_username)
-        self.assertNotContains(response, self.LOCKED_MESSAGE, status_code=302)
+        self.test_valid_login()
 
-    def test_valid_logout(self):
-        """Tests a valid logout and make sure the logout_time is updated
+    def test_cooling_off_for_trusted_user(self):
+        """Test the cooling time for a trusted user
         """
-        valid_username = self._random_username(existing_username=True)
-        self.client.post(ADMIN_LOGIN_URL, {
-            'username': valid_username,
-            'password': valid_username,
-            'this_is_the_login_form': 1,
-        }, follow=True)
+        # Test successful login-logout, this makes the user trusted.
+        self.test_valid_logout()
 
-        self.assertEquals(AccessLog.objects.latest('id').logout_time, None)
-
-        response = self.client.get(reverse('admin:logout'))
-
-        self.assertNotEquals(AccessLog.objects.latest('id').logout_time, None)
-
-        self.assertContains(response, 'Logged out')
+        # Try the cooling off time
+        self.test_cooling_off()
 
     def test_long_user_agent_valid(self):
         """Tests if can handle a long user agent
         """
         long_user_agent = 'ie6' * 1024
-        valid_username = self._random_username(existing_username=True)
-        response = self.client.post(ADMIN_LOGIN_URL, {
-            'username': valid_username,
-            'password': valid_username,
-            'this_is_the_login_form': 1,
-        }, HTTP_USER_AGENT=long_user_agent)
-
+        response = self._login(is_valid=True, user_agent=long_user_agent)
         self.assertNotContains(response, LOGIN_FORM_KEY, status_code=302)
 
     def test_long_user_agent_not_valid(self):
         """Tests if can handle a long user agent with failure
         """
         long_user_agent = 'ie6' * 1024
-        for i in range(0, FAILURE_LIMIT):
-            response = self._login(
-                existing_username=False,
-                user_agent=long_user_agent,
-            )
-            self.assertContains(response, LOGIN_FORM_KEY)
+        for i in range(0, FAILURE_LIMIT + 1):
+            response = self._login(user_agent=long_user_agent)
 
-        response = self._login()
         self.assertContains(response, self.LOCKED_MESSAGE)
 
     def test_reset_ip(self):
         """Tests if can reset an ip address
         """
         # Make a lockout
-        self.test_with_real_username_max()
+        self.test_failure_limit_once()
 
         # Reset the ip so we can try again
         reset(ip='127.0.0.1')
 
         # Make a login attempt again
-        self.test_with_real_username_max()
+        self.test_valid_login()
 
     def test_reset_all(self):
         """Tests if can reset all attempts
         """
         # Make a lockout
-        self.test_with_real_username_max()
+        self.test_failure_limit_once()
 
         # Reset all attempts so we can try again
         reset()
 
         # Make a login attempt again
-        self.test_with_real_username_max()
+        self.test_valid_login()
