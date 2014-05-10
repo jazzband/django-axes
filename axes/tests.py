@@ -3,7 +3,6 @@ import string
 import time
 
 from django.test import TestCase
-from django.test.client import Client
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
@@ -120,8 +119,7 @@ class AccessAttemptTest(TestCase):
         self.assertNotContains(response, LOGIN_FORM_KEY, status_code=302)
 
     def _successful_login(self, username, password):
-        c = Client()
-        response = c.post(ADMIN_LOGIN_URL, {
+        response = self.client.post(ADMIN_LOGIN_URL, {
             'username': username,
             'password': username,
             'this_is_the_login_form': 1,
@@ -130,8 +128,7 @@ class AccessAttemptTest(TestCase):
         return response
 
     def _unsuccessful_login(self, username):
-        c = Client()
-        response = c.post(ADMIN_LOGIN_URL, {
+        response = self.client.post(ADMIN_LOGIN_URL, {
             'username': username,
             'password': 'wrong',
             'this_is_the_login_form': 1,
