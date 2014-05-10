@@ -121,7 +121,7 @@ class AccessAttemptTest(TestCase):
 
     def _successful_login(self, username, password):
         c = Client()
-        response = c.post(reverse('admin:index'), {
+        response = c.post(ADMIN_LOGIN_URL, {
             'username': username,
             'password': username,
             'this_is_the_login_form': 1,
@@ -131,7 +131,7 @@ class AccessAttemptTest(TestCase):
 
     def _unsuccessful_login(self, username):
         c = Client()
-        response = c.post(reverse('admin:index'), {
+        response = c.post(ADMIN_LOGIN_URL, {
             'username': username,
             'password': 'wrong',
             'this_is_the_login_form': 1,
@@ -195,7 +195,7 @@ class AccessAttemptTest(TestCase):
         """
         long_user_agent = 'ie6' * 1024
         valid_username = self._random_username(existing_username=True)
-        response = self.client.post(reverse('admin:index'), {
+        response = self.client.post(ADMIN_LOGIN_URL, {
             'username': valid_username,
             'password': valid_username,
             'this_is_the_login_form': 1,
