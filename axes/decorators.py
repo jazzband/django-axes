@@ -85,11 +85,13 @@ def query2str(items):
 
     If there's a field called "password" it will be excluded from the output.
     """
+    # Limit the length of the value to avoid a DoS attack
+    value_maxlimit = 256
 
     kvs = []
     for k, v in items:
         if k != 'password':
-            kvs.append(six.u('%s=%s') % (k, v))
+            kvs.append(six.u('%s=%s') % (k, v[:256]))
 
     return '\n'.join(kvs)
 
