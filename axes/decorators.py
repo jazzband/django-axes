@@ -64,17 +64,27 @@ ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
                               "Note that both fields are case-sensitive.")
 
 
+log = logging.getLogger(LOGGER)
+if VERBOSE:
+    log.info('AXES: BEGIN LOG')
+    log.info('Using django-axes ' + axes.get_version())
+
+
+if BEHIND_REVERSE_PROXY:
+    log.debug('Axes is configured to be behind reverse proxy...looking for header value %s', REVERSE_PROXY_HEADER)
+
+
 def get_ip(request):
     if not BEHIND_REVERSE_PROXY:
         ip = request.META.get('REMOTE_ADDR', '')
     else:
-        logging.debug('Axes is configured to be behind reverse proxy...looking for header value %s', REVERSE_PROXY_HEADER)
         ip = request.META.get(REVERSE_PROXY_HEADER, '')
         if ip == '':
             raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
                           'an HTTP header value {0}. Check your proxy server settings '\
                           'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
     return ip
+
 
 def get_lockout_url():
     return getattr(settings, 'AXES_LOCKOUT_URL', None)
@@ -108,12 +118,6 @@ def ip_in_blacklist(ip):
         return ip in IP_BLACKLIST
 
     return False
-
-
-log = logging.getLogger(LOGGER)
-if VERBOSE:
-    log.info('AXES: BEGIN LOG')
-    log.info('Using django-axes ' + axes.get_version())
 
 
 def is_user_lockable(request):
