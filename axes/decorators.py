@@ -82,6 +82,7 @@ def get_ip(request):
         ip = request.META.get('REMOTE_ADDR', '')
     else:
         ip = request.META.get(REVERSE_PROXY_HEADER, '')
+        ip = ip.split(",", 1)[0].strip()
         if ip == '':
             if not BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS:
                 raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
