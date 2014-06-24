@@ -42,6 +42,9 @@ USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 # see if the django app is sitting behind a reverse proxy
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
 
+# see if the django app is sitting behind a reverse proxy but can be accessed directly
+BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS', False)
+
 # if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
 REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
 
@@ -80,9 +83,15 @@ def get_ip(request):
     else:
         ip = request.META.get(REVERSE_PROXY_HEADER, '')
         if ip == '':
-            raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
-                          'an HTTP header value {0}. Check your proxy server settings '\
-                          'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
+            if not BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS:
+                raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
+                    'an HTTP header value {0}. Check your proxy server settings '\
+                    'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
+            else:
+                ip = request.META.get('REMOTE_ADDR', '')
+                if ip not in IP_WHITELIST:
+                    raise Warning('Axes is configured for operation behind a reverse proxy and to allow some'\
+                        'IP addresses to have direct access. {0} is not on the white list'.format(ip))
     return ip
 
 
