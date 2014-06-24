@@ -66,6 +66,7 @@ def get_ip(request):
     else:
         logging.debug('Axes is configured to be behind reverse proxy...looking for header value %s', REVERSE_PROXY_HEADER)
         ip = request.META.get(REVERSE_PROXY_HEADER, '')
+        ip = ip.split(",", 1)[0].strip()
         if ip == '':
             raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
                           'an HTTP header value {0}. Check your proxy server settings '\
