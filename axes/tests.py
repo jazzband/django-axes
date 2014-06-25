@@ -5,7 +5,7 @@ import time
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 
 from axes.decorators import COOLOFF_TIME
 from axes.decorators import FAILURE_LIMIT
@@ -15,10 +15,10 @@ from axes.utils import reset
 
 # Django >= 1.7 compatibility
 try:
-    ADMIN_LOGIN_URL = reverse('admin:login')
+    ADMIN_LOGIN_URL = reverse_lazy('admin:login')
     LOGIN_FORM_KEY = '<form action="/admin/login/" method="post" id="login-form">'
 except NoReverseMatch:
-    ADMIN_LOGIN_URL = reverse('admin:index')
+    ADMIN_LOGIN_URL = reverse_lazy('admin:index')
     LOGIN_FORM_KEY = 'this_is_the_login_form'
 
 
