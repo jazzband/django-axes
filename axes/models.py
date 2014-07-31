@@ -6,7 +6,7 @@ class CommonAccess(models.Model):
         max_length=255,
     )
 
-    ip_address = models.IPAddressField(
+    ip_address = models.GenericIPAddressField(
         verbose_name='IP Address',
         null=True,
     )
