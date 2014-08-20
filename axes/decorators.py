@@ -421,7 +421,7 @@ def check_request(request, login_unsuccessful):
     user_lockable = is_user_lockable(request)
     # no matter what, we want to lock them out if they're past the number of
     # attempts allowed, unless the user is set to notlockable
-    if failures > FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
+    if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
         # We log them out in case they actually managed to enter the correct
         # password
         logout(request)
