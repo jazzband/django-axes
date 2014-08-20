@@ -424,7 +424,8 @@ def check_request(request, login_unsuccessful):
     if failures > FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
         # We log them out in case they actually managed to enter the correct
         # password
-        logout(request)
+        if hasattr(request, 'user') and request.user.is_authenticated():
+            logout(request)
         log.warn('AXES: locked out %s after repeated login attempts.' %
                  (ip_address,))
         # send signal when someone is locked out.
