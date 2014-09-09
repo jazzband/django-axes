@@ -40,6 +40,9 @@ LOCK_OUT_AT_FAILURE = getattr(settings, 'AXES_LOCK_OUT_AT_FAILURE', True)
 
 USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 
+# use a specific username field to retrieve from login POST data
+USERNAME_FORM_FIELD = getattr(settings, 'AXES_USERNAME_FORM_FIELD', 'username')
+
 # see if the django app is sitting behind a reverse proxy
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
 
@@ -184,7 +187,7 @@ def is_user_lockable(request):
     try:
         field = getattr(User, 'USERNAME_FIELD', 'username')
         kwargs = {
-            field: request.POST.get('username')
+            field: request.POST.get(USERNAME_FORM_FIELD)
         }
         user = User.objects.get(**kwargs)
     except User.DoesNotExist:
@@ -216,7 +219,7 @@ def _get_user_attempts(request):
     """
     ip = get_ip(request)
 
-    username = request.POST.get('username', None)
+    username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     if USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
@@ -283,7 +286,7 @@ def watch_login(func):
         # also no need to keep accessing these:
         # ip = request.META.get('REMOTE_ADDR', '')
         # ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
-        # username = request.POST.get('username', None)
+        # username = request.POST.get(USERNAME_FORM_FIELD, None)
 
         # if the request is currently under lockout, do not proceed to the
         # login function, go directly to lockout url, do not pass go, do not
@@ -313,7 +316,7 @@ def watch_login(func):
             access_log = AccessLog.objects.create(
                 user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
                 ip_address=get_ip(request),
-                username=request.POST.get('username', None),
+                username=request.POST.get(USERNAME_FORM_FIELD, None),
                 http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
                 path_info=request.META.get('PATH_INFO', '<unknown>'),
                 trusted=not login_unsuccessful,
@@ -370,7 +373,7 @@ def is_already_locked(request):
 
 def check_request(request, login_unsuccessful):
     ip_address = get_ip(request)
-    username = request.POST.get('username', None)
+    username = request.POST.get(USERNAME_FORM_FIELD, None)
     failures = 0
     attempts = get_user_attempts(request)
 
@@ -443,7 +446,7 @@ def check_request(request, login_unsuccessful):
 def create_new_failure_records(request, failures):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get('username', None)
+    username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     params = {
         'user_agent': ua,
@@ -472,7 +475,7 @@ def create_new_failure_records(request, failures):
 def create_new_trusted_record(request):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get('username', None)
+    username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     if not username:
         return False
