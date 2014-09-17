@@ -146,20 +146,20 @@ def get_lockout_url():
     return getattr(settings, 'AXES_LOCKOUT_URL', None)
 
 
-def query2str(items):
+def query2str(items, max_length=1024):
     """Turns a dictionary into an easy-to-read list of key-value pairs.
 
     If there's a field called "password" it will be excluded from the output.
+
+    The length of the output is limited to max_length to avoid a DoS attack.
     """
-    # Limit the length of the value to avoid a DoS attack
-    value_maxlimit = 256
 
     kvs = []
     for k, v in items:
         if k != 'password':
-            kvs.append(six.u('%s=%s') % (k, v[:256]))
+            kvs.append(six.u('%s=%s') % (k, v))
 
-    return '\n'.join(kvs)
+    return '\n'.join(kvs)[:max_length]
 
 
 def ip_in_whitelist(ip):
