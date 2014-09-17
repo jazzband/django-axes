@@ -50,7 +50,7 @@ BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS = getattr(settings, 'AXES_BEHIND_REVERSE
 REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
 
 COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
-if isinstance(COOLOFF_TIME, int):
+if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float) ):
     COOLOFF_TIME = timedelta(hours=COOLOFF_TIME)
 
 LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
