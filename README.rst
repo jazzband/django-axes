@@ -146,9 +146,7 @@ In your code, you can use ``from axes.utils import reset``.
 Issues
 ======
 
-* Why is Axes not capturing my failed login attempt?
-
-It may be that you need to manually add watch_login to your login url. 
+You may find that Axes is not capturing my failed login attempt. It may be that you need to manually add watch_login to your login url. 
 For example, in your urls.py::
 
     ...
