@@ -142,3 +142,18 @@ In your code, you can use ``from axes.utils import reset``.
 * ``reset()`` will reset all lockouts and access records.
 * ``reset(ip=ip)`` will clear lockout/records for ip
 * ``reset(username=username)`` will clear lockout/records for username
+
+Issues
+======
+
+You may find that Axes is not capturing my failed login attempt. It may be that you need to manually add watch_login to your login url. 
+For example, in your urls.py::
+
+    ...
+    from django.contrib.auth.views import login, logout, password_change
+    from axes.decorators import watch_login
+    ...
+    urlpatterns = patterns('',
+        (r'^login/$', watch_login(login), {'template_name': 'auth/login.html'}),
+    ...
+
