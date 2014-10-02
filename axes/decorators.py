@@ -43,6 +43,9 @@ USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 # use a specific username field to retrieve from login POST data
 USERNAME_FORM_FIELD = getattr(settings, 'AXES_USERNAME_FORM_FIELD', 'username')
 
+# use a specific password field to retrieve from login POST data
+PASSWORD_FORM_FIELD = getattr(settings, 'AXES_PASSWORD_FORM_FIELD', 'password')
+
 # see if the django app is sitting behind a reverse proxy
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
 
@@ -159,7 +162,7 @@ def query2str(items, max_length=1024):
 
     kvs = []
     for k, v in items:
-        if k != 'password':
+        if k != PASSWORD_FORM_FIELD:
             kvs.append(six.u('%s=%s') % (k, v))
 
     return '\n'.join(kvs)[:max_length]
@@ -307,6 +310,7 @@ def watch_login(func):
 
         if request.method == 'POST':
             # see if the login was successful
+
             login_unsuccessful = (
                 response and
                 not response.has_header('location') and
