@@ -1,6 +1,121 @@
 Changes
 =======
 
+1.3.7 (2014-10-05)
+------------------
+
+- Explain common issues where Axes fails silently
+  [cericoda]
+
+- Allow for user-defined username field for lookup in POST data
+  [SteveByerly]
+
+- Log out only if user was logged in
+  [zoten]
+
+- Support for floats in cooloff time (i.e: 0.1 == 6 minutes)
+  [marianov]
+
+- Limit amount of POST data logged (#73). Limiting the length of value is not enough, as there could be arbitrary number of them, or very long key names.
+  [peterkuma]
+
+- Improve get_ip to try for real ip address
+  [7wonders]
+
+- Change IPAddressField to GenericIPAddressField. When using a PostgreSQL database and the client does not pass an IP address you get an inet error. This is a known problem with PostgreSQL and the IPAddressField. https://code.djangoproject.com/ticket/5622. It can be fixed by using a GenericIPAddressField instead.
+  [polvoblanco]
+
+- Get first X-Forwarded-For IP
+  [tutumcloud]
+
+- White listing IP addresses behind reverse proxy. Allowing some IP addresses to have direct access to the app even if they are behind a reverse proxy. Those IP addresses must still be on a white list.
+  [ericbulloch]
+
+- Reduce logging of reverse proxy IP lookup and use configured logger. Fixes #76. Instead of logging the notice that django.axes looks for a HTTP header set by a reverse proxy on each attempt, just log it one-time on first module import. Also use the configured logger (by default axes.watch_login) for the message to be more consistent in logging.
+  [eht16]
+
+- Limit the length of the values logged into the database. Refs #73
+  [camilonova]
+
+- Refactored tests to be more stable and faster
+  [camilonova]
+
+- Clean client references
+  [camilonova]
+
+- Fixed admin login url
+  [camilonova]
+
+- Added django 1.7 for testing
+  [camilonova]
+
+- Travis file cleanup
+  [camilonova]
+
+- Remove hardcoded url path
+  [camilonova]
+
+- Fixing tests for django 1.7
+  [Andrew-Crosio]
+
+- Fix for django 1.7 exception not existing
+  [Andrew-Crosio]
+
+- Removed python 2.6 from testing
+  [camilonova]
+
+- Use django built-in six version
+  [camilonova]
+
+- Added six as requirement
+  [camilonova]
+
+- Added python 2.6 for travis testing
+  [camilonova]
+
+- Replaced u string literal prefixes with six.u() calls
+  [amrhassan]
+
+- Fixes object type issue, response is not an string
+  [camilonova]
+    
+- Python 3 compatibility fix for db_reset
+  [nicois]
+
+- Added example project and helper scripts
+  [barseghyanartur]
+
+- Admin command to list login attemps
+  [marianov]
+
+- Replaced six imports with django.utils.six ones
+  [amrhassan]
+
+- Replaced u string literal prefixes with six.u() calls to make it compatible with Python 3.2
+  [amrhassan]
+
+- Replaced `assertIn`s and `assertNotIn`s with `assertContains` and `assertNotContains`
+  [fcurella]
+
+- Added py3k to travis
+  [fcurella]
+
+- Update test cases to be python3 compatible
+  [nicois]
+
+- Python 3 compatibility fix for db_reset
+  [nicois]
+
+- Removed trash from example urls
+  [barseghyanartur]
+
+- Added django installer
+  [barseghyanartur]
+
+- Added example project and helper scripts
+  [barseghyanartur]
+
+
 1.3.6 (2013-11-23)
 ------------------
 

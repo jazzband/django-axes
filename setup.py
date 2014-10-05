@@ -4,17 +4,15 @@
 import os
 from setuptools import setup, find_packages
 
-try:
-    readme = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read() + '\n' + \
-             open(os.path.join(os.path.dirname(__file__), 'CHANGES.rst')).read()
-except:
-    readme = ''
+VERSION = '1.3.7'
 
 setup(
     name='django-axes',
-    version='1.3.6',
+    version=VERSION,
     description="Keep track of failed login attempts in Django-powered sites.",
-    long_description=readme,
+    long_description=(
+        open("README.rst").read() + '\n' +
+        open("CHANGES.txt").read()),
     keywords='django, security, authentication',
     author='Josh VanderLinden, Philip Neustrom, Michael Blume, Camilo Nova',
     author_email='codekoala@gmail.com',

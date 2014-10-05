@@ -1,2 +1,7 @@
 include LICENSE README.rst CHANGES.txt
 recursive-include axes *.py
+include .travis.yml
+recursive-include examples *.example
+recursive-include examples *.py
+recursive-include examples *.rst
+recursive-include examples *.sh
