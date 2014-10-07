@@ -29,7 +29,7 @@ Installation
 
 Download and install ``django-axes`` using **one** of the following methods:
 
-PIP
+pip
 ---
 
 You can install the latest stable package running this command::
