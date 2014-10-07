@@ -1,9 +1,9 @@
 Django Axes
 ===========
 
-.. image:: https://secure.travis-ci.org/django-security/django-axes.png?branch=master
+.. image:: https://secure.travis-ci.org/django-pci/django-axes.png?branch=master
     :alt: Build Status
-    :target: http://travis-ci.org/django-security/django-axes
+    :target: http://travis-ci.org/django-pci/django-axes
 
 ``django-axes`` is a very simple way for you to keep track of failed login
 attempts, both for the Django admin and for the rest of your site.  The name is
@@ -38,7 +38,7 @@ You can install the latest stable package running this command::
 
 Also you can install the development version running this command::
 
-    $ pip install -e git+http://github.com/django-security/django-axes.git#egg=django_axes-dev
+    $ pip install -e git+http://github.com/django-pci/django-axes.git#egg=django_axes-dev
 
 Setuptools
 ----------
