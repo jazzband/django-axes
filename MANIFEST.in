@@ -5,3 +5,4 @@ recursive-include examples *.example
 recursive-include examples *.py
 recursive-include examples *.rst
 recursive-include examples *.sh
+include Makefile
