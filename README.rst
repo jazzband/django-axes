@@ -118,6 +118,8 @@ These should be defined in your ``settings.py`` file.
   be used. Default: ``None``
 * ``AXES_VERBOSE``: If ``True``, you'll see slightly more logging for Axes.
   Default: ``True``
+* ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
+  users usernames. Default: ``username``
 
 
 Usage
@@ -146,7 +148,10 @@ In your code, you can use ``from axes.utils import reset``.
 Issues
 ======
 
-You may find that Axes is not capturing my failed login attempt. It may be that you need to manually add watch_login to your login url. 
+Not being locked out after failed attempts
+------------------------------------------
+
+You may find that Axes is not capturing your failed login attempts. It may be that you need to manually add watch_login to your login url. 
 For example, in your urls.py::
 
     ...
@@ -157,3 +162,14 @@ For example, in your urls.py::
         (r'^login/$', watch_login(login), {'template_name': 'auth/login.html'}),
     ...
 
+
+Locked out without reason
+-------------------------
+
+It may happen that you have suddenly become locked out without a single failed
+attempt. One possible reason is that you are using some custom login form and the
+username field is named something different than "username", e.g. "email". This
+leads to all users attempts being lumped together. To fix this add the following
+to your settings:
+
+    AXES_USERNAME_FORM_FIELD = "email"
