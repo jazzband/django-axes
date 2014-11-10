@@ -43,6 +43,9 @@ USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 # use a specific username field to retrieve from login POST data
 USERNAME_FORM_FIELD = getattr(settings, 'AXES_USERNAME_FORM_FIELD', 'username')
 
+# Set this flag to only check user name and not location or user_agent
+AXES_ONLY_USER_FAILURES = getattr(settings, 'AXES_ONLY_USER_FAILURES', False)
+
 # use a specific password field to retrieve from login POST data
 PASSWORD_FORM_FIELD = getattr(settings, 'AXES_PASSWORD_FORM_FIELD', 'password')
 
@@ -224,26 +227,29 @@ def _get_user_attempts(request):
 
     username = request.POST.get(USERNAME_FORM_FIELD, None)
 
-    if USE_USER_AGENT:
-        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-        attempts = AccessAttempt.objects.filter(
-            user_agent=ua, ip_address=ip, username=username, trusted=True
-        )
+    if AXES_ONLY_USER_FAILURES:
+        attempts = AccessAttempt.objects.filter(username=username)
     else:
-        attempts = AccessAttempt.objects.filter(
-            ip_address=ip, username=username, trusted=True
-        )
-
-    if not attempts:
-        params = {'ip_address': ip, 'trusted': False}
         if USE_USER_AGENT:
-            params['user_agent'] = ua
+            ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
+            attempts = AccessAttempt.objects.filter(
+                user_agent=ua, ip_address=ip, username=username, trusted=True
+            )
+        else:
+            attempts = AccessAttempt.objects.filter(
+                ip_address=ip, username=username, trusted=True
+            )
 
-        attempts = AccessAttempt.objects.filter(**params)
-        if username and not ip_in_whitelist(ip):
-            del params['ip_address']
-            params['username'] = username
-            attempts |= AccessAttempt.objects.filter(**params)
+        if not attempts:
+            params = {'ip_address': ip, 'trusted': False}
+            if USE_USER_AGENT:
+                params['user_agent'] = ua
+
+            attempts = AccessAttempt.objects.filter(**params)
+            if username and not ip_in_whitelist(ip):
+                del params['ip_address']
+                params['username'] = username
+                attempts |= AccessAttempt.objects.filter(**params)
 
     return attempts
 
@@ -463,9 +469,10 @@ def create_new_failure_records(request, failures):
         'path_info': request.META.get('PATH_INFO', '<unknown>'),
         'failures_since_start': failures,
     }
-
-    # record failed attempt from this IP
-    AccessAttempt.objects.create(**params)
+    
+    # record failed attempt from this IP if not AXES_ONLY_USER_FAILURES
+    if not AXES_ONLY_USER_FAILURES:
+        AccessAttempt.objects.create(**params)
 
     # record failed attempt on this username from untrusted IP
     params.update({
