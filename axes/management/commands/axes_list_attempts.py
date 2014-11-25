@@ -9,5 +9,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         for at in  AccessAttempt.objects.all():
-            print "%s %s %s" % (at.ip_address,  at.username, at.failures)
+            print ("%s %s %s" % (at.ip_address,  at.username, at.failures))
 
