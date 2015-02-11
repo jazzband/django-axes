@@ -27,11 +27,6 @@ login-powered pages.
 Installation
 ============
 
-Download and install ``django-axes`` using **one** of the following methods:
-
-pip
----
-
 You can install the latest stable package running this command::
 
     $ pip install django-axes
@@ -39,14 +34,6 @@ You can install the latest stable package running this command::
 Also you can install the development version running this command::
 
     $ pip install -e git+http://github.com/django-pci/django-axes.git#egg=django_axes-dev
-
-Setuptools
-----------
-
-You can install the latest stable package running::
-
-    $ easy_install django-axes
-
 
 Development
 ===========
