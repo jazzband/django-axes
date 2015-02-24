@@ -197,24 +197,25 @@ def is_user_lockable(request):
         # not a valid user
         return True
 
-    # Django 1.5 does not support profile anymore, ask directly to user
     if hasattr(user, 'nolockout'):
         # need to revert since we need to return
         # false for users that can't be blocked
         return not user.nolockout
 
-    try:
-        profile = user.get_profile()
-    except (SiteProfileNotAvailable, ObjectDoesNotExist, AttributeError):
-        # no profile
-        return True
+    elif hasattr(settings, 'AUTH_PROFILE_MODULE'):
+        try:
+            profile = user.get_profile()
+            if hasattr(profile, 'nolockout'):
+                # need to revert since we need to return
+                # false for users that can't be blocked
+                return not profile.nolockout
 
-    if hasattr(profile, 'nolockout'):
-        # need to revert since we need to return
-        # false for users that can't be blocked
-        return not profile.nolockout
-    else:
-        return True
+        except (SiteProfileNotAvailable, ObjectDoesNotExist, AttributeError):
+            # no profile
+            return True
+
+    # Default behavior for a user to be lockable
+    return True
 
 def _get_user_attempts(request):
     """Returns access attempt record if it exists.
