@@ -55,6 +55,9 @@ BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS = getattr(settings, 'AXES_BEHIND_REVERSE
 # if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
 REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
 
+# lock out user from particular IP based on combination USER+IP
+LOCK_OUT_BY_COMBINATION_USER_AND_IP = getattr(settings, 'AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP', False)
+
 COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
 if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float) ):
     COOLOFF_TIME = timedelta(hours=COOLOFF_TIME)
@@ -235,16 +238,12 @@ def _get_user_attempts(request):
             ip_address=ip, username=username, trusted=True
         )
 
-    if not attempts:
+    if not attempts and not LOCK_OUT_BY_COMBINATION_USER_AND_IP:
         params = {'ip_address': ip, 'trusted': False}
         if USE_USER_AGENT:
             params['user_agent'] = ua
 
         attempts = AccessAttempt.objects.filter(**params)
-        if username and not ip_in_whitelist(ip):
-            del params['ip_address']
-            params['username'] = username
-            attempts |= AccessAttempt.objects.filter(**params)
 
     return attempts
 
@@ -457,7 +456,7 @@ def create_new_failure_records(request, failures):
     params = {
         'user_agent': ua,
         'ip_address': ip,
-        'username': None,
+        'username': username,
         'get_data': query2str(request.GET.items()),
         'post_data': query2str(request.POST.items()),
         'http_accept': request.META.get('HTTP_ACCEPT', '<unknown>'),
@@ -465,14 +464,6 @@ def create_new_failure_records(request, failures):
         'failures_since_start': failures,
     }
 
-    # record failed attempt from this IP
-    AccessAttempt.objects.create(**params)
-
-    # record failed attempt on this username from untrusted IP
-    params.update({
-        'ip_address': None,
-        'username': username,
-    })
     AccessAttempt.objects.create(**params)
 
     log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
