@@ -1,15 +1,11 @@
-import os
-import django
+from datetime import timedelta
 
-if django.VERSION[:2] >= (1, 3):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': ':memory:',
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
     }
-else:
-    DATABASE_ENGINE = 'sqlite3'
+}
 
 SITE_ID = 1
 
@@ -22,7 +18,7 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'axes.test_urls'
 
-INSTALLED_APPS = [
+INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -31,13 +27,11 @@ INSTALLED_APPS = [
     'django.contrib.admin',
 
     'axes',
-]
+)
 
 SECRET_KEY = 'too-secret-for-test'
 
-LOGIN_REDIRECT_URL = '/admin'
+LOGIN_REDIRECT_URL = '/admin/'
 
 AXES_LOGIN_FAILURE_LIMIT = 10
-from datetime import timedelta
-AXES_COOLOFF_TIME=timedelta(seconds = 2)
-
+AXES_COOLOFF_TIME = timedelta(seconds=2)

@@ -13,37 +13,33 @@ from axes.models import AccessLog
 from axes.utils import reset
 
 
-# Django >= 1.7 compatibility
-try:
-    ADMIN_LOGIN_URL = reverse('admin:login')
-    LOGIN_FORM_KEY = '<form action="/admin/login/" method="post" id="login-form">'
-except NoReverseMatch:
-    ADMIN_LOGIN_URL = reverse('admin:index')
-    LOGIN_FORM_KEY = 'this_is_the_login_form'
-
-
 class AccessAttemptTest(TestCase):
     """Test case using custom settings for testing
     """
-    VALID_USERNAME = 'valid'
+    VALID_PASSWORD = 'valid-password'
     LOCKED_MESSAGE = 'Account locked: too many login attempts.'
-
-    def _get_random_string(self):
-        """Returns a random string
-        """
-        chars = string.ascii_uppercase + string.digits
-
-        return ''.join(random.choice(chars) for x in range(20))
+    LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
 
     def _login(self, is_valid=False, user_agent='test-browser'):
         """Login a user. A valid credential is used when is_valid is True,
         otherwise it will use a random string to make a failed login.
         """
-        username = self.VALID_USERNAME if is_valid else self._get_random_string()
+        try:
+            admin_login = reverse('admin:login')
+        except NoReverseMatch:
+            admin_login = reverse('admin:index')
 
-        response = self.client.post(ADMIN_LOGIN_URL, {
+        if is_valid:
+            # Use a valid username
+            username = self.user.username
+        else:
+            # Generate a wrong random username
+            chars = string.ascii_uppercase + string.digits
+            username = ''.join(random.choice(chars) for x in range(10))
+
+        response = self.client.post(admin_login, {
             'username': username,
-            'password': username,
+            'password': self.VALID_PASSWORD,
             'this_is_the_login_form': 1,
         }, HTTP_USER_AGENT=user_agent)
 
@@ -52,10 +48,10 @@ class AccessAttemptTest(TestCase):
     def setUp(self):
         """Create a valid user for login
         """
-        user = User.objects.create_superuser(
-            username=self.VALID_USERNAME,
+        self.user = User.objects.create_superuser(
+            username='valid-username',
             email='test@example.com',
-            password=self.VALID_USERNAME,
+            password=self.VALID_PASSWORD,
         )
 
     def test_failure_limit_once(self):
@@ -65,7 +61,7 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
-            self.assertContains(response, LOGIN_FORM_KEY)
+            self.assertContains(response, self.LOGIN_FORM_KEY)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
@@ -79,12 +75,11 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
-            self.assertContains(response, LOGIN_FORM_KEY)
+            self.assertContains(response, self.LOGIN_FORM_KEY)
 
         # So, we shouldn't have gotten a lock-out yet.
-        # But we should get one now
-        for i in range(0, random.randrange(1, 10)):
-            # try to log in a bunch of times
+        # We should get a locked message each time we try again
+        for i in range(0, random.randrange(1, FAILURE_LIMIT)):
             response = self._login()
             self.assertContains(response, self.LOCKED_MESSAGE)
 
@@ -92,7 +87,7 @@ class AccessAttemptTest(TestCase):
         """Tests a valid login for a real username
         """
         response = self._login(is_valid=True)
-        self.assertNotContains(response, LOGIN_FORM_KEY, status_code=302)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
 
     def test_valid_logout(self):
         """Tests a valid logout and make sure the logout_time is updated
@@ -129,7 +124,7 @@ class AccessAttemptTest(TestCase):
         """
         long_user_agent = 'ie6' * 1024
         response = self._login(is_valid=True, user_agent=long_user_agent)
-        self.assertNotContains(response, LOGIN_FORM_KEY, status_code=302)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
 
     def test_long_user_agent_not_valid(self):
         """Tests if can handle a long user agent with failure
