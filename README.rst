@@ -19,7 +19,7 @@ sort of a geeky pun, since ``axes`` can be read interpreted as:
 Requirements
 ============
 
-``django-axes`` requires Django 1.4 or later.  The application is intended to
+``django-axes`` requires Django 1.5 or later. The application is intended to
 work around the Django admin and the regular ``django.contrib.auth``
 login-powered pages.
 
@@ -143,7 +143,7 @@ Issues
 Not being locked out after failed attempts
 ------------------------------------------
 
-You may find that Axes is not capturing your failed login attempts. It may be that you need to manually add watch_login to your login url. 
+You may find that Axes is not capturing your failed login attempts. It may be that you need to manually add watch_login to your login url.
 For example, in your urls.py::
 
     ...
