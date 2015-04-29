@@ -10,6 +10,7 @@ from django.core.urlresolvers import reverse
 from axes.decorators import COOLOFF_TIME
 from axes.decorators import FAILURE_LIMIT
 from axes.models import AccessLog
+from axes.signals import user_locked_out
 from axes.utils import reset
 
 
@@ -58,7 +59,7 @@ class AccessAttemptTest(TestCase):
         """Tests the login lock trying to login one more time
         than failure limit
         """
-        for i in range(0, FAILURE_LIMIT):
+        for i in range(1, FAILURE_LIMIT):  # test until one try before the limit
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
@@ -72,7 +73,7 @@ class AccessAttemptTest(TestCase):
         """Tests the login lock trying to login a lot of times more
         than failure limit
         """
-        for i in range(0, FAILURE_LIMIT):
+        for i in range(1, FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
@@ -158,3 +159,27 @@ class AccessAttemptTest(TestCase):
 
         # Make a login attempt again
         self.test_valid_login()
+
+    def test_send_lockout_signal(self):
+        """Test if the lockout signal is emitted
+        """
+        class Scope(object): pass  # this "hack" is needed so we don't have to use global variables or python3 features
+        scope = Scope()
+        scope.signal_received = 0
+
+        def signal_handler(request, username, ip_address, *args, **kwargs):
+            scope.signal_received += 1
+            self.assertIsNotNone(request)
+
+        # Connect signal handler
+        user_locked_out.connect(signal_handler)
+
+        # Make a lockout
+        self.test_failure_limit_once()
+        self.assertEquals(scope.signal_received, 1)
+
+        reset()
+
+        # Make another lockout
+        self.test_failure_limit_once()
+        self.assertEquals(scope.signal_received, 2)
