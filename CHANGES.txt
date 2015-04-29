@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.4.0 (Unreleased)
+------------------
+
+- Send the user_locked_out signal. Fixes #94.
+  [toabi]
+
 1.3.9 (2015-02-11)
 ------------------
 
