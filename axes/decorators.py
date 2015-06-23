@@ -238,10 +238,12 @@ def _get_user_attempts(request):
             ip_address=ip, username=username, trusted=True
         )
 
-    if not attempts and not LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+    if not attempts:
         params = {'ip_address': ip, 'trusted': False}
         if USE_USER_AGENT:
             params['user_agent'] = ua
+        if LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+            params['username'] = username
 
         attempts = AccessAttempt.objects.filter(**params)
 
