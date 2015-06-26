@@ -2,19 +2,16 @@ import random
 import string
 import time
 
-from django.conf import settings
 from django.test import TestCase
-from django.core.urlresolvers import NoReverseMatch, reverse
-
-if not settings.configured:
-    settings.configure()
+from django.contrib.auth.models import User
+from django.core.urlresolvers import NoReverseMatch
+from django.core.urlresolvers import reverse
 
 from axes.decorators import COOLOFF_TIME
 from axes.decorators import FAILURE_LIMIT
 from axes.models import AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset
-
 
 
 class AccessAttemptTest(TestCase):
@@ -52,13 +49,6 @@ class AccessAttemptTest(TestCase):
     def setUp(self):
         """Create a valid user for login
         """
-        try:
-            from django.contrib.auth import get_user_model
-        except ImportError:  # django < 1.5
-            from django.contrib.auth.models import User
-        else:
-            User = get_user_model()
-
         self.user = User.objects.create_superuser(
             username='valid-username',
             email='test@example.com',
@@ -93,27 +83,6 @@ class AccessAttemptTest(TestCase):
         for i in range(0, random.randrange(1, FAILURE_LIMIT)):
             response = self._login()
             self.assertContains(response, self.LOCKED_MESSAGE)
-
-    def test_failure_username_ip(self):
-        """Tests the login lock based on a combination of username
-        and IP address
-        """
-        with self.settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True):
-            for i in range(1, FAILURE_LIMIT):  # test until one try before the limit
-                response = self._login()
-                # Check if we are in the same login page
-                self.assertContains(response, self.LOGIN_FORM_KEY)
-
-            # So, we shouldn't have gotten a lock-out yet.
-            # But we should get one now
-            response = self._login()
-            self.assertContains(response, self.LOCKED_MESSAGE)
-
-
-            self.user.username='other-user'
-            self.user.save()
-            response = self._login()
-            self.test_valid_login()
 
     def test_valid_login(self):
         """Tests a valid login for a real username
