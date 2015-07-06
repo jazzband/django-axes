@@ -340,6 +340,7 @@ def lockout_response(request):
         context = {
             'cooloff_time': COOLOFF_TIME,
             'failure_limit': FAILURE_LIMIT,
+            'username': request.POST.get(USERNAME_FORM_FIELD, '')
         }
         return render_to_response(LOCKOUT_TEMPLATE, context,
                                   context_instance=RequestContext(request))
