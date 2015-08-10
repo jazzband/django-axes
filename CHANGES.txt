@@ -1,7 +1,7 @@
 Changes
 =======
 
-1.4.0 (Unreleased)
+1.4.0 (2015-08-09)
 ------------------
 
 - Send the user_locked_out signal. Fixes #94.

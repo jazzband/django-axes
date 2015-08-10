@@ -4,7 +4,7 @@
 import os
 from setuptools import setup, find_packages
 
-VERSION = '1.3.9'
+VERSION = '1.4.0'
 
 setup(
     name='django-axes',
