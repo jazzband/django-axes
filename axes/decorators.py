@@ -56,7 +56,8 @@ BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS = getattr(settings, 'AXES_BEHIND_REVERSE
 REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
 
 # lock out user from particular IP based on combination USER+IP
-LOCK_OUT_BY_COMBINATION_USER_AND_IP = getattr(settings, 'AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP', False)
+def should_lock_out_by_combination_user_and_ip():
+    return getattr(settings, 'AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP', False)
 
 COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
 if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float) ):
@@ -238,10 +239,12 @@ def _get_user_attempts(request):
             ip_address=ip, username=username, trusted=True
         )
 
-    if not attempts and not LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+    if not attempts:
         params = {'ip_address': ip, 'trusted': False}
         if USE_USER_AGENT:
             params['user_agent'] = ua
+        if should_lock_out_by_combination_user_and_ip():
+            params['username'] = username
 
         attempts = AccessAttempt.objects.filter(**params)
 
