@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.5.0 (2015-09-11)
+------------------
+
+- Fix #_get_user_attempts to include username when filtering AccessAttempts if AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True
+  [afioca]
+
 1.4.0 (2015-08-09)
 ------------------
 
