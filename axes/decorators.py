@@ -8,8 +8,7 @@ from django.contrib.auth import logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.template.loader import get_template
 from django.utils import timezone as datetime
 from django.utils.translation import ugettext_lazy
 
@@ -345,8 +344,9 @@ def lockout_response(request):
             'failure_limit': FAILURE_LIMIT,
             'username': request.POST.get(USERNAME_FORM_FIELD, '')
         }
-        return render_to_response(LOCKOUT_TEMPLATE, context,
-                                  context_instance=RequestContext(request))
+        template = get_template(LOCKOUT_TEMPLATE)
+        content = template.render(context, request)
+        return HttpResponse(content)
 
     LOCKOUT_URL = get_lockout_url()
     if LOCKOUT_URL:
