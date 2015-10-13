@@ -201,7 +201,7 @@ def is_user_lockable(request):
         return True
 
     if hasattr(user, 'nolockout'):
-        # need to revert since we need to return
+        # need to invert since we need to return
         # false for users that can't be blocked
         return not user.nolockout
 
@@ -209,7 +209,7 @@ def is_user_lockable(request):
         try:
             profile = user.get_profile()
             if hasattr(profile, 'nolockout'):
-                # need to revert since we need to return
+                # need to invert since we need to return
                 # false for users that can't be blocked
                 return not profile.nolockout
 
@@ -370,10 +370,15 @@ def is_already_locked(request):
     if ip_in_blacklist(ip):
         return True
 
-    attempts = get_user_attempts(request)
     user_lockable = is_user_lockable(request)
+
+    if not user_lockable:
+        return False
+
+    attempts = get_user_attempts(request)
+
     for attempt in attempts:
-        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
+        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
             return True
 
     return False
