@@ -160,15 +160,11 @@ def query2str(items, max_length=1024):
 
     If there's a field called "password" it will be excluded from the output.
 
-    The length of the output is limited to max_length to avoid a DoS attack.
+    The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
     """
 
-    kvs = []
-    for k, v in items:
-        if k != PASSWORD_FORM_FIELD:
-            kvs.append(six.u('%s=%s') % (k, v))
-
-    return '\n'.join(kvs)[:max_length]
+    return '\n'.join(['%s=%s' % (k, v) for k, v in six.iteritems(items)
+                      if k != PASSWORD_FORM_FIELD][:int(max_length/2)])[:max_length]
 
 
 def ip_in_whitelist(ip):
@@ -398,11 +394,11 @@ def check_request(request, login_unsuccessful):
             for attempt in attempts:
                 attempt.get_data = '%s\n---------\n%s' % (
                     attempt.get_data,
-                    query2str(request.GET.items()),
+                    query2str(request.GET),
                 )
                 attempt.post_data = '%s\n---------\n%s' % (
                     attempt.post_data,
-                    query2str(request.POST.items())
+                    query2str(request.POST)
                 )
                 attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
                 attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
@@ -461,8 +457,8 @@ def create_new_failure_records(request, failures):
         'user_agent': ua,
         'ip_address': ip,
         'username': username,
-        'get_data': query2str(request.GET.items()),
-        'post_data': query2str(request.POST.items()),
+        'get_data': query2str(request.GET),
+        'post_data': query2str(request.POST),
         'http_accept': request.META.get('HTTP_ACCEPT', '<unknown>'),
         'path_info': request.META.get('PATH_INFO', '<unknown>'),
         'failures_since_start': failures,
@@ -485,8 +481,8 @@ def create_new_trusted_record(request):
         user_agent=ua,
         ip_address=ip,
         username=username,
-        get_data=query2str(request.GET.items()),
-        post_data=query2str(request.POST.items()),
+        get_data=query2str(request.GET),
+        post_data=query2str(request.POST),
         http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
         path_info=request.META.get('PATH_INFO', '<unknown>'),
         failures_since_start=0,
