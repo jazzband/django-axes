@@ -106,8 +106,8 @@ def get_ip_address_from_request(request):
         if not x_forwarded_for.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(x_forwarded_for):
             ip_address = x_forwarded_for.strip()
     else:
-        ips = [ip.strip() for ip in x_forwarded_for.split(',')]
-        for ip in ips:
+        for ip_raw in x_forwarded_for.split(','):
+            ip = ip_raw.strip()
             if ip.startswith(PRIVATE_IPS_PREFIX):
                 continue
             elif not is_valid_ip(ip):
