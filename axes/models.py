@@ -4,22 +4,26 @@ from django.utils import six
 class CommonAccess(models.Model):
     user_agent = models.CharField(
         max_length=255,
+        db_index=True,
     )
 
     ip_address = models.GenericIPAddressField(
         verbose_name='IP Address',
         null=True,
+        db_index=True,
     )
 
     username = models.CharField(
         max_length=255,
         null=True,
+        db_index=True,
     )
 
     # Once a user logs in from an ip, that combination is trusted and not
     # locked out in case of a distributed attack
     trusted = models.BooleanField(
         default=False,
+        db_index=True,
     )
 
     http_accept = models.CharField(
