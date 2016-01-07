@@ -1,6 +1,27 @@
 Changes
 =======
 
+1.6.0 (2016-01-07)
+------------------
+
+- Stopped using render_to_response so that other template engines work
+  [tarkatronic]
+
+- Improved performance & DoS prevention on query2str
+  [tarkatronic]
+
+- Immediately return from is_already_locked if the user is not lockable
+  [jdunck]
+
+- Iterate over ip addresses only once
+  [annp89]
+
+- added initial migration files to support django 1.7 &up
+  [ibaguio]
+
+- Add db indexes to CommonAccess model
+  [Schweigi]
+
 1.5.0 (2015-09-11)
 ------------------
 
