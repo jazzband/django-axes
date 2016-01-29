@@ -145,7 +145,7 @@ def get_ip(request):
                     'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
             else:
                 ip = request.META.get('REMOTE_ADDR', '')
-                if ip not in IP_WHITELIST:
+                if not ip_in_whitelist(ip):
                     raise Warning('Axes is configured for operation behind a reverse proxy and to allow some'\
                         'IP addresses to have direct access. {0} is not on the white list'.format(ip))
     return ip
