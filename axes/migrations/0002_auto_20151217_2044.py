@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='accessattempt',
             name='ip_address',
-            field=models.GenericIPAddressField(db_index=True, null=True, verbose_name=b'IP Address'),
+            field=models.GenericIPAddressField(db_index=True, null=True, verbose_name='IP Address'),
         ),
         migrations.AlterField(
             model_name='accessattempt',
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='accesslog',
             name='ip_address',
-            field=models.GenericIPAddressField(db_index=True, null=True, verbose_name=b'IP Address'),
+            field=models.GenericIPAddressField(db_index=True, null=True, verbose_name='IP Address'),
         ),
         migrations.AlterField(
             model_name='accesslog',
