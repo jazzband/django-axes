@@ -16,7 +16,7 @@ Changes
 - Iterate over ip addresses only once
   [annp89]
 
-- added initial migration files to support django 1.7 &up
+- added initial migration files to support django 1.7 &up. Upgrading users should run migrate --fake-initial after update
   [ibaguio]
 
 - Add db indexes to CommonAccess model
