@@ -74,7 +74,7 @@ Next, install the ``FailedLoginMiddleware`` middleware::
         'axes.middleware.FailedLoginMiddleware'
     )
 
-Run ``python manage.py syncdb``.  This creates the appropriate tables in your database
+Run ``python manage.py migrate``.  This creates the appropriate tables in your database
 that are necessary for operation.
 
 Customizing Axes
