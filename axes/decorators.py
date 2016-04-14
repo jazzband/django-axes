@@ -181,15 +181,19 @@ def ip_in_blacklist(ip):
     return False
 
 
-def is_user_lockable(request):
+def is_user_lockable(request, username=None):
     """Check if the user has a profile with nolockout
     If so, then return the value to see if this user is special
     and doesn't get their account locked out
     """
+    
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD)
+    
     try:
         field = getattr(User, 'USERNAME_FIELD', 'username')
         kwargs = {
-            field: request.POST.get(USERNAME_FORM_FIELD)
+            field: username
         }
         user = User.objects.get(**kwargs)
     except User.DoesNotExist:
@@ -216,13 +220,14 @@ def is_user_lockable(request):
     # Default behavior for a user to be lockable
     return True
 
-def _get_user_attempts(request):
+def _get_user_attempts(request, username = None):
     """Returns access attempt record if it exists.
     Otherwise return None.
     """
     ip = get_ip(request)
 
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     if USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
@@ -245,9 +250,9 @@ def _get_user_attempts(request):
 
     return attempts
 
-def get_user_attempts(request):
+def get_user_attempts(request, username = None):
     objects_deleted = False
-    attempts = _get_user_attempts(request)
+    attempts = _get_user_attempts(request, username)
 
     if COOLOFF_TIME:
         for attempt in attempts:
@@ -262,7 +267,7 @@ def get_user_attempts(request):
     # If objects were deleted, we need to update the queryset to reflect this,
     # so force a reload.
     if objects_deleted:
-        attempts = _get_user_attempts(request)
+        attempts = _get_user_attempts(request, username)
 
     return attempts
 
@@ -292,8 +297,8 @@ def watch_login(func):
         # if the request is currently under lockout, do not proceed to the
         # login function, go directly to lockout url, do not pass go, do not
         # collect messages about this login attempt
-        if is_already_locked(request):
-            return lockout_response(request)
+        if is_already_locked(request, username):
+            return lockout_response(request, username)
 
         # call the login function
         response = func(request, *args, **kwargs)
@@ -318,27 +323,30 @@ def watch_login(func):
             access_log = AccessLog.objects.create(
                 user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
                 ip_address=get_ip(request),
-                username=request.POST.get(USERNAME_FORM_FIELD, None),
+                username=username,
                 http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
                 path_info=request.META.get('PATH_INFO', '<unknown>'),
                 trusted=not login_unsuccessful,
             )
-            if check_request(request, login_unsuccessful):
+            if check_request(request, login_unsuccessful, username):
                 return response
 
-            return lockout_response(request)
+            return lockout_response(request, username)
 
         return response
 
     return decorated_login
 
 
-def lockout_response(request):
+def lockout_response(request, username = None):
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, '')
+
     if LOCKOUT_TEMPLATE:
         context = {
             'cooloff_time': COOLOFF_TIME,
             'failure_limit': FAILURE_LIMIT,
-            'username': request.POST.get(USERNAME_FORM_FIELD, '')
+            'username': username
         }
         template = get_template(LOCKOUT_TEMPLATE)
         content = template.render(context, request)
@@ -356,7 +364,8 @@ def lockout_response(request):
                             "Contact an admin to unlock your account.")
 
 
-def is_already_locked(request):
+def is_already_locked(request, username = None):
+
     ip = get_ip(request)
 
     if ONLY_WHITELIST:
@@ -366,12 +375,12 @@ def is_already_locked(request):
     if ip_in_blacklist(ip):
         return True
 
-    user_lockable = is_user_lockable(request)
+    user_lockable = is_user_lockable(request, username)
 
     if not user_lockable:
         return False
 
-    attempts = get_user_attempts(request)
+    attempts = get_user_attempts(request, username)
 
     for attempt in attempts:
         if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
@@ -380,11 +389,14 @@ def is_already_locked(request):
     return False
 
 
-def check_request(request, login_unsuccessful):
+def check_request(request, login_unsuccessful, username=None):
     ip_address = get_ip(request)
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
     failures = 0
-    attempts = get_user_attempts(request)
+    
+    if username is not None:
+        username = request.POST.get(USERNAME_FORM_FIELD, None)
+        
+    attempts = get_user_attempts(request, username)
 
     for attempt in attempts:
         failures = max(failures, attempt.failures_since_start)
@@ -414,7 +426,7 @@ def check_request(request, login_unsuccessful):
                          'record. Count = %s' %
                          (attempt.ip_address, failures))
         else:
-            create_new_failure_records(request, failures)
+            create_new_failure_records(request, failures, username)
     else:
         # user logged in -- forget the failed attempts
         failures = 0
@@ -428,9 +440,9 @@ def check_request(request, login_unsuccessful):
                 attempt.save()
 
         if trusted_record_exists is False:
-            create_new_trusted_record(request)
+            create_new_trusted_record(request, username)
 
-    user_lockable = is_user_lockable(request)
+    user_lockable = is_user_lockable(request, username)
     # no matter what, we want to lock them out if they're past the number of
     # attempts allowed, unless the user is set to notlockable
     if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
@@ -446,17 +458,19 @@ def check_request(request, login_unsuccessful):
         # if a trusted login has violated lockout, revoke trust
         for attempt in [a for a in attempts if a.trusted]:
             attempt.delete()
-            create_new_failure_records(request, failures)
+            create_new_failure_records(request, failures, username)
 
         return False
 
     return True
 
 
-def create_new_failure_records(request, failures):
+def create_new_failure_records(request, failures, username=None):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     params = {
         'user_agent': ua,
@@ -474,10 +488,12 @@ def create_new_failure_records(request, failures):
     log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
 
 
-def create_new_trusted_record(request):
+def create_new_trusted_record(request, username=None):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     if not username:
         return False
