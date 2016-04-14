@@ -297,8 +297,8 @@ def watch_login(func):
         # if the request is currently under lockout, do not proceed to the
         # login function, go directly to lockout url, do not pass go, do not
         # collect messages about this login attempt
-        if is_already_locked(request, username):
-            return lockout_response(request, username)
+        if is_already_locked(request):
+            return lockout_response(request)
 
         # call the login function
         response = func(request, *args, **kwargs)
@@ -323,15 +323,15 @@ def watch_login(func):
             access_log = AccessLog.objects.create(
                 user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
                 ip_address=get_ip(request),
-                username=username,
+                username=request.POST.get(USERNAME_FORM_FIELD, None),
                 http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
                 path_info=request.META.get('PATH_INFO', '<unknown>'),
                 trusted=not login_unsuccessful,
             )
-            if check_request(request, login_unsuccessful, username):
+            if check_request(request, login_unsuccessful):
                 return response
 
-            return lockout_response(request, username)
+            return lockout_response(request)
 
         return response
 
@@ -393,7 +393,7 @@ def check_request(request, login_unsuccessful, username=None):
     ip_address = get_ip(request)
     failures = 0
     
-    if username is not None:
+    if username is None:
         username = request.POST.get(USERNAME_FORM_FIELD, None)
         
     attempts = get_user_attempts(request, username)
