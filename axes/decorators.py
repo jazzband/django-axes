@@ -11,6 +11,8 @@ from django.http import HttpResponseRedirect
 from django.template.loader import get_template
 from django.utils import timezone as datetime
 from django.utils.translation import ugettext_lazy
+from django.utils.ipv6 import clean_ipv6_address
+from django.core.validators import validate_ipv4_address, validate_ipv6_address
 
 try:
     from django.contrib.auth import get_user_model
@@ -65,7 +67,9 @@ if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float) ):
 LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 
 LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
-VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
+
+# Deprecate this in favor of real log levels 
+#VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
 # whitelist and blacklist
 # todo: convert the strings to IPv4 on startup to avoid type conversion during processing
@@ -78,57 +82,31 @@ ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
 
 
 log = logging.getLogger(LOGGER)
-if VERBOSE:
-    log.info('AXES: BEGIN LOG')
-    log.info('Using django-axes ' + axes.get_version())
+
+log.debug('AXES: BEGIN LOG')
+log.debug('Using django-axes ' + axes.get_version())
 
 
 if BEHIND_REVERSE_PROXY:
     log.debug('Axes is configured to be behind reverse proxy...looking for header value %s', REVERSE_PROXY_HEADER)
 
 
-def is_valid_ip(ip_address):
-    """ Check Validity of an IP address """
-    valid = True
-    try:
-        socket.inet_aton(ip_address.strip())
-    except:
-        valid = False
-    return valid
-
-
 def get_ip_address_from_request(request):
     """ Makes the best attempt to get the client's real IP or return the loopback """
-    PRIVATE_IPS_PREFIX = ('10.', '172.', '192.', '127.')
-    ip_address = ''
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', '')
-    if x_forwarded_for and ',' not in x_forwarded_for:
-        if not x_forwarded_for.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(x_forwarded_for):
-            ip_address = x_forwarded_for.strip()
-    else:
-        for ip_raw in x_forwarded_for.split(','):
-            ip = ip_raw.strip()
-            if ip.startswith(PRIVATE_IPS_PREFIX):
-                continue
-            elif not is_valid_ip(ip):
-                continue
-            else:
-                ip_address = ip
-                break
-    if not ip_address:
-        x_real_ip = request.META.get('HTTP_X_REAL_IP', '')
-        if x_real_ip:
-            if not x_real_ip.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(x_real_ip):
-                ip_address = x_real_ip.strip()
-    if not ip_address:
-        remote_addr = request.META.get('REMOTE_ADDR', '')
-        if remote_addr:
-            if not remote_addr.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(remote_addr):
-                ip_address = remote_addr.strip()
-            if remote_addr.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(remote_addr):
-                ip_address = remote_addr.strip()
-    if not ip_address:
-            ip_address = '127.0.0.1'
+    
+    # Would rather rely on middleware to set up a good REMOTE_ADDR than try to get
+    # fancy here. Also, just use django's built in ipv4/ipv6 normalization logic
+    ip_address = request.META.get('REMOTE_ADDR', 'bad address')
+    try:
+        validate_ipv4_address(ip_address)
+    except:
+        try:
+            validate_ipv6_address(ip_address)
+            ip_address = clean_ipv6_address(ip_address, True)
+        except:
+            log.error("Could not parse address {0}".format(ip_address))
+            ip_address = "127.0.0.1"
+        
     return ip_address
 
 
@@ -280,12 +258,12 @@ def watch_login(func):
 
     def decorated_login(request, *args, **kwargs):
         # share some useful information
-        if func.__name__ != 'decorated_login' and VERBOSE:
-            log.info('AXES: Calling decorated function: %s' % func.__name__)
+        if func.__name__ != 'decorated_login':
+            log.debug('AXES: Calling decorated function: %s' % func.__name__)
             if args:
-                log.info('args: %s' % str(args))
+                log.debug('args: %s' % str(args))
             if kwargs:
-                log.info('kwargs: %s' % kwargs)
+                log.debug('kwargs: %s' % kwargs)
 
         # TODO: create a class to hold the attempts records and perform checks
         # with its methods? or just store attempts=get_user_attempts here and
