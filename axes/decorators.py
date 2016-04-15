@@ -162,9 +162,10 @@ def query2str(items, max_length=1024):
 
     The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
     """
-
-    return '\n'.join(['%s=%s' % (k, v) for k, v in six.iteritems(items)
-                      if k != PASSWORD_FORM_FIELD][:int(max_length/2)])[:max_length]
+    # Would rather not store any query data in plaintext
+    return ""
+    #return '\n'.join(['%s=%s' % (k, v) for k, v in six.iteritems(items)
+    #                  if k != PASSWORD_FORM_FIELD][:int(max_length/2)])[:max_length]
 
 
 def ip_in_whitelist(ip):
