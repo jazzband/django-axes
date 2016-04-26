@@ -272,6 +272,10 @@ def watch_login(func):
     Used to decorate the django.contrib.admin.site.login method.
     """
 
+    # Don't decorate multiple times
+    if func.__name__ == 'decorated_login':
+        return func
+
     def decorated_login(request, *args, **kwargs):
         # share some useful information
         if func.__name__ != 'decorated_login' and VERBOSE:
