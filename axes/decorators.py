@@ -11,6 +11,8 @@ from django.http import HttpResponseRedirect
 from django.template.loader import get_template
 from django.utils import timezone as datetime
 from django.utils.translation import ugettext_lazy
+from django.utils.ipv6 import clean_ipv6_address
+from django.core.validators import validate_ipv4_address, validate_ipv6_address
 
 try:
     from django.contrib.auth import get_user_model
@@ -65,7 +67,9 @@ if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float) ):
 LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 
 LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
-VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
+
+# Deprecate this in favor of real log levels 
+#VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
 # whitelist and blacklist
 # todo: convert the strings to IPv4 on startup to avoid type conversion during processing
@@ -78,57 +82,31 @@ ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
 
 
 log = logging.getLogger(LOGGER)
-if VERBOSE:
-    log.info('AXES: BEGIN LOG')
-    log.info('Using django-axes ' + axes.get_version())
+
+log.debug('AXES: BEGIN LOG')
+log.debug('Using django-axes ' + axes.get_version())
 
 
 if BEHIND_REVERSE_PROXY:
     log.debug('Axes is configured to be behind reverse proxy...looking for header value %s', REVERSE_PROXY_HEADER)
 
 
-def is_valid_ip(ip_address):
-    """ Check Validity of an IP address """
-    valid = True
-    try:
-        socket.inet_aton(ip_address.strip())
-    except:
-        valid = False
-    return valid
-
-
 def get_ip_address_from_request(request):
     """ Makes the best attempt to get the client's real IP or return the loopback """
-    PRIVATE_IPS_PREFIX = ('10.', '172.', '192.', '127.')
-    ip_address = ''
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', '')
-    if x_forwarded_for and ',' not in x_forwarded_for:
-        if not x_forwarded_for.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(x_forwarded_for):
-            ip_address = x_forwarded_for.strip()
-    else:
-        for ip_raw in x_forwarded_for.split(','):
-            ip = ip_raw.strip()
-            if ip.startswith(PRIVATE_IPS_PREFIX):
-                continue
-            elif not is_valid_ip(ip):
-                continue
-            else:
-                ip_address = ip
-                break
-    if not ip_address:
-        x_real_ip = request.META.get('HTTP_X_REAL_IP', '')
-        if x_real_ip:
-            if not x_real_ip.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(x_real_ip):
-                ip_address = x_real_ip.strip()
-    if not ip_address:
-        remote_addr = request.META.get('REMOTE_ADDR', '')
-        if remote_addr:
-            if not remote_addr.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(remote_addr):
-                ip_address = remote_addr.strip()
-            if remote_addr.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(remote_addr):
-                ip_address = remote_addr.strip()
-    if not ip_address:
-            ip_address = '127.0.0.1'
+    
+    # Would rather rely on middleware to set up a good REMOTE_ADDR than try to get
+    # fancy here. Also, just use django's built in ipv4/ipv6 normalization logic
+    ip_address = request.META.get('REMOTE_ADDR', 'bad address')
+    try:
+        validate_ipv4_address(ip_address)
+    except:
+        try:
+            validate_ipv6_address(ip_address)
+            ip_address = clean_ipv6_address(ip_address, True)
+        except:
+            log.error("Could not parse address {0}".format(ip_address))
+            ip_address = "127.0.0.1"
+        
     return ip_address
 
 
@@ -162,9 +140,10 @@ def query2str(items, max_length=1024):
 
     The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
     """
-
-    return '\n'.join(['%s=%s' % (k, v) for k, v in six.iteritems(items)
-                      if k != PASSWORD_FORM_FIELD][:int(max_length/2)])[:max_length]
+    # Would rather not store any query data in plaintext
+    return ""
+    #return '\n'.join(['%s=%s' % (k, v) for k, v in six.iteritems(items)
+    #                  if k != PASSWORD_FORM_FIELD][:int(max_length/2)])[:max_length]
 
 
 def ip_in_whitelist(ip):
@@ -181,15 +160,19 @@ def ip_in_blacklist(ip):
     return False
 
 
-def is_user_lockable(request):
+def is_user_lockable(request, username=None):
     """Check if the user has a profile with nolockout
     If so, then return the value to see if this user is special
     and doesn't get their account locked out
     """
+    
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD)
+    
     try:
         field = getattr(User, 'USERNAME_FIELD', 'username')
         kwargs = {
-            field: request.POST.get(USERNAME_FORM_FIELD)
+            field: username
         }
         user = User.objects.get(**kwargs)
     except User.DoesNotExist:
@@ -216,13 +199,14 @@ def is_user_lockable(request):
     # Default behavior for a user to be lockable
     return True
 
-def _get_user_attempts(request):
+def _get_user_attempts(request, username = None):
     """Returns access attempt record if it exists.
     Otherwise return None.
     """
     ip = get_ip(request)
 
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     if USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
@@ -245,9 +229,9 @@ def _get_user_attempts(request):
 
     return attempts
 
-def get_user_attempts(request):
+def get_user_attempts(request, username = None):
     objects_deleted = False
-    attempts = _get_user_attempts(request)
+    attempts = _get_user_attempts(request, username)
 
     if COOLOFF_TIME:
         for attempt in attempts:
@@ -262,7 +246,7 @@ def get_user_attempts(request):
     # If objects were deleted, we need to update the queryset to reflect this,
     # so force a reload.
     if objects_deleted:
-        attempts = _get_user_attempts(request)
+        attempts = _get_user_attempts(request, username)
 
     return attempts
 
@@ -278,12 +262,12 @@ def watch_login(func):
 
     def decorated_login(request, *args, **kwargs):
         # share some useful information
-        if func.__name__ != 'decorated_login' and VERBOSE:
-            log.info('AXES: Calling decorated function: %s' % func.__name__)
+        if func.__name__ != 'decorated_login':
+            log.debug('AXES: Calling decorated function: %s' % func.__name__)
             if args:
-                log.info('args: %s' % str(args))
+                log.debug('args: %s' % str(args))
             if kwargs:
-                log.info('kwargs: %s' % kwargs)
+                log.debug('kwargs: %s' % kwargs)
 
         # TODO: create a class to hold the attempts records and perform checks
         # with its methods? or just store attempts=get_user_attempts here and
@@ -337,12 +321,15 @@ def watch_login(func):
     return decorated_login
 
 
-def lockout_response(request):
+def lockout_response(request, username = None):
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, '')
+
     if LOCKOUT_TEMPLATE:
         context = {
             'cooloff_time': COOLOFF_TIME,
             'failure_limit': FAILURE_LIMIT,
-            'username': request.POST.get(USERNAME_FORM_FIELD, '')
+            'username': username
         }
         template = get_template(LOCKOUT_TEMPLATE)
         content = template.render(context, request)
@@ -360,7 +347,8 @@ def lockout_response(request):
                             "Contact an admin to unlock your account.")
 
 
-def is_already_locked(request):
+def is_already_locked(request, username = None):
+
     ip = get_ip(request)
 
     if ONLY_WHITELIST:
@@ -370,12 +358,12 @@ def is_already_locked(request):
     if ip_in_blacklist(ip):
         return True
 
-    user_lockable = is_user_lockable(request)
+    user_lockable = is_user_lockable(request, username)
 
     if not user_lockable:
         return False
 
-    attempts = get_user_attempts(request)
+    attempts = get_user_attempts(request, username)
 
     for attempt in attempts:
         if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
@@ -384,11 +372,14 @@ def is_already_locked(request):
     return False
 
 
-def check_request(request, login_unsuccessful):
+def check_request(request, login_unsuccessful, username=None):
     ip_address = get_ip(request)
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
     failures = 0
-    attempts = get_user_attempts(request)
+    
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, None)
+        
+    attempts = get_user_attempts(request, username)
 
     for attempt in attempts:
         failures = max(failures, attempt.failures_since_start)
@@ -418,7 +409,7 @@ def check_request(request, login_unsuccessful):
                          'record. Count = %s' %
                          (attempt.ip_address, failures))
         else:
-            create_new_failure_records(request, failures)
+            create_new_failure_records(request, failures, username)
     else:
         # user logged in -- forget the failed attempts
         failures = 0
@@ -432,9 +423,9 @@ def check_request(request, login_unsuccessful):
                 attempt.save()
 
         if trusted_record_exists is False:
-            create_new_trusted_record(request)
+            create_new_trusted_record(request, username)
 
-    user_lockable = is_user_lockable(request)
+    user_lockable = is_user_lockable(request, username)
     # no matter what, we want to lock them out if they're past the number of
     # attempts allowed, unless the user is set to notlockable
     if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
@@ -450,17 +441,19 @@ def check_request(request, login_unsuccessful):
         # if a trusted login has violated lockout, revoke trust
         for attempt in [a for a in attempts if a.trusted]:
             attempt.delete()
-            create_new_failure_records(request, failures)
+            create_new_failure_records(request, failures, username)
 
         return False
 
     return True
 
 
-def create_new_failure_records(request, failures):
+def create_new_failure_records(request, failures, username=None):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     params = {
         'user_agent': ua,
@@ -478,10 +471,12 @@ def create_new_failure_records(request, failures):
     log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
 
 
-def create_new_trusted_record(request):
+def create_new_trusted_record(request, username=None):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    
+    if username is None:
+        username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     if not username:
         return False
