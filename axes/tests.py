@@ -15,6 +15,12 @@ from axes.signals import user_locked_out
 from axes.utils import reset
 
 
+def custom_unsuccessful_login(response):
+    """Use to test custom successful login functionality in settings
+    """
+    return True
+
+
 class AccessAttemptTest(TestCase):
     """Test case using custom settings for testing
     """
@@ -214,3 +220,10 @@ class AccessAttemptTest(TestCase):
         extra_data = {string.ascii_letters * x: x for x in range(0, 1000)}  # An impossibly large post dict
         self._login(**extra_data)
         self.assertEquals(len(AccessAttempt.objects.latest('id').post_data), 1024)
+
+    @override_settings(AXES_CUSTOM_UNSUCCESSFUL_LOGIN='axes.tests.custom_unsuccessful_login')
+    def test_custom_successful_login_function(self):
+        """Tests replacing default successful login check with custom one in settings
+        """
+        self._login(is_valid_username=True, is_valid_password=True)
+        self.assertFalse(AccessLog.objects.latest('id').trusted)

@@ -27,6 +27,7 @@ except ImportError: # django >= 1.7
 from axes.models import AccessLog
 from axes.models import AccessAttempt
 from axes.signals import user_locked_out
+from axes.utils import import_callable
 import axes
 from django.utils import six
 
@@ -313,11 +314,15 @@ def watch_login(func):
         if request.method == 'POST':
             # see if the login was successful
 
-            login_unsuccessful = (
-                response and
-                not response.has_header('location') and
-                response.status_code != 302
-            )
+            CUSTOM_UNSUCCESSFUL_LOGIN = getattr(settings, 'AXES_CUSTOM_UNSUCCESSFUL_LOGIN', None)
+            if CUSTOM_UNSUCCESSFUL_LOGIN is not None:
+                login_unsuccessful = import_callable(CUSTOM_UNSUCCESSFUL_LOGIN)(response)
+            else:
+                login_unsuccessful = (
+                    response and
+                    not response.has_header('location') and
+                    response.status_code != 302
+                )
 
             access_log = AccessLog.objects.create(
                 user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
