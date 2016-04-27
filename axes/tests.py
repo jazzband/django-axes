@@ -7,9 +7,11 @@ from django.test.utils import override_settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
+from django.utils import six
 
 from axes.decorators import COOLOFF_TIME
 from axes.decorators import FAILURE_LIMIT
+from axes.decorators import is_valid_public_ip
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset
@@ -214,3 +216,26 @@ class AccessAttemptTest(TestCase):
         extra_data = {string.ascii_letters * x: x for x in range(0, 1000)}  # An impossibly large post dict
         self._login(**extra_data)
         self.assertEquals(len(AccessAttempt.objects.latest('id').post_data), 1024)
+
+
+class IPClassifierTest(TestCase):
+
+    def test_classify_private_ips(self):
+        """Tests whether is_valid_public_ip correctly classifies IPs as being
+        bot public and valid
+        """
+        EXPECTED = {
+            'foobar': False,  # invalid - not octects
+            '192.168.0': False,  # invalid - only 3 octets
+            '192.168.0.0': False,  # private
+            '192.168.165.1': False,  # private
+            '192.249.19.1': True,  # public but 192 prefix
+            '10.0.201.13': False,  # private
+            '172.15.12.1': True,  # public but 172 prefix
+            '172.16.12.1': False,  # private
+            '172.31.12.1': False,  # private
+            '172.32.0.1': True,  # public but 127 prefix
+            '200.150.23.5': True,  # normal public
+        }
+        for ip_address, is_valid_public in six.iteritems(EXPECTED):
+            self.assertEqual(is_valid_public_ip(ip_address), is_valid_public)

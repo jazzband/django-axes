@@ -97,20 +97,32 @@ def is_valid_ip(ip_address):
     return valid
 
 
+def is_valid_public_ip(ip_address):
+    """Returns whether IP address is both valid AND, per RFC 1918, not reserved as
+    private"""
+    if not is_valid_ip(ip_address):
+        return False
+    PRIVATE_IPS_PREFIX = (
+        '10.', 
+        '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.',
+        '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.',
+        '172.30.', '172.31.',
+        '192.168.',
+        '127.',
+    )
+    return not ip_address.startswith(PRIVATE_IPS_PREFIX)
+
 def get_ip_address_from_request(request):
     """ Makes the best attempt to get the client's real IP or return the loopback """
-    PRIVATE_IPS_PREFIX = ('10.', '172.', '192.', '127.')
     ip_address = ''
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', '')
     if x_forwarded_for and ',' not in x_forwarded_for:
-        if not x_forwarded_for.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(x_forwarded_for):
+        if is_valid_public_ip(x_forwarded_for):
             ip_address = x_forwarded_for.strip()
     else:
         for ip_raw in x_forwarded_for.split(','):
             ip = ip_raw.strip()
-            if ip.startswith(PRIVATE_IPS_PREFIX):
-                continue
-            elif not is_valid_ip(ip):
+            if not is_valid_public_ip(ip):
                 continue
             else:
                 ip_address = ip
@@ -118,14 +130,14 @@ def get_ip_address_from_request(request):
     if not ip_address:
         x_real_ip = request.META.get('HTTP_X_REAL_IP', '')
         if x_real_ip:
-            if not x_real_ip.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(x_real_ip):
+            if is_valid_public_ip(x_real_ip):
                 ip_address = x_real_ip.strip()
     if not ip_address:
         remote_addr = request.META.get('REMOTE_ADDR', '')
         if remote_addr:
-            if not remote_addr.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(remote_addr):
+            if is_valid_public_ip(remote_addr):
                 ip_address = remote_addr.strip()
-            if remote_addr.startswith(PRIVATE_IPS_PREFIX) and is_valid_ip(remote_addr):
+            if not is_valid_public_ip(remote_addr) and is_valid_ip(remote_addr):
                 ip_address = remote_addr.strip()
     if not ip_address:
             ip_address = '127.0.0.1'
