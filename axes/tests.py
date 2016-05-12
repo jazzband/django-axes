@@ -78,7 +78,7 @@ class AccessAttemptTest(TestCase):
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self._login()
-        self.assertContains(response, self.LOCKED_MESSAGE)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     def test_failure_limit_many(self):
         """Tests the login lock trying to login a lot of times more
@@ -93,7 +93,7 @@ class AccessAttemptTest(TestCase):
         # We should get a locked message each time we try again
         for i in range(0, random.randrange(1, FAILURE_LIMIT)):
             response = self._login()
-            self.assertContains(response, self.LOCKED_MESSAGE)
+            self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     def test_valid_login(self):
         """Tests a valid login for a real username
@@ -145,7 +145,7 @@ class AccessAttemptTest(TestCase):
         for i in range(0, FAILURE_LIMIT + 1):
             response = self._login(user_agent=long_user_agent)
 
-        self.assertContains(response, self.LOCKED_MESSAGE)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     def test_reset_ip(self):
         """Tests if can reset an ip address
@@ -208,7 +208,7 @@ class AccessAttemptTest(TestCase):
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self._login(is_valid_username=True, is_valid_password=False)
-        self.assertContains(response, self.LOCKED_MESSAGE)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     def test_log_data_truncated(self):
         """Tests that query2str properly truncates data to the max_length (default 1024)

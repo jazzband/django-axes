@@ -103,7 +103,7 @@ def is_valid_public_ip(ip_address):
     if not is_valid_ip(ip_address):
         return False
     PRIVATE_IPS_PREFIX = (
-        '10.', 
+        '10.',
         '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.',
         '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.',
         '172.30.', '172.31.',
@@ -358,7 +358,7 @@ def lockout_response(request):
         }
         template = get_template(LOCKOUT_TEMPLATE)
         content = template.render(context, request)
-        return HttpResponse(content)
+        return HttpResponse(content, status=403)
 
     LOCKOUT_URL = get_lockout_url()
     if LOCKOUT_URL:
@@ -366,10 +366,11 @@ def lockout_response(request):
 
     if COOLOFF_TIME:
         return HttpResponse("Account locked: too many login attempts.  "
-                            "Please try again later.")
+                            "Please try again later.", status=403)
     else:
         return HttpResponse("Account locked: too many login attempts.  "
-                            "Contact an admin to unlock your account.")
+                            "Contact an admin to unlock your account.",
+                            status=403)
 
 
 def is_already_locked(request):
