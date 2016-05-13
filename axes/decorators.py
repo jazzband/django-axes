@@ -1,7 +1,9 @@
 import logging
 import socket
+import json
 
 from datetime import timedelta
+from babel.dates import format_timedelta
 
 from django.conf import settings
 from django.contrib.auth import logout
@@ -350,12 +352,17 @@ def watch_login(func):
 
 
 def lockout_response(request):
+    context = {
+        'cooloff_time': COOLOFF_TIME,
+        'failure_limit': FAILURE_LIMIT,
+        'username': request.POST.get(USERNAME_FORM_FIELD, '')
+    }
+    if request.is_ajax():
+        return HttpResponse(json.dumps(context),
+                            content_type='application/json',
+                            status=403)
+
     if LOCKOUT_TEMPLATE:
-        context = {
-            'cooloff_time': COOLOFF_TIME,
-            'failure_limit': FAILURE_LIMIT,
-            'username': request.POST.get(USERNAME_FORM_FIELD, '')
-        }
         template = get_template(LOCKOUT_TEMPLATE)
         content = template.render(context, request)
         return HttpResponse(content, status=403)
