@@ -353,16 +353,19 @@ def watch_login(func):
 
 def lockout_response(request):
     context = {
-        'cooloff_time': COOLOFF_TIME,
+        'humanize_cooloff_time': format_timedelta(COOLOFF_TIME),
         'failure_limit': FAILURE_LIMIT,
         'username': request.POST.get(USERNAME_FORM_FIELD, '')
     }
+
     if request.is_ajax():
         return HttpResponse(json.dumps(context),
                             content_type='application/json',
                             status=403)
 
     if LOCKOUT_TEMPLATE:
+        # datetime.timedelta not JSON serializable
+        context.update({'cooloff_time': COOLOFF_TIME})
         template = get_template(LOCKOUT_TEMPLATE)
         content = template.render(context, request)
         return HttpResponse(content, status=403)
