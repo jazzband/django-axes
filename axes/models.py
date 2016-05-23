@@ -41,6 +41,7 @@ class CommonAccess(models.Model):
     )
 
     class Meta:
+        app_label = 'axes'
         abstract = True
         ordering = ['-attempt_time']
 
