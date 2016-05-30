@@ -1,6 +1,8 @@
 import random
 import string
 import time
+import json
+import datetime
 
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -14,7 +16,7 @@ from axes.decorators import FAILURE_LIMIT
 from axes.decorators import is_valid_public_ip
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
-from axes.utils import reset
+from axes.utils import reset, iso8601
 
 
 class AccessAttemptTest(TestCase):
@@ -25,7 +27,8 @@ class AccessAttemptTest(TestCase):
     LOCKED_MESSAGE = 'Account locked: too many login attempts.'
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
 
-    def _login(self, is_valid_username=False, is_valid_password=False, user_agent='test-browser', **kwargs):
+    def _login(self, is_valid_username=False, is_valid_password=False,
+               is_json=False, **kwargs):
         """Login a user. A valid credential is used when is_valid_username is True,
         otherwise it will use a random string to make a failed login.
         """
@@ -47,13 +50,23 @@ class AccessAttemptTest(TestCase):
         else:
             password = 'invalid-password'
 
+        headers = {
+            'user_agent': 'test-browser'
+        }
         post_data = {
             'username': username,
             'password': password,
             'this_is_the_login_form': 1,
         }
         post_data.update(kwargs)
-        response = self.client.post(admin_login, post_data, HTTP_USER_AGENT=user_agent)
+
+        if is_json:
+            headers.update({
+                'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest',
+                'content_type': 'application/json',
+            })
+            post_data = json.dumps(post_data)
+        response = self.client.post(admin_login, post_data, **headers)
 
         return response
 
@@ -217,6 +230,14 @@ class AccessAttemptTest(TestCase):
         self._login(**extra_data)
         self.assertEquals(len(AccessAttempt.objects.latest('id').post_data), 1024)
 
+    def test_json_response(self):
+        """Tests response content type and status code for the ajax request
+        """
+        self.test_failure_limit_once()
+        response = self._login(is_json=True)
+        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.get('Content-Type'), 'application/json')
+
 
 class IPClassifierTest(TestCase):
 
@@ -239,3 +260,27 @@ class IPClassifierTest(TestCase):
         }
         for ip_address, is_valid_public in six.iteritems(EXPECTED):
             self.assertEqual(is_valid_public_ip(ip_address), is_valid_public)
+
+class UtilsTest(TestCase):
+
+    def test_iso8601(self):
+        """Tests iso8601 correctly translates datetime.timdelta to ISO 8601
+        formatted duration."""
+        EXPECTED = {
+            datetime.timedelta(days=1, hours=25, minutes=42, seconds=8):
+                'P2D1H42M8S',
+            datetime.timedelta(days=7, seconds=342):
+                'P7D5M42S',
+            datetime.timedelta(days=0, hours=2, minutes=42):
+                'P2H42M',
+            datetime.timedelta(hours=20, seconds=42):
+                'P20H42S',
+            datetime.timedelta(seconds=300):
+                'P5M',
+            datetime.timedelta(seconds=9005):
+                'P2H30M5S',
+            datetime.timedelta(minutes=9005):
+                'P6D6H5M'
+        }
+        for timedelta, iso_duration in six.iteritems(EXPECTED):
+            self.assertEqual(iso8601(timedelta), iso_duration)
