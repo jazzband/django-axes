@@ -9,6 +9,7 @@ from django.contrib.auth import logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.template.loader import get_template
 from django.utils import timezone as datetime
 from django.utils.translation import ugettext_lazy
@@ -365,9 +366,7 @@ def lockout_response(request):
 
     if LOCKOUT_TEMPLATE:
         context.update({'cooloff_time': COOLOFF_TIME})
-        template = get_template(LOCKOUT_TEMPLATE)
-        content = template.render(context, request)
-        return HttpResponse(content, status=403)
+        return render(request, LOCKOUT_TEMPLATE, context, status=403)
 
     LOCKOUT_URL = get_lockout_url()
     if LOCKOUT_URL:

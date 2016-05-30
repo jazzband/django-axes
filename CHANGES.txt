@@ -1,6 +1,36 @@
 Changes
 =======
 
+1.6.1 (2016-05-13)
+------------------
+
+- Fixes whitelist check when BEHIND_REVERSE_PROXY
+  [Patrick Hagemeister]
+
+- Made migrations py3 compatible
+  [mvdwaeter]
+
+- Fixing #126, possibly breaking compatibility with Django<=1.7
+  [int-ua]
+
+- Add note for upgrading users about new migration files
+  [kelseyq]
+
+- Fixes #148
+  [camilonova]
+
+- Decorate auth_views.login only once
+  [teeberg]
+
+- Set IP public/private classifier to be compliant with RFC 1918.
+  [SilasX]
+
+- Issue #155. Lockout response status code changed to 403.
+  [Артур Муллахметов]
+
+- BUGFIX: Missing migration
+  [smeinel]
+
 1.6.0 (2016-01-07)
 ------------------
 
