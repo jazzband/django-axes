@@ -3,7 +3,6 @@ import socket
 import json
 
 from datetime import timedelta
-from babel.dates import format_timedelta
 
 from django.conf import settings
 from django.contrib.auth import logout
@@ -31,6 +30,7 @@ from axes.models import AccessAttempt
 from axes.signals import user_locked_out
 import axes
 from django.utils import six
+from axes.utils import iso8601
 
 
 # see if the user has overridden the failure limit
@@ -353,18 +353,17 @@ def watch_login(func):
 
 def lockout_response(request):
     context = {
-        'humanize_cooloff_time': format_timedelta(COOLOFF_TIME),
         'failure_limit': FAILURE_LIMIT,
         'username': request.POST.get(USERNAME_FORM_FIELD, '')
     }
 
     if request.is_ajax():
+        context.update({'cooloff_time': iso8601(COOLOFF_TIME)})
         return HttpResponse(json.dumps(context),
                             content_type='application/json',
                             status=403)
 
     if LOCKOUT_TEMPLATE:
-        # datetime.timedelta not JSON serializable
         context.update({'cooloff_time': COOLOFF_TIME})
         template = get_template(LOCKOUT_TEMPLATE)
         content = template.render(context, request)
