@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import codecs
 from setuptools import setup, find_packages
 
 VERSION = '1.6.1'
@@ -11,8 +12,8 @@ setup(
     version=VERSION,
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description=(
-        open("README.rst").read() + '\n' +
-        open("CHANGES.txt").read()),
+        codecs.open("README.rst", encoding='utf-8').read() + '\n' +
+        codecs.open("CHANGES.txt", encoding='utf-8').read()),
     keywords='authentication, django, pci, security',
     author='Josh VanderLinden, Philip Neustrom, Michael Blume, Camilo Nova',
     author_email='codekoala@gmail.com',
