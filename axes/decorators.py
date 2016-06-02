@@ -70,6 +70,7 @@ VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
 # whitelist and blacklist
 # todo: convert the strings to IPv4 on startup to avoid type conversion during processing
+NEVER_LOCKOUT_WHITELIST = getattr(settings, 'AXES_NEVER_LOCKOUT_WHITELIST', False)
 ONLY_WHITELIST = getattr(settings, 'AXES_ONLY_ALLOW_WHITELIST', False)
 IP_WHITELIST = getattr(settings, 'AXES_IP_WHITELIST', None)
 IP_BLACKLIST = getattr(settings, 'AXES_IP_BLACKLIST', None)
@@ -375,6 +376,9 @@ def lockout_response(request):
 def is_already_locked(request):
     ip = get_ip(request)
 
+    if NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
+        return False
+
     if ONLY_WHITELIST:
         if not ip_in_whitelist(ip):
             return True
@@ -445,6 +449,9 @@ def check_request(request, login_unsuccessful):
 
         if trusted_record_exists is False:
             create_new_trusted_record(request)
+
+    if NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
+        return True
 
     user_lockable = is_user_lockable(request)
     # no matter what, we want to lock them out if they're past the number of

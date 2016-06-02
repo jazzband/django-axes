@@ -112,6 +112,9 @@ These should be defined in your ``settings.py`` file.
   from IP under particular user if attempts limit exceed, otherwise lock out
   based on IP.
   Default: ``False``
+* ``AXES_NEVER_LOCKOUT_WHITELIST``: If ``True``, users can always login from
+  whitelisted IP addresses.
+  Default: ``False``
 
 
 Usage
