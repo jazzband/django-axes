@@ -1,5 +1,6 @@
 import logging
 import socket
+import json
 
 from datetime import timedelta
 
@@ -30,6 +31,7 @@ from axes.models import AccessAttempt
 from axes.signals import user_locked_out
 import axes
 from django.utils import six
+from axes.utils import iso8601
 
 
 # see if the user has overridden the failure limit
@@ -352,12 +354,19 @@ def watch_login(func):
 
 
 def lockout_response(request):
+    context = {
+        'failure_limit': FAILURE_LIMIT,
+        'username': request.POST.get(USERNAME_FORM_FIELD, '')
+    }
+
+    if request.is_ajax():
+        context.update({'cooloff_time': iso8601(COOLOFF_TIME)})
+        return HttpResponse(json.dumps(context),
+                            content_type='application/json',
+                            status=403)
+
     if LOCKOUT_TEMPLATE:
-        context = {
-            'cooloff_time': COOLOFF_TIME,
-            'failure_limit': FAILURE_LIMIT,
-            'username': request.POST.get(USERNAME_FORM_FIELD, '')
-        }
+        context.update({'cooloff_time': COOLOFF_TIME})
         return render(request, LOCKOUT_TEMPLATE, context, status=403)
 
     LOCKOUT_URL = get_lockout_url()
