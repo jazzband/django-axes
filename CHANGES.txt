@@ -1,6 +1,31 @@
 Changes
 =======
 
+1.7.0 (2016-06-10)
+------------------
+
+- Use render shortcut for rendering LOCKOUT_TEMPLATE
+  [Radosław Luter]
+
+- Added app_label for RemovedInDjango19Warning
+  [yograterol]
+
+- Add iso8601 translator.
+  [mullakhmetov]
+
+- Edit json response. Context now contains ISO 8601 formatted cooloff time
+  [mullakhmetov]
+
+- Add json response and iso8601 tests.
+  [mullakhmetov]
+
+- Fixes issue 162: UnicodeDecodeError on pip install
+  [joeribekker]
+
+- Added AXES_NEVER_LOCKOUT_WHITELIST option to prevent certain IPs from being locked out.
+  [joeribekker]
+
+
 1.6.1 (2016-05-13)
 ------------------
 
