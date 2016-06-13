@@ -19,9 +19,11 @@ sort of a geeky pun, since ``axes`` can be read interpreted as:
 Requirements
 ============
 
-``django-axes`` requires Django 1.5 or later. The application is intended to
-work around the Django admin and the regular ``django.contrib.auth``
-login-powered pages.
+``django-axes`` requires a supported Django version. The application is
+intended to work around the Django admin and the regular
+``django.contrib.auth`` login-powered pages.
+Look at https://www.djangoproject.com/download/ to check if your version
+is supported.
 
 
 Installation
@@ -74,7 +76,7 @@ Next, install the ``FailedLoginMiddleware`` middleware::
         'axes.middleware.FailedLoginMiddleware'
     )
 
-Run ``python manage.py migrate``.  This creates the appropriate tables in your database
+Run ``python manage.py migrate``. This creates the appropriate tables in your database
 that are necessary for operation.
 
 Customizing Axes
@@ -107,7 +109,6 @@ These should be defined in your ``settings.py`` file.
   Default: ``True``
 * ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
   users usernames. Default: ``username``
-
 * ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True`` prevents to login
   from IP under particular user if attempts limit exceed, otherwise lock out
   based on IP.
@@ -120,7 +121,7 @@ These should be defined in your ``settings.py`` file.
 Usage
 =====
 
-Using ``django-axes`` is extremely simple.  Once you install the application
+Using ``django-axes`` is extremely simple. Once you install the application
 and the middleware, all you need to do is periodically check the Access
 Attempts section of the admin.
 
@@ -146,7 +147,9 @@ Issues
 Not being locked out after failed attempts
 ------------------------------------------
 
-You may find that Axes is not capturing your failed login attempts. It may be that you need to manually add watch_login to your login url.
+You may find that Axes is not capturing your failed login attempts. It may
+be that you need to manually add watch_login to your login url.
+
 For example, in your urls.py::
 
     ...
