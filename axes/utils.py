@@ -38,4 +38,4 @@ def iso8601(value):
         for value, designator in zip(time_values, time_designators)
         if value]
     )
-    return u'P' + date + time
+    return u'P' + date + (u'T' + time if time else '')
