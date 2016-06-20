@@ -268,19 +268,21 @@ class UtilsTest(TestCase):
         formatted duration."""
         EXPECTED = {
             datetime.timedelta(days=1, hours=25, minutes=42, seconds=8):
-                'P2D1H42M8S',
+                'P2DT1H42M8S',
             datetime.timedelta(days=7, seconds=342):
-                'P7D5M42S',
+                'P7DT5M42S',
             datetime.timedelta(days=0, hours=2, minutes=42):
-                'P2H42M',
+                'PT2H42M',
             datetime.timedelta(hours=20, seconds=42):
-                'P20H42S',
+                'PT20H42S',
             datetime.timedelta(seconds=300):
-                'P5M',
+                'PT5M',
             datetime.timedelta(seconds=9005):
-                'P2H30M5S',
+                'PT2H30M5S',
             datetime.timedelta(minutes=9005):
-                'P6D6H5M'
+                'P6DT6H5M',
+            datetime.timedelta(days=15):
+                'P15D'
         }
         for timedelta, iso_duration in six.iteritems(EXPECTED):
             self.assertEqual(iso8601(timedelta), iso_duration)
