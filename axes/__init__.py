@@ -1,5 +1,5 @@
-from setup import VERSION
+__version__ = '1.7.0'
 
 
 def get_version():
-    return VERSION
+    return __version__

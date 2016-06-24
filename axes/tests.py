@@ -13,7 +13,7 @@ from django.utils import six
 
 from axes.decorators import COOLOFF_TIME
 from axes.decorators import FAILURE_LIMIT
-from axes.decorators import is_valid_public_ip
+from axes.decorators import is_valid_ip
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset, iso8601
@@ -240,7 +240,6 @@ class AccessAttemptTest(TestCase):
 
 
 class IPClassifierTest(TestCase):
-
     def test_classify_private_ips(self):
         """Tests whether is_valid_public_ip correctly classifies IPs as being
         bot public and valid
@@ -259,10 +258,10 @@ class IPClassifierTest(TestCase):
             '200.150.23.5': True,  # normal public
         }
         for ip_address, is_valid_public in six.iteritems(EXPECTED):
-            self.assertEqual(is_valid_public_ip(ip_address), is_valid_public)
+            self.assertEqual(is_valid_ip(ip_address), is_valid_public)
+
 
 class UtilsTest(TestCase):
-
     def test_iso8601(self):
         """Tests iso8601 correctly translates datetime.timdelta to ISO 8601
         formatted duration."""

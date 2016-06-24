@@ -3,16 +3,16 @@
 import codecs
 from setuptools import setup, find_packages
 
-VERSION = '1.7.0'
+from axes import get_version
 
 setup(
     name='django-axes',
-    version=VERSION,
+    version=get_version(),
     description="Keep track of failed login attempts in Django-powered sites.",
     long_description=(
         codecs.open("README.rst", encoding='utf-8').read() + '\n' +
         codecs.open("CHANGES.txt", encoding='utf-8').read()),
-    keywords='authentication, django, pci, security',
+    keywords='authentication django pci security'.split(),
     author='Josh VanderLinden, Philip Neustrom, Michael Blume, Camilo Nova',
     author_email='codekoala@gmail.com',
     maintainer='Alex Clark',

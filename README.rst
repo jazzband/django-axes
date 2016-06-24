@@ -45,9 +45,9 @@ You can contribute to this project forking it from github and sending pull reque
 Running tests
 -------------
 
-Tests can be run, after you clone the repository and having django installed, like::
+Clone the repository and install the django version you want. Then run::
 
-    $ PYTHONPATH=$PYTHONPATH:$PWD django-admin.py test axes --settings=axes.test_settings
+    $ ./runtests.py
 
 
 Configuration
@@ -141,6 +141,7 @@ In your code, you can use ``from axes.utils import reset``.
 * ``reset(ip=ip)`` will clear lockout/records for ip
 * ``reset(username=username)`` will clear lockout/records for username
 
+
 Issues
 ======
 
@@ -202,17 +203,17 @@ Using https://github.com/mbi/django-simple-captcha you do the following:
                 return HttpResponseRedirect(reverse_lazy('signin'))
         else:
             form = AxesCaptchaForm()
-    
+
         return render_to_response('locked_out.html', dict(form=form), context_instance=RequestContext(request))
 
 5. Add a captcha template::
 
     <form action="" method="post">
         {% csrf_token %}
-    
+
         {{ form.captcha.errors }}
         {{ form.captcha }}
-    
+
         <div class="form-actions">
             <input type="submit" value="Submit" />
         </div>
