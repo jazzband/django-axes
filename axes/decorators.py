@@ -58,6 +58,8 @@ LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 
 LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
 
+LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
+
 VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
 # whitelist and blacklist
@@ -157,10 +159,6 @@ def get_ip(request):
     return ip
 
 
-def get_lockout_url():
-    return getattr(settings, 'AXES_LOCKOUT_URL', None)
-
-
 def query2str(items, max_length=1024):
     """Turns a dictionary into an easy-to-read list of key-value pairs.
 
@@ -198,14 +196,15 @@ def is_user_lockable(request):
             field: request.POST.get(USERNAME_FORM_FIELD)
         }
         user = get_user_model().objects.get(**kwargs)
+
+        if hasattr(user, 'nolockout'):
+            # need to invert since we need to return
+            # false for users that can't be blocked
+            return not user.nolockout
+
     except get_user_model().DoesNotExist:
         # not a valid user
         return True
-
-    if hasattr(user, 'nolockout'):
-        # need to invert since we need to return
-        # false for users that can't be blocked
-        return not user.nolockout
 
     # Default behavior for a user to be lockable
     return True
@@ -216,7 +215,6 @@ def _get_user_attempts(request):
     Otherwise return None.
     """
     ip = get_ip(request)
-
     username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     if USE_USER_AGENT:
@@ -239,6 +237,7 @@ def _get_user_attempts(request):
         attempts = AccessAttempt.objects.filter(**params)
 
     return attempts
+
 
 def get_user_attempts(request):
     objects_deleted = False
@@ -307,14 +306,13 @@ def watch_login(func):
 
         if request.method == 'POST':
             # see if the login was successful
-
             login_unsuccessful = (
                 response and
                 not response.has_header('location') and
                 response.status_code != 302
             )
 
-            access_log = AccessLog.objects.create(
+            AccessLog.objects.create(
                 user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
                 ip_address=get_ip(request),
                 username=request.POST.get(USERNAME_FORM_FIELD, None),
@@ -339,26 +337,32 @@ def lockout_response(request):
     }
 
     if request.is_ajax():
-        context.update({'cooloff_time': iso8601(COOLOFF_TIME)})
-        return HttpResponse(json.dumps(context),
-                            content_type='application/json',
-                            status=403)
+        if COOLOFF_TIME:
+            context.update({'cooloff_time': iso8601(COOLOFF_TIME)})
 
-    if LOCKOUT_TEMPLATE:
-        context.update({'cooloff_time': COOLOFF_TIME})
+        return HttpResponse(
+            json.dumps(context),
+            content_type='application/json',
+            status=403,
+        )
+
+    elif LOCKOUT_TEMPLATE:
+        if COOLOFF_TIME:
+            context.update({'cooloff_time': iso8601(COOLOFF_TIME)})
+
         return render(request, LOCKOUT_TEMPLATE, context, status=403)
 
-    LOCKOUT_URL = get_lockout_url()
-    if LOCKOUT_URL:
+    elif LOCKOUT_URL:
         return HttpResponseRedirect(LOCKOUT_URL)
 
-    if COOLOFF_TIME:
-        return HttpResponse("Account locked: too many login attempts.  "
-                            "Please try again later.", status=403)
     else:
-        return HttpResponse("Account locked: too many login attempts.  "
-                            "Contact an admin to unlock your account.",
-                            status=403)
+        msg = 'Account locked: too many login attempts. {0}'
+        if COOLOFF_TIME:
+            msg = msg.format('Please try again later.')
+        else:
+            msg = msg.format('Contact an admin to unlock your account.')
+
+        return HttpResponse(msg, status=403)
 
 
 def is_already_locked(request):
@@ -367,21 +371,16 @@ def is_already_locked(request):
     if NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
         return False
 
-    if ONLY_WHITELIST:
-        if not ip_in_whitelist(ip):
-            return True
+    if ONLY_WHITELIST and not ip_in_whitelist(ip):
+        return True
 
     if ip_in_blacklist(ip):
         return True
 
-    user_lockable = is_user_lockable(request)
-
-    if not user_lockable:
+    if not is_user_lockable(request):
         return False
 
-    attempts = get_user_attempts(request)
-
-    for attempt in attempts:
+    for attempt in get_user_attempts(request):
         if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
             return True
 
@@ -449,10 +448,13 @@ def check_request(request, login_unsuccessful):
         # password
         if hasattr(request, 'user') and request.user.is_authenticated():
             logout(request)
-        log.warn('AXES: locked out %s after repeated login attempts.' %
-                 (ip_address,))
+        log.warn(
+            'AXES: locked out %s after repeated login attempts.' % (ip_address,)
+        )
         # send signal when someone is locked out.
-        user_locked_out.send("axes", request=request, username=username, ip_address=ip_address)
+        user_locked_out.send(
+            'axes', request=request, username=username, ip_address=ip_address
+        )
 
         # if a trusted login has violated lockout, revoke trust
         for attempt in [a for a in attempts if a.trusted]:
@@ -469,18 +471,16 @@ def create_new_failure_records(request, failures):
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     username = request.POST.get(USERNAME_FORM_FIELD, None)
 
-    params = {
-        'user_agent': ua,
-        'ip_address': ip,
-        'username': username,
-        'get_data': query2str(request.GET),
-        'post_data': query2str(request.POST),
-        'http_accept': request.META.get('HTTP_ACCEPT', '<unknown>'),
-        'path_info': request.META.get('PATH_INFO', '<unknown>'),
-        'failures_since_start': failures,
-    }
-
-    AccessAttempt.objects.create(**params)
+    AccessAttempt.objects.create(
+        user_agent=ua,
+        ip_address=ip,
+        username=username,
+        get_data=query2str(request.GET),
+        post_data=query2str(request.POST),
+        http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+        path_info=request.META.get('PATH_INFO', '<unknown>'),
+        failures_since_start=failures,
+    )
 
     log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
 

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import six
 
+
 class CommonAccess(models.Model):
     user_agent = models.CharField(
         max_length=255,

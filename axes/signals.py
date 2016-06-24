@@ -2,7 +2,6 @@ from django.dispatch import receiver
 from django.dispatch import Signal
 from django.utils.timezone import now
 from django.contrib.auth.signals import user_logged_out
-from django.core.exceptions import ObjectDoesNotExist
 
 from axes.models import AccessLog
 
@@ -17,18 +16,12 @@ def log_user_lockout(sender, request, user, signal, *args, **kwargs):
     if not user:
         return
 
-    try:
-        username = user.get_username()
-    except AttributeError:
-        # Django < 1.5
-        username = user.username
-
     access_logs = AccessLog.objects.filter(
-        username=username,
+        username=user.get_username(),
         logout_time__isnull=True,
     ).order_by('-attempt_time')
 
-    if access_logs:
-        access_log = access_logs[0]
+    if access_logs.exists():
+        access_log = access_logs.first()
         access_log.logout_time = now()
         access_log.save()

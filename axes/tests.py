@@ -83,7 +83,8 @@ class AccessAttemptTest(TestCase):
         """Tests the login lock trying to login one more time
         than failure limit
         """
-        for i in range(1, FAILURE_LIMIT):  # test until one try before the limit
+        # test until one try before the limit
+        for i in range(1, FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
@@ -148,7 +149,11 @@ class AccessAttemptTest(TestCase):
         """Tests if can handle a long user agent
         """
         long_user_agent = 'ie6' * 1024
-        response = self._login(is_valid_username=True, is_valid_password=True, user_agent=long_user_agent)
+        response = self._login(
+            is_valid_username=True,
+            is_valid_password=True,
+            user_agent=long_user_agent,
+        )
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
 
     def test_long_user_agent_not_valid(self):
@@ -213,8 +218,12 @@ class AccessAttemptTest(TestCase):
         """Tests the login lock with a valid username and invalid password
         when AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True
         """
-        for i in range(1, FAILURE_LIMIT):  # test until one try before the limit
-            response = self._login(is_valid_username=True, is_valid_password=False)
+        # test until one try before the limit
+        for i in range(1, FAILURE_LIMIT):
+            response = self._login(
+                is_valid_username=True,
+                is_valid_password=False,
+            )
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
 
@@ -226,9 +235,12 @@ class AccessAttemptTest(TestCase):
     def test_log_data_truncated(self):
         """Tests that query2str properly truncates data to the max_length (default 1024)
         """
-        extra_data = {string.ascii_letters * x: x for x in range(0, 1000)}  # An impossibly large post dict
+        # An impossibly large post dict
+        extra_data = {string.ascii_letters * x: x for x in range(0, 1000)}
         self._login(**extra_data)
-        self.assertEquals(len(AccessAttempt.objects.latest('id').post_data), 1024)
+        self.assertEquals(
+            len(AccessAttempt.objects.latest('id').post_data), 1024
+        )
 
     def test_json_response(self):
         """Tests response content type and status code for the ajax request
