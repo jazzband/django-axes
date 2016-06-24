@@ -1,37 +1,24 @@
-import logging
-import socket
 import json
+import logging
 
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_ipv46_address
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.template.loader import get_template
-from django.utils import timezone as datetime
-from django.utils.translation import ugettext_lazy
-
-try:
-    from django.contrib.auth import get_user_model
-except ImportError:  # django < 1.5
-    from django.contrib.auth.models import User
-else:
-    User = get_user_model()
-
-try:
-    from django.contrib.auth.models import SiteProfileNotAvailable
-except ImportError: # django >= 1.7
-    SiteProfileNotAvailable = type('SiteProfileNotAvailable', (Exception,), {})
-
-from axes.models import AccessLog
-from axes.models import AccessAttempt
-from axes.signals import user_locked_out
-import axes
 from django.utils import six
+from django.utils import timezone as datetime
+
+from axes.models import AccessAttempt
+from axes.models import AccessLog
+from axes.signals import user_locked_out
 from axes.utils import iso8601
+import axes
 
 
 # see if the user has overridden the failure limit
@@ -52,33 +39,37 @@ PASSWORD_FORM_FIELD = getattr(settings, 'AXES_PASSWORD_FORM_FIELD', 'password')
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
 
 # see if the django app is sitting behind a reverse proxy but can be accessed directly
-BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS', False)
+BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS = \
+    getattr(settings, 'AXES_BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS', False)
 
 # if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
-REVERSE_PROXY_HEADER = getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
+REVERSE_PROXY_HEADER = \
+    getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
 
 # lock out user from particular IP based on combination USER+IP
-def should_lock_out_by_combination_user_and_ip():
-    return getattr(settings, 'AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP', False)
+LOCK_OUT_BY_COMBINATION_USER_AND_IP = \
+    getattr(settings, 'AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP', False)
 
 COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
-if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float) ):
+if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float)):
     COOLOFF_TIME = timedelta(hours=COOLOFF_TIME)
 
 LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 
 LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
+
 VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
 
 # whitelist and blacklist
-# todo: convert the strings to IPv4 on startup to avoid type conversion during processing
-NEVER_LOCKOUT_WHITELIST = getattr(settings, 'AXES_NEVER_LOCKOUT_WHITELIST', False)
-ONLY_WHITELIST = getattr(settings, 'AXES_ONLY_ALLOW_WHITELIST', False)
-IP_WHITELIST = getattr(settings, 'AXES_IP_WHITELIST', None)
-IP_BLACKLIST = getattr(settings, 'AXES_IP_BLACKLIST', None)
+# TODO: convert the strings to IPv4 on startup to avoid type conversion during processing
+NEVER_LOCKOUT_WHITELIST = \
+    getattr(settings, 'AXES_NEVER_LOCKOUT_WHITELIST', False)
 
-ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. "
-                              "Note that both fields are case-sensitive.")
+ONLY_WHITELIST = getattr(settings, 'AXES_ONLY_ALLOW_WHITELIST', False)
+
+IP_WHITELIST = getattr(settings, 'AXES_IP_WHITELIST', None)
+
+IP_BLACKLIST = getattr(settings, 'AXES_IP_BLACKLIST', None)
 
 
 log = logging.getLogger(LOGGER)
@@ -88,82 +79,81 @@ if VERBOSE:
 
 
 if BEHIND_REVERSE_PROXY:
-    log.debug('Axes is configured to be behind reverse proxy...looking for header value %s', REVERSE_PROXY_HEADER)
+    log.debug('Axes is configured to be behind reverse proxy')
+    log.debug('Looking for header value %s', REVERSE_PROXY_HEADER)
 
 
 def is_valid_ip(ip_address):
-    """ Check Validity of an IP address """
-    valid = True
-    try:
-        socket.inet_aton(ip_address.strip())
-    except:
-        valid = False
-    return valid
-
-
-def is_valid_public_ip(ip_address):
     """Returns whether IP address is both valid AND, per RFC 1918, not reserved as
     private"""
-    if not is_valid_ip(ip_address):
+    try:
+        validate_ipv46_address(ip_address)
+    except ValidationError:
         return False
+
     PRIVATE_IPS_PREFIX = (
         '10.',
-        '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.',
-        '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.',
-        '172.30.', '172.31.',
+        '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.',
+        '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.',
+        '172.28.', '172.29.', '172.30.', '172.31.',
         '192.168.',
         '127.',
     )
     return not ip_address.startswith(PRIVATE_IPS_PREFIX)
 
+
 def get_ip_address_from_request(request):
-    """ Makes the best attempt to get the client's real IP or return the loopback """
-    ip_address = ''
+    """
+    Makes the best attempt to get the client's real IP or return the loopback
+    """
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', '')
+    x_real_ip = request.META.get('HTTP_X_REAL_IP', '')
+    remote_addr = request.META.get('REMOTE_ADDR', '')
+
+    ip_address = None
     if x_forwarded_for and ',' not in x_forwarded_for:
-        if is_valid_public_ip(x_forwarded_for):
+        if is_valid_ip(x_forwarded_for):
             ip_address = x_forwarded_for.strip()
     else:
         for ip_raw in x_forwarded_for.split(','):
             ip = ip_raw.strip()
-            if not is_valid_public_ip(ip):
-                continue
-            else:
+            if is_valid_ip(ip):
                 ip_address = ip
                 break
+
     if not ip_address:
-        x_real_ip = request.META.get('HTTP_X_REAL_IP', '')
-        if x_real_ip:
-            if is_valid_public_ip(x_real_ip):
-                ip_address = x_real_ip.strip()
-    if not ip_address:
-        remote_addr = request.META.get('REMOTE_ADDR', '')
-        if remote_addr:
-            if is_valid_public_ip(remote_addr):
-                ip_address = remote_addr.strip()
-            if not is_valid_public_ip(remote_addr) and is_valid_ip(remote_addr):
-                ip_address = remote_addr.strip()
-    if not ip_address:
+        if x_real_ip and is_valid_ip(x_real_ip):
+            ip_address = x_real_ip.strip()
+        elif remote_addr and is_valid_ip(remote_addr):
+            ip_address = remote_addr.strip()
+        else:
             ip_address = '127.0.0.1'
+
     return ip_address
 
 
 def get_ip(request):
     if not BEHIND_REVERSE_PROXY:
-        ip = get_ip_address_from_request(request)
-    else:
-        ip = request.META.get(REVERSE_PROXY_HEADER, '')
-        ip = ip.split(",", 1)[0].strip()
-        if ip == '':
-            if not BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS:
-                raise Warning('Axes is configured for operation behind a reverse proxy but could not find '\
-                    'an HTTP header value {0}. Check your proxy server settings '\
-                    'to make sure this header value is being passed.'.format(REVERSE_PROXY_HEADER))
-            else:
-                ip = request.META.get('REMOTE_ADDR', '')
-                if not ip_in_whitelist(ip):
-                    raise Warning('Axes is configured for operation behind a reverse proxy and to allow some'\
-                        'IP addresses to have direct access. {0} is not on the white list'.format(ip))
+        return get_ip_address_from_request(request)
+
+    ip = request.META.get(REVERSE_PROXY_HEADER, '')
+    ip = ip.split(',', 1)[0].strip()
+    if ip == '':
+        if BEHIND_REVERSE_PROXY_WITH_DIRECT_ACCESS:
+            ip = request.META.get('REMOTE_ADDR', '')
+            if not ip_in_whitelist(ip):
+                raise Warning(
+                    'Axes is configured for operation behind a reverse proxy '
+                    'and to allow some IP addresses to have direct access. '
+                    '{0} is not on the white list'.format(ip)
+                )
+        else:
+            raise Warning(
+                'Axes is configured for operation behind a reverse proxy '
+                'but could not find an HTTP header value. Check your proxy '
+                'server settings to make sure this header value is being '
+                'passed. Header value {0}'.format(REVERSE_PROXY_HEADER)
+            )
     return ip
 
 
@@ -203,12 +193,12 @@ def is_user_lockable(request):
     and doesn't get their account locked out
     """
     try:
-        field = getattr(User, 'USERNAME_FIELD', 'username')
+        field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
         kwargs = {
             field: request.POST.get(USERNAME_FORM_FIELD)
         }
-        user = User.objects.get(**kwargs)
-    except User.DoesNotExist:
+        user = get_user_model().objects.get(**kwargs)
+    except get_user_model().DoesNotExist:
         # not a valid user
         return True
 
@@ -217,20 +207,9 @@ def is_user_lockable(request):
         # false for users that can't be blocked
         return not user.nolockout
 
-    elif hasattr(settings, 'AUTH_PROFILE_MODULE'):
-        try:
-            profile = user.get_profile()
-            if hasattr(profile, 'nolockout'):
-                # need to invert since we need to return
-                # false for users that can't be blocked
-                return not profile.nolockout
-
-        except (SiteProfileNotAvailable, ObjectDoesNotExist, AttributeError):
-            # no profile
-            return True
-
     # Default behavior for a user to be lockable
     return True
+
 
 def _get_user_attempts(request):
     """Returns access attempt record if it exists.
@@ -254,7 +233,7 @@ def _get_user_attempts(request):
         params = {'ip_address': ip, 'trusted': False}
         if USE_USER_AGENT:
             params['user_agent'] = ua
-        if should_lock_out_by_combination_user_and_ip():
+        if LOCK_OUT_BY_COMBINATION_USER_AND_IP:
             params['username'] = username
 
         attempts = AccessAttempt.objects.filter(**params)
