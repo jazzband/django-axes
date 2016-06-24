@@ -4,8 +4,3 @@ build
 dist
 .hg
 .DS_Store
-examples/db/
-examples/logs/
-examples/media/
-examples/static/
-examples/example/local_settings.py

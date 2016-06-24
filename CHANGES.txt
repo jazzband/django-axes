@@ -177,7 +177,7 @@ Changes
 
 - Fixes object type issue, response is not an string
   [camilonova]
-    
+
 - Python 3 compatibility fix for db_reset
   [nicois]
 
