@@ -1,6 +1,19 @@
 Changes
 =======
 
+2.0.0 (2016-06-24)
+------------------
+
+- Removed middleware to use app_config
+  [camilonova]
+
+- Lots of cleaning
+  [camilonova]
+
+- Improved test suite and versions
+  [camilonova]
+
+
 1.7.0 (2016-06-10)
 ------------------
 

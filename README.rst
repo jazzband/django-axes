@@ -6,14 +6,14 @@ Django Axes
     :target: http://travis-ci.org/django-pci/django-axes
 
 ``django-axes`` is a very simple way for you to keep track of failed login
-attempts, both for the Django admin and for the rest of your site.  The name is
+attempts, both for the Django admin and for the rest of your site. The name is
 sort of a geeky pun, since ``axes`` can be read interpreted as:
 
 * "access", as in monitoring access attempts
-* "axes", as in tools you can use hack (generally on wood).  In this case,
+* "axes", as in tools you can use hack (generally on wood). In this case,
   however, the "hacking" part of it can be taken a bit further: ``django-axes``
   is intended to help you *stop* people from hacking (popular media
-  definition) your website.  Hilarious, right?  That's what I thought too!
+  definition) your website. Hilarious, right? That's what I thought too!
 
 
 Requirements
@@ -33,9 +33,6 @@ You can install the latest stable package running this command::
 
     $ pip install django-axes
 
-Also you can install the development version running this command::
-
-    $ pip install -e git+http://github.com/django-pci/django-axes.git#egg=django_axes-dev
 
 Development
 ===========
@@ -53,8 +50,7 @@ Clone the repository and install the django version you want. Then run::
 Configuration
 =============
 
-First of all, you must add this project to your list of ``INSTALLED_APPS`` in
-``settings.py``::
+Just add `axes.apps.AppConfig` to your ``INSTALLED_APPS``::
 
     INSTALLED_APPS = (
         'django.contrib.admin',
@@ -63,21 +59,11 @@ First of all, you must add this project to your list of ``INSTALLED_APPS`` in
         'django.contrib.sessions',
         'django.contrib.sites',
         ...
-        'axes',
+        'axes.apps.AppConfig',
         ...
     )
 
-Next, install the ``FailedLoginMiddleware`` middleware::
-
-    MIDDLEWARE_CLASSES = (
-        'django.middleware.common.CommonMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'axes.middleware.FailedLoginMiddleware'
-    )
-
-Run ``python manage.py migrate``. This creates the appropriate tables in your database
-that are necessary for operation.
+Remember to run ``python manage.py migrate`` to sync the database.
 
 Customizing Axes
 ----------------
@@ -121,12 +107,11 @@ These should be defined in your ``settings.py`` file.
 Usage
 =====
 
-Using ``django-axes`` is extremely simple. Once you install the application
-and the middleware, all you need to do is periodically check the Access
-Attempts section of the admin.
+Using ``django-axes`` is extremely simple. All you need to do is periodically
+check the Access Attempts section of the admin.
 
 By default, django-axes will lock out repeated attempts from the same IP
-address.  You can allow this IP to attempt again by deleting the relevant
+address. You can allow this IP to attempt again by deleting the relevant
 ``AccessAttempt`` records in the admin.
 
 You can also use the ``axes_reset`` management command using Django's
@@ -139,7 +124,7 @@ In your code, you can use ``from axes.utils import reset``.
 
 * ``reset()`` will reset all lockouts and access records.
 * ``reset(ip=ip)`` will clear lockout/records for ip
-* ``reset(username=username)`` will clear lockout/records for username
+* ``reset(username=username)`` will clear lockout/records for a username
 
 
 Issues
@@ -154,11 +139,11 @@ be that you need to manually add watch_login to your login url.
 For example, in your urls.py::
 
     ...
-    from django.contrib.auth.views import login, logout, password_change
+    from my.custom.app import login
     from axes.decorators import watch_login
     ...
     urlpatterns = patterns('',
-        (r'^login/$', watch_login(login), {'template_name': 'auth/login.html'}),
+        (r'^login/$', watch_login(login)),
     ...
 
 

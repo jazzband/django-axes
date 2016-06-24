@@ -34,7 +34,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Topic :: Internet :: Log Analysis',
-        'Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware',
         'Topic :: Security',
         'Topic :: System :: Logging',
     ],
