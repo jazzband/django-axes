@@ -59,7 +59,7 @@ Just add `axes.apps.AppConfig` to your ``INSTALLED_APPS``::
         'django.contrib.sessions',
         'django.contrib.sites',
         ...
-        'axes.apps.AppConfig',
+        'axes',
         ...
     )
 
