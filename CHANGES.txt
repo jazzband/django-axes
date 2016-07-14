@@ -1,6 +1,13 @@
 Changes
 =======
 
+2.1.0 (2016-07-14)
+------------------
+
+- Add `default_app_config` so you can just use `axes` in `INSTALLED_APPS`
+  [vdboor]
+
+
 2.0.0 (2016-06-24)
 ------------------
 
