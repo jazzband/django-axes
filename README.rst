@@ -50,7 +50,7 @@ Clone the repository and install the django version you want. Then run::
 Configuration
 =============
 
-Just add `axes.apps.AppConfig` to your ``INSTALLED_APPS``::
+Just add `axes` to your ``INSTALLED_APPS``::
 
     INSTALLED_APPS = (
         'django.contrib.admin',
@@ -64,6 +64,7 @@ Just add `axes.apps.AppConfig` to your ``INSTALLED_APPS``::
     )
 
 Remember to run ``python manage.py migrate`` to sync the database.
+
 
 Customizing Axes
 ----------------
@@ -102,6 +103,10 @@ These should be defined in your ``settings.py`` file.
 * ``AXES_NEVER_LOCKOUT_WHITELIST``: If ``True``, users can always login from
   whitelisted IP addresses.
   Default: ``False``
+* ``AXES_BEHIND_REVERSE_PROXY``: If ``True``, it will look for the IP address from the header defined at ``AXES_REVERSE_PROXY_HEADER``. Please make sure if you enable this setting to configure your proxy to set the correct value for the header, otherwise you could be attacked by setting this header directly in every request.
+  Default: ``False``
+* ``AXES_REVERSE_PROXY_HEADER``: If ``AXES_BEHIND_REVERSE_PROXY`` is ``True``, it will look for the IP address from this header.
+  Default: ``HTTP_X_FORWARDED_FOR``
 
 
 Usage
