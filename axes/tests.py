@@ -232,7 +232,8 @@ class AccessAttemptTest(TestCase):
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     def test_log_data_truncated(self):
-        """Tests that query2str properly truncates data to the max_length (default 1024)
+        """Tests that query2str properly truncates data to the
+        max_length (default 1024)
         """
         # An impossibly large post dict
         extra_data = {string.ascii_letters * x: x for x in range(0, 1000)}
@@ -248,28 +249,6 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_json=True)
         self.assertEquals(response.status_code, 403)
         self.assertEquals(response.get('Content-Type'), 'application/json')
-
-
-class IPClassifierTest(TestCase):
-    def test_classify_private_ips(self):
-        """Tests whether is_valid_public_ip correctly classifies IPs as being
-        bot public and valid
-        """
-        EXPECTED = {
-            'foobar': False,  # invalid - not octects
-            '192.168.0': False,  # invalid - only 3 octets
-            '192.168.0.0': False,  # private
-            '192.168.165.1': False,  # private
-            '192.249.19.1': True,  # public but 192 prefix
-            '10.0.201.13': False,  # private
-            '172.15.12.1': True,  # public but 172 prefix
-            '172.16.12.1': False,  # private
-            '172.31.12.1': False,  # private
-            '172.32.0.1': True,  # public but 127 prefix
-            '200.150.23.5': True,  # normal public
-        }
-        for ip_address, is_valid_public in six.iteritems(EXPECTED):
-            self.assertEqual(ip_address, is_valid_public)
 
 
 class UtilsTest(TestCase):
