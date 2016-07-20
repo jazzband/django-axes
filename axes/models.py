@@ -75,4 +75,6 @@ class AccessLog(CommonAccess):
     )
 
     def __unicode__(self):
-        return six.u('Access Log for %s @ %s') % (self.username, self.attempt_time)
+        return six.u('Access Log for %s @ %s') % (
+            self.username, self.attempt_time
+        )
