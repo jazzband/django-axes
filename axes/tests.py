@@ -13,7 +13,6 @@ from django.utils import six
 
 from axes.decorators import COOLOFF_TIME
 from axes.decorators import FAILURE_LIMIT
-from axes.decorators import is_valid_ip
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset, iso8601
@@ -270,7 +269,7 @@ class IPClassifierTest(TestCase):
             '200.150.23.5': True,  # normal public
         }
         for ip_address, is_valid_public in six.iteritems(EXPECTED):
-            self.assertEqual(is_valid_ip(ip_address), is_valid_public)
+            self.assertEqual(ip_address, is_valid_public)
 
 
 class UtilsTest(TestCase):
