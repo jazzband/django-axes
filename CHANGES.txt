@@ -1,6 +1,13 @@
 Changes
 =======
 
+2.2.0 (2016-07-20)
+------------------
+
+- Improve the logic when using a reverse proxy to avoid possible attacks.
+  [camilonova]
+
+
 2.1.0 (2016-07-14)
 ------------------
 
