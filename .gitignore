@@ -4,3 +4,4 @@ build
 dist
 .hg
 .DS_Store
+docs/_build
