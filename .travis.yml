@@ -10,10 +10,13 @@ env:
   - DJANGO="Django --pre"
 
 install:
-  - pip install -q $DJANGO
+  - pip install -q $DJANGO coveralls
 
 script:
   - ./runtests.py
+
+after_success:
+  - coveralls
 
 deploy:
   provider: pypi
