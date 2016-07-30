@@ -1,6 +1,10 @@
 Django Axes
 ===========
 
+.. image:: https://jazzband.co/static/img/badge.svg
+   :target: https://jazzband.co/
+   :alt: Jazzband
+
 .. image:: https://secure.travis-ci.org/django-pci/django-axes.png?branch=master
     :alt: Build Status
     :target: http://travis-ci.org/django-pci/django-axes
