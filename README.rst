@@ -6,8 +6,13 @@ Django Axes
    :alt: Jazzband
 
 .. image:: https://secure.travis-ci.org/jazzband/django-axes.png?branch=master
-    :target: http://travis-ci.org/jazzband/django-axes
-    :alt: Build Status
+   :target: http://travis-ci.org/jazzband/django-axes
+   :alt: Build Status
+
+.. image:: https://coveralls.io/repos/github/jazzband/django-axes/badge.svg?branch=master
+   :target: https://coveralls.io/github/jazzband/django-axes?branch=master
+   :alt: Coveralls
+
 
 ``django-axes`` is a very simple way for you to keep track of failed login
 attempts, both for the Django admin and for the rest of your site. The name is
