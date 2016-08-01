@@ -5,3 +5,5 @@ dist
 .hg
 .DS_Store
 docs/_build
+.tox/
+tox.ini
