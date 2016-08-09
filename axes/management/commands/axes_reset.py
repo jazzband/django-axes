@@ -8,11 +8,11 @@ class Command(BaseCommand):
             "IP, resets only for that IP")
 
     def add_arguments(self, parser):
-        parser.add_argument('ip', nargs='+')
+        parser.add_argument('ip', nargs='*')
 
     def handle(self, *args, **kwargs):
         count = 0
-        if kwargs:
+        if kwargs and kwargs.get('ip'):
             for ip in kwargs['ip']:
                 count += reset(ip=ip)
         else:
