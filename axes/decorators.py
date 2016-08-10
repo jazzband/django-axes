@@ -1,9 +1,6 @@
 import json
 import logging
 
-from datetime import timedelta
-
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
 from django.http import HttpResponse
@@ -14,59 +11,10 @@ from django.utils import timezone as datetime
 
 from axes.models import AccessAttempt
 from axes.models import AccessLog
+from axes.settings import *
 from axes.signals import user_locked_out
 from axes.utils import iso8601
 import axes
-
-
-# see if the user has overridden the failure limit
-FAILURE_LIMIT = getattr(settings, 'AXES_LOGIN_FAILURE_LIMIT', 3)
-
-# see if the user has set axes to lock out logins after failure limit
-LOCK_OUT_AT_FAILURE = getattr(settings, 'AXES_LOCK_OUT_AT_FAILURE', True)
-
-USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
-
-# use a specific username field to retrieve from login POST data
-USERNAME_FORM_FIELD = getattr(settings, 'AXES_USERNAME_FORM_FIELD', 'username')
-
-# use a specific password field to retrieve from login POST data
-PASSWORD_FORM_FIELD = getattr(settings, 'AXES_PASSWORD_FORM_FIELD', 'password')
-
-# see if the django app is sitting behind a reverse proxy
-BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
-
-# if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
-REVERSE_PROXY_HEADER = \
-    getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
-
-# lock out user from particular IP based on combination USER+IP
-LOCK_OUT_BY_COMBINATION_USER_AND_IP = \
-    getattr(settings, 'AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP', False)
-
-COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
-if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float)):
-    COOLOFF_TIME = timedelta(hours=COOLOFF_TIME)
-
-LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
-
-LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
-
-LOCKOUT_URL = getattr(settings, 'AXES_LOCKOUT_URL', None)
-
-VERBOSE = getattr(settings, 'AXES_VERBOSE', True)
-
-# whitelist and blacklist
-# TODO: convert the strings to IPv4 on startup to avoid type conversion during processing
-NEVER_LOCKOUT_WHITELIST = \
-    getattr(settings, 'AXES_NEVER_LOCKOUT_WHITELIST', False)
-
-ONLY_WHITELIST = getattr(settings, 'AXES_ONLY_ALLOW_WHITELIST', False)
-
-IP_WHITELIST = getattr(settings, 'AXES_IP_WHITELIST', None)
-
-IP_BLACKLIST = getattr(settings, 'AXES_IP_BLACKLIST', None)
-
 
 log = logging.getLogger(LOGGER)
 if VERBOSE:
@@ -254,14 +202,15 @@ def watch_login(func):
             user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
             http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
             path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-            AccessLog.objects.create(
-                user_agent=user_agent,
-                ip_address=get_ip(request),
-                username=request.POST.get(USERNAME_FORM_FIELD, None),
-                http_accept=http_accept,
-                path_info=path_info,
-                trusted=not login_unsuccessful,
-            )
+            if not DISABLE_ACCESS_LOG:
+                AccessLog.objects.create(
+                    user_agent=user_agent,
+                    ip_address=get_ip(request),
+                    username=request.POST.get(USERNAME_FORM_FIELD, None),
+                    http_accept=http_accept,
+                    path_info=path_info,
+                    trusted=not login_unsuccessful,
+                )
             if check_request(request, login_unsuccessful):
                 return response
 
