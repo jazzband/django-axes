@@ -202,7 +202,7 @@ def watch_login(func):
             user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
             http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
             path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-            if not DISABLE_ACCESS_LOG:
+            if not getattr(settings, 'AXES_DISABLE_ACCESS_LOG', False):
                 AccessLog.objects.create(
                     user_agent=user_agent,
                     ip_address=get_ip(request),

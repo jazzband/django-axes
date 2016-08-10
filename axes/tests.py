@@ -250,15 +250,14 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(response.status_code, 403)
         self.assertEquals(response.get('Content-Type'), 'application/json')
 
-    @override_settings(DISABLE_ACCESS_LOG=True)
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_valid_logout_without_log(self):
         AccessLog.objects.all().delete()
 
         response = self._login(is_valid_username=True, is_valid_password=True)
         response = self.client.get(reverse('admin:logout'))
 
-        self.assertRaisesMessage(AccessLog.objects.latest('id'),
-                                 AccessLog.DoesNotExist)
+        self.assertEquals(AccessLog.objects.all().count(), 0)
         self.assertContains(response, 'Logged out')
 
 
