@@ -60,4 +60,4 @@ These should be defined in your ``settings.py`` file.
   Default: ``False``
 * ``AXES_REVERSE_PROXY_HEADER``: If ``AXES_BEHIND_REVERSE_PROXY`` is ``True``, it will look for the IP address from this header.
   Default: ``HTTP_X_FORWARDED_FOR``
-* ``AXES_DISABLE_ACCESS_LOG``: If ``True``, successful logins will not be logged, so the access log shown in the admin interface is empty.
+* ``AXES_DISABLE_ACCESS_LOG``: If ``True``, successful logins will not be logged, so the access log shown in the admin interface will only list unsuccessful login attempts.

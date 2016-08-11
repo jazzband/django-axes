@@ -260,6 +260,14 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(AccessLog.objects.all().count(), 0)
         self.assertContains(response, 'Logged out')
 
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
+    def test_valid_logout_without_log(self):
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=False)
+
+        self.assertEquals(AccessLog.objects.all().count(), 1)
+
 
 class UtilsTest(TestCase):
     def test_iso8601(self):
