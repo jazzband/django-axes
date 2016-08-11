@@ -11,8 +11,8 @@ from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
 from django.utils import six
 
-from axes.decorators import COOLOFF_TIME
-from axes.decorators import FAILURE_LIMIT
+from axes.settings import COOLOFF_TIME
+from axes.settings import FAILURE_LIMIT
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset, iso8601
@@ -249,6 +249,24 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_json=True)
         self.assertEquals(response.status_code, 403)
         self.assertEquals(response.get('Content-Type'), 'application/json')
+
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
+    def test_valid_logout_without_log(self):
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=True)
+        response = self.client.get(reverse('admin:logout'))
+
+        self.assertEquals(AccessLog.objects.all().count(), 0)
+        self.assertContains(response, 'Logged out')
+
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
+    def test_valid_logout_without_log(self):
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=False)
+
+        self.assertEquals(AccessLog.objects.all().count(), 1)
 
 
 class UtilsTest(TestCase):
