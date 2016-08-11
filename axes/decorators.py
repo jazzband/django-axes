@@ -153,21 +153,18 @@ def _get_user_attempts(request):
     """Returns access attempt record if it exists.
     Otherwise return None.
     """
-    ip = get_ip(request)
     username = request.POST.get(USERNAME_FORM_FIELD, None)
 
     if USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
         attempts = AccessAttempt.objects.filter(
-            user_agent=ua, ip_address=ip, username=username, trusted=True
+            user_agent=ua, username=username, trusted=True
         )
     else:
-        attempts = AccessAttempt.objects.filter(
-            ip_address=ip, username=username, trusted=True
-        )
+        attempts = AccessAttempt.objects.filter(username=username, trusted=True)
 
     if not attempts:
-        params = {'ip_address': ip, 'trusted': False}
+        params = {'trusted': False}
         if USE_USER_AGENT:
             params['user_agent'] = ua
         if LOCK_OUT_BY_COMBINATION_USER_AND_IP:
@@ -322,9 +319,8 @@ def is_already_locked(request):
     if not is_user_lockable(request):
         return False
 
-    for attempt in get_user_attempts(request):
-        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
-            return True
+    if len(get_user_attempts(request)) >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
+        return True
 
     return False
 
