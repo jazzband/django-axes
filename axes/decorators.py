@@ -33,6 +33,9 @@ def get_ip(request):
     if BEHIND_REVERSE_PROXY:
         ip = request.META.get(REVERSE_PROXY_HEADER, '').split(',', 1)[0]
         ip = ip.strip()
+        if REVERSE_PROXY_XFF_CLIENT_PORT:
+            # Fix for IIS adding client port number to 'HTTP_X_FORWARDED_FOR' header (removes port number).
+            ip = ''.join(ip.split(':')[:-1])
         if not ip:
             raise Warning(
                 'Axes is configured for operation behind a reverse proxy '
