@@ -265,7 +265,7 @@ class AccessAttemptTest(TestCase):
         AccessLog.objects.all().delete()
 
         response = self._login(is_valid_username=True, is_valid_password=False)
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 200)
 
         self.assertEquals(AccessLog.objects.all().count(), 1)
 
