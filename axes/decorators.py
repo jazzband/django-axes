@@ -1,6 +1,14 @@
 import json
 import logging
 
+try:
+    import ipaddress
+except ImportError:
+    ipaddress = False
+    ipv6_address = re.compile(
+        '^(?:(?:[0-9A-Fa-f]{1,4}:){6}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|::(?:[0-9A-Fa-f]{1,4}:){5}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){4}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){3}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,2}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){2}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,4}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(?:(?:[0-9A-Fa-f]{1,4}:){,6}[0-9A-Fa-f]{1,4})?::)$'
+    )
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
 from django.http import HttpResponse
@@ -27,15 +35,19 @@ if BEHIND_REVERSE_PROXY:
     log.debug('Looking for header value %s', REVERSE_PROXY_HEADER)
 
 
+def is_ipv6(ip):
+    if ipaddress:
+        return isinstance(ipaddress.ip_address(ip), ipaddress.IPv6Address)
+    else:
+        return ipv6_address.match(ip)
+
+
 def get_ip(request):
     ip = request.META.get('REMOTE_ADDR', '')
 
     if BEHIND_REVERSE_PROXY:
         ip = request.META.get(REVERSE_PROXY_HEADER, '').split(',', 1)[0]
         ip = ip.strip()
-        if REVERSE_PROXY_XFF_CLIENT_PORT:
-            # Fix for IIS adding client port number to 'HTTP_X_FORWARDED_FOR' header (removes port number).
-            ip = ''.join(ip.split(':')[:-1])
         if not ip:
             raise Warning(
                 'Axes is configured for operation behind a reverse proxy '
@@ -43,6 +55,9 @@ def get_ip(request):
                 'server settings to make sure this header value is being '
                 'passed. Header value {0}'.format(REVERSE_PROXY_HEADER)
             )
+        if not is_ipv6(ip):
+            # Fix for IIS adding client port number to 'HTTP_X_FORWARDED_FOR' header (removes port number).
+            ip = ''.join(ip.split(':')[:-1])
 
     return ip
 

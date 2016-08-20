@@ -19,10 +19,6 @@ PASSWORD_FORM_FIELD = getattr(settings, 'AXES_PASSWORD_FORM_FIELD', 'password')
 # see if the django app is sitting behind a reverse proxy
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
 
-# whether the reverse proxy adds client port number to 'HTTP_X_FORWARDED_FOR' header (IIS)
-# http://stackoverflow.com/questions/29155841/port-number-being-set-by-iis-in-the-x-forwarded-for-header-is-different-than-the
-REVERSE_PROXY_XFF_CLIENT_PORT = getattr(settings, 'AXES_REVERSE_PROXY_XFF_CLIENT_PORT', False)
-
 # if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
 REVERSE_PROXY_HEADER = \
     getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
