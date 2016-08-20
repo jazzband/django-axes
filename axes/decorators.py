@@ -1,5 +1,6 @@
 import json
 import logging
+import ipaddress
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
@@ -27,6 +28,13 @@ if BEHIND_REVERSE_PROXY:
     log.debug('Looking for header value %s', REVERSE_PROXY_HEADER)
 
 
+def is_ipv6(ip):
+    try:
+        return isinstance(ipaddress.ip_address(ip), ipaddress.IPv6Address)
+    except ValueError:
+        return False
+
+
 def get_ip(request):
     ip = request.META.get('REMOTE_ADDR', '')
 
@@ -45,6 +53,9 @@ def get_ip(request):
                 'server settings to make sure this header value is being '
                 'passed. Header value {0}'.format(REVERSE_PROXY_HEADER)
             )
+        if not is_ipv6(ip):
+            # Fix for IIS adding client port number to 'HTTP_X_FORWARDED_FOR' header (removes port number).
+            ip = ''.join(ip.split(':')[:-1])
 
     return ip
 
