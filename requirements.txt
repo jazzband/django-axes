@@ -1,4 +1,3 @@
 Django
-ipaddress
 sphinx-rtd-theme
 -e .

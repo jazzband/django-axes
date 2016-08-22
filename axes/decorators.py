@@ -1,6 +1,6 @@
 import json
 import logging
-import ipaddress
+from socket import inet_pton, AF_INET6
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
@@ -30,9 +30,10 @@ if BEHIND_REVERSE_PROXY:
 
 def is_ipv6(ip):
     try:
-        return isinstance(ipaddress.ip_address(ip), ipaddress.IPv6Address)
-    except ValueError:
+        inet_pton(AF_INET6, ip)
+    except OSError:
         return False
+    return True
 
 
 def get_ip(request):
