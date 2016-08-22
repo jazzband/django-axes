@@ -11,7 +11,6 @@ env:
 
 install:
   - pip install -q $DJANGO coveralls
-
 script:
   - ./runtests.py
 
