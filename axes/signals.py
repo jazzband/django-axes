@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.dispatch import receiver
 from django.dispatch import Signal
 from django.utils.timezone import now
@@ -21,9 +20,9 @@ if not DISABLE_ACCESS_LOG:
         access_logs = AccessLog.objects.filter(
             username=user.get_username(),
             logout_time__isnull=True,
-        ).order_by('-attempt_time')
+        ).order_by('-attempt_time')[0:1]
 
-        if access_logs.exists():
-            access_log = access_logs.first()
+        if access_logs:
+            access_log = access_logs[0]
             access_log.logout_time = now()
             access_log.save()
