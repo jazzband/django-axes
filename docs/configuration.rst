@@ -53,6 +53,9 @@ These should be defined in your ``settings.py`` file.
   from IP under particular user if attempts limit exceed, otherwise lock out
   based on IP.
   Default: ``False``
+* ``AXES_ONLY_USER_FAILURES`` : If ``True`` only locks based on user id and never locks by IP
+  if attempts limit exceed, otherwise utilize the existing IP and user locking logic
+  Default: ``False``
 * ``AXES_NEVER_LOCKOUT_WHITELIST``: If ``True``, users can always login from
   whitelisted IP addresses.
   Default: ``False``

@@ -231,6 +231,44 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_valid_username=True, is_valid_password=False)
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    def test_lockout_by_user_only(self):
+        """Tests the login lock with a valid username and invalid password
+        when AXES_ONLY_USER_FAILURES is True
+        """
+        # test until one try before the limit
+        for i in range(1, FAILURE_LIMIT):
+            response = self._login(
+                is_valid_username=True,
+                is_valid_password=False,
+            )
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY)
+
+        # So, we shouldn't have gotten a lock-out yet.
+        # But we should get one now
+        response = self._login(is_valid_username=True, is_valid_password=False)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+
+        # reset the username only and make sure we can log in now even though our IP has failed each time
+        reset(username=AccessAttemptTest.VALID_USERNAME)
+        response = self._login(
+            is_valid_username=True,
+            is_valid_password=True,
+        )
+        # Check if we are still in the login page
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
+
+        # now create failure_limit + 1 failed logins and then we should still be able to login with valid_username
+        for i in range(1, FAILURE_LIMIT + 1):
+            response = self._login(
+                is_valid_username=False,
+                is_valid_password=False,
+            )
+        # Check if we can still log in with valid user
+        response = self._login(is_valid_username=True, is_valid_password=True)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
+
     def test_log_data_truncated(self):
         """Tests that query2str properly truncates data to the
         max_length (default 1024)
