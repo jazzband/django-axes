@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
 from django.utils import six
+from mock import patch
 
 from axes.settings import COOLOFF_TIME
 from axes.settings import FAILURE_LIMIT
@@ -212,7 +213,7 @@ class AccessAttemptTest(TestCase):
         self.test_failure_limit_once()
         self.assertEquals(scope.signal_received, 2)
 
-    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
     def test_lockout_by_combination_user_and_ip(self):
         """Tests the login lock with a valid username and invalid password
         when AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True
@@ -288,7 +289,7 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(response.status_code, 403)
         self.assertEquals(response.get('Content-Type'), 'application/json')
 
-    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
+    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
     def test_valid_logout_without_log(self):
         AccessLog.objects.all().delete()
 
@@ -298,7 +299,7 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(AccessLog.objects.all().count(), 0)
         self.assertContains(response, 'Logged out')
 
-    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
+    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
     def test_non_valid_login_without_log(self):
         AccessLog.objects.all().delete()
 
@@ -306,6 +307,19 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(response.status_code, 200)
 
         self.assertEquals(AccessLog.objects.all().count(), 1)
+
+    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
+    def test_valid_login_without_log(self):
+        """
+        A valid login doesn't generate an access attempt when
+        `AXES_DISABLE_ACCESS_LOG=True`.
+        """
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=True)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(AccessLog.objects.all().count(), 0)
 
 
 class UtilsTest(TestCase):
