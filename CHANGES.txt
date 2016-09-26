@@ -1,6 +1,25 @@
 Changes
 =======
 
+2.2.1 (2016-09-26)
+------------------
+
+- Make IP position argument optional.
+  [aredalen]
+
+- Added possibility to disable access log
+  [svenhertle]
+
+- Fix for IIS used as reverse proxy adding port number
+  [Dmitri-Sintsov]
+
+- Made the signal race condition safe.
+  [Minkey27]
+
+- Added AXES_ONLY_USER_FAILURES to support only looking at the user ID.
+  [lip77us]
+
+
 2.2.0 (2016-07-20)
 ------------------
 
