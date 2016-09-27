@@ -13,7 +13,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         count = 0
         if kwargs and kwargs.get('ip'):
-            for ip in kwargs['ip']:
+            for ip in kwargs['ip'][1:]:
                 count += reset(ip=ip)
         else:
             count = reset()
