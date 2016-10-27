@@ -5,7 +5,7 @@ Django Axes
    :target: https://jazzband.co/
    :alt: Jazzband
 
-.. image:: https://secure.travis-ci.org/jazzband/django-axes.png?branch=master
+.. image:: https://secure.travis-ci.org/jazzband/django-axes.svg?branch=master
    :target: http://travis-ci.org/jazzband/django-axes
    :alt: Build Status
 
