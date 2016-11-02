@@ -1,6 +1,7 @@
 import json
 import logging
 from socket import inet_pton, AF_INET6
+from hashlib import md5
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
@@ -9,6 +10,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import six
 from django.utils import timezone as datetime
+from django.core.cache import cache
 
 from axes.models import AccessAttempt
 from axes.models import AccessLog
@@ -148,6 +150,8 @@ def _get_user_attempts(request):
 def get_user_attempts(request):
     objects_deleted = False
     attempts = _get_user_attempts(request)
+    cache_hash_key = get_cache_key(request)
+    cache_timeout = get_cache_timeout()
 
     if COOLOFF_TIME:
         for attempt in attempts:
@@ -155,9 +159,15 @@ def get_user_attempts(request):
                 if attempt.trusted:
                     attempt.failures_since_start = 0
                     attempt.save()
+                    cache.set(cache_hash_key, 0, cache_timeout)
                 else:
                     attempt.delete()
                     objects_deleted = True
+                    failures_cached = cache.get(cache_hash_key)
+                    if failures_cached is not None:
+                        cache.set(cache_hash_key,
+                                  failures_cached - 1,
+                                  cache_timeout)
 
     # If objects were deleted, we need to update the queryset to reflect this,
     # so force a reload.
@@ -290,9 +300,15 @@ def is_already_locked(request):
     if not is_user_lockable(request):
         return False
 
-    for attempt in get_user_attempts(request):
-        if attempt.failures_since_start >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE:
-            return True
+    cache_hash_key = get_cache_key(request)
+    failures_cached = cache.get(cache_hash_key)
+    if failures_cached is not None:
+        return failures_cached >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE
+    else:
+        for attempt in get_user_attempts(request):
+            if attempt.failures_since_start >= FAILURE_LIMIT and \
+                    LOCK_OUT_AT_FAILURE:
+                return True
 
     return False
 
@@ -302,13 +318,20 @@ def check_request(request, login_unsuccessful):
     username = request.POST.get(USERNAME_FORM_FIELD, None)
     failures = 0
     attempts = get_user_attempts(request)
+    cache_hash_key = get_cache_key(request)
+    cache_timeout = get_cache_timeout()
 
-    for attempt in attempts:
-        failures = max(failures, attempt.failures_since_start)
+    failures_cached = cache.get(cache_hash_key)
+    if failures_cached is not None:
+        failures = failures_cached
+    else:
+        for attempt in attempts:
+            failures = max(failures, attempt.failures_since_start)
 
     if login_unsuccessful:
         # add a failed attempt for this user
         failures += 1
+        cache.set(cache_hash_key, failures, cache_timeout)
 
         # Create an AccessAttempt record if the login wasn't successful
         # has already attempted, update the info
@@ -342,10 +365,16 @@ def check_request(request, login_unsuccessful):
         for attempt in attempts:
             if not attempt.trusted:
                 attempt.delete()
+                failures_cached = cache.get(cache_hash_key)
+                if failures_cached is not None:
+                    cache.set(cache_hash_key,
+                              failures_cached - 1,
+                              cache_timeout)
             else:
                 trusted_record_exists = True
                 attempt.failures_since_start = 0
                 attempt.save()
+                cache.set(cache_hash_key, 0, cache_timeout)
 
         if trusted_record_exists is False:
             create_new_trusted_record(request)
@@ -418,3 +447,33 @@ def create_new_trusted_record(request):
         failures_since_start=0,
         trusted=True
     )
+
+
+def get_cache_key(request_or_object):
+    """
+    Build cache key name from request or AccessAttempt object.
+    :param  request_or_object: Request or AccessAttempt object
+    :return cache-key: String, key to be used in cache system
+    """
+    ua = None
+    if isinstance(request_or_object, AccessAttempt):
+        ip = request_or_object.ip_address
+        ua = request_or_object.user_agent
+    else:
+        ip = get_ip(request_or_object)
+        ua = request_or_object.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
+
+    if ua:
+        cache_hash_key = 'axes-{}'.format(md5(ip+ua).hexdigest())
+    else:
+        cache_hash_key = 'axes-{}'.format(md5(ip).hexdigest())
+
+    return cache_hash_key
+
+
+def get_cache_timeout():
+    "Returns timeout according to COOLOFF_TIME."
+    cache_timeout = None
+    if COOLOFF_TIME:
+        cache_timeout = COOLOFF_TIME.total_seconds()
+    return cache_timeout
