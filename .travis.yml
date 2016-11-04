@@ -18,9 +18,9 @@ deploy:
   user: jazzband
   distributions: sdist bdist_wheel
   password:
-    secure: KR7AiS0+1WHkDLKV6eru4l1VOuO1DvVuYiRr4UWqFa9tjgN0ZH4itJkw/LSMRHof9fvg8ZWvPxsb3ifM2lXv7Nrk81fv97MO8XbLdVyF5xyvVEYOii0cu4ffxttj7BjL6aRDrpdG0OqayCsXYgkXngC7zdBrdLxKOq7CIbJ6oUo=
+    secure: jFsQCmQ2ih3FNatGSxQ5cRwLgXFLPReJw2+GeBLK4nkL2zr6z6PM5j74pVk8cS5uKrxNhunrwZBeamG+N4J0TnYCKKJxP8hQIRQ96N8n/YL5ycm6XnPALpfhHXXcfoBeqZQCoeueKOMswBY+0eOJv+7Bj/O0GgSOeQC2/1CNhZk=
   on:
     tags: true
     repo: jazzband/django-axes
     condition: $DJANGO = "Django>=1.8,<1.9"
-    python: "2.7"
+    python: '2.7'
