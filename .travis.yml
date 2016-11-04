@@ -13,14 +13,3 @@ script:
 - coverage report
 after_success:
 - coveralls
-deploy:
-  provider: pypi
-  user: jazzband
-  distributions: sdist bdist_wheel
-  password:
-    secure: WIkx80DYd/6+aOgWHmGE+Ni/KIiuRvvivsNPD9ZqX6ssLoxFUzfRkSUDADzTI6gvqqoEKxUEr5w3CZJ9RuyI/bZSfLJjuD8bUL6ana4Wv/hKx4UpsjYD9MvA7D+M/VC0GIh+YrqPOHwOUa4fTF8K92VHovm+fkIU12rKHRoj+0A=
-  on:
-    tags: true
-    repo: jazzband/django-axes
-    condition: $DJANGO = "Django>=1.8,<1.9"
-    python: '2.7'
