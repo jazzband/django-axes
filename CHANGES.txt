@@ -1,8 +1,19 @@
 Changes
 =======
 
-2.2.1 (2016-09-26)
+2.3.0 (2016-11-04)
 ------------------
+
+- Fixed ``axes_reset`` management command to skip "ip" prefix to command
+  arguments.
+  [EvaMarques]
+
+- Added ``axes_reset_user`` management command to reset lockouts and failed
+  login records for given users.
+  [vladimirnani]
+
+- Fixed Travis-PyPI release configuration.
+  [jezdez]
 
 - Make IP position argument optional.
   [aredalen]
