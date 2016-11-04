@@ -1,6 +1,36 @@
 Changes
 =======
 
+2.3.0 (2016-11-04)
+------------------
+
+- Fixed ``axes_reset`` management command to skip "ip" prefix to command
+  arguments.
+  [EvaMarques]
+
+- Added ``axes_reset_user`` management command to reset lockouts and failed
+  login records for given users.
+  [vladimirnani]
+
+- Fixed Travis-PyPI release configuration.
+  [jezdez]
+
+- Make IP position argument optional.
+  [aredalen]
+
+- Added possibility to disable access log
+  [svenhertle]
+
+- Fix for IIS used as reverse proxy adding port number
+  [Dmitri-Sintsov]
+
+- Made the signal race condition safe.
+  [Minkey27]
+
+- Added AXES_ONLY_USER_FAILURES to support only looking at the user ID.
+  [lip77us]
+
+
 2.2.0 (2016-07-20)
 ------------------
 

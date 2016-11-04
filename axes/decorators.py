@@ -121,7 +121,9 @@ def _get_user_attempts(request):
     ip = get_ip(request)
     username = request.POST.get(USERNAME_FORM_FIELD, None)
 
-    if USE_USER_AGENT:
+    if AXES_ONLY_USER_FAILURES:
+        attempts = AccessAttempt.objects.filter(username=username)
+    elif USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
         attempts = AccessAttempt.objects.filter(
             user_agent=ua, ip_address=ip, username=username, trusted=True
@@ -219,8 +221,7 @@ def watch_login(func):
             user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
             http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
             path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-            if not getattr(settings, 'AXES_DISABLE_ACCESS_LOG', False) or \
-                    login_unsuccessful:
+            if login_unsuccessful or not DISABLE_ACCESS_LOG:
                 AccessLog.objects.create(
                     user_agent=user_agent,
                     ip_address=get_ip(request),
@@ -383,18 +384,19 @@ def create_new_failure_records(request, failures):
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     username = request.POST.get(USERNAME_FORM_FIELD, None)
 
-    AccessAttempt.objects.create(
-        user_agent=ua,
-        ip_address=ip,
-        username=username,
-        get_data=query2str(request.GET),
-        post_data=query2str(request.POST),
-        http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
-        path_info=request.META.get('PATH_INFO', '<unknown>'),
-        failures_since_start=failures,
-    )
-
-    log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
+    # record failed attempt from this IP if not AXES_ONLY_USER_FAILURES
+    if not AXES_ONLY_USER_FAILURES:
+        AccessAttempt.objects.create(
+            user_agent=ua,
+            ip_address=ip,
+            username=username,
+            get_data=query2str(request.GET),
+            post_data=query2str(request.POST),
+            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+            path_info=request.META.get('PATH_INFO', '<unknown>'),
+            failures_since_start=failures,
+        )
+        log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
 
 
 def create_new_trusted_record(request):
