@@ -36,6 +36,8 @@ if (isinstance(COOLOFF_TIME, int) or isinstance(COOLOFF_TIME, float)):
 
 DISABLE_ACCESS_LOG = getattr(settings, 'AXES_DISABLE_ACCESS_LOG', False)
 
+DISABLE_SUCCESS_ACCESS_LOG = getattr(settings, 'AXES_DISABLE_SUCCESS_ACCESS_LOG', False)
+
 LOGGER = getattr(settings, 'AXES_LOGGER', 'axes.watch_login')
 
 LOCKOUT_TEMPLATE = getattr(settings, 'AXES_LOCKOUT_TEMPLATE', None)
