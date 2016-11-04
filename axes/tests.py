@@ -289,6 +289,42 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(response.status_code, 403)
         self.assertEquals(response.get('Content-Type'), 'application/json')
 
+    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    def test_valid_logout_without_success_log(self):
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=True)
+        response = self.client.get(reverse('admin:logout'))
+
+        self.assertEquals(AccessLog.objects.all().count(), 0)
+        self.assertContains(response, 'Logged out')
+
+    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    def test_non_valid_login_without_success_log(self):
+        """
+        A non-valid login does generate an AccessLog when
+        `DISABLE_SUCCESS_ACCESS_LOG=True`.
+        """
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=False)
+        self.assertEquals(response.status_code, 200)
+
+        self.assertEquals(AccessLog.objects.all().count(), 1)
+
+    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    def test_valid_login_without_success_log(self):
+        """
+        A valid login doesn't generate an AccessLog when
+        `DISABLE_SUCCESS_ACCESS_LOG=True`.
+        """
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=True)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(AccessLog.objects.all().count(), 0)
+
     @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
     def test_valid_logout_without_log(self):
         AccessLog.objects.all().delete()
@@ -301,18 +337,22 @@ class AccessAttemptTest(TestCase):
 
     @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
     def test_non_valid_login_without_log(self):
+        """
+        A non-valid login does generate an AccessLog when
+        `DISABLE_ACCESS_LOG=True`.
+        """
         AccessLog.objects.all().delete()
 
         response = self._login(is_valid_username=True, is_valid_password=False)
         self.assertEquals(response.status_code, 200)
 
-        self.assertEquals(AccessLog.objects.all().count(), 1)
+        self.assertEquals(AccessLog.objects.all().count(), 0)
 
     @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
     def test_valid_login_without_log(self):
         """
-        A valid login doesn't generate an access attempt when
-        `AXES_DISABLE_ACCESS_LOG=True`.
+        A valid login doesn't generate an AccessLog when
+        `DISABLE_ACCESS_LOG=True`.
         """
         AccessLog.objects.all().delete()
 
