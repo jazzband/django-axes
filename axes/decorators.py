@@ -31,7 +31,7 @@ if BEHIND_REVERSE_PROXY:
 def is_ipv6(ip):
     try:
         inet_pton(AF_INET6, ip)
-    except OSError:
+    except:
         return False
     return True
 
