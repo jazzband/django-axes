@@ -386,3 +386,9 @@ class UtilsTest(TestCase):
         }
         for timedelta, iso_duration in six.iteritems(EXPECTED):
             self.assertEqual(iso8601(timedelta), iso_duration)
+
+    def test_is_ipv6(self):
+        from axes.decorators import is_ipv6
+        self.assertTrue(is_ipv6('ff80::220:16ff:fec9:1'))
+        self.assertFalse(is_ipv6('67.255.125.204'))
+        self.assertFalse(is_ipv6('foo'))
