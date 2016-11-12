@@ -1,6 +1,16 @@
 Changes
 =======
 
+2.3.1 (2016-11-12)
+------------------
+
+- Added settings for disabling success accesslogs
+  [Minkey27]
+
+- Fixed illegal IP address string passed to inet_pton
+  [samkuehn]
+
+
 2.3.0 (2016-11-04)
 ------------------
 
