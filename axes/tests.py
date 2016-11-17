@@ -376,7 +376,7 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_valid_username=True, is_valid_password=True)
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.get(admin_login)
+        response = self.client.get(reverse('admin:index'))
         self.assertEqual(response.status_code, 200)
 
 
