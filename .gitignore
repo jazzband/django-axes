@@ -7,3 +7,4 @@ dist
 docs/_build
 .tox/
 tox.ini
+.idea/
