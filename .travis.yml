@@ -9,7 +9,9 @@ env:
 install:
 - pip install -q $DJANGO coveralls
 script:
-- coverage run --source=axes runtests.py
+- coverage run -a --source=axes runtests.py
+- coverage run -a --source=axes runtests_proxy.py
+- coverage run -a --source=axes runtests_proxy_custom_header.py
 - coverage report
 after_success:
 - coveralls

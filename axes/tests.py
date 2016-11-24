@@ -4,19 +4,27 @@ import time
 import json
 import datetime
 
+from mock import patch
+
+from django.conf import settings
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
 from django.utils import six
-from mock import patch
 
+from axes.decorators import get_ip
 from axes.settings import COOLOFF_TIME
 from axes.settings import FAILURE_LIMIT
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset, iso8601
+
+
+class MockRequest:
+    def __init__(self):
+        self.META = dict()
 
 
 class AccessAttemptTest(TestCase):
@@ -392,3 +400,67 @@ class UtilsTest(TestCase):
         self.assertTrue(is_ipv6('ff80::220:16ff:fec9:1'))
         self.assertFalse(is_ipv6('67.255.125.204'))
         self.assertFalse(is_ipv6('foo'))
+
+
+class GetIPProxyTest(TestCase):
+    """Test get_ip returns correct addresses with proxy
+    """
+    def setUp(self):
+        self.request = MockRequest()
+
+    def test_iis_ipv4_port_stripping(self):
+        self.ip = '192.168.1.1'
+
+        valid_headers = [
+            '192.168.1.1:6112',
+            '192.168.1.1:6033, 192.168.1.2:9001',
+        ]
+
+        for header in valid_headers:
+            self.request.META['HTTP_X_FORWARDED_FOR'] = header
+            self.assertEqual(self.ip, get_ip(self.request))
+
+    def test_valid_ipv4_parsing(self):
+        self.ip = '192.168.1.1'
+
+        valid_headers = [
+            '192.168.1.1',
+            '192.168.1.1, 192.168.1.2',
+            ' 192.168.1.1  , 192.168.1.2  ',
+            ' 192.168.1.1  , 2001:db8:cafe::17 ',
+        ]
+
+        for header in valid_headers:
+            self.request.META['HTTP_X_FORWARDED_FOR'] = header
+            self.assertEqual(self.ip, get_ip(self.request))
+
+    def test_valid_ipv6_parsing(self):
+        self.ip = '2001:db8:cafe::17'
+
+        valid_headers = [
+            '2001:db8:cafe::17',
+            '2001:db8:cafe::17 , 2001:db8:cafe::18',
+            '2001:db8:cafe::17,  2001:db8:cafe::18, 192.168.1.1',
+        ]
+
+        for header in valid_headers:
+            self.request.META['HTTP_X_FORWARDED_FOR'] = header
+            self.assertEqual(self.ip, get_ip(self.request))
+
+
+class GetIPProxyCustomHeaderTest(TestCase):
+    """Test that get_ip returns correct addresses with a custom proxy header
+    """
+    def setUp(self):
+        self.request = MockRequest()
+
+    def test_custom_header_parsing(self):
+        self.ip = '2001:db8:cafe::17'
+
+        valid_headers = [
+            ' 2001:db8:cafe::17 , 2001:db8:cafe::18',
+        ]
+
+        for header in valid_headers:
+            self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = header
+            self.assertEqual(self.ip, get_ip(self.request))
