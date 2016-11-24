@@ -1,6 +1,16 @@
 Changes
 =======
 
+2.3.2 (2016-11-24)
+------------------
+
+- Only look for lockable users on a POST
+  [schinckel]
+
+- Fix and add tests for IPv4 and IPv6 parsing
+  [aleksihakli]
+
+
 2.3.1 (2016-11-12)
 ------------------
 
