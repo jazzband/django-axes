@@ -369,6 +369,24 @@ class AccessAttemptTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(AccessLog.objects.all().count(), 0)
 
+    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
+    def test_check_is_not_made_on_GET(self):
+        AccessLog.objects.all().delete()
+
+        try:
+            admin_login = reverse('admin:login')
+        except NoReverseMatch:
+            admin_login = reverse('admin:index')
+
+        response = self.client.get(admin_login)
+        self.assertEqual(response.status_code, 200)
+
+        response = self._login(is_valid_username=True, is_valid_password=True)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(reverse('admin:index'))
+        self.assertEqual(response.status_code, 200)
+
 
 class UtilsTest(TestCase):
     def test_iso8601(self):

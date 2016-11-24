@@ -107,6 +107,12 @@ def is_user_lockable(request):
     If so, then return the value to see if this user is special
     and doesn't get their account locked out
     """
+    if hasattr(request.user, 'nolockout'):
+        return not request.user.nolockout
+
+    if request.method != 'POST':
+        return True
+
     try:
         field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
         kwargs = {
