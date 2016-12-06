@@ -1,8 +1,39 @@
 Changes
 =======
 
-2.2.1 (2016-09-26)
+2.3.2 (2016-11-24)
 ------------------
+
+- Only look for lockable users on a POST
+  [schinckel]
+
+- Fix and add tests for IPv4 and IPv6 parsing
+  [aleksihakli]
+
+
+2.3.1 (2016-11-12)
+------------------
+
+- Added settings for disabling success accesslogs
+  [Minkey27]
+
+- Fixed illegal IP address string passed to inet_pton
+  [samkuehn]
+
+
+2.3.0 (2016-11-04)
+------------------
+
+- Fixed ``axes_reset`` management command to skip "ip" prefix to command
+  arguments.
+  [EvaMarques]
+
+- Added ``axes_reset_user`` management command to reset lockouts and failed
+  login records for given users.
+  [vladimirnani]
+
+- Fixed Travis-PyPI release configuration.
+  [jezdez]
 
 - Make IP position argument optional.
   [aredalen]

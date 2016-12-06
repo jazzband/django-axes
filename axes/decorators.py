@@ -1,6 +1,6 @@
 import json
 import logging
-from socket import inet_pton, AF_INET6
+from socket import inet_pton, AF_INET6, error
 from hashlib import md5
 
 from django.contrib.auth import get_user_model
@@ -33,21 +33,24 @@ if BEHIND_REVERSE_PROXY:
 def is_ipv6(ip):
     try:
         inet_pton(AF_INET6, ip)
-    except OSError:
+    except (OSError, error):
         return False
     return True
 
 
 def get_ip(request):
-    ip = request.META.get('REMOTE_ADDR', '')
+    """Parse IP address from REMOTE_ADDR or
+    AXES_REVERSE_PROXY_HEADER if AXES_BEHIND_REVERSE_PROXY is set."""
 
     if BEHIND_REVERSE_PROXY:
-        ip = request.META.get(REVERSE_PROXY_HEADER, '').split(',', 1)[0]
-        ip = ip.strip()
+        # For requests originating from behind a reverse proxy,
+        # resolve the IP address from the given AXES_REVERSE_PROXY_HEADER.
+        # AXES_REVERSE_PROXY_HEADER defaults to HTTP_X_FORWARDED_FOR if not given,
+        # which is the Django calling format for the HTTP X-Forwarder-For header.
+        # Please see RFC7239 for additional information:
+        #   https://tools.ietf.org/html/rfc7239#section-5
 
-        # IIS seems to add the port number to HTTP_X_FORWARDED_FOR
-        if ':' in ip:
-            ip = ip.split(':')[0]
+        ip = request.META.get(REVERSE_PROXY_HEADER, '')
 
         if not ip:
             raise Warning(
@@ -56,11 +59,21 @@ def get_ip(request):
                 'server settings to make sure this header value is being '
                 'passed. Header value {0}'.format(REVERSE_PROXY_HEADER)
             )
-        if not is_ipv6(ip):
-            # Fix for IIS adding client port number to 'HTTP_X_FORWARDED_FOR' header (removes port number).
-            ip = ''.join(ip.split(':')[:-1])
 
-    return ip
+        # X-Forwarded-For IPs can have multiple IPs of which the first one is the
+        # originating reverse and the rest are proxies that are between the client
+        ip = ip.split(',', 1)[0]
+
+        # As spaces are permitted between given X-Forwarded-For IP addresses, strip them as well
+        ip = ip.strip()
+
+        # Fix IIS adding client port number to 'X-Forwarded-For' header (strip port)
+        if not is_ipv6(ip):
+            ip = ip.split(':', 1)[0]
+
+        return ip
+
+    return request.META.get('REMOTE_ADDR', '')
 
 
 def query2str(items, max_length=1024):
@@ -96,6 +109,12 @@ def is_user_lockable(request):
     If so, then return the value to see if this user is special
     and doesn't get their account locked out
     """
+    if hasattr(request.user, 'nolockout'):
+        return not request.user.nolockout
+
+    if request.method != 'POST':
+        return True
+
     try:
         field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
         kwargs = {
@@ -231,15 +250,16 @@ def watch_login(func):
             user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
             http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
             path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-            if login_unsuccessful or not DISABLE_ACCESS_LOG:
-                AccessLog.objects.create(
-                    user_agent=user_agent,
-                    ip_address=get_ip(request),
-                    username=request.POST.get(USERNAME_FORM_FIELD, None),
-                    http_accept=http_accept,
-                    path_info=path_info,
-                    trusted=not login_unsuccessful,
-                )
+            if not DISABLE_ACCESS_LOG:
+                if login_unsuccessful or not DISABLE_SUCCESS_ACCESS_LOG:
+                    AccessLog.objects.create(
+                        user_agent=user_agent,
+                        ip_address=get_ip(request),
+                        username=request.POST.get(USERNAME_FORM_FIELD, None),
+                        http_accept=http_accept,
+                        path_info=path_info,
+                        trusted=not login_unsuccessful,
+                    )
             if check_request(request, login_unsuccessful):
                 return response
 

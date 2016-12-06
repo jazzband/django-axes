@@ -4,19 +4,27 @@ import time
 import json
 import datetime
 
+from mock import patch
+
+from django.conf import settings
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
 from django.utils import six
-from mock import patch
 
+from axes.decorators import get_ip
 from axes.settings import COOLOFF_TIME
 from axes.settings import FAILURE_LIMIT
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset, iso8601
+
+
+class MockRequest:
+    def __init__(self):
+        self.META = dict()
 
 
 class AccessAttemptTest(TestCase):
@@ -305,6 +313,45 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(response.status_code, 403)
         self.assertEquals(response.get('Content-Type'), 'application/json')
 
+    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    def test_valid_logout_without_success_log(self):
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=True)
+        response = self.client.get(reverse('admin:logout'))
+
+        self.assertEquals(AccessLog.objects.all().count(), 0)
+        self.assertContains(response, 'Logged out')
+
+    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_non_valid_login_without_success_log(self, cache_set_mock,
+                                                 cache_get_mock):
+        """
+        A non-valid login does generate an AccessLog when
+        `DISABLE_SUCCESS_ACCESS_LOG=True`.
+        """
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=False)
+        self.assertEquals(response.status_code, 200)
+
+        self.assertEquals(AccessLog.objects.all().count(), 1)
+
+    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    def test_valid_login_without_success_log(self):
+        """
+        A valid login doesn't generate an AccessLog when
+        `DISABLE_SUCCESS_ACCESS_LOG=True`.
+        """
+        AccessLog.objects.all().delete()
+
+        response = self._login(is_valid_username=True, is_valid_password=True)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(AccessLog.objects.all().count(), 0)
+
     @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
     def test_valid_logout_without_log(self):
         AccessLog.objects.all().delete()
@@ -319,18 +366,22 @@ class AccessAttemptTest(TestCase):
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_non_valid_login_without_log(self, cache_set_mock, cache_get_mock):
+        """
+        A non-valid login does generate an AccessLog when
+        `DISABLE_ACCESS_LOG=True`.
+        """
         AccessLog.objects.all().delete()
 
         response = self._login(is_valid_username=True, is_valid_password=False)
         self.assertEquals(response.status_code, 200)
 
-        self.assertEquals(AccessLog.objects.all().count(), 1)
+        self.assertEquals(AccessLog.objects.all().count(), 0)
 
     @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
     def test_valid_login_without_log(self):
         """
-        A valid login doesn't generate an access attempt when
-        `AXES_DISABLE_ACCESS_LOG=True`.
+        A valid login doesn't generate an AccessLog when
+        `DISABLE_ACCESS_LOG=True`.
         """
         AccessLog.objects.all().delete()
 
@@ -338,6 +389,24 @@ class AccessAttemptTest(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(AccessLog.objects.all().count(), 0)
+
+    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
+    def test_check_is_not_made_on_GET(self):
+        AccessLog.objects.all().delete()
+
+        try:
+            admin_login = reverse('admin:login')
+        except NoReverseMatch:
+            admin_login = reverse('admin:index')
+
+        response = self.client.get(admin_login)
+        self.assertEqual(response.status_code, 200)
+
+        response = self._login(is_valid_username=True, is_valid_password=True)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(reverse('admin:index'))
+        self.assertEqual(response.status_code, 200)
 
 
 class UtilsTest(TestCase):
@@ -364,3 +433,73 @@ class UtilsTest(TestCase):
         }
         for timedelta, iso_duration in six.iteritems(EXPECTED):
             self.assertEqual(iso8601(timedelta), iso_duration)
+
+    def test_is_ipv6(self):
+        from axes.decorators import is_ipv6
+        self.assertTrue(is_ipv6('ff80::220:16ff:fec9:1'))
+        self.assertFalse(is_ipv6('67.255.125.204'))
+        self.assertFalse(is_ipv6('foo'))
+
+
+class GetIPProxyTest(TestCase):
+    """Test get_ip returns correct addresses with proxy
+    """
+    def setUp(self):
+        self.request = MockRequest()
+
+    def test_iis_ipv4_port_stripping(self):
+        self.ip = '192.168.1.1'
+
+        valid_headers = [
+            '192.168.1.1:6112',
+            '192.168.1.1:6033, 192.168.1.2:9001',
+        ]
+
+        for header in valid_headers:
+            self.request.META['HTTP_X_FORWARDED_FOR'] = header
+            self.assertEqual(self.ip, get_ip(self.request))
+
+    def test_valid_ipv4_parsing(self):
+        self.ip = '192.168.1.1'
+
+        valid_headers = [
+            '192.168.1.1',
+            '192.168.1.1, 192.168.1.2',
+            ' 192.168.1.1  , 192.168.1.2  ',
+            ' 192.168.1.1  , 2001:db8:cafe::17 ',
+        ]
+
+        for header in valid_headers:
+            self.request.META['HTTP_X_FORWARDED_FOR'] = header
+            self.assertEqual(self.ip, get_ip(self.request))
+
+    def test_valid_ipv6_parsing(self):
+        self.ip = '2001:db8:cafe::17'
+
+        valid_headers = [
+            '2001:db8:cafe::17',
+            '2001:db8:cafe::17 , 2001:db8:cafe::18',
+            '2001:db8:cafe::17,  2001:db8:cafe::18, 192.168.1.1',
+        ]
+
+        for header in valid_headers:
+            self.request.META['HTTP_X_FORWARDED_FOR'] = header
+            self.assertEqual(self.ip, get_ip(self.request))
+
+
+class GetIPProxyCustomHeaderTest(TestCase):
+    """Test that get_ip returns correct addresses with a custom proxy header
+    """
+    def setUp(self):
+        self.request = MockRequest()
+
+    def test_custom_header_parsing(self):
+        self.ip = '2001:db8:cafe::17'
+
+        valid_headers = [
+            ' 2001:db8:cafe::17 , 2001:db8:cafe::18',
+        ]
+
+        for header in valid_headers:
+            self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = header
+            self.assertEqual(self.ip, get_ip(self.request))
