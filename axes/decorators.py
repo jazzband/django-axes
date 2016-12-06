@@ -476,6 +476,8 @@ def get_cache_key(request_or_object):
     :return cache-key: String, key to be used in cache system
     """
     ua = None
+    ip = None
+
     if isinstance(request_or_object, AccessAttempt):
         ip = request_or_object.ip_address
         ua = request_or_object.user_agent
@@ -483,7 +485,10 @@ def get_cache_key(request_or_object):
         ip = get_ip(request_or_object)
         ua = request_or_object.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
+    ip = ip.encode('utf-8')
+
     if ua:
+        ua = ua.encode('utf-8')
         cache_hash_key = 'axes-{}'.format(md5(ip+ua).hexdigest())
     else:
         cache_hash_key = 'axes-{}'.format(md5(ip).hexdigest())
