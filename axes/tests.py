@@ -4,6 +4,7 @@ import time
 import json
 import datetime
 
+from hashlib import md5
 from mock import patch
 
 from django.conf import settings
@@ -13,8 +14,9 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
 from django.utils import six
+from django.test.client import RequestFactory
 
-from axes.decorators import get_ip
+from axes.decorators import get_ip, get_cache_key
 from axes.settings import COOLOFF_TIME
 from axes.settings import FAILURE_LIMIT
 from axes.models import AccessAttempt, AccessLog
@@ -204,6 +206,39 @@ class AccessAttemptTest(TestCase):
 
         # Make a login attempt again
         self.test_valid_login()
+
+    @patch('axes.decorators.get_ip', return_value='127.0.0.1')
+    def test_get_cache_key(self, get_ip_mock):
+        """ Test the cache key format"""
+        # Getting cache key from request
+        ip = '127.0.0.1'.encode('utf-8')
+        ua = '<unknown>'.encode('utf-8')
+
+        cache_hash_key_checker = 'axes-{}'.format(md5((ip+ua)).hexdigest())
+
+        request_factory = RequestFactory()
+        request = request_factory.post('/admin/login/',
+                                       data={
+                                           'username': self.VALID_USERNAME,
+                                           'password': 'test'
+                                       })
+
+        cache_hash_key = get_cache_key(request)
+        self.assertEqual(cache_hash_key_checker, cache_hash_key)
+
+        # Getting cache key from AccessAttempt Object
+        attempt = AccessAttempt(
+            user_agent='<unknown>',
+            ip_address='127.0.0.1',
+            username=self.VALID_USERNAME,
+            get_data='',
+            post_data='',
+            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+            path_info=request.META.get('PATH_INFO', '<unknown>'),
+            failures_since_start=0,
+        )
+        cache_hash_key = get_cache_key(attempt)
+        self.assertEqual(cache_hash_key_checker, cache_hash_key)
 
     def test_send_lockout_signal(self):
         """Test if the lockout signal is emitted
