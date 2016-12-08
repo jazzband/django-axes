@@ -4,6 +4,7 @@ import time
 import json
 import datetime
 
+from hashlib import md5
 from mock import patch
 
 from django.conf import settings
@@ -13,8 +14,9 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
 from django.utils import six
+from django.test.client import RequestFactory
 
-from axes.decorators import get_ip
+from axes.decorators import get_ip, get_cache_key
 from axes.settings import COOLOFF_TIME
 from axes.settings import FAILURE_LIMIT
 from axes.models import AccessAttempt, AccessLog
@@ -87,7 +89,9 @@ class AccessAttemptTest(TestCase):
             password=self.VALID_PASSWORD,
         )
 
-    def test_failure_limit_once(self):
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_failure_limit_once(self, cache_get_mock, cache_set_mock):
         """Tests the login lock trying to login one more time
         than failure limit
         """
@@ -117,13 +121,17 @@ class AccessAttemptTest(TestCase):
             response = self._login()
             self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
-    def test_valid_login(self):
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_valid_login(self, cache_set_mock, cache_get_mock):
         """Tests a valid login for a real username
         """
         response = self._login(is_valid_username=True, is_valid_password=True)
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
 
-    def test_valid_logout(self):
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_valid_logout(self, cache_set_mock, cache_get_mock):
         """Tests a valid logout and make sure the logout_time is updated
         """
         response = self._login(is_valid_username=True, is_valid_password=True)
@@ -153,7 +161,9 @@ class AccessAttemptTest(TestCase):
         # Try the cooling off time
         self.test_cooling_off()
 
-    def test_long_user_agent_valid(self):
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_long_user_agent_valid(self, cache_set_mock, cache_get_mock):
         """Tests if can handle a long user agent
         """
         long_user_agent = 'ie6' * 1024
@@ -197,6 +207,39 @@ class AccessAttemptTest(TestCase):
         # Make a login attempt again
         self.test_valid_login()
 
+    @patch('axes.decorators.get_ip', return_value='127.0.0.1')
+    def test_get_cache_key(self, get_ip_mock):
+        """ Test the cache key format"""
+        # Getting cache key from request
+        ip = '127.0.0.1'.encode('utf-8')
+        ua = '<unknown>'.encode('utf-8')
+
+        cache_hash_key_checker = 'axes-{}'.format(md5((ip+ua)).hexdigest())
+
+        request_factory = RequestFactory()
+        request = request_factory.post('/admin/login/',
+                                       data={
+                                           'username': self.VALID_USERNAME,
+                                           'password': 'test'
+                                       })
+
+        cache_hash_key = get_cache_key(request)
+        self.assertEqual(cache_hash_key_checker, cache_hash_key)
+
+        # Getting cache key from AccessAttempt Object
+        attempt = AccessAttempt(
+            user_agent='<unknown>',
+            ip_address='127.0.0.1',
+            username=self.VALID_USERNAME,
+            get_data='',
+            post_data='',
+            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+            path_info=request.META.get('PATH_INFO', '<unknown>'),
+            failures_since_start=0,
+        )
+        cache_hash_key = get_cache_key(attempt)
+        self.assertEqual(cache_hash_key_checker, cache_hash_key)
+
     def test_send_lockout_signal(self):
         """Test if the lockout signal is emitted
         """
@@ -222,7 +265,10 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(scope.signal_received, 2)
 
     @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
-    def test_lockout_by_combination_user_and_ip(self):
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_combination_user_and_ip(self, cache_set_mock,
+                                                cache_get_mock):
         """Tests the login lock with a valid username and invalid password
         when AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True
         """
@@ -241,7 +287,9 @@ class AccessAttemptTest(TestCase):
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
-    def test_lockout_by_user_only(self):
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_only(self, cache_set_mock, cache_get_mock):
         """Tests the login lock with a valid username and invalid password
         when AXES_ONLY_USER_FAILURES is True
         """
@@ -278,7 +326,10 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_valid_username=True, is_valid_password=True)
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
 
-    def test_log_data_truncated(self):
+
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_log_data_truncated(self, cache_set_mock, cache_get_mock):
         """Tests that query2str properly truncates data to the
         max_length (default 1024)
         """
@@ -308,7 +359,10 @@ class AccessAttemptTest(TestCase):
         self.assertContains(response, 'Logged out')
 
     @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
-    def test_non_valid_login_without_success_log(self):
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_non_valid_login_without_success_log(self, cache_set_mock,
+                                                 cache_get_mock):
         """
         A non-valid login does generate an AccessLog when
         `DISABLE_SUCCESS_ACCESS_LOG=True`.
@@ -344,7 +398,9 @@ class AccessAttemptTest(TestCase):
         self.assertContains(response, 'Logged out')
 
     @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
-    def test_non_valid_login_without_log(self):
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_non_valid_login_without_log(self, cache_set_mock, cache_get_mock):
         """
         A non-valid login does generate an AccessLog when
         `DISABLE_ACCESS_LOG=True`.
