@@ -433,19 +433,20 @@ def create_new_failure_records(request, failures):
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     username = request.POST.get(USERNAME_FORM_FIELD, None)
 
-    # record failed attempt from this IP if not AXES_ONLY_USER_FAILURES
-    if not AXES_ONLY_USER_FAILURES:
-        AccessAttempt.objects.create(
-            user_agent=ua,
-            ip_address=ip,
-            username=username,
-            get_data=query2str(request.GET),
-            post_data=query2str(request.POST),
-            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
-            path_info=request.META.get('PATH_INFO', '<unknown>'),
-            failures_since_start=failures,
-        )
-        log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
+    # Record failed attempt. Whether or not the IP address or user agent is
+    # used in counting failures is handled elsewhere, so we just record
+    # everything here.
+    AccessAttempt.objects.create(
+        user_agent=ua,
+        ip_address=ip,
+        username=username,
+        get_data=query2str(request.GET),
+        post_data=query2str(request.POST),
+        http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+        path_info=request.META.get('PATH_INFO', '<unknown>'),
+        failures_since_start=failures,
+    )
+    log.info('AXES: New login failure by %s. Creating access record.' % (ip,))
 
 
 def create_new_trusted_record(request):
