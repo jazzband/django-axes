@@ -11,6 +11,7 @@ install:
 script:
 - coverage run -a --source=axes runtests.py
 - coverage run -a --source=axes runtests_proxy.py
+- coverage run -a --source=axes runtests_num_proxies.py
 - coverage run -a --source=axes runtests_proxy_custom_header.py
 - coverage report
 after_success:
