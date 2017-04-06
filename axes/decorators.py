@@ -22,14 +22,14 @@ import axes
 log = logging.getLogger(LOGGER)
 if VERBOSE:
     log.info('AXES: BEGIN LOG')
-    log.info('Using django-axes ' + axes.get_version())
+    log.info('AXES: Using django-axes ' + axes.get_version())
 
 
 if BEHIND_REVERSE_PROXY:
-    log.debug('Axes is configured to be behind reverse proxy')
-    log.debug('Looking for header value %s', REVERSE_PROXY_HEADER)
+    log.debug('AXES: Axes is configured to be behind reverse proxy')
+    log.debug('AXES: Looking for header value %s', REVERSE_PROXY_HEADER)
     log.debug(
-        'Number of proxies configured: {} '
+        'AXES: Number of proxies configured: {} '
         '(please check this if you are using a custom header)'.format(
             NUM_PROXIES
         )
@@ -81,7 +81,7 @@ def get_ip(request):
 
         if not ip:
             raise Warning(
-                'Axes is configured for operation behind a reverse proxy '
+                'AXES: Axes is configured for operation behind a reverse proxy '
                 'but could not find an HTTP header value. Check your proxy '
                 'server settings to make sure this header value is being '
                 'passed. Header name {0}'.format(REVERSE_PROXY_HEADER)
