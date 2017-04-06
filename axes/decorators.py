@@ -51,15 +51,15 @@ def get_ip(request):
     if BEHIND_REVERSE_PROXY:
         # For requests originating from behind a reverse proxy,
         # resolve the IP address from the given AXES_REVERSE_PROXY_HEADER.
-        # AXES_REVERSE_PROXY_HEADER defaults to HTTP_X_FORWARDED_FOR if not given,
-        # which is the Django calling format for the HTTP X-Forwarder-For header.
+        # AXES_REVERSE_PROXY_HEADER defaults to HTTP_X_FORWARDED_FOR,
+        # which is the Django name for the HTTP X-Forwarder-For header.
         # Please see RFC7239 for additional information:
         #   https://tools.ietf.org/html/rfc7239#section-5
 
         # The REVERSE_PROXY_HEADER HTTP header is a list
         # of potentionally unsecure IPs, for example:
         #   X-Forwarded-For: 1.1.1.1, 11.11.11.11:8080, 111.111.111.111
-        ip = request.META.get(REVERSE_PROXY_HEADER, '')
+        ip_str = request.META.get(REVERSE_PROXY_HEADER, '')
 
         # We need to know the number of proxies present in the request chain
         # in order to securely calculate the one IP that is the real client IP.
@@ -68,23 +68,45 @@ def get_ip(request):
         # configurations, with e.g. the X-Forwarded-For header containing
         # the originating client IP, proxies and possibly spoofed values.
         #
-        # If you are using a special header for client calculation such as
-        # the X-Real-IP or the like with nginx, please check this configuration.
+        # If you are using a special header for client calculation such as the
+        # X-Real-IP or the like with nginx, please check this configuration.
         #
         # Please see discussion for more information:
         #   https://github.com/jazzband/django-axes/issues/224
-        ip = [ip.strip() for ip in ip.split(',')][-NUM_PROXIES]
+        ip_list = [ip.strip() for ip in ip_str.split(',')]
 
-        # Fix IIS adding client port number to 'X-Forwarded-For' header (strip port)
-        if not is_ipv6(ip):
-            ip = ip.split(':', 1)[0]
+        # Pick the nth last IP in the given list of addresses after parsing
+        if len(ip_list) >= NUM_PROXIES:
+            ip = ip_list[-NUM_PROXIES]
+
+            # Fix IIS adding client port number to the
+            # 'X-Forwarded-For' header (strip port)
+            if not is_ipv6(ip):
+                ip = ip.split(':', 1)[0]
+
+        # If nth last is not found, default to no IP and raise a warning
+        else:
+            ip = ''
+            raise Warning(
+                'AXES: Axes is configured for operation behind a '
+                'reverse proxy but received too few IPs in the HTTP '
+                'AXES_REVERSE_PROXY_HEADER. Check your '
+                'AXES_NUM_PROXIES configuration. '
+                'Header name: {0}, value: {1}'.format(
+                    REVERSE_PROXY_HEADER, ip_str
+                )
+            )
 
         if not ip:
             raise Warning(
-                'AXES: Axes is configured for operation behind a reverse proxy '
-                'but could not find an HTTP header value. Check your proxy '
-                'server settings to make sure this header value is being '
-                'passed. Header name {0}'.format(REVERSE_PROXY_HEADER)
+                'AXES: Axes is configured for operation behind a reverse '
+                'proxy but could not find a suitable IP in the specified '
+                'HTTP header. Check your proxy server settings to make '
+                'sure correct headers are being passed to Django in '
+                'AXES_REVERSE_PROXY_HEADER. '
+                'Header name: {0}, value: {1}'.format(
+                    REVERSE_PROXY_HEADER, ip_str
+                )
             )
 
         return ip
