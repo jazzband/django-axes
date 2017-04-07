@@ -22,6 +22,9 @@ AXES_ONLY_USER_FAILURES = getattr(settings, 'AXES_ONLY_USER_FAILURES', False)
 # see if the django app is sitting behind a reverse proxy
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)
 
+# if we are behind a proxy, we need to know how many proxies there are
+NUM_PROXIES = getattr(settings, 'AXES_NUM_PROXIES', 0)
+
 # if the django app is behind a reverse proxy, look for the ip address using this HTTP header value
 REVERSE_PROXY_HEADER = \
     getattr(settings, 'AXES_REVERSE_PROXY_HEADER', 'HTTP_X_FORWARDED_FOR')
