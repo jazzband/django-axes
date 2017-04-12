@@ -5,6 +5,8 @@ from setuptools import setup, find_packages
 
 from axes import get_version
 
+required = ['Django',]
+
 setup(
     name='django-axes',
     version=get_version(),
@@ -19,6 +21,7 @@ setup(
     maintainer_email='aclark@aclark.net',
     url='https://github.com/django-pci/django-axes',
     license='MIT',
+    install_requires=required,
     package_dir={'axes': 'axes'},
     include_package_data=True,
     packages=find_packages(),
