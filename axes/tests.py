@@ -9,7 +9,6 @@ from mock import patch
 
 from django.conf import settings
 from django.test import TestCase
-from django.test.utils import override_settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
@@ -286,7 +285,7 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_valid_username=True, is_valid_password=False)
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
-    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_only(self, cache_set_mock, cache_get_mock):
