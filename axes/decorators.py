@@ -171,11 +171,18 @@ def _get_user_attempts(request):
         )
 
     if not attempts:
-        params = {'ip_address': ip, 'trusted': False}
+        params = {'trusted': False}
+
+        if AXES_ONLY_USER_FAILURES:
+            params['username'] = username
+        elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+            params['username'] = username
+            params['ip_address'] = ip
+        else:
+            params['ip_address'] = ip
+
         if USE_USER_AGENT:
             params['user_agent'] = ua
-        if LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-            params['username'] = username
 
         attempts = AccessAttempt.objects.filter(**params)
 
