@@ -20,5 +20,6 @@ def run_tests(settings_module, *modules):
 if __name__ == '__main__':
     run_tests('axes.test_settings', [
         'axes.tests.AccessAttemptTest',
+        'axes.tests.AccessAttemptConfigTest',
         'axes.tests.UtilsTest',
     ])
