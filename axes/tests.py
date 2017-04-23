@@ -213,7 +213,7 @@ class AccessAttemptTest(TestCase):
         ip = '127.0.0.1'.encode('utf-8')
         ua = '<unknown>'.encode('utf-8')
 
-        cache_hash_key_checker = 'axes-{}'.format(md5((ip+ua)).hexdigest())
+        cache_hash_key_checker = 'axes-{}'.format(md5((ip)).hexdigest())
 
         request_factory = RequestFactory()
         request = request_factory.post('/admin/login/',

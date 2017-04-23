@@ -499,23 +499,30 @@ def get_cache_key(request_or_object):
     :param  request_or_object: Request or AccessAttempt object
     :return cache-key: String, key to be used in cache system
     """
-    ua = None
-    ip = None
-
     if isinstance(request_or_object, AccessAttempt):
         ip = request_or_object.ip_address
+        un = request_or_object.username
         ua = request_or_object.user_agent
     else:
         ip = get_ip(request_or_object)
+        un = request_or_object.POST.get(USERNAME_FORM_FIELD, None)
         ua = request_or_object.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
-    ip = ip.encode('utf-8')
+    ip = ip.encode('utf-8') if ip else ''
+    un = un.encode('utf-8') if un else ''
+    ua = ua.encode('utf-8') if ua else ''
 
-    if ua:
-        ua = ua.encode('utf-8')
-        cache_hash_key = 'axes-{}'.format(md5(ip+ua).hexdigest())
+    if AXES_ONLY_USER_FAILURES:
+        attributes = un
+    elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+        attributes = ip+un
     else:
-        cache_hash_key = 'axes-{}'.format(md5(ip).hexdigest())
+        attributes = ip
+
+    if USE_USER_AGENT:
+        attributes += ua
+
+    cache_hash_key = 'axes-{}'.format(md5(attributes).hexdigest())
 
     return cache_hash_key
 
