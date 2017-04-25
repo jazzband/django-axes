@@ -51,6 +51,12 @@ def get_client_str(username=None, ip_address=None):
         return ip_address
 
 
+def log_successful_attempt(username, ip_address):
+    client = get_client_str(username, ip_address)
+    msg = 'AXES: Successful login by {0}. Creating access record.'
+    log.info(msg.format(client))
+
+
 def log_initial_attempt(username, ip_address):
     client = get_client_str(username, ip_address)
     msg = 'AXES: New login failure by {0}. Creating access record.'
@@ -305,15 +311,21 @@ def watch_login(func):
             http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
             path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
             if not DISABLE_ACCESS_LOG:
+                username = request.POST.get(USERNAME_FORM_FIELD, None)
+                ip_address = get_ip(request)
+
                 if login_unsuccessful or not DISABLE_SUCCESS_ACCESS_LOG:
                     AccessLog.objects.create(
                         user_agent=user_agent,
-                        ip_address=get_ip(request),
-                        username=request.POST.get(USERNAME_FORM_FIELD, None),
+                        ip_address=ip_address,
+                        username=username,
                         http_accept=http_accept,
                         path_info=path_info,
                         trusted=not login_unsuccessful,
                     )
+                if not login_unsuccessful and not DISABLE_SUCCESS_ACCESS_LOG:
+                    log_successful_attempt(username, ip_address)
+
             if check_request(request, login_unsuccessful):
                 return response
 
