@@ -42,36 +42,48 @@ if BEHIND_REVERSE_PROXY:
     )
 
 
-def get_client_str(username=None, ip_address=None):
+def get_client_str(username, ip_address, user_agent=None, path_info=None):
+
+    if VERBOSE:
+        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        return details.format(username, ip_address, user_agent, path_info)
+
     if AXES_ONLY_USER_FAILURES:
-        return username
+        client = username
     elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-        return '{0} from {1}'.format(username, ip_address)
+        client = '{0} from {1}'.format(username, ip_address)
     else:
-        return ip_address
+        client = ip_address
+
+    if USE_USER_AGENT:
+        return client + '(user-agent={0})'.format(user_agent)
+
+    return client
 
 
-def log_successful_attempt(username, ip_address):
-    client = get_client_str(username, ip_address)
+def log_successful_attempt(username, ip_address,
+                           user_agent=None, path_info=None):
+    client = get_client_str(username, ip_address, user_agent, path_info)
     msg = 'AXES: Successful login by {0}. Creating access record.'
     log.info(msg.format(client))
 
 
-def log_initial_attempt(username, ip_address):
-    client = get_client_str(username, ip_address)
+def log_initial_attempt(username, ip_address, user_agent, path_info):
+    client = get_client_str(username, ip_address, user_agent, path_info)
     msg = 'AXES: New login failure by {0}. Creating access record.'
     log.info(msg.format(client))
 
 
-def log_repeated_attempt(username, ip_address, fail_count):
-    client = get_client_str(username, ip_address)
+def log_repeated_attempt(username, ip_address, user_agent, path_info,
+                         fail_count):
+    client = get_client_str(username, ip_address, user_agent, path_info)
     fail_msg = 'AXES: Repeated login failure by {0}. Updating access record.'
     count_msg = 'Count = {0} of {1}'.format(fail_count, FAILURE_LIMIT)
     log.info('{0} {1}'.format(fail_msg.format(client), count_msg))
 
 
-def log_lockout(username, ip_address):
-    client = get_client_str(username, ip_address)
+def log_lockout(username, ip_address, user_agent, path_info):
+    client = get_client_str(username, ip_address, user_agent, path_info)
     msg = 'AXES: locked out {0} after repeated login attempts.'
     log.warn(msg.format(client))
 
@@ -324,7 +336,8 @@ def watch_login(func):
                         trusted=not login_unsuccessful,
                     )
                 if not login_unsuccessful and not DISABLE_SUCCESS_ACCESS_LOG:
-                    log_successful_attempt(username, ip_address)
+                    log_successful_attempt(username, ip_address,
+                                           user_agent, path_info)
 
             if check_request(request, login_unsuccessful):
                 return response
@@ -402,6 +415,8 @@ def is_already_locked(request):
 def check_request(request, login_unsuccessful):
     ip_address = get_ip(request)
     username = request.POST.get(USERNAME_FORM_FIELD, None)
+    user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
+    path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     failures = 0
     attempts = get_user_attempts(request)
     cache_hash_key = get_cache_key(request)
@@ -433,13 +448,13 @@ def check_request(request, login_unsuccessful):
                 )
                 attempt.http_accept = \
                     request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
-                attempt.path_info = \
-                    request.META.get('PATH_INFO', '<unknown>')[:255]
+                attempt.path_info = path_info,path_info
                 attempt.failures_since_start = failures
                 attempt.attempt_time = datetime.now()
                 attempt.save()
 
-                log_repeated_attempt(username, ip_address, failures)
+                log_repeated_attempt(username, ip_address,
+                                     user_agent, path_info, failures)
 
         else:
             create_new_failure_records(request, failures)
@@ -477,7 +492,7 @@ def check_request(request, login_unsuccessful):
             logout(request)
 
         username = request.POST.get(USERNAME_FORM_FIELD, None)
-        log_lockout(username, ip_address)
+        log_lockout(username, ip_address, user_agent, path_info)
 
         # send signal when someone is locked out.
         user_locked_out.send(
@@ -498,6 +513,7 @@ def create_new_failure_records(request, failures):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     username = request.POST.get(USERNAME_FORM_FIELD, None)
+    path_info = request.META.get('PATH_INFO', '<unknown>'),
 
     # Record failed attempt. Whether or not the IP address or user agent is
     # used in counting failures is handled elsewhere, so we just record
@@ -509,12 +525,12 @@ def create_new_failure_records(request, failures):
         get_data=query2str(request.GET),
         post_data=query2str(request.POST),
         http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
-        path_info=request.META.get('PATH_INFO', '<unknown>'),
+        path_info=path_info,
         failures_since_start=failures,
     )
 
     username = request.POST.get(USERNAME_FORM_FIELD, None)
-    log_initial_attempt(username, ip)
+    log_initial_attempt(username, ip, ua, path_info)
 
 
 def create_new_trusted_record(request):
