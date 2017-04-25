@@ -42,6 +42,42 @@ if BEHIND_REVERSE_PROXY:
     )
 
 
+def get_client_str(username=None, ip_address=None):
+    if AXES_ONLY_USER_FAILURES:
+        return username
+    elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+        return '{0} from {1}'.format(username, ip_address)
+    else:
+        return ip_address
+
+
+def log_initial_attempt(username, ip_address):
+    client = get_client_str(username, ip_address)
+    msg = 'AXES: New login failure by {0}. Creating access record.'
+    log.info(msg.format(client))
+
+
+def log_repeated_attempt(username, ip_address, fail_count):
+    client = get_client_str(username, ip_address)
+    fail_msg = 'AXES: Repeated login failure by {0}. Updating access record.'
+    count_msg = 'Count = {0} of {1}'.format(fail_count, FAILURE_LIMIT)
+    log.info('{0} {1}'.format(fail_msg.format(client), count_msg))
+
+
+def log_lockout(username, ip_address):
+    client = get_client_str(username, ip_address)
+    msg = 'AXES: locked out {0} after repeated login attempts.'
+    log.warn(msg.format(client))
+
+
+def log_decorated_call(func, args=None, kwargs=None):
+    log.info('AXES: Calling decorated function: %s' % func.__name__)
+    if args:
+        log.info('args: %s' % str(args))
+    if kwargs:
+        log.info('kwargs: %s' % kwargs)
+
+
 def is_ipv6(ip):
     try:
         inet_pton(AF_INET6, ip)
@@ -230,11 +266,7 @@ def watch_login(func):
     def decorated_login(request, *args, **kwargs):
         # share some useful information
         if func.__name__ != 'decorated_login' and VERBOSE:
-            log.info('AXES: Calling decorated function: %s' % func.__name__)
-            if args:
-                log.info('args: %s' % str(args))
-            if kwargs:
-                log.info('kwargs: %s' % kwargs)
+            log_decorated_call(func, args, kwargs)
 
         # TODO: create a class to hold the attempts records and perform checks
         # with its methods? or just store attempts=get_user_attempts here and
@@ -395,20 +427,8 @@ def check_request(request, login_unsuccessful):
                 attempt.attempt_time = datetime.now()
                 attempt.save()
 
-                if AXES_ONLY_USER_FAILURES:
-                    block_msg = 'for {0}.'.format(attempt.username)
-                elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-                    block_msg = 'for {0} from {1}.'.format(
-                        attempt.username, attempt.ip_address
-                    )
-                else:
-                    block_msg = 'from {0}.'.format(attempt.ip_address)
-                count_msg = 'Updating access record. Count = {0} of {1}'.format(
-                    failures, FAILURE_LIMIT
-                )
-                log.info('AXES: Repeated login failure {0} {1}'.format(
-                    block_msg, count_msg
-                ))
+                log_repeated_attempt(username, ip_address, failures)
+
         else:
             create_new_failure_records(request, failures)
     else:
@@ -444,14 +464,8 @@ def check_request(request, login_unsuccessful):
         if hasattr(request, 'user') and request.user.is_authenticated():
             logout(request)
 
-        msg = 'AXES: locked out {0} after repeated login attempts.'
         username = request.POST.get(USERNAME_FORM_FIELD, None)
-        if AXES_ONLY_USER_FAILURES:
-            log.warn(msg.format(username))
-        elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-            log.warn(msg.format('{0} from {1}'.format(username, ip_address)))
-        else:
-            log.warn(msg.format(ip_address))
+        log_lockout(username, ip_address)
 
         # send signal when someone is locked out.
         user_locked_out.send(
@@ -487,14 +501,8 @@ def create_new_failure_records(request, failures):
         failures_since_start=failures,
     )
 
-    msg = 'AXES: New login failure by {0}. Creating access record.'
     username = request.POST.get(USERNAME_FORM_FIELD, None)
-    if AXES_ONLY_USER_FAILURES:
-        log.info(msg.format(username))
-    elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-        log.info(msg.format('{0} from {1}'.format(username, ip)))
-    else:
-        log.info(msg.format(ip))
+    log_initial_attempt(username, ip)
 
 
 def create_new_trusted_record(request):
