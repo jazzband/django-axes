@@ -45,6 +45,8 @@ if BEHIND_REVERSE_PROXY:
 def get_client_str(username, ip_address, user_agent=None, path_info=None):
 
     if VERBOSE:
+        if isinstance(path_info, tuple):
+            path_info = path_info[0]
         details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
         return details.format(username, ip_address, user_agent, path_info)
 
