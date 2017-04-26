@@ -508,9 +508,9 @@ def get_cache_key(request_or_object):
         un = request_or_object.POST.get(USERNAME_FORM_FIELD, None)
         ua = request_or_object.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
-    ip = ip.encode('utf-8') if ip else ''
-    un = un.encode('utf-8') if un else ''
-    ua = ua.encode('utf-8') if ua else ''
+    ip = ip.encode('utf-8') if ip else ''.encode('utf-8')
+    un = un.encode('utf-8') if un else ''.encode('utf-8')
+    ua = ua.encode('utf-8') if ua else ''.encode('utf-8')
 
     if AXES_ONLY_USER_FAILURES:
         attributes = un
