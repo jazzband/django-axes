@@ -274,6 +274,22 @@ def get_user_attempts(request):
     return attempts
 
 
+def is_login_failed(response):
+    return (
+        response and
+        not response.has_header('location') and
+        response.status_code != 302
+    )
+
+def is_ajax_login_failed(response):
+    return (
+        response and
+        response.status_code != 302 and
+        response.status_code != 200
+    )
+
+
+
 def watch_login(func):
     """
     Used to decorate the django.contrib.admin.site.login method.
@@ -315,11 +331,10 @@ def watch_login(func):
 
         if request.method == 'POST':
             # see if the login was successful
-            login_unsuccessful = (
-                response and
-                not response.has_header('location') and
-                response.status_code != 302
-            )
+            if request.is_ajax():
+                login_unsuccessful = is_ajax_login_failed(response)
+            else:
+                login_unsuccessful = is_login_failed(response)
 
             user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
             http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
