@@ -538,3 +538,33 @@ class GetIPProxyCustomHeaderTest(TestCase):
         for header in valid_headers:
             self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = header
             self.assertEqual(self.ip, get_ip(self.request))
+
+class GetIPNumProxiesTest(TestCase):
+    """Test that get_ip returns the correct last IP when NUM_PROXIES is configured
+    """
+
+    def setUp(self):
+        self.request = MockRequest()
+
+    def test_header_ordering(self):
+        self.ip = '2.2.2.2'
+
+        valid_headers = [
+            '4.4.4.4, 3.3.3.3, 2.2.2.2, 1.1.1.1',
+            '         3.3.3.3, 2.2.2.2, 1.1.1.1',
+            '                  2.2.2.2, 1.1.1.1',
+        ]
+
+        for header in valid_headers:
+            self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = header
+            self.assertEqual(self.ip, get_ip(self.request))
+
+    def test_invalid_headers_too_few(self):
+        self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = '1.1.1.1'
+        with self.assertRaises(Warning):
+            get_ip(self.request)
+
+    def test_invalid_headers_no_ip(self):
+        self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = ''
+        with self.assertRaises(Warning):
+            get_ip(self.request)
