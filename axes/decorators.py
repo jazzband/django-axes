@@ -113,15 +113,15 @@ def get_ip(request):
     if BEHIND_REVERSE_PROXY:
         # For requests originating from behind a reverse proxy,
         # resolve the IP address from the given AXES_REVERSE_PROXY_HEADER.
-        # AXES_REVERSE_PROXY_HEADER defaults to HTTP_X_FORWARDED_FOR if not given,
-        # which is the Django calling format for the HTTP X-Forwarder-For header.
+        # AXES_REVERSE_PROXY_HEADER defaults to HTTP_X_FORWARDED_FOR,
+        # which is the Django name for the HTTP X-Forwarder-For header.
         # Please see RFC7239 for additional information:
         #   https://tools.ietf.org/html/rfc7239#section-5
 
         # The REVERSE_PROXY_HEADER HTTP header is a list
         # of potentionally unsecure IPs, for example:
         #   X-Forwarded-For: 1.1.1.1, 11.11.11.11:8080, 111.111.111.111
-        ip = request.META.get(REVERSE_PROXY_HEADER, '')
+        ip_str = request.META.get(REVERSE_PROXY_HEADER, '')
 
         # We need to know the number of proxies present in the request chain
         # in order to securely calculate the one IP that is the real client IP.
@@ -130,23 +130,45 @@ def get_ip(request):
         # configurations, with e.g. the X-Forwarded-For header containing
         # the originating client IP, proxies and possibly spoofed values.
         #
-        # If you are using a special header for client calculation such as
-        # the X-Real-IP or the like with nginx, please check this configuration.
+        # If you are using a special header for client calculation such as the
+        # X-Real-IP or the like with nginx, please check this configuration.
         #
         # Please see discussion for more information:
         #   https://github.com/jazzband/django-axes/issues/224
-        ip = [ip.strip() for ip in ip.split(',')][-NUM_PROXIES]
+        ip_list = [ip.strip() for ip in ip_str.split(',')]
 
-        # Fix IIS adding client port number to 'X-Forwarded-For' header (strip port)
-        if not is_ipv6(ip):
-            ip = ip.split(':', 1)[0]
+        # Pick the nth last IP in the given list of addresses after parsing
+        if len(ip_list) >= NUM_PROXIES:
+            ip = ip_list[-NUM_PROXIES]
+
+            # Fix IIS adding client port number to the
+            # 'X-Forwarded-For' header (strip port)
+            if not is_ipv6(ip):
+                ip = ip.split(':', 1)[0]
+
+        # If nth last is not found, default to no IP and raise a warning
+        else:
+            ip = ''
+            raise Warning(
+                'AXES: Axes is configured for operation behind a '
+                'reverse proxy but received too few IPs in the HTTP '
+                'AXES_REVERSE_PROXY_HEADER. Check your '
+                'AXES_NUM_PROXIES configuration. '
+                'Header name: {0}, value: {1}'.format(
+                    REVERSE_PROXY_HEADER, ip_str
+                )
+            )
 
         if not ip:
             raise Warning(
-                'AXES: Axes is configured for operation behind a reverse proxy '
-                'but could not find an HTTP header value. Check your proxy '
-                'server settings to make sure this header value is being '
-                'passed. Header name {0}'.format(REVERSE_PROXY_HEADER)
+                'AXES: Axes is configured for operation behind a reverse '
+                'proxy but could not find a suitable IP in the specified '
+                'HTTP header. Check your proxy server settings to make '
+                'sure correct headers are being passed to Django in '
+                'AXES_REVERSE_PROXY_HEADER. '
+                'Header name: {0}, value: {1}'.format(
+                    REVERSE_PROXY_HEADER, ip_str
+                )
             )
 
         return ip
@@ -233,11 +255,18 @@ def _get_user_attempts(request):
         )
 
     if not attempts:
-        params = {'ip_address': ip, 'trusted': False}
+        params = {'trusted': False}
+
+        if AXES_ONLY_USER_FAILURES:
+            params['username'] = username
+        elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+            params['username'] = username
+            params['ip_address'] = ip
+        else:
+            params['ip_address'] = ip
+
         if USE_USER_AGENT:
             params['user_agent'] = ua
-        if LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-            params['username'] = username
 
         attempts = AccessAttempt.objects.filter(**params)
 
@@ -577,23 +606,30 @@ def get_cache_key(request_or_object):
     :param  request_or_object: Request or AccessAttempt object
     :return cache-key: String, key to be used in cache system
     """
-    ua = None
-    ip = None
-
     if isinstance(request_or_object, AccessAttempt):
         ip = request_or_object.ip_address
+        un = request_or_object.username
         ua = request_or_object.user_agent
     else:
         ip = get_ip(request_or_object)
+        un = request_or_object.POST.get(USERNAME_FORM_FIELD, None)
         ua = request_or_object.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
-    ip = ip.encode('utf-8')
+    ip = ip.encode('utf-8') if ip else ''.encode('utf-8')
+    un = un.encode('utf-8') if un else ''.encode('utf-8')
+    ua = ua.encode('utf-8') if ua else ''.encode('utf-8')
 
-    if ua:
-        ua = ua.encode('utf-8')
-        cache_hash_key = 'axes-{}'.format(md5(ip+ua).hexdigest())
+    if AXES_ONLY_USER_FAILURES:
+        attributes = un
+    elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+        attributes = ip+un
     else:
-        cache_hash_key = 'axes-{}'.format(md5(ip).hexdigest())
+        attributes = ip
+
+    if USE_USER_AGENT:
+        attributes += ua
+
+    cache_hash_key = 'axes-{}'.format(md5(attributes).hexdigest())
 
     return cache_hash_key
 

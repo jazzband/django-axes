@@ -16,11 +16,13 @@ from django.utils import six
 from django.test.client import RequestFactory
 
 from axes.decorators import get_ip, get_cache_key, get_client_str
-from axes.settings import COOLOFF_TIME
 from axes.settings import FAILURE_LIMIT
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset, iso8601
+
+
+TEST_COOLOFF_TIME = datetime.timedelta(seconds=2)
 
 
 class MockRequest:
@@ -140,17 +142,19 @@ class AccessAttemptTest(TestCase):
         self.assertNotEquals(AccessLog.objects.latest('id').logout_time, None)
         self.assertContains(response, 'Logged out')
 
+    @patch('axes.decorators.COOLOFF_TIME', TEST_COOLOFF_TIME)
     def test_cooling_off(self):
         """Tests if the cooling time allows a user to login
         """
         self.test_failure_limit_once()
 
         # Wait for the cooling off period
-        time.sleep(COOLOFF_TIME.total_seconds())
+        time.sleep(TEST_COOLOFF_TIME.total_seconds())
 
         # It should be possible to login again, make sure it is.
         self.test_valid_login()
 
+    @patch('axes.decorators.COOLOFF_TIME', TEST_COOLOFF_TIME)
     def test_cooling_off_for_trusted_user(self):
         """Test the cooling time for a trusted user
         """
@@ -213,7 +217,7 @@ class AccessAttemptTest(TestCase):
         ip = '127.0.0.1'.encode('utf-8')
         ua = '<unknown>'.encode('utf-8')
 
-        cache_hash_key_checker = 'axes-{}'.format(md5((ip+ua)).hexdigest())
+        cache_hash_key_checker = 'axes-{}'.format(md5((ip)).hexdigest())
 
         request_factory = RequestFactory()
         request = request_factory.post('/admin/login/',
@@ -443,6 +447,469 @@ class AccessAttemptTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
+class AccessAttemptConfigTest(TestCase):
+    """ This set of tests checks for lockouts under different configurations
+    and circumstances to prevent false positives and false negatives.
+    Always block attempted logins for the same user from the same IP.
+    Always allow attempted logins for a different user from a different IP.
+    """
+
+    IP_1 = '10.1.1.1'
+    IP_2 = '10.2.2.2'
+    USER_1 = 'valid-user-1'
+    USER_2 = 'valid-user-2'
+    VALID_PASSWORD = 'valid-password'
+    WRONG_PASSWORD = 'wrong-password'
+    LOCKED_MESSAGE = 'Account locked: too many login attempts.'
+    LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
+    ALLOWED = 302
+    BLOCKED = 403
+
+    def _login(self, username, password, ip_addr='127.0.0.1',
+               is_json=False, **kwargs):
+        """Login a user and get the response.
+        IP address can be configured to test IP blocking functionality.
+        """
+        try:
+            admin_login = reverse('admin:login')
+        except NoReverseMatch:
+            admin_login = reverse('admin:index')
+
+        headers = {
+            'user_agent': 'test-browser'
+        }
+        post_data = {
+            'username': username,
+            'password': password,
+            'this_is_the_login_form': 1,
+        }
+        post_data.update(kwargs)
+
+        if is_json:
+            headers.update({
+                'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest',
+                'content_type': 'application/json',
+            })
+            post_data = json.dumps(post_data)
+
+        response = self.client.post(
+            admin_login, post_data, REMOTE_ADDR=ip_addr, **headers
+        )
+        return response
+
+    def _lockout_user1_from_ip1(self):
+        for i in range(1, FAILURE_LIMIT+1):
+            response = self._login(
+                username=self.USER_1,
+                password=self.WRONG_PASSWORD,
+                ip_addr=self.IP_1
+            )
+        return response
+
+    def setUp(self):
+        """Create two valid users for authentication.
+        """
+
+        self.user = User.objects.create_superuser(
+            username=self.USER_1,
+            email='test_1@example.com',
+            password=self.VALID_PASSWORD,
+        )
+        self.user = User.objects.create_superuser(
+            username=self.USER_2,
+            email='test_2@example.com',
+            password=self.VALID_PASSWORD,
+        )
+
+    # Test for true and false positives when blocking by IP *OR* user (default).
+    # Cache disabled. Default settings.
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_ip_blocks_when_same_user_same_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is still blocked from IP 1.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_ip_allows_when_same_user_diff_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 can still login from IP 2.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_ip_blocks_when_diff_user_same_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 is also locked out from IP 1.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_ip_allows_when_diff_user_diff_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 2.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    # Test for true and false positives when blocking by user only.
+    # Cache disabled. When AXES_ONLY_USER_FAILURES = True
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_blocks_when_same_user_same_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is still blocked from IP 1.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_blocks_when_same_user_diff_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is also locked out from IP 2.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_allows_when_diff_user_same_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 1.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_allows_when_diff_user_diff_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 2.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    # Test for true and false positives when blocking by user and IP together.
+    # Cache disabled. When LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_and_ip_blocks_when_same_user_same_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is still blocked from IP 1.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_and_ip_allows_when_same_user_diff_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 can still login from IP 2.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 1.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_lockout_by_user_and_ip_allows_when_diff_user_diff_ip_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 2.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    # Test for true and false positives when blocking by IP *OR* user (default).
+    # With cache enabled. Default criteria.
+    def test_lockout_by_ip_blocks_when_same_user_same_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is still blocked from IP 1.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    def test_lockout_by_ip_allows_when_same_user_diff_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 can still login from IP 2.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    def test_lockout_by_ip_blocks_when_diff_user_same_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 is also locked out from IP 1.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    def test_lockout_by_ip_allows_when_diff_user_diff_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 2.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    # Test for true and false positives when blocking by user only.
+    # With cache enabled. When AXES_ONLY_USER_FAILURES = True
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    def test_lockout_by_user_blocks_when_same_user_same_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is still blocked from IP 1.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    def test_lockout_by_user_blocks_when_same_user_diff_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is also locked out from IP 2.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    def test_lockout_by_user_allows_when_diff_user_same_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 1.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    def test_lockout_by_user_allows_when_diff_user_diff_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 2.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    # Test for true and false positives when blocking by user and IP together.
+    # With cache enabled. When LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    def test_lockout_by_user_and_ip_blocks_when_same_user_same_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is still blocked from IP 1.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    def test_lockout_by_user_and_ip_allows_when_same_user_diff_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 can still login from IP 2.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 1.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    def test_lockout_by_user_and_ip_allows_when_diff_user_diff_ip_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 2.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+
 class UtilsTest(TestCase):
     def test_iso8601(self):
         """Tests iso8601 correctly translates datetime.timdelta to ISO 8601
@@ -562,3 +1029,33 @@ class GetIPProxyCustomHeaderTest(TestCase):
         for header in valid_headers:
             self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = header
             self.assertEqual(self.ip, get_ip(self.request))
+
+class GetIPNumProxiesTest(TestCase):
+    """Test that get_ip returns the correct last IP when NUM_PROXIES is configured
+    """
+
+    def setUp(self):
+        self.request = MockRequest()
+
+    def test_header_ordering(self):
+        self.ip = '2.2.2.2'
+
+        valid_headers = [
+            '4.4.4.4, 3.3.3.3, 2.2.2.2, 1.1.1.1',
+            '         3.3.3.3, 2.2.2.2, 1.1.1.1',
+            '                  2.2.2.2, 1.1.1.1',
+        ]
+
+        for header in valid_headers:
+            self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = header
+            self.assertEqual(self.ip, get_ip(self.request))
+
+    def test_invalid_headers_too_few(self):
+        self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = '1.1.1.1'
+        with self.assertRaises(Warning):
+            get_ip(self.request)
+
+    def test_invalid_headers_no_ip(self):
+        self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = ''
+        with self.assertRaises(Warning):
+            get_ip(self.request)

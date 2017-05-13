@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -55,4 +53,3 @@ USE_TZ = False
 LOGIN_REDIRECT_URL = '/admin/'
 
 AXES_LOGIN_FAILURE_LIMIT = 10
-AXES_COOLOFF_TIME = timedelta(seconds=2)
