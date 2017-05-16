@@ -15,7 +15,7 @@ from django.core.urlresolvers import reverse
 from django.utils import six
 from django.test.client import RequestFactory
 
-from axes.decorators import get_ip, get_cache_key
+from axes.decorators import get_ip, get_cache_key, get_client_str
 from axes.settings import FAILURE_LIMIT
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
@@ -215,7 +215,6 @@ class AccessAttemptTest(TestCase):
         """ Test the cache key format"""
         # Getting cache key from request
         ip = '127.0.0.1'.encode('utf-8')
-        ua = '<unknown>'.encode('utf-8')
 
         cache_hash_key_checker = 'axes-{}'.format(md5((ip)).hexdigest())
 
@@ -328,7 +327,6 @@ class AccessAttemptTest(TestCase):
         # Check if we can still log in with valid user
         response = self._login(is_valid_username=True, is_valid_password=True)
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
-
 
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
@@ -941,6 +939,112 @@ class UtilsTest(TestCase):
         self.assertFalse(is_ipv6('67.255.125.204'))
         self.assertFalse(is_ipv6('foo'))
 
+    @patch('axes.decorators.VERBOSE', True)
+    def test_verbose_ip_only_client_details(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = '/admin/'
+
+        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        expected = details.format(username, ip, user_agent, path_info)
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @patch('axes.decorators.VERBOSE', False)
+    def test_non_verbose_ip_only_client_details(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = '/admin/'
+
+        expected = ip
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @patch('axes.decorators.VERBOSE', True)
+    def test_verbose_user_only_client_details(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = '/admin/'
+
+        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        expected = details.format(username, ip, user_agent, path_info)
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @patch('axes.decorators.VERBOSE', False)
+    def test_non_verbose_user_only_client_details(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = '/admin/'
+
+        expected = username
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @patch('axes.decorators.VERBOSE', True)
+    def test_verbose_user_ip_combo_client_details(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = '/admin/'
+
+        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        expected = details.format(username, ip, user_agent, path_info)
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @patch('axes.decorators.VERBOSE', False)
+    def test_non_verbose_user_ip_combo_client_details(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = '/admin/'
+
+        expected = '{0} from {1}'.format(username, ip)
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @patch('axes.decorators.USE_USER_AGENT', True)
+    @patch('axes.decorators.VERBOSE', True)
+    def test_verbose_user_agent_client_details(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = '/admin/'
+
+        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        expected = details.format(username, ip, user_agent, path_info)
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @patch('axes.decorators.USE_USER_AGENT', True)
+    @patch('axes.decorators.VERBOSE', False)
+    def test_non_verbose_user_agent_client_details(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = '/admin/'
+
+        expected = ip + '(user-agent={0})'.format(user_agent)
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
 
 class GetIPProxyTest(TestCase):
     """Test get_ip returns correct addresses with proxy
@@ -1004,6 +1108,7 @@ class GetIPProxyCustomHeaderTest(TestCase):
         for header in valid_headers:
             self.request.META[settings.AXES_REVERSE_PROXY_HEADER] = header
             self.assertEqual(self.ip, get_ip(self.request))
+
 
 class GetIPNumProxiesTest(TestCase):
     """Test that get_ip returns the correct last IP when NUM_PROXIES is configured
