@@ -494,7 +494,7 @@ def check_request(request, login_unsuccessful):
                 )
                 attempt.http_accept = \
                     request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
-                attempt.path_info = path_info,path_info
+                attempt.path_info = path_info
                 attempt.failures_since_start = failures
                 attempt.attempt_time = datetime.now()
                 attempt.save()
