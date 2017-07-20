@@ -36,7 +36,7 @@ def get_client_str(username, ip_address, user_agent=None, path_info=None):
         client = ip_address
 
     if axes_settings.USE_USER_AGENT:
-        return client + '(user-agent={0})'.format(user_agent)
+        client += '(user-agent={0})'.format(user_agent)
 
     return client
 
