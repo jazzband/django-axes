@@ -1,6 +1,34 @@
 Changes
 =======
 
+2.3.3 (2017-07-20)
+------------------
+
+- Many tweaks and handles successful AJAX logins.
+  [Jack Sullivan]
+
+- Add tests for proxy number parametrization
+  [aleksihakli]
+
+- Add AXES_NUM_PROXIES setting
+  [aleksihakli]
+
+- Log failed access attempts regardless of settings
+  [jimr]
+
+- Updated configuration docs to include AXES_IP_WHITELIST
+  [Minkey27]
+
+- Add test for get_cache_key function
+  [jorlugaqui]
+
+- Delete cache key in reset command line
+  [jorlugaqui]
+
+- Add signals for setting/deleting cache keys
+  [jorlugaqui]
+
+
 2.3.2 (2016-11-24)
 ------------------
 
