@@ -64,8 +64,12 @@ class AccessAttempt(CommonAccess):
     def failures(self):
         return self.failures_since_start
 
-    def __unicode__(self):
+    def __str__(self):
         return six.u('Attempted Access: %s') % self.attempt_time
+
+    # Only for python 2 support
+    def __unicode__(self):
+        return self.__str__()
 
 
 class AccessLog(CommonAccess):
@@ -74,7 +78,11 @@ class AccessLog(CommonAccess):
         blank=True,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return six.u('Access Log for %s @ %s') % (
             self.username, self.attempt_time
         )
+
+    # Only for python 2 support
+    def __unicode__(self):
+        return self.__str__()
