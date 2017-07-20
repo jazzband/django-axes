@@ -8,14 +8,16 @@ from hashlib import md5
 from mock import patch
 
 from django.conf import settings
-from django.test import TestCase
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
-from django.utils import six
+from django.test import override_settings
+from django.test import TestCase
 from django.test.client import RequestFactory
+from django.utils import six
 
-from axes.decorators import get_ip, get_cache_key, get_client_str
+from axes.utils import get_ip, get_client_str
+from axes.attempts import get_cache_key
 from axes.settings import FAILURE_LIMIT
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
@@ -43,11 +45,6 @@ class AccessAttemptTest(TestCase):
         """Login a user. A valid credential is used when is_valid_username is True,
         otherwise it will use a random string to make a failed login.
         """
-        try:
-            admin_login = reverse('admin:login')
-        except NoReverseMatch:
-            admin_login = reverse('admin:index')
-
         if is_valid_username:
             # Use a valid username
             username = self.VALID_USERNAME
@@ -77,7 +74,10 @@ class AccessAttemptTest(TestCase):
                 'content_type': 'application/json',
             })
             post_data = json.dumps(post_data)
-        response = self.client.post(admin_login, post_data, **headers)
+
+        response = self.client.post(
+            reverse('admin:login'), post_data, **headers
+        )
 
         return response
 
@@ -90,8 +90,8 @@ class AccessAttemptTest(TestCase):
             password=self.VALID_PASSWORD,
         )
 
-    @patch('axes.decorators.cache.set', return_value=None)
-    @patch('axes.decorators.cache.get', return_value=None)
+    @patch('django.core.cache.cache.set', return_value=None)
+    @patch('django.core.cache.cache.get', return_value=None)
     def test_failure_limit_once(self, cache_get_mock, cache_set_mock):
         """Tests the login lock trying to login one more time
         than failure limit
@@ -451,7 +451,6 @@ class AccessAttemptConfigTest(TestCase):
     Always block attempted logins for the same user from the same IP.
     Always allow attempted logins for a different user from a different IP.
     """
-
     IP_1 = '10.1.1.1'
     IP_2 = '10.2.2.2'
     USER_1 = 'valid-user-1'
@@ -496,7 +495,7 @@ class AccessAttemptConfigTest(TestCase):
         return response
 
     def _lockout_user1_from_ip1(self):
-        for i in range(1, FAILURE_LIMIT+1):
+        for i in range(1, FAILURE_LIMIT + 1):
             response = self._login(
                 username=self.USER_1,
                 password=self.WRONG_PASSWORD,
@@ -507,7 +506,6 @@ class AccessAttemptConfigTest(TestCase):
     def setUp(self):
         """Create two valid users for authentication.
         """
-
         self.user = User.objects.create_superuser(
             username=self.USER_1,
             email='test_1@example.com',
@@ -519,7 +517,7 @@ class AccessAttemptConfigTest(TestCase):
             password=self.VALID_PASSWORD,
         )
 
-    # Test for true and false positives when blocking by IP *OR* user (default).
+    # Test for true and false positives when blocking by IP *OR* user (default)
     # Cache disabled. Default settings.
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
@@ -939,7 +937,7 @@ class UtilsTest(TestCase):
         self.assertFalse(is_ipv6('67.255.125.204'))
         self.assertFalse(is_ipv6('foo'))
 
-    @patch('axes.decorators.VERBOSE', True)
+    @override_settings(AXES_VERBOSE=True)
     def test_verbose_ip_only_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -952,7 +950,7 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.VERBOSE', False)
+    @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_ip_only_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -964,8 +962,8 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
-    @patch('axes.decorators.VERBOSE', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    @override_settings(AXES_VERBOSE=True)
     def test_verbose_user_only_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -978,8 +976,8 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
-    @patch('axes.decorators.VERBOSE', False)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_user_only_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -991,8 +989,8 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
-    @patch('axes.decorators.VERBOSE', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    @override_settings(AXES_VERBOSE=True)
     def test_verbose_user_ip_combo_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -1005,8 +1003,8 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
-    @patch('axes.decorators.VERBOSE', False)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_user_ip_combo_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -1018,8 +1016,8 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.USE_USER_AGENT', True)
-    @patch('axes.decorators.VERBOSE', True)
+    @override_settings(AXES_USE_USER_AGENT=True)
+    @override_settings(AXES_VERBOSE=True)
     def test_verbose_user_agent_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -1032,8 +1030,8 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.USE_USER_AGENT', True)
-    @patch('axes.decorators.VERBOSE', False)
+    @override_settings(AXES_USE_USER_AGENT=True)
+    @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_user_agent_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -1113,7 +1111,6 @@ class GetIPProxyCustomHeaderTest(TestCase):
 class GetIPNumProxiesTest(TestCase):
     """Test that get_ip returns the correct last IP when NUM_PROXIES is configured
     """
-
     def setUp(self):
         self.request = MockRequest()
 

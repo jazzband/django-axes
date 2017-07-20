@@ -17,7 +17,7 @@ USERNAME_FORM_FIELD = getattr(settings, 'AXES_USERNAME_FORM_FIELD', 'username')
 PASSWORD_FORM_FIELD = getattr(settings, 'AXES_PASSWORD_FORM_FIELD', 'password')
 
 # only check user name and not location or user_agent
-AXES_ONLY_USER_FAILURES = getattr(settings, 'AXES_ONLY_USER_FAILURES', False)
+ONLY_USER_FAILURES = getattr(settings, 'AXES_ONLY_USER_FAILURES', False)
 
 # see if the django app is sitting behind a reverse proxy
 BEHIND_REVERSE_PROXY = getattr(settings, 'AXES_BEHIND_REVERSE_PROXY', False)

@@ -16,7 +16,7 @@ log = logging.getLogger(axes_settings.LOGGER)
 if axes_settings.VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('AXES: Using django-axes ' + get_version())
-    if axes_settings.AXES_ONLY_USER_FAILURES:
+    if axes_settings.ONLY_USER_FAILURES:
         log.info('AXES: blocking by username only.')
     elif axes_settings.LOCK_OUT_BY_COMBINATION_USER_AND_IP:
         log.info('AXES: blocking by combination of username and IP.')

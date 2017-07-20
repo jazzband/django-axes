@@ -16,7 +16,7 @@ def _query_user_attempts(request):
     ip = get_ip(request)
     username = request.POST.get(axes_settings.USERNAME_FORM_FIELD, None)
 
-    if axes_settings.AXES_ONLY_USER_FAILURES:
+    if axes_settings.ONLY_USER_FAILURES:
         attempts = AccessAttempt.objects.filter(username=username)
     elif axes_settings.USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
@@ -31,7 +31,7 @@ def _query_user_attempts(request):
     if not attempts:
         params = {'trusted': False}
 
-        if axes_settings.AXES_ONLY_USER_FAILURES:
+        if axes_settings.ONLY_USER_FAILURES:
             params['username'] = username
         elif axes_settings.LOCK_OUT_BY_COMBINATION_USER_AND_IP:
             params['username'] = username
@@ -66,7 +66,7 @@ def get_cache_key(request_or_obj):
     un = un.encode('utf-8') if un else ''.encode('utf-8')
     ua = ua.encode('utf-8') if ua else ''.encode('utf-8')
 
-    if axes_settings.AXES_ONLY_USER_FAILURES:
+    if axes_settings.ONLY_USER_FAILURES:
         attributes = un
     elif axes_settings.LOCK_OUT_BY_COMBINATION_USER_AND_IP:
         attributes = ip + un
