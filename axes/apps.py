@@ -5,7 +5,9 @@ class AppConfig(apps.AppConfig):
     name = 'axes'
 
     def ready(self):
-        from django.contrib.auth import views as auth_views
+        from django.contrib.auth.views import LoginView
+        from django.utils.decorators import method_decorator
+
         from axes.decorators import watch_login
 
-        auth_views.login = watch_login(auth_views.login)
+        LoginView.dispatch = method_decorator(watch_login)(LoginView.dispatch)

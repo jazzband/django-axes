@@ -1,6 +1,14 @@
 Changes
 =======
 
+3.0.0 (2017-11-17)
+------------------
+
+- BREAKING CHANGES. Support for Django >= 1.11 and signals, see issue #215.
+  Drop support for Python < 3.6
+  [camilonova]
+
+
 2.3.3 (2017-07-20)
 ------------------
 
