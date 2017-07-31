@@ -5,6 +5,12 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache'
+    }
+}
+
 SITE_ID = 1
 
 MIDDLEWARE_CLASSES = (

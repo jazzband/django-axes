@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import six
+from django.utils.encoding import python_2_unicode_compatible
 
 
 class CommonAccess(models.Model):
@@ -47,6 +48,7 @@ class CommonAccess(models.Model):
         ordering = ['-attempt_time']
 
 
+@python_2_unicode_compatible
 class AccessAttempt(CommonAccess):
     get_data = models.TextField(
         verbose_name='GET Data',
@@ -67,11 +69,8 @@ class AccessAttempt(CommonAccess):
     def __str__(self):
         return six.u('Attempted Access: %s') % self.attempt_time
 
-    # Only for python 2 support
-    def __unicode__(self):
-        return self.__str__()
 
-
+@python_2_unicode_compatible
 class AccessLog(CommonAccess):
     logout_time = models.DateTimeField(
         null=True,
@@ -82,7 +81,3 @@ class AccessLog(CommonAccess):
         return six.u('Access Log for %s @ %s') % (
             self.username, self.attempt_time
         )
-
-    # Only for python 2 support
-    def __unicode__(self):
-        return self.__str__()
