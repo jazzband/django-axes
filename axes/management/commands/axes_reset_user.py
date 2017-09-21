@@ -13,7 +13,8 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         count = 0
         count += reset(username=kwargs['username'])
-        if count:
-            print('{0} attempts removed.'.format(count))
-        else:
-            print('No attempts found.')
+        if kwargs['verbosity']:
+            if count:
+                self.stdout.write('{0} attempts removed.'.format(count))
+            else:
+                self.stdout.write('No attempts found.')
