@@ -18,7 +18,8 @@ class Command(BaseCommand):
         else:
             count = reset()
 
-        if count:
-            print('{0} attempts removed.'.format(count))
-        else:
-            print('No attempts found.')
+        if kwargs['verbosity']:
+            if count:
+                self.stdout.write('{0} attempts removed.'.format(count))
+            else:
+                self.stdout.write('No attempts found.')

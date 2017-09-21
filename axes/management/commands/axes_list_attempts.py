@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         for obj in AccessAttempt.objects.all():
-            print('{ip}\t{username}\t{failures}'.format(
+            self.stdout.write('{ip}\t{username}\t{failures}'.format(
                 ip=obj.ip_address,
                 username=obj.username,
                 failures=obj.failures,
