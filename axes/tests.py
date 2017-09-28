@@ -454,6 +454,8 @@ class AccessAttemptConfigTest(TestCase):
 
     IP_1 = '10.1.1.1'
     IP_2 = '10.2.2.2'
+    WHITELISTED_IPV4 = '30.0.0.1'
+    WHITELISTED_IPV6 = 'cafe:face::1'
     USER_1 = 'valid-user-1'
     USER_2 = 'valid-user-2'
     VALID_PASSWORD = 'valid-password'
@@ -504,6 +506,24 @@ class AccessAttemptConfigTest(TestCase):
             )
         return response
 
+    def _lockout_user1_from_whitelisted_ipv4(self):
+        for i in range(1, FAILURE_LIMIT+1):
+            response = self._login(
+                username=self.USER_1,
+                password=self.WRONG_PASSWORD,
+                ip_addr=self.WHITELISTED_IPV4
+            )
+        return response
+
+    def _lockout_user1_from_whitelisted_ipv6(self):
+        for i in range(1, FAILURE_LIMIT+1):
+            response = self._login(
+                username=self.USER_1,
+                password=self.WRONG_PASSWORD,
+                ip_addr=self.WHITELISTED_IPV6
+            )
+        return response
+
     def setUp(self):
         """Create two valid users for authentication.
         """
@@ -536,6 +556,42 @@ class AccessAttemptConfigTest(TestCase):
             ip_addr=self.IP_1
         )
         self.assertEqual(response.status_code, self.BLOCKED)
+
+    # Test that tentative from whitelisted IPv4 will never be blocked
+    # Cache disabled. Default settings.
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_non_lockout_from_whitelisted_ipv4(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from whitelisted IPv4.
+        self._lockout_user1_from_whitelisted_ipv4()
+        
+        # User 1 is still blocked from whitelisted IPv4.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.WHITELISTED_IPV4
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    # Test that tentative from whitelisted IPv6 will never be blocked
+    # Cache disabled. Default settings.
+    @patch('axes.decorators.cache.set', return_value=None)
+    @patch('axes.decorators.cache.get', return_value=None)
+    def test_non_lockout_from_whitelisted_ipv4(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User 1 is locked out from whitelisted IPv4.
+        self._lockout_user1_from_whitelisted_ipv6()
+        
+        # User 1 is still blocked from whitelisted IPv4.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.WHITELISTED_IPV6
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
 
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)

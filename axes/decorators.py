@@ -1,5 +1,6 @@
 import json
 import logging
+import ipaddress
 from socket import inet_pton, AF_INET6, error
 from hashlib import md5
 
@@ -100,10 +101,11 @@ def log_decorated_call(func, args=None, kwargs=None):
 
 def is_ipv6(ip):
     try:
-        inet_pton(AF_INET6, ip)
-    except (OSError, error):
+        ipaddress.IPv6Network(ip)
+        return True
+    except ipaddress.AddressValueError:
         return False
-    return True
+
 
 
 def get_ip(request):
@@ -191,15 +193,33 @@ def query2str(items, max_length=1024):
 
 
 def ip_in_whitelist(ip):
-    if IP_WHITELIST is not None:
-        return ip in IP_WHITELIST
+    if IP_WHITELIST is None:
+        return False
+
+    if is_ipv6(ip):
+        for whitelisted_network in IP_WHITELIST:
+            if is_ipv6(whitelisted_network) and ipaddress.IPv6Address(ip) in ipaddress.IPv6Network(whitelisted_network):
+                return True
+    else:
+        for whitelisted_network in IP_WHITELIST:
+            if not is_ipv6(whitelisted_network) and ipaddress.IPv4Address(ip) in ipaddress.IPv4Network(whitelisted_network):
+                return True
 
     return False
 
 
 def ip_in_blacklist(ip):
-    if IP_BLACKLIST is not None:
-        return ip in IP_BLACKLIST
+    if IP_BLACKLIST is None:
+        return False
+
+    if is_ipv6(ip):
+        for blacklisted_network in IP_BLACKLIST:
+            if is_ipv6(blacklisted_network) and ipaddress.IPv6Address(ip) in ipaddress.IPv6Network(blacklisted_network):
+                return True
+    else:
+        for blacklisted_network in IP_BLACKLIST:
+            if not is_ipv6(blacklisted_network) and ipaddress.IPv4Address(ip) in ipaddress.IPv4Network(blacklisted_network):
+                return True
 
     return False
 

@@ -53,3 +53,10 @@ USE_TZ = False
 LOGIN_REDIRECT_URL = '/admin/'
 
 AXES_LOGIN_FAILURE_LIMIT = 10
+
+AXES_NEVER_LOCKOUT_WHITELIST = True
+
+AXES_IP_WHITELIST = [
+    "cafe:face::/48",
+    "30.0.0.0/8"
+    ]
