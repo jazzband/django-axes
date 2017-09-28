@@ -579,7 +579,7 @@ class AccessAttemptConfigTest(TestCase):
     # Cache disabled. Default settings.
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
-    def test_non_lockout_from_whitelisted_ipv4(
+    def test_non_lockout_from_whitelisted_ipv6(
         self, cache_get_mock=None, cache_set_mock=None
     ):
         # User 1 will not be blocked from whitelisted ipv6.
