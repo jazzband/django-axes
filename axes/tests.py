@@ -564,10 +564,10 @@ class AccessAttemptConfigTest(TestCase):
     def test_non_lockout_from_whitelisted_ipv4(
         self, cache_get_mock=None, cache_set_mock=None
     ):
-        # User 1 is locked out from whitelisted IPv4.
+        # User 1 will not be blocked from whitelisted ipv4.
         self._lockout_user1_from_whitelisted_ipv4()
         
-        # User 1 is still blocked from whitelisted IPv4.
+        #  User 1 will not be blocked from whitelisted ipv4.
         response = self._login(
             self.USER_1,
             self.VALID_PASSWORD,
@@ -582,10 +582,10 @@ class AccessAttemptConfigTest(TestCase):
     def test_non_lockout_from_whitelisted_ipv4(
         self, cache_get_mock=None, cache_set_mock=None
     ):
-        # User 1 is locked out from whitelisted IPv4.
+        # User 1 will not be blocked from whitelisted ipv6.
         self._lockout_user1_from_whitelisted_ipv6()
         
-        # User 1 is still blocked from whitelisted IPv4.
+        # User 1 is not blocked from whitelisted ipv6
         response = self._login(
             self.USER_1,
             self.VALID_PASSWORD,
