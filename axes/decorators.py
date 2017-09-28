@@ -103,7 +103,7 @@ def log_decorated_call(func, args=None, kwargs=None):
 
 def is_ipv6(ip):
     try:
-        ipaddress.IPv6Network(ip)
+        ipaddress.IPv6Network(u(ip))
         return True
     except ipaddress.AddressValueError:
         return False
