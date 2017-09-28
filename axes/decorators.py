@@ -198,11 +198,11 @@ def ip_in_whitelist(ip):
 
     if is_ipv6(ip):
         for whitelisted_network in IP_WHITELIST:
-            if is_ipv6(whitelisted_network) and ipaddress.IPv6Address(ip) in ipaddress.IPv6Network(whitelisted_network):
+            if is_ipv6(bytes(whitelisted_network)) and ipaddress.IPv6Address(bytes(ip)) in ipaddress.IPv6Network(bytes(whitelisted_network)):
                 return True
     else:
         for whitelisted_network in IP_WHITELIST:
-            if not is_ipv6(whitelisted_network) and ipaddress.IPv4Address(ip) in ipaddress.IPv4Network(whitelisted_network):
+            if not is_ipv6(bytes(whitelisted_network)) and ipaddress.IPv4Address(bytes(ip)) in ipaddress.IPv4Network(bytes(whitelisted_network)):
                 return True
 
     return False
@@ -214,11 +214,11 @@ def ip_in_blacklist(ip):
 
     if is_ipv6(ip):
         for blacklisted_network in IP_BLACKLIST:
-            if is_ipv6(blacklisted_network) and ipaddress.IPv6Address(ip) in ipaddress.IPv6Network(blacklisted_network):
+            if is_ipv6(bytes(blacklisted_network)) and ipaddress.IPv6Address(bytes(ip)) in ipaddress.IPv6Network(bytes(blacklisted_network)):
                 return True
     else:
         for blacklisted_network in IP_BLACKLIST:
-            if not is_ipv6(blacklisted_network) and ipaddress.IPv4Address(ip) in ipaddress.IPv4Network(blacklisted_network):
+            if not is_ipv6(bytes(blacklisted_network)) and ipaddress.IPv4Address(bytes(ip)) in ipaddress.IPv4Network(bytes(blacklisted_network)):
                 return True
 
     return False
