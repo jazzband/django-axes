@@ -1,4 +1,6 @@
 Django
 sphinx-rtd-theme
 mock
+ipaddress
+six
 -e .
