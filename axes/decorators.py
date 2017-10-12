@@ -3,6 +3,7 @@ import logging
 from socket import inet_pton, AF_INET6, error
 from hashlib import md5
 
+from django import VERSION as DJANGO_VERSION
 from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
 from django.http import HttpResponse
@@ -40,6 +41,14 @@ if BEHIND_REVERSE_PROXY:
             NUM_PROXIES
         )
     )
+
+
+if DJANGO_VERSION < (1, 10):
+    def check_is_authenticated(user):
+        return user.is_authenticated()
+else:
+    def check_is_authenticated(user):
+        return user.is_authenticated
 
 
 def get_client_str(username, ip_address, user_agent=None, path_info=None):
@@ -534,7 +543,7 @@ def check_request(request, login_unsuccessful):
     if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
         # We log them out in case they actually managed to enter the correct
         # password
-        if hasattr(request, 'user') and request.user.is_authenticated():
+        if hasattr(request, 'user') and check_is_authenticated(request.user):
             logout(request)
 
         username = request.POST.get(USERNAME_FORM_FIELD, None)
