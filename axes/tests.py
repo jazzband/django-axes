@@ -946,7 +946,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        details = "{{user: {0!r}, ip: {1!r}, user-agent: {2!r}, path: {3!r}}}"
         expected = details.format(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
@@ -972,7 +972,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        details = "{{user: {0!r}, ip: {1!r}, user-agent: {2!r}, path: {3!r}}}"
         expected = details.format(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
@@ -999,7 +999,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        details = "{{user: {0!r}, ip: {1!r}, user-agent: {2!r}, path: {3!r}}}"
         expected = details.format(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
@@ -1013,7 +1013,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = '{0} from {1}'.format(username, ip)
+        expected = '{0!r} from {1!r}'.format(username, ip)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -1026,7 +1026,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        details = "{{user: {0!r}, ip: {1!r}, user-agent: {2!r}, path: {3!r}}}"
         expected = details.format(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
@@ -1040,7 +1040,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = ip + '(user-agent={0})'.format(user_agent)
+        expected = ip + '(user-agent={0!r})'.format(user_agent)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
