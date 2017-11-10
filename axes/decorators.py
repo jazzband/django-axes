@@ -87,7 +87,7 @@ def log_repeated_attempt(username, ip_address, user_agent, path_info,
 def log_lockout(username, ip_address, user_agent, path_info):
     client = get_client_str(username, ip_address, user_agent, path_info)
     msg = 'AXES: locked out {0} after repeated login attempts.'
-    log.warn(msg.format(client))
+    log.warning(msg.format(client))
 
 
 def log_decorated_call(func, args=None, kwargs=None):
