@@ -47,18 +47,18 @@ def get_client_str(username, ip_address, user_agent=None, path_info=None):
     if VERBOSE:
         if isinstance(path_info, tuple):
             path_info = path_info[0]
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
+        details = "{{user: {0!r}, ip: {1!r}, user-agent: {2!r}, path: {3!r}}}"
         return details.format(username, ip_address, user_agent, path_info)
 
     if AXES_ONLY_USER_FAILURES:
         client = username
     elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-        client = '{0} from {1}'.format(username, ip_address)
+        client = '{0!r} from {1!r}'.format(username, ip_address)
     else:
         client = ip_address
 
     if USE_USER_AGENT:
-        return client + '(user-agent={0})'.format(user_agent)
+        return client + '(user-agent={0!r})'.format(user_agent)
 
     return client
 
