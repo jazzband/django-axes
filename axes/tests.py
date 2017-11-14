@@ -16,8 +16,8 @@ from django.core.urlresolvers import reverse
 from django.utils import six
 from django.test.client import RequestFactory
 
+from axes.conf import settings
 from axes.decorators import get_ip, get_cache_key, get_client_str
-from axes.settings import settings
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset, iso8601

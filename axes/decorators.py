@@ -13,9 +13,9 @@ from django.utils import six
 from django.utils import timezone as datetime
 from django.core.cache import cache
 
+from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.models import AccessLog
-from axes.settings import settings
 from axes.signals import user_locked_out
 from axes.utils import iso8601
 import axes

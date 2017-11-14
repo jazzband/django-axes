@@ -5,8 +5,8 @@ from django.contrib.auth.signals import user_logged_out
 from django.db.models.signals import post_save, post_delete
 from django.core.cache import cache
 
+from axes.conf import settings
 from axes.models import AccessLog, AccessAttempt
-from axes.settings import settings
 
 
 user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
