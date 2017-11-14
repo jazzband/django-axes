@@ -9,6 +9,7 @@ from mock import patch
 
 from django.conf import settings
 from django.test import TestCase
+from django.test import override_settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.core.urlresolvers import reverse
@@ -16,7 +17,7 @@ from django.utils import six
 from django.test.client import RequestFactory
 
 from axes.decorators import get_ip, get_cache_key, get_client_str
-from axes.settings import FAILURE_LIMIT
+from axes.settings import settings
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset, iso8601
@@ -97,7 +98,7 @@ class AccessAttemptTest(TestCase):
         than failure limit
         """
         # test until one try before the limit
-        for i in range(1, FAILURE_LIMIT):
+        for i in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
@@ -111,14 +112,14 @@ class AccessAttemptTest(TestCase):
         """Tests the login lock trying to login a lot of times more
         than failure limit
         """
-        for i in range(1, FAILURE_LIMIT):
+        for i in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
 
         # So, we shouldn't have gotten a lock-out yet.
         # We should get a locked message each time we try again
-        for i in range(0, random.randrange(1, FAILURE_LIMIT)):
+        for i in range(0, random.randrange(1, settings.AXES_FAILURE_LIMIT)):
             response = self._login()
             self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
@@ -142,7 +143,7 @@ class AccessAttemptTest(TestCase):
         self.assertNotEquals(AccessLog.objects.latest('id').logout_time, None)
         self.assertContains(response, 'Logged out')
 
-    @patch('axes.decorators.COOLOFF_TIME', TEST_COOLOFF_TIME)
+    @override_settings(AXES_COOLOFF_TIME=TEST_COOLOFF_TIME)
     def test_cooling_off(self):
         """Tests if the cooling time allows a user to login
         """
@@ -154,7 +155,7 @@ class AccessAttemptTest(TestCase):
         # It should be possible to login again, make sure it is.
         self.test_valid_login()
 
-    @patch('axes.decorators.COOLOFF_TIME', TEST_COOLOFF_TIME)
+    @override_settings(AXES_COOLOFF_TIME=TEST_COOLOFF_TIME)
     def test_cooling_off_for_trusted_user(self):
         """Test the cooling time for a trusted user
         """
@@ -181,7 +182,7 @@ class AccessAttemptTest(TestCase):
         """Tests if can handle a long user agent with failure
         """
         long_user_agent = 'ie6' * 1024
-        for i in range(0, FAILURE_LIMIT + 1):
+        for i in range(0, settings.AXES_FAILURE_LIMIT + 1):
             response = self._login(user_agent=long_user_agent)
 
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
@@ -266,7 +267,7 @@ class AccessAttemptTest(TestCase):
         self.test_failure_limit_once()
         self.assertEquals(scope.signal_received, 2)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_combination_user_and_ip(self, cache_set_mock,
@@ -275,7 +276,7 @@ class AccessAttemptTest(TestCase):
         when AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True
         """
         # test until one try before the limit
-        for i in range(1, FAILURE_LIMIT):
+        for i in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login(
                 is_valid_username=True,
                 is_valid_password=False,
@@ -288,7 +289,7 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_valid_username=True, is_valid_password=False)
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_only(self, cache_set_mock, cache_get_mock):
@@ -296,7 +297,7 @@ class AccessAttemptTest(TestCase):
         when AXES_ONLY_USER_FAILURES is True
         """
         # test until one try before the limit
-        for i in range(1, FAILURE_LIMIT):
+        for i in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login(
                 is_valid_username=True,
                 is_valid_password=False,
@@ -319,7 +320,7 @@ class AccessAttemptTest(TestCase):
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
 
         # now create failure_limit + 1 failed logins and then we should still be able to login with valid_username
-        for i in range(1, FAILURE_LIMIT + 1):
+        for i in range(1, settings.AXES_FAILURE_LIMIT + 1):
             response = self._login(
                 is_valid_username=False,
                 is_valid_password=False,
@@ -349,7 +350,7 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(response.status_code, 403)
         self.assertEquals(response.get('Content-Type'), 'application/json')
 
-    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
     def test_valid_logout_without_success_log(self):
         AccessLog.objects.all().delete()
 
@@ -359,7 +360,7 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(AccessLog.objects.all().count(), 0)
         self.assertContains(response, 'Logged out')
 
-    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_non_valid_login_without_success_log(self, cache_set_mock,
@@ -375,7 +376,7 @@ class AccessAttemptTest(TestCase):
 
         self.assertEquals(AccessLog.objects.all().count(), 1)
 
-    @patch('axes.decorators.DISABLE_SUCCESS_ACCESS_LOG', True)
+    @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
     def test_valid_login_without_success_log(self):
         """
         A valid login doesn't generate an AccessLog when
@@ -388,7 +389,7 @@ class AccessAttemptTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(AccessLog.objects.all().count(), 0)
 
-    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_valid_logout_without_log(self):
         AccessLog.objects.all().delete()
 
@@ -398,7 +399,7 @@ class AccessAttemptTest(TestCase):
         self.assertEquals(AccessLog.objects.all().count(), 0)
         self.assertContains(response, 'Logged out')
 
-    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_non_valid_login_without_log(self, cache_set_mock, cache_get_mock):
@@ -413,7 +414,7 @@ class AccessAttemptTest(TestCase):
 
         self.assertEquals(AccessLog.objects.all().count(), 0)
 
-    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_valid_login_without_log(self):
         """
         A valid login doesn't generate an AccessLog when
@@ -426,7 +427,7 @@ class AccessAttemptTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(AccessLog.objects.all().count(), 0)
 
-    @patch('axes.decorators.DISABLE_ACCESS_LOG', True)
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_check_is_not_made_on_GET(self):
         AccessLog.objects.all().delete()
 
@@ -496,7 +497,7 @@ class AccessAttemptConfigTest(TestCase):
         return response
 
     def _lockout_user1_from_ip1(self):
-        for i in range(1, FAILURE_LIMIT+1):
+        for i in range(1, settings.AXES_FAILURE_LIMIT + 1):
             response = self._login(
                 username=self.USER_1,
                 password=self.WRONG_PASSWORD,
@@ -587,7 +588,7 @@ class AccessAttemptConfigTest(TestCase):
 
     # Test for true and false positives when blocking by user only.
     # Cache disabled. When AXES_ONLY_USER_FAILURES = True
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_blocks_when_same_user_same_ip_without_cache(
@@ -604,7 +605,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.BLOCKED)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_blocks_when_same_user_diff_ip_without_cache(
@@ -621,7 +622,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.BLOCKED)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_allows_when_diff_user_same_ip_without_cache(
@@ -638,7 +639,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_allows_when_diff_user_diff_ip_without_cache(
@@ -657,7 +658,7 @@ class AccessAttemptConfigTest(TestCase):
 
     # Test for true and false positives when blocking by user and IP together.
     # Cache disabled. When LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_and_ip_blocks_when_same_user_same_ip_without_cache(
@@ -674,7 +675,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.BLOCKED)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_and_ip_allows_when_same_user_diff_ip_without_cache(
@@ -691,7 +692,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_without_cache(
@@ -708,7 +709,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     @patch('axes.decorators.cache.set', return_value=None)
     @patch('axes.decorators.cache.get', return_value=None)
     def test_lockout_by_user_and_ip_allows_when_diff_user_diff_ip_without_cache(
@@ -785,7 +786,7 @@ class AccessAttemptConfigTest(TestCase):
 
     # Test for true and false positives when blocking by user only.
     # With cache enabled. When AXES_ONLY_USER_FAILURES = True
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_blocks_when_same_user_same_ip_using_cache(
         self, cache_get_mock=None, cache_set_mock=None
     ):
@@ -800,7 +801,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.BLOCKED)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_blocks_when_same_user_diff_ip_using_cache(
         self, cache_get_mock=None, cache_set_mock=None
     ):
@@ -815,7 +816,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.BLOCKED)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_allows_when_diff_user_same_ip_using_cache(
         self, cache_get_mock=None, cache_set_mock=None
     ):
@@ -830,7 +831,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_allows_when_diff_user_diff_ip_using_cache(
         self, cache_get_mock=None, cache_set_mock=None
     ):
@@ -847,7 +848,7 @@ class AccessAttemptConfigTest(TestCase):
 
     # Test for true and false positives when blocking by user and IP together.
     # With cache enabled. When LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_user_and_ip_blocks_when_same_user_same_ip_using_cache(
         self, cache_get_mock=None, cache_set_mock=None
     ):
@@ -862,7 +863,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.BLOCKED)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_user_and_ip_allows_when_same_user_diff_ip_using_cache(
         self, cache_get_mock=None, cache_set_mock=None
     ):
@@ -877,7 +878,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_using_cache(
         self, cache_get_mock=None, cache_set_mock=None
     ):
@@ -892,7 +893,7 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_user_and_ip_allows_when_diff_user_diff_ip_using_cache(
         self, cache_get_mock=None, cache_set_mock=None
     ):
@@ -939,7 +940,7 @@ class UtilsTest(TestCase):
         self.assertFalse(is_ipv6('67.255.125.204'))
         self.assertFalse(is_ipv6('foo'))
 
-    @patch('axes.decorators.VERBOSE', True)
+    @override_settings(AXES_VERBOSE=True)
     def test_verbose_ip_only_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -952,7 +953,7 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.VERBOSE', False)
+    @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_ip_only_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -964,8 +965,10 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
-    @patch('axes.decorators.VERBOSE', True)
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=True,
+        AXES_VERBOSE=True,
+    )
     def test_verbose_user_only_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -978,8 +981,10 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.AXES_ONLY_USER_FAILURES', True)
-    @patch('axes.decorators.VERBOSE', False)
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=True,
+        AXES_VERBOSE=False,
+    )
     def test_non_verbose_user_only_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -991,8 +996,10 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
-    @patch('axes.decorators.VERBOSE', True)
+    @override_settings(
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True,
+        AXES_VERBOSE=True,
+    )
     def test_verbose_user_ip_combo_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -1005,8 +1012,10 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.LOCK_OUT_BY_COMBINATION_USER_AND_IP', True)
-    @patch('axes.decorators.VERBOSE', False)
+    @override_settings(
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True,
+        AXES_VERBOSE=False,
+    )
     def test_non_verbose_user_ip_combo_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -1018,8 +1027,10 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.USE_USER_AGENT', True)
-    @patch('axes.decorators.VERBOSE', True)
+    @override_settings(
+        AXES_USE_USER_AGENT=True,
+        AXES_VERBOSE=True,
+    )
     def test_verbose_user_agent_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'
@@ -1032,8 +1043,10 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch('axes.decorators.USE_USER_AGENT', True)
-    @patch('axes.decorators.VERBOSE', False)
+    @override_settings(
+        AXES_USE_USER_AGENT=True,
+        AXES_VERBOSE=False,
+    )
     def test_non_verbose_user_agent_client_details(self):
         username = 'test@example.com'
         ip = '127.0.0.1'

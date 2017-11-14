@@ -6,12 +6,12 @@ from django.db.models.signals import post_save, post_delete
 from django.core.cache import cache
 
 from axes.models import AccessLog, AccessAttempt
-from axes.settings import DISABLE_ACCESS_LOG
+from axes.settings import settings
 
 
 user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 
-if not DISABLE_ACCESS_LOG:
+if not settings.AXES_DISABLE_ACCESS_LOG:
     @receiver(user_logged_out)
     def log_user_lockout(sender, request, user, signal, *args, **kwargs):
         """ When a user logs out, update the access log

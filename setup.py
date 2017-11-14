@@ -20,7 +20,7 @@ setup(
     url='https://github.com/django-pci/django-axes',
     license='MIT',
     package_dir={'axes': 'axes'},
-    install_requires=['pytz'],
+    install_requires=['pytz', 'django-appconf'],
     include_package_data=True,
     packages=find_packages(),
     classifiers=[
