@@ -9,10 +9,7 @@ env:
 install:
 - pip install -q $DJANGO django-appconf coveralls
 script:
-- coverage run -a --source=axes runtests.py
-- coverage run -a --source=axes runtests_proxy.py
-- coverage run -a --source=axes runtests_num_proxies.py
-- coverage run -a --source=axes runtests_proxy_custom_header.py
+- coverage run -a --source=axes ./manage.py test --settings axes.test_settings
 - coverage report
 after_success:
 - coveralls

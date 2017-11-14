@@ -1059,6 +1059,9 @@ class UtilsTest(TestCase):
         self.assertEqual(expected, actual)
 
 
+@override_settings(
+    AXES_BEHIND_REVERSE_PROXY=True,
+)
 class GetIPProxyTest(TestCase):
     """Test get_ip returns correct addresses with proxy
     """
@@ -1105,6 +1108,10 @@ class GetIPProxyTest(TestCase):
             self.assertEqual(self.ip, get_ip(self.request))
 
 
+@override_settings(
+    AXES_BEHIND_REVERSE_PROXY=True,
+    AXES_REVERSE_PROXY_HEADER='HTTP_X_AXES_CUSTOM_HEADER'
+)
 class GetIPProxyCustomHeaderTest(TestCase):
     """Test that get_ip returns correct addresses with a custom proxy header
     """
@@ -1123,6 +1130,11 @@ class GetIPProxyCustomHeaderTest(TestCase):
             self.assertEqual(self.ip, get_ip(self.request))
 
 
+@override_settings(
+    AXES_BEHIND_REVERSE_PROXY=True,
+    AXES_REVERSE_PROXY_HEADER='HTTP_X_FORWARDED_FOR',
+    AXES_NUM_PROXIES=2,
+)
 class GetIPNumProxiesTest(TestCase):
     """Test that get_ip returns the correct last IP when NUM_PROXIES is configured
     """
