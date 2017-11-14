@@ -25,6 +25,9 @@ setup(
         'django-appconf',
         'pytz',
     ],
+    test_requires=[
+        'mock',
+    ],
     include_package_data=True,
     packages=find_packages(),
     classifiers=[
