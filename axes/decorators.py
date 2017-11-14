@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import timedelta
 from socket import inet_pton, AF_INET6, error
 from hashlib import md5
 
@@ -12,52 +13,53 @@ from django.utils import six
 from django.utils import timezone as datetime
 from django.core.cache import cache
 
+from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.models import AccessLog
-from axes.settings import *
 from axes.signals import user_locked_out
 from axes.utils import iso8601
 import axes
 
-log = logging.getLogger(LOGGER)
-if VERBOSE:
+log = logging.getLogger(settings.AXES_LOGGER)
+if settings.AXES_VERBOSE:
     log.info('AXES: BEGIN LOG')
     log.info('AXES: Using django-axes ' + axes.get_version())
-    if AXES_ONLY_USER_FAILURES:
+    if settings.AXES_ONLY_USER_FAILURES:
         log.info('AXES: blocking by username only.')
-    elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+    elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
         log.info('AXES: blocking by combination of username and IP.')
     else:
         log.info('AXES: blocking by IP only.')
 
 
-if BEHIND_REVERSE_PROXY:
+if settings.AXES_BEHIND_REVERSE_PROXY:
     log.debug('AXES: Axes is configured to be behind reverse proxy')
-    log.debug('AXES: Looking for header value %s', REVERSE_PROXY_HEADER)
+    log.debug('AXES: Looking for header value %s',
+              settings.AXES_REVERSE_PROXY_HEADER)
     log.debug(
         'AXES: Number of proxies configured: {} '
         '(please check this if you are using a custom header)'.format(
-            NUM_PROXIES
+            settings.AXES_NUM_PROXIES
         )
     )
 
 
 def get_client_str(username, ip_address, user_agent=None, path_info=None):
 
-    if VERBOSE:
+    if settings.AXES_VERBOSE:
         if isinstance(path_info, tuple):
             path_info = path_info[0]
         details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
         return details.format(username, ip_address, user_agent, path_info)
 
-    if AXES_ONLY_USER_FAILURES:
+    if settings.AXES_ONLY_USER_FAILURES:
         client = username
-    elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+    elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
         client = '{0} from {1}'.format(username, ip_address)
     else:
         client = ip_address
 
-    if USE_USER_AGENT:
+    if settings.AXES_USE_USER_AGENT:
         return client + '(user-agent={0})'.format(user_agent)
 
     return client
@@ -80,7 +82,8 @@ def log_repeated_attempt(username, ip_address, user_agent, path_info,
                          fail_count):
     client = get_client_str(username, ip_address, user_agent, path_info)
     fail_msg = 'AXES: Repeated login failure by {0}. Updating access record.'
-    count_msg = 'Count = {0} of {1}'.format(fail_count, FAILURE_LIMIT)
+    count_msg = 'Count = {0} of {1}'.format(fail_count,
+                                            settings.AXES_FAILURE_LIMIT)
     log.info('{0} {1}'.format(fail_msg.format(client), count_msg))
 
 
@@ -110,7 +113,7 @@ def get_ip(request):
     """Parse IP address from REMOTE_ADDR or
     AXES_REVERSE_PROXY_HEADER if AXES_BEHIND_REVERSE_PROXY is set."""
 
-    if BEHIND_REVERSE_PROXY:
+    if settings.AXES_BEHIND_REVERSE_PROXY:
         # For requests originating from behind a reverse proxy,
         # resolve the IP address from the given AXES_REVERSE_PROXY_HEADER.
         # AXES_REVERSE_PROXY_HEADER defaults to HTTP_X_FORWARDED_FOR,
@@ -121,7 +124,7 @@ def get_ip(request):
         # The REVERSE_PROXY_HEADER HTTP header is a list
         # of potentionally unsecure IPs, for example:
         #   X-Forwarded-For: 1.1.1.1, 11.11.11.11:8080, 111.111.111.111
-        ip_str = request.META.get(REVERSE_PROXY_HEADER, '')
+        ip_str = request.META.get(settings.AXES_REVERSE_PROXY_HEADER, '')
 
         # We need to know the number of proxies present in the request chain
         # in order to securely calculate the one IP that is the real client IP.
@@ -138,8 +141,8 @@ def get_ip(request):
         ip_list = [ip.strip() for ip in ip_str.split(',')]
 
         # Pick the nth last IP in the given list of addresses after parsing
-        if len(ip_list) >= NUM_PROXIES:
-            ip = ip_list[-NUM_PROXIES]
+        if len(ip_list) >= settings.AXES_NUM_PROXIES:
+            ip = ip_list[-settings.AXES_NUM_PROXIES]
 
             # Fix IIS adding client port number to the
             # 'X-Forwarded-For' header (strip port)
@@ -155,7 +158,7 @@ def get_ip(request):
                 'AXES_REVERSE_PROXY_HEADER. Check your '
                 'AXES_NUM_PROXIES configuration. '
                 'Header name: {0}, value: {1}'.format(
-                    REVERSE_PROXY_HEADER, ip_str
+                    settings.AXES_REVERSE_PROXY_HEADER, ip_str
                 )
             )
 
@@ -167,7 +170,7 @@ def get_ip(request):
                 'sure correct headers are being passed to Django in '
                 'AXES_REVERSE_PROXY_HEADER. '
                 'Header name: {0}, value: {1}'.format(
-                    REVERSE_PROXY_HEADER, ip_str
+                    settings.AXES_REVERSE_PROXY_HEADER, ip_str
                 )
             )
 
@@ -186,20 +189,20 @@ def query2str(items, max_length=1024):
     """
     return '\n'.join([
         '%s=%s' % (k, v) for k, v in six.iteritems(items)
-        if k != PASSWORD_FORM_FIELD
+        if k != settings.AXES_PASSWORD_FORM_FIELD
     ][:int(max_length / 2)])[:max_length]
 
 
 def ip_in_whitelist(ip):
-    if IP_WHITELIST is not None:
-        return ip in IP_WHITELIST
+    if settings.AXES_IP_WHITELIST is not None:
+        return ip in settings.AXES_IP_WHITELIST
 
     return False
 
 
 def ip_in_blacklist(ip):
-    if IP_BLACKLIST is not None:
-        return ip in IP_BLACKLIST
+    if settings.AXES_IP_BLACKLIST is not None:
+        return ip in settings.AXES_IP_BLACKLIST
 
     return False
 
@@ -218,7 +221,7 @@ def is_user_lockable(request):
     try:
         field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
         kwargs = {
-            field: request.POST.get(USERNAME_FORM_FIELD)
+            field: request.POST.get(settings.AXES_USERNAME_FORM_FIELD)
         }
         user = get_user_model().objects.get(**kwargs)
 
@@ -240,11 +243,11 @@ def _get_user_attempts(request):
     Otherwise return None.
     """
     ip = get_ip(request)
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
-    if AXES_ONLY_USER_FAILURES:
+    if settings.AXES_ONLY_USER_FAILURES:
         attempts = AccessAttempt.objects.filter(username=username)
-    elif USE_USER_AGENT:
+    elif settings.AXES_USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
         attempts = AccessAttempt.objects.filter(
             user_agent=ua, ip_address=ip, username=username, trusted=True
@@ -257,15 +260,15 @@ def _get_user_attempts(request):
     if not attempts:
         params = {'trusted': False}
 
-        if AXES_ONLY_USER_FAILURES:
+        if settings.AXES_ONLY_USER_FAILURES:
             params['username'] = username
-        elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+        elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
             params['username'] = username
             params['ip_address'] = ip
         else:
             params['ip_address'] = ip
 
-        if USE_USER_AGENT:
+        if settings.AXES_USE_USER_AGENT:
             params['user_agent'] = ua
 
         attempts = AccessAttempt.objects.filter(**params)
@@ -279,9 +282,13 @@ def get_user_attempts(request):
     cache_hash_key = get_cache_key(request)
     cache_timeout = get_cache_timeout()
 
-    if COOLOFF_TIME:
+    cool_off = settings.AXES_COOLOFF_TIME
+    if cool_off:
+        if isinstance(cool_off, (int, float)):
+            cool_off = timedelta(hours=cool_off)
+
         for attempt in attempts:
-            if attempt.attempt_time + COOLOFF_TIME < datetime.now():
+            if attempt.attempt_time + cool_off < datetime.now():
                 if attempt.trusted:
                     attempt.failures_since_start = 0
                     attempt.save()
@@ -330,7 +337,7 @@ def watch_login(func):
 
     def decorated_login(request, *args, **kwargs):
         # share some useful information
-        if func.__name__ != 'decorated_login' and VERBOSE:
+        if func.__name__ != 'decorated_login' and settings.AXES_VERBOSE:
             log_decorated_call(func, args, kwargs)
 
         # TODO: create a class to hold the attempts records and perform checks
@@ -339,7 +346,7 @@ def watch_login(func):
         # also no need to keep accessing these:
         # ip = request.META.get('REMOTE_ADDR', '')
         # ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
-        # username = request.POST.get(USERNAME_FORM_FIELD, None)
+        # username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
         # if the request is currently under lockout, do not proceed to the
         # login function, go directly to lockout url, do not pass go, do not
@@ -368,11 +375,14 @@ def watch_login(func):
             user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
             http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
             path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-            if not DISABLE_ACCESS_LOG:
-                username = request.POST.get(USERNAME_FORM_FIELD, None)
+            if not settings.AXES_DISABLE_ACCESS_LOG:
+                username = request.POST.get(
+                    settings.AXES_USERNAME_FORM_FIELD, None
+                )
                 ip_address = get_ip(request)
 
-                if login_unsuccessful or not DISABLE_SUCCESS_ACCESS_LOG:
+                if (login_unsuccessful or
+                        not settings.AXES_DISABLE_SUCCESS_ACCESS_LOG):
                     AccessLog.objects.create(
                         user_agent=user_agent,
                         ip_address=ip_address,
@@ -381,7 +391,8 @@ def watch_login(func):
                         path_info=path_info,
                         trusted=not login_unsuccessful,
                     )
-                if not login_unsuccessful and not DISABLE_SUCCESS_ACCESS_LOG:
+                if (not login_unsuccessful and
+                        not settings.AXES_DISABLE_SUCCESS_ACCESS_LOG):
                     log_successful_attempt(username, ip_address,
                                            user_agent, path_info)
 
@@ -397,32 +408,34 @@ def watch_login(func):
 
 def lockout_response(request):
     context = {
-        'failure_limit': FAILURE_LIMIT,
-        'username': request.POST.get(USERNAME_FORM_FIELD, '')
+        'failure_limit': settings.AXES_FAILURE_LIMIT,
+        'username': request.POST.get(settings.AXES_USERNAME_FORM_FIELD, '')
     }
 
-    if request.is_ajax():
-        if COOLOFF_TIME:
-            context.update({'cooloff_time': iso8601(COOLOFF_TIME)})
+    cool_off = settings.AXES_COOLOFF_TIME
+    if cool_off:
+        if isinstance(cool_off, (int, float)):
+            cool_off = timedelta(hours=cool_off)
 
+        context.update({'cooloff_time': iso8601(cool_off)})
+
+    if request.is_ajax():
         return HttpResponse(
             json.dumps(context),
             content_type='application/json',
             status=403,
         )
 
-    elif LOCKOUT_TEMPLATE:
-        if COOLOFF_TIME:
-            context.update({'cooloff_time': iso8601(COOLOFF_TIME)})
+    elif settings.AXES_LOCKOUT_TEMPLATE:
+        return render(request, settings.AXES_LOCKOUT_TEMPLATE, context,
+                      status=403)
 
-        return render(request, LOCKOUT_TEMPLATE, context, status=403)
-
-    elif LOCKOUT_URL:
-        return HttpResponseRedirect(LOCKOUT_URL)
+    elif settings.AXES_LOCKOUT_URL:
+        return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
 
     else:
         msg = 'Account locked: too many login attempts. {0}'
-        if COOLOFF_TIME:
+        if settings.AXES_COOLOFF_TIME:
             msg = msg.format('Please try again later.')
         else:
             msg = msg.format('Contact an admin to unlock your account.')
@@ -433,10 +446,10 @@ def lockout_response(request):
 def is_already_locked(request):
     ip = get_ip(request)
 
-    if NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
+    if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
         return False
 
-    if ONLY_WHITELIST and not ip_in_whitelist(ip):
+    if settings.AXES_ONLY_WHITELIST and not ip_in_whitelist(ip):
         return True
 
     if ip_in_blacklist(ip):
@@ -448,11 +461,12 @@ def is_already_locked(request):
     cache_hash_key = get_cache_key(request)
     failures_cached = cache.get(cache_hash_key)
     if failures_cached is not None:
-        return failures_cached >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE
+        return (failures_cached >= settings.AXES_FAILURE_LIMIT and
+                settings.AXES_LOCK_OUT_AT_FAILURE)
     else:
         for attempt in get_user_attempts(request):
-            if attempt.failures_since_start >= FAILURE_LIMIT and \
-                    LOCK_OUT_AT_FAILURE:
+            if (attempt.failures_since_start >= settings.AXES_FAILURE_LIMIT and
+                    settings.AXES_LOCK_OUT_AT_FAILURE):
                 return True
 
     return False
@@ -460,7 +474,7 @@ def is_already_locked(request):
 
 def check_request(request, login_unsuccessful):
     ip_address = get_ip(request)
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     failures = 0
@@ -525,19 +539,20 @@ def check_request(request, login_unsuccessful):
         if trusted_record_exists is False:
             create_new_trusted_record(request)
 
-    if NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
+    if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
         return True
 
     user_lockable = is_user_lockable(request)
     # no matter what, we want to lock them out if they're past the number of
     # attempts allowed, unless the user is set to notlockable
-    if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
+    if (failures >= settings.AXES_FAILURE_LIMIT and
+            settings.AXES_LOCK_OUT_AT_FAILURE and user_lockable):
         # We log them out in case they actually managed to enter the correct
         # password
         if hasattr(request, 'user') and request.user.is_authenticated():
             logout(request)
 
-        username = request.POST.get(USERNAME_FORM_FIELD, None)
+        username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
         log_lockout(username, ip_address, user_agent, path_info)
 
         # send signal when someone is locked out.
@@ -558,7 +573,7 @@ def check_request(request, login_unsuccessful):
 def create_new_failure_records(request, failures):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
     path_info = request.META.get('PATH_INFO', '<unknown>'),
 
     # Record failed attempt. Whether or not the IP address or user agent is
@@ -575,14 +590,14 @@ def create_new_failure_records(request, failures):
         failures_since_start=failures,
     )
 
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
     log_initial_attempt(username, ip, ua, path_info)
 
 
 def create_new_trusted_record(request):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get(USERNAME_FORM_FIELD, None)
+    username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
     if not username:
         return False
@@ -612,21 +627,22 @@ def get_cache_key(request_or_object):
         ua = request_or_object.user_agent
     else:
         ip = get_ip(request_or_object)
-        un = request_or_object.POST.get(USERNAME_FORM_FIELD, None)
+        un = request_or_object.POST.get(settings.AXES_USERNAME_FORM_FIELD,
+                                        None)
         ua = request_or_object.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
     ip = ip.encode('utf-8') if ip else ''.encode('utf-8')
     un = un.encode('utf-8') if un else ''.encode('utf-8')
     ua = ua.encode('utf-8') if ua else ''.encode('utf-8')
 
-    if AXES_ONLY_USER_FAILURES:
+    if settings.AXES_ONLY_USER_FAILURES:
         attributes = un
-    elif LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+    elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
         attributes = ip+un
     else:
         attributes = ip
 
-    if USE_USER_AGENT:
+    if settings.AXES_USE_USER_AGENT:
         attributes += ua
 
     cache_hash_key = 'axes-{}'.format(md5(attributes).hexdigest())
@@ -637,6 +653,10 @@ def get_cache_key(request_or_object):
 def get_cache_timeout():
     "Returns timeout according to COOLOFF_TIME."
     cache_timeout = None
-    if COOLOFF_TIME:
-        cache_timeout = COOLOFF_TIME.total_seconds()
+    cool_off = settings.AXES_COOLOFF_TIME
+    if cool_off:
+        if isinstance(cool_off, (int, float)):
+            cache_timeout = timedelta(hours=cool_off).total_seconds()
+        else:
+            cache_timeout = cool_off.total_seconds()
     return cache_timeout
