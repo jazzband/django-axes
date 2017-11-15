@@ -559,7 +559,7 @@ def create_new_failure_records(request, failures):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     username = request.POST.get(USERNAME_FORM_FIELD, None)
-    path_info = request.META.get('PATH_INFO', '<unknown>'),
+    path_info = request.META.get('PATH_INFO', '<unknown>')
 
     # Record failed attempt. Whether or not the IP address or user agent is
     # used in counting failures is handled elsewhere, so we just record
