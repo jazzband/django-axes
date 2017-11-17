@@ -108,7 +108,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
         settings.AXES_LOCK_OUT_AT_FAILURE and
         is_user_lockable(request)
     ):
-        log.warn('AXES: locked out {0} after repeated login attempts.'.format(
+        log.warning('AXES: locked out {0} after repeated login attempts.'.format(
             get_client_str(username, ip_address, user_agent, path_info)
         ))
 
