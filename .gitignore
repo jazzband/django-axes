@@ -1,9 +1,11 @@
-django_axes.egg-info
+*.egg-info
 *.pyc
-build
-dist
-.hg
+.coverage
 .DS_Store
+.project
+.pydevproject
+.tox
+build/
+dist/
 docs/_build
-.tox/
-tox.ini
+test.db

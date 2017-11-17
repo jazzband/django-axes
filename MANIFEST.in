@@ -1,4 +1,3 @@
 include LICENSE README.rst CHANGES.txt
 recursive-include axes *.py
 include .travis.yml
-include Makefile

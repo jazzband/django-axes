@@ -1,18 +1,19 @@
+sudo: false
 language: python
+cache: pip
 python:
-- 2.7
-- 3.5
-env:
-- DJANGO="Django>=1.8,<1.9"
-- DJANGO="Django>=1.9,<1.10"
-- DJANGO="Django>=1.10,<1.11"
-install:
-- pip install -q $DJANGO coveralls
-script:
-- coverage run -a --source=axes runtests.py
-- coverage run -a --source=axes runtests_proxy.py
-- coverage run -a --source=axes runtests_num_proxies.py
-- coverage run -a --source=axes runtests_proxy_custom_header.py
-- coverage report
+  - 3.6
+install: pip install tox-travis
+script: tox
 after_success:
 - coveralls
+deploy:
+  provider: pypi
+  user: jazzband
+  distributions: "sdist bdist_wheel"
+  password:
+    secure: VD+63Tnv0VYNfFQv9f1KZ0k79HSX8veNk4dTy42Hriteci50z5uSQdZMnqqD83xQJa4VF6N7DHkxHnBVOWLCqGQZeYqR/5BuDFNUewcr6O14dk31HvxMsWDaN1KW0Qwtus8ZrztwGhZtZ/92ODA6luHI4mCTzqX0gcG0/aKd75s=
+  on:
+    tags: true
+    repo: jazzband/django-axes
+    python: 3.6
