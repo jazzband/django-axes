@@ -1,6 +1,19 @@
 Changes
 =======
 
+3.0.1 (2017-11-17)
+------------------
+
+- Fix DeprecationWarning for logger warning
+  [richardowen]
+
+- Fixes global lockout possibility
+  [joeribekker]
+
+- Changed the way output is handled in the management commands
+  [ataylor32]
+
+
 3.0.0 (2017-11-17)
 ------------------
 
