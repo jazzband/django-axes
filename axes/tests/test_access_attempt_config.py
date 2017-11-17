@@ -51,14 +51,20 @@ class AccessAttemptConfigTest(TestCase):
         )
         return response
 
-    def _lockout_user1_from_ip1(self):
+    def _lockout_user_from_ip(self, username, ip_addr):
         for i in range(1, settings.AXES_FAILURE_LIMIT + 1):
             response = self._login(
-                username=self.USER_1,
+                username=username,
                 password=self.WRONG_PASSWORD,
-                ip_addr=self.IP_1
+                ip_addr=ip_addr,
             )
         return response
+
+    def _lockout_user1_from_ip1(self):
+        return self._lockout_user_from_ip(
+            username=self.USER_1,
+            ip_addr=self.IP_1,
+        )
 
     def setUp(self):
         """Create two valid users for authentication.
@@ -178,6 +184,17 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.ALLOWED)
 
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    def test_lockout_by_user_with_empty_username_allows_other_users_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User with empty username is locked out from IP 1.
+        self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
+
+        # Still possible to access the login page
+        response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200)
+
     # Test for true and false positives when blocking by user and IP together.
     # Cache disabled. When LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
@@ -232,6 +249,17 @@ class AccessAttemptConfigTest(TestCase):
         )
         self.assertEqual(response.status_code, self.ALLOWED)
 
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_without_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User with empty username is locked out from IP 1.
+        self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
+
+        # Still possible to access the login page
+        response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200)
+
     # Test for true and false positives when blocking by IP *OR* user (default)
     # With cache enabled. Default criteria.
     def test_lockout_by_ip_blocks_when_same_user_same_ip_using_cache(self):
@@ -281,6 +309,17 @@ class AccessAttemptConfigTest(TestCase):
             ip_addr=self.IP_2
         )
         self.assertEqual(response.status_code, self.ALLOWED)
+
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    def test_lockout_by_user_with_empty_username_allows_other_users_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User with empty username is locked out from IP 1.
+        self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
+
+        # Still possible to access the login page
+        response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200)
 
     # Test for true and false positives when blocking by user only.
     # With cache enabled. When AXES_ONLY_USER_FAILURES = True
@@ -389,3 +428,14 @@ class AccessAttemptConfigTest(TestCase):
             ip_addr=self.IP_2
         )
         self.assertEqual(response.status_code, self.ALLOWED)
+
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_using_cache(
+        self, cache_get_mock=None, cache_set_mock=None
+    ):
+        # User with empty username is locked out from IP 1.
+        self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
+
+        # Still possible to access the login page
+        response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200)

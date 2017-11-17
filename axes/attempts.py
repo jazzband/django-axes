@@ -177,6 +177,12 @@ def is_user_lockable(request):
 def is_already_locked(request):
     ip = get_ip(request)
 
+    if (
+        settings.AXES_ONLY_USER_FAILURES or
+        settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP
+    ) and request.method == 'GET':
+        return False
+
     if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
         return False
 
