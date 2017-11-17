@@ -1,4 +1,4 @@
-Django
+Django>=1.8,<1.11
 sphinx-rtd-theme
 mock
 -e .

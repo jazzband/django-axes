@@ -433,6 +433,9 @@ def lockout_response(request):
 def is_already_locked(request):
     ip = get_ip(request)
 
+    if (AXES_ONLY_USER_FAILURES or LOCK_OUT_BY_COMBINATION_USER_AND_IP) and request.method == 'GET':
+        return False
+
     if NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
         return False
 
