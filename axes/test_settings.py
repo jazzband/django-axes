@@ -13,7 +13,7 @@ CACHES = {
 
 SITE_ID = 1
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -28,8 +28,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.admin',
-
-    'axes.apps.AppConfig',
+    'axes',
 )
 
 TEMPLATES = [
