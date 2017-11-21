@@ -1,4 +1,5 @@
 from datetime import timedelta
+from functools import wraps
 import json
 import logging
 
@@ -10,7 +11,6 @@ from axes import get_version
 from axes.conf import settings
 from axes.attempts import is_already_locked
 from axes.utils import iso8601
-from axes.signals import *      # load all signals
 
 
 log = logging.getLogger(settings.AXES_LOGGER)
@@ -38,16 +38,23 @@ if settings.AXES_BEHIND_REVERSE_PROXY:
     )
 
 
-def watch_login(func):
+def axes_dispatch(func):
     def inner(request, *args, **kwargs):
-        # If the request is currently under lockout, do not proceed to the
-        # login function, go directly to lockout url, do not pass go, do not
-        # collect messages about this login attempt
         if is_already_locked(request):
             return lockout_response(request)
 
-        # call the login function
         return func(request, *args, **kwargs)
+
+    return inner
+
+
+def axes_form_invalid(func):
+    @wraps(func)
+    def inner(self, *args, **kwargs):
+        if is_already_locked(self.request):
+            return lockout_response(self.request)
+
+        return func(self, *args, **kwargs)
 
     return inner
 

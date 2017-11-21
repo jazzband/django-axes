@@ -8,6 +8,9 @@ class AppConfig(apps.AppConfig):
         from django.contrib.auth.views import LoginView
         from django.utils.decorators import method_decorator
 
-        from axes.decorators import watch_login
+        from axes import signals    # we must load signals
+        from axes.decorators import axes_dispatch
+        from axes.decorators import axes_form_invalid
 
-        LoginView.dispatch = method_decorator(watch_login)(LoginView.dispatch)
+        LoginView.dispatch = method_decorator(axes_dispatch)(LoginView.dispatch)
+        LoginView.form_invalid = method_decorator(axes_form_invalid)(LoginView.form_invalid)

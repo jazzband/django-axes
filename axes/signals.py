@@ -40,7 +40,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
         return
 
-    failures = 1
+    failures = 0
     attempts = get_user_attempts(request)
     cache_hash_key = get_cache_key(request)
     cache_timeout = get_cache_timeout()
