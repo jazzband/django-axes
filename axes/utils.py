@@ -132,7 +132,8 @@ def reset(ip=None, username=None):
 
     if attempts:
         count = attempts.count()
-        from axes.decorators import get_cache_key
+        # import should be here to avoid circular dependency with get_ip
+        from axes.attempts import get_cache_key
         for attempt in attempts:
             cache_hash_key = get_cache_key(attempt)
             if cache.get(cache_hash_key):
