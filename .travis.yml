@@ -2,20 +2,20 @@ sudo: false
 language: python
 cache: pip
 python:
-  - 3.5
-  - 3.6
+- 3.5
+- 3.6
 install: pip install tox-travis
 script: tox
 after_success:
 - coveralls
-
 deploy:
   provider: pypi
   user: jazzband
   server: https://jazzband.co/projects/django-axes/upload
   distributions: sdist bdist_wheel
   password:
-    secure: BZlzJyqEbo1nofxEqeE12EyIcM6ldJL40yDRo62qk1dBirUV+eJQN3kTJtKTqVgTMRalQJKqMZgbhWtvxo2wsuBx+JW3LlfjYuY/fNzj/+5x7Tq/NEy4HyBj4RdWdincmdvQ0n4ixar6cDr79KjHUzC9Db3psbTRE6+Vw0EJTM4=
+    secure: TCH5tGIggL2wsWce2svMwpEpPiwVOYqq1R3uSBTexszleP0OafNq/wZk2KZEReR5w1Aq68qp5F5Eeh2ZjJTq4f9M4LtTvqQzrmyNP55DYk/uB1rBJm9b4gBgMtAknxdI2g7unkhQEDo4suuPCVofM7rrDughySNpmvlUQYDttHQ=
   on:
     tags: true
     repo: jazzband/django-axes
+    python: 3.6
