@@ -17,7 +17,7 @@ setup(
     author_email='codekoala@gmail.com',
     maintainer='Alex Clark',
     maintainer_email='aclark@aclark.net',
-    url='https://github.com/django-pci/django-axes',
+    url='https://github.com/jazzband/django-axes',
     license='MIT',
     package_dir={'axes': 'axes'},
     install_requires=['pytz', 'django-appconf'],
