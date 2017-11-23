@@ -1,4 +1,3 @@
-from unittest.mock import patch
 import datetime
 import hashlib
 import json
@@ -15,6 +14,7 @@ from axes.conf import settings
 from axes.attempts import get_cache_key
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
+from axes.tests.compatibility import patch
 from axes.utils import reset
 
 
