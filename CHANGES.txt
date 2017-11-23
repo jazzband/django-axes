@@ -1,6 +1,16 @@
 Changes
 =======
 
+3.0.3 (2017-11-23)
+------------------
+
+- Test against Python 2.7.
+  [mbaechtold]
+
+- Test against Python 3.4.
+  [pope1ni]
+
+
 3.0.2 (2017-11-21)
 ------------------
 
