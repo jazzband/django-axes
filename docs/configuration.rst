@@ -25,7 +25,7 @@ Customizing Axes
 You have a couple options available to you to customize ``django-axes`` a bit.
 These should be defined in your ``settings.py`` file.
 
-* ``AXES_LOGIN_FAILURE_LIMIT``: The number of login attempts allowed before a
+* ``AXES_FAILURE_LIMIT``: The number of login attempts allowed before a
   record is created for the failed logins.  Default: ``3``
 * ``AXES_LOCK_OUT_AT_FAILURE``: After the number of allowed login attempts
   are exceeded, should we lock out this IP (and optional user agent)?
