@@ -12,14 +12,13 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 2 
+   :maxdepth: 2
 
    installation
    configuration
    usage
    requirements
    development
-   issues
    captcha
 
 Indices and tables
