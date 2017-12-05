@@ -32,7 +32,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     """ Create an AccessAttempt record if the login wasn't successful
     """
     if request is None or 'username' not in credentials:
-        log.info('Attempt to authenticate with a custom backend failed.')
+        log.error('Attempt to authenticate with a custom backend failed.')
         return
 
     ip_address = get_ip(request)
