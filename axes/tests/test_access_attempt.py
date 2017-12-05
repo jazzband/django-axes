@@ -7,6 +7,7 @@ import time
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.test.client import RequestFactory
 
@@ -379,3 +380,12 @@ class AccessAttemptTest(TestCase):
 
         response = self.client.get(reverse('admin:index'))
         self.assertEqual(response.status_code, 200)
+
+    def test_custom_authentication_backend(self):
+        '''
+        ``log_user_login_failed`` should shortcircuit if an attempt to authenticate
+        with a custom authentication backend fails.
+        '''
+        authenticate(foo='bar')
+
+        self.assertEqual(AccessLog.objects.all().count(), 0)
