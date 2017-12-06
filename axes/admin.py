@@ -16,7 +16,6 @@ class AccessAttemptAdmin(admin.ModelAdmin):
 
     list_filter = [
         'attempt_time',
-        'username',
         'path_info',
     ]
 
@@ -73,7 +72,6 @@ class AccessLogAdmin(admin.ModelAdmin):
     list_filter = [
         'attempt_time',
         'logout_time',
-        'username',
         'path_info',
     ]
 
