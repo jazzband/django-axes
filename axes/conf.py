@@ -55,3 +55,5 @@ class MyAppConf(AppConf):
     IP_WHITELIST = None
 
     IP_BLACKLIST = None
+
+    USE_LEGACY_LOGIN_VIEW_PATCH = True
