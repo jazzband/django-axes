@@ -25,19 +25,6 @@ if settings.AXES_VERBOSE:
         log.info('AXES: blocking by IP only.')
 
 
-if settings.AXES_BEHIND_REVERSE_PROXY:
-    log.debug('AXES: Axes is configured to be behind reverse proxy')
-    log.debug(
-        'AXES: Looking for header value %s', settings.AXES_REVERSE_PROXY_HEADER
-    )
-    log.debug(
-        'AXES: Number of proxies configured: {} '
-        '(please check this if you are using a custom header)'.format(
-            settings.AXES_NUM_PROXIES
-        )
-    )
-
-
 def axes_dispatch(func):
     def inner(request, *args, **kwargs):
         if is_already_locked(request):

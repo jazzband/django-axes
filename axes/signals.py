@@ -9,6 +9,8 @@ from django.dispatch import receiver
 from django.dispatch import Signal
 from django.utils import timezone
 
+from ipware.ip import get_ip
+
 from axes.conf import settings
 from axes.attempts import get_cache_key
 from axes.attempts import get_cache_timeout
@@ -17,7 +19,6 @@ from axes.attempts import is_user_lockable
 from axes.attempts import ip_in_whitelist
 from axes.models import AccessLog, AccessAttempt
 from axes.utils import get_client_str
-from axes.utils import get_ip
 from axes.utils import query2str
 
 
