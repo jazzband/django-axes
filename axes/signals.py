@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth.signals import user_login_failed
@@ -27,16 +28,26 @@ log = logging.getLogger(settings.AXES_LOGGER)
 user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 
 
+def get_username_field():
+    try:
+        username_field = get_user_model().USERNAME_FIELD
+    except:
+        username_field = 'username'
+
+    return username_field
+
+
 @receiver(user_login_failed)
 def log_user_login_failed(sender, credentials, request, **kwargs):
     """ Create an AccessAttempt record if the login wasn't successful
     """
-    if request is None or 'username' not in credentials:
+    username_field = get_username_field()
+    if request is None or username_field not in credentials:
         log.error('Attempt to authenticate with a custom backend failed.')
         return
 
     ip_address = get_ip(request)
-    username = credentials['username']
+    username = credentials[username_field]
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
