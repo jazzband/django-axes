@@ -1,6 +1,28 @@
 Changes
 =======
 
+4.0.0 (2017-12-18)
+------------------
+
+- *BREAKING CHANGES*. `AXES_BEHIND_REVERSE_PROXY` `AXES_REVERSE_PROXY_HEADER`
+  `AXES_NUM_PROXIES` were removed in order to use `django-ipware` to get
+  the user ip address
+  [camilonova]
+
+- Added support for custom username field
+  [kakulukia]
+
+- Customizing Axes doc updated
+  [pckapps]
+
+- Remove filtering by username
+  [camilonova]
+
+- Fixed logging failed attempts to authenticate using a custom authentication
+  backend.
+  [D3X]
+
+
 3.0.3 (2017-11-23)
 ------------------
 
