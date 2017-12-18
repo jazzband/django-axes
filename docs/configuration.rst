@@ -49,6 +49,8 @@ These should be defined in your ``settings.py`` file.
   Default: ``True``
 * ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
   users usernames. Default: ``username``
+* ``AXES_PASSWORD_FORM_FIELD``: the name of the form field that contains your
+  users password. Default: ``password``
 * ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True`` prevents the login
   from IP under a particular user if the attempt limit has been exceeded,
   otherwise lock out based on IP.
@@ -64,5 +66,5 @@ These should be defined in your ``settings.py`` file.
 * ``AXES_REVERSE_PROXY_HEADER``: If ``AXES_BEHIND_REVERSE_PROXY`` is ``True``, it will look for the IP address from this header.
   Default: ``HTTP_X_FORWARDED_FOR``
 * ``AXES_NUM_PROXIES``: If ``AXES_BEHIND_REVERSE_PROXY`` is ``True``, use this value to calculate the end user IP address from the end of the list of IPs in header ``AXES_REVERSE_PROXY_HEADER``. For example, if you have one (1) proxy configured and set ``AXES_NUM_PROXIES = 1`` we, choose IP ``[ip.strip() for ip in request.META.get(AXES_REVERSE_PROXY_HEADER).split(',')][-1]``. For ``X-Forwarded-For: a, b, client-ip`` this would pick the value ``client-ip``. This configuration is used to prevent ``X-Forwarded-For`` (XFF) header spoofing or injection by the end user, because the ``X-Forwarded-For`` headers can be added to the request by the end user, circumventing the IP locking mechanisms in Axes. If you are running with Apache, nginx, or Elastic Load Balancer, you should set this to ``1``. It is by default configured to ``0`` for backwards compatibility. Default: ``0``
-* ``AXES_DISABLE_ACCESS_LOG``: If ``True``, disable all access logging, so the admin interface will be empty.
-* ``AXES_DISABLE_SUCCESS_ACCESS_LOG``: If ``True``, successful logins will not be logged, so the access log shown in the admin interface will only list unsuccessful login attempts.
+* ``AXES_DISABLE_ACCESS_LOG``: If ``True``, disable all access logging, so the admin interface will be empty. Default: ``False``
+* ``AXES_DISABLE_SUCCESS_ACCESS_LOG``: If ``True``, successful logins will not be logged, so the access log shown in the admin interface will only list unsuccessful login attempts. Default: ``False``
