@@ -5,9 +5,10 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.utils import timezone
 
+from ipware.ip import get_ip
+
 from axes.conf import settings
 from axes.models import AccessAttempt
-from axes.utils import get_ip
 
 
 def _query_user_attempts(request):

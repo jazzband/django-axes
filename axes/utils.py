@@ -3,6 +3,7 @@ from socket import inet_pton, AF_INET6, error
 from django.core.cache import cache
 from django.utils import six
 
+from axes.attempts import get_cache_key
 from axes.conf import settings
 from axes.models import AccessAttempt
 
@@ -49,75 +50,6 @@ def is_ipv6(ip):
     return True
 
 
-def get_ip(request):
-    """Parse IP address from REMOTE_ADDR or
-    AXES_REVERSE_PROXY_HEADER if AXES_BEHIND_REVERSE_PROXY is set."""
-    if settings.AXES_BEHIND_REVERSE_PROXY:
-        # For requests originating from behind a reverse proxy,
-        # resolve the IP address from the given AXES_REVERSE_PROXY_HEADER.
-        # AXES_REVERSE_PROXY_HEADER defaults to HTTP_X_FORWARDED_FOR,
-        # which is the Django name for the HTTP X-Forwarder-For header.
-        # Please see RFC7239 for additional information:
-        #   https://tools.ietf.org/html/rfc7239#section-5
-
-        # The REVERSE_PROXY_HEADER HTTP header is a list
-        # of potentionally unsecure IPs, for example:
-        #   X-Forwarded-For: 1.1.1.1, 11.11.11.11:8080, 111.111.111.111
-        ip_str = request.META.get(settings.AXES_REVERSE_PROXY_HEADER, '')
-
-        # We need to know the number of proxies present in the request chain
-        # in order to securely calculate the one IP that is the real client IP.
-        #
-        # This is because IP headers can have multiple IPs in different
-        # configurations, with e.g. the X-Forwarded-For header containing
-        # the originating client IP, proxies and possibly spoofed values.
-        #
-        # If you are using a special header for client calculation such as the
-        # X-Real-IP or the like with nginx, please check this configuration.
-        #
-        # Please see discussion for more information:
-        #   https://github.com/jazzband/django-axes/issues/224
-        ip_list = [ip.strip() for ip in ip_str.split(',')]
-
-        # Pick the nth last IP in the given list of addresses after parsing
-        if len(ip_list) >= settings.AXES_NUM_PROXIES:
-            ip = ip_list[-settings.AXES_NUM_PROXIES]
-
-            # Fix IIS adding client port number to the
-            # 'X-Forwarded-For' header (strip port)
-            if not is_ipv6(ip):
-                ip = ip.split(':', 1)[0]
-
-        # If nth last is not found, default to no IP and raise a warning
-        else:
-            ip = ''
-            raise Warning(
-                'AXES: Axes is configured for operation behind a '
-                'reverse proxy but received too few IPs in the HTTP '
-                'AXES_REVERSE_PROXY_HEADER. Check your '
-                'AXES_NUM_PROXIES configuration. '
-                'Header name: {0}, value: {1}'.format(
-                    settings.AXES_REVERSE_PROXY_HEADER, ip_str
-                )
-            )
-
-        if not ip:
-            raise Warning(
-                'AXES: Axes is configured for operation behind a reverse '
-                'proxy but could not find a suitable IP in the specified '
-                'HTTP header. Check your proxy server settings to make '
-                'sure correct headers are being passed to Django in '
-                'AXES_REVERSE_PROXY_HEADER. '
-                'Header name: {0}, value: {1}'.format(
-                    settings.AXES_REVERSE_PROXY_HEADER, ip_str
-                )
-            )
-
-        return ip
-
-    return request.META.get('REMOTE_ADDR', '')
-
-
 def reset(ip=None, username=None):
     """Reset records that match ip or username, and
     return the count of removed attempts.
@@ -132,8 +64,6 @@ def reset(ip=None, username=None):
 
     if attempts:
         count = attempts.count()
-        # import should be here to avoid circular dependency with get_ip
-        from axes.attempts import get_cache_key
         for attempt in attempts:
             cache_hash_key = get_cache_key(attempt)
             if cache.get(cache_hash_key):
