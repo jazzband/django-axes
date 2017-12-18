@@ -1,17 +1,9 @@
 from django.conf import settings
+
 from appconf import AppConf
 
 
 class MyAppConf(AppConf):
-    # see if the django app is sitting behind a reverse proxy
-    BEHIND_REVERSE_PROXY = False
-
-    # if we are behind a proxy, we need to know how many proxies there are
-    NUM_PROXIES = 0
-
-    # behind a reverse proxy, look for the ip address using this value
-    REVERSE_PROXY_HEADER = 'HTTP_X_FORWARDED_FOR'
-
     # see if the user has overridden the failure limit
     FAILURE_LIMIT = 3
 
