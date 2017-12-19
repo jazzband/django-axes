@@ -33,13 +33,12 @@ user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 def log_user_login_failed(sender, credentials, request, **kwargs):
     """ Create an AccessAttempt record if the login wasn't successful
     """
-    username_field = get_user_model().USERNAME_FIELD
-    if request is None or username_field not in credentials:
+    if request is None or settings.AXES_USERNAME_FORM_FIELD not in credentials:
         log.error('Attempt to authenticate with a custom backend failed.')
         return
 
     ip_address = get_ip(request)
-    username = credentials[username_field]
+    username = credentials[settings.AXES_USERNAME_FORM_FIELD]
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
