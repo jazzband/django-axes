@@ -1,6 +1,13 @@
 Changes
 =======
 
+4.0.1 (2017-12-19)
+------------------
+
+- Fixes issue when not using `AXES_USERNAME_FORM_FIELD`
+  [camilonova]
+
+
 4.0.0 (2017-12-18)
 ------------------
 
