@@ -1,4 +1,10 @@
-from socket import inet_pton, AF_INET6, error
+from platform import python_version
+from sys import platform
+if python_version() < '3.4' and platform == 'win32':
+    from win_inet_pton import inet_pton
+else:
+    from socket import inet_pton
+from socket import AF_INET6, error
 
 from django.core.cache import cache
 from django.utils import six
