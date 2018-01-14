@@ -120,3 +120,56 @@ them as per the example.
     urlpatterns = [
         path('login/', Login.as_view(), name='login'),
     ]
+
+Integration with django-allauth
+-------------------------------
+
+``axes`` rely on having login id stored under ``AXES_USERNAME_FORM_FIELD`` key
+both in ``request.POST`` and in ``credentials`` dict passed to 
+``user_login_failed`` signal. This is not the case with ``allauth``. 
+They allways use ``login`` key in post POST data but it becomes ``username``
+key in ``credentials`` dict in signal handler.
+
+To overcome this you need to use custom login form that duplicates the value
+of ``username`` key under a ``login`` key in that dict 
+(and set ``AXES_USERNAME_FORM_FIELD = 'login'``).
+
+You also need to decorate ``dispatch()`` and ``form_invalid()`` methods 
+of ``allauth``'s login view. By default ``axes`` is patching only the 
+``LoginView`` from ``django.contrib.auth`` app - with ``allauth`` you have to
+do it yourself.
+
+*settings.py:*::
+    
+    AXES_USERNAME_FORM_FIELD = 'login'
+
+*forms.py:*::
+
+    from allauth.account.forms import LoginForm
+
+    class AllauthCompatLoginForm(LoginForm):
+        def user_credentials(self):
+            credentials = super(AllauthCompatLoginForm, self).user_credentials()
+            credentials['login'] = credentials.get('email') or credentials.get('username')
+            return credentials
+
+*urls.py:*::
+
+    from allauth.account.views import LoginView
+    from axes.decorators import axes_dispatch
+    from axes.decorators import axes_form_invalid
+    from django.utils.decorators import method_decorator
+
+    from my_app.forms import AllauthCompatLoginForm
+
+    LoginView.dispatch = method_decorator(axes_dispatch)(LoginView.dispatch)
+    LoginView.form_invalid = method_decorator(axes_form_invalid)(LoginView.form_invalid)
+
+    urlpatterns = [
+        ...
+        url(r'^accounts/login/$', # Override allauth's default view with our compatibility mod
+            LoginView.as_view(form_class=AllauthCompatLoginForm),
+            name="account_login"),
+        url(r'^accounts/', include('allauth.urls')),
+        ...
+    ]
