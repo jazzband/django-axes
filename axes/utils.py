@@ -54,7 +54,6 @@ def reset(ip=None, username=None):
     """Reset records that match ip or username, and
     return the count of removed attempts.
     """
-    count = 0
 
     attempts = AccessAttempt.objects.all()
     if ip:
@@ -62,14 +61,8 @@ def reset(ip=None, username=None):
     if username:
         attempts = attempts.filter(username=username)
 
-    if attempts:
-        count = attempts.count()
-        for attempt in attempts:
-            cache_hash_key = get_cache_key(attempt)
-            if cache.get(cache_hash_key):
-                cache.delete(cache_hash_key)
+    count, _ = attempts.delete()
 
-        attempts.delete()
     return count
 
 
