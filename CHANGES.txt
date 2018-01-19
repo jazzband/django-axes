@@ -1,6 +1,23 @@
 Changes
 =======
 
+4.0.2 (2018-01-19)
+------------------
+
+- Improve Windows compatibility on Python < 3.4 by utilizing win_inet_pton
+  [hsiaoyi0504]
+
+- Add documentation on django-allauth integration
+  [grucha]
+
+- Add documentation on known AccessAttempt caching configuration problems
+  when using axes with the `django.core.cache.backends.locmem.LocMemCache`
+  [aleksihakli]
+
+- Refactor and improve existing AccessAttempt cache reset utility
+  [aleksihakli]
+
+
 4.0.1 (2017-12-19)
 ------------------
 
