@@ -18,6 +18,24 @@ Just add `axes` to your ``INSTALLED_APPS``::
 
 Remember to run ``python manage.py migrate`` to sync the database.
 
+Known configuration problems
+----------------------------
+
+If you are running Axes on a deployment with in-memory Django cache,
+the ``axes_reset`` functionality might not work predictably.
+
+Axes caches access attempts application-wide, and the in-memory cache
+only caches access attempts per Django process, so for example
+resets made in one web server process or the command line with ``axes_reset``
+might not remove lock-outs that are in the sepate process' in-memory cache
+such as the web server process serving your login or admin page.
+
+To circumvent this problem please use somethings else than
+``django.core.cache.backends.locmem.LocMemCache`` as your
+cache backend in Django cache ``BACKEND`` setting.
+
+There are no known problems in other cache backends such as
+``DummyCache``, ``FileBasedCache``, or ``MemcachedCache`` backends.
 
 Customizing Axes
 ----------------
