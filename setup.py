@@ -20,7 +20,12 @@ setup(
     url='https://github.com/jazzband/django-axes',
     license='MIT',
     package_dir={'axes': 'axes'},
-    install_requires=['pytz', 'django-appconf', 'django-ipware'],
+    install_requires=[
+        'pytz',
+        'django-appconf',
+        'django-ipware',
+        'win_inet_pton ; python_version < "3.4" and sys_platform == "win32"'
+    ],
     include_package_data=True,
     packages=find_packages(),
     classifiers=[
