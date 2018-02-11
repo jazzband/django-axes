@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 
 from axes.conf import settings
+from axes.tests.compatibility import patch
 
 
 class AccessAttemptConfigTest(TestCase):
@@ -51,14 +52,21 @@ class AccessAttemptConfigTest(TestCase):
         )
         return response
 
-    def _lockout_user_from_ip(self, username, ip_addr):
-        for i in range(1, settings.AXES_FAILURE_LIMIT + 1):
+    def _attempt_unsuccessful_login(self, username, ip_addr, num_attempts=1):
+        for i in range(0, num_attempts):
             response = self._login(
                 username=username,
                 password=self.WRONG_PASSWORD,
                 ip_addr=ip_addr,
             )
         return response
+
+    def _lockout_user_from_ip(self, username, ip_addr):
+        return self._attempt_unsuccessful_login(
+            username=username,
+            ip_addr=ip_addr,
+            num_attempts=settings.AXES_FAILURE_LIMIT
+        )
 
     def _lockout_user1_from_ip1(self):
         return self._lockout_user_from_ip(
@@ -146,7 +154,7 @@ class AccessAttemptConfigTest(TestCase):
         self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
-    def test_lockout_by_user_blocks_when_same_user_diff_ip_without_cache(self):
+    def test_lockout_by_user_blocks_when_same_user_diff_ip_without_cache_basic(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
 
@@ -157,6 +165,32 @@ class AccessAttemptConfigTest(TestCase):
             ip_addr=self.IP_2
         )
         self.assertEqual(response.status_code, self.BLOCKED)
+
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    def test_lockout_by_user_blocks_when_same_user_diff_ip_without_cache_advance(self):
+        # Bug #299
+        for i in range(0, settings.AXES_FAILURE_LIMIT - 1):
+            if i % 2 == 0:
+                # User 1 login unsuccessfully from IP 1.
+                self._attempt_unsuccessful_login(
+                    self.USER_1,
+                    self.IP_1
+                )
+            else:
+                # User 1 login unsuccessfully from IP 2.
+                self._attempt_unsuccessful_login(
+                    self.USER_1,
+                    self.IP_2
+                )
+
+        # User 1 is locked out from IP 1 or IP 2
+        for ip in (self.IP_1, self.IP_2):
+            response = self._login(
+                self.USER_1,
+                self.WRONG_PASSWORD,
+                ip_addr=ip
+            )
+            self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_allows_when_diff_user_same_ip_without_cache(self):
@@ -324,7 +358,7 @@ class AccessAttemptConfigTest(TestCase):
     # Test for true and false positives when blocking by user only.
     # With cache enabled. When AXES_ONLY_USER_FAILURES = True
     @override_settings(AXES_ONLY_USER_FAILURES=True)
-    def test_lockout_by_user_blocks_when_same_user_same_ip_using_cache(self):
+    def test_lockout_by_user_blocks_when_same_user_same_ip_using_cache_basic(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
 
@@ -335,6 +369,47 @@ class AccessAttemptConfigTest(TestCase):
             ip_addr=self.IP_1
         )
         self.assertEqual(response.status_code, self.BLOCKED)
+
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    def test_lockout_by_user_blocks_when_same_user_diff_ip_using_locmemcache(self):
+        # Bug #299
+        # Simulate 2 process each with their own copy of django.core.cache.backends.locmem.LocMemCache
+
+        from django.core.cache.backends.locmem import LocMemCache
+        cache1 = LocMemCache('cache1', {'timeout': 3600})
+        cache2 = LocMemCache('cache2', {'timeout': 3600})
+
+        for i in range(0, settings.AXES_FAILURE_LIMIT - 1):
+            if i % 2 == 0:
+                with patch('axes.signals.cache', new=cache1):
+                    # User 1 login unsuccessfully from IP 1.
+                    self._attempt_unsuccessful_login(
+                        self.USER_1,
+                        self.IP_1
+                    )
+            else:
+                with patch('axes.signals.cache', new=cache2):
+                    # User 1 login unsuccessfully from IP 2.
+                    self._attempt_unsuccessful_login(
+                        self.USER_1,
+                        self.IP_2
+                    )
+
+        # User 1 is locked out from IP 1 or IP 2
+        with patch('axes.signals.cache', new=cache1):
+            response = self._login(
+                self.USER_1,
+                self.WRONG_PASSWORD,
+                ip_addr=self.IP_1
+            )
+            self.assertEqual(response.status_code, self.BLOCKED)
+        with patch('axes.signals.cache', new=cache2):
+            response = self._login(
+                self.USER_1,
+                self.WRONG_PASSWORD,
+                ip_addr=self.IP_2
+            )
+            self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_blocks_when_same_user_diff_ip_using_cache(self):

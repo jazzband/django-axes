@@ -5,6 +5,7 @@ from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth.signals import user_login_failed
 from django.core.cache import cache
+from django.core.cache.backends.locmem import LocMemCache
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.dispatch import Signal
@@ -52,7 +53,8 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     cache_timeout = get_cache_timeout()
 
     failures_cached = cache.get(cache_hash_key)
-    if failures_cached is not None:
+    if failures_cached is not None and \
+       not isinstance(cache, LocMemCache):
         failures = failures_cached
     else:
         for attempt in attempts:
