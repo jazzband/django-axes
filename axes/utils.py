@@ -1,30 +1,18 @@
-import logging
-
 from platform import python_version
 from sys import platform
-
 if python_version() < '3.4' and platform == 'win32':
     import win_inet_pton
 from socket import inet_pton, AF_INET6, error
 
-from django.core.cache import cache, caches, InvalidCacheBackendError
+from django.core.cache import cache, caches
 from django.utils import six
 
 from axes.conf import settings
 from axes.models import AccessAttempt
 
 
-log = logging.getLogger(settings.AXES_LOGGER)
-
-
 def get_axes_cache():
-    axes_cache_name = settings.AXES_CACHE
-    if axes_cache_name:
-        axes_cache = caches[axes_cache_name]
-    else:
-        axes_cache = cache
-
-    return axes_cache
+    return caches[getattr(settings, 'AXES_CACHE', 'default')]
 
 
 def query2str(items, max_length=1024):

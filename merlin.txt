@@ -1,1 +1,0 @@
-Make cache backend that django-axes uses configurable through a setting.
