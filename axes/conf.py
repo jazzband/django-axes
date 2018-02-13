@@ -4,9 +4,6 @@ from appconf import AppConf
 
 
 class MyAppConf(AppConf):
-    # see if the user has specified a cache to use for axes instead of the default
-    AXES_CACHE = None
-
     # see if the user has overridden the failure limit
     FAILURE_LIMIT = 3
 
