@@ -34,6 +34,24 @@ To circumvent this problem please use somethings else than
 ``django.core.cache.backends.locmem.LocMemCache`` as your
 cache backend in Django cache ``BACKEND`` setting.
 
+If it is not an option to change the default cache you can add a cache
+specifically for use with Axes. This is a two step process. First you need to
+add an extra cache to ``CACHES`` with a name of your choice::
+
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        },
+        'axes_cache': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+
+The next step is to tell axes to use this cache through adding ``AXES_CACHE``
+to your ``settings.py`` file::
+
+    AXES_CACHE = "axes_cache"
+
 There are no known problems in other cache backends such as
 ``DummyCache``, ``FileBasedCache``, or ``MemcachedCache`` backends.
 
@@ -43,6 +61,8 @@ Customizing Axes
 You have a couple options available to you to customize ``django-axes`` a bit.
 These should be defined in your ``settings.py`` file.
 
+* ``AXES_CACHE``: The name of the cache for axes to use.
+  Default: ``'default'``
 * ``AXES_FAILURE_LIMIT``: The number of login attempts allowed before a
   record is created for the failed logins.  Default: ``3``
 * ``AXES_LOCK_OUT_AT_FAILURE``: After the number of allowed login attempts
