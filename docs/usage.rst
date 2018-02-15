@@ -25,11 +25,12 @@ By default, django-axes will lock out repeated attempts from the same IP
 address. You can allow this IP to attempt again by deleting the relevant
 ``AccessAttempt`` records in the admin.
 
-You can also use the ``axes_reset`` management command using Django's
-``manage.py``.
+You can also use the ``axes_reset`` and ``axes_reset_user`` management commands
+using Django's ``manage.py``.
 
 * ``manage.py axes_reset`` will reset all lockouts and access records.
 * ``manage.py axes_reset ip`` will clear lockout/records for ip
+* ``manage.py axes_reset_user username`` will clear lockout/records for an username
 
 In your code, you can use ``from axes.utils import reset``.
 
