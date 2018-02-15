@@ -8,8 +8,10 @@ class AppConfig(apps.AppConfig):
         from django.conf import settings
         from django.core.exceptions import ImproperlyConfigured
 
-        if settings.CACHES['default']['BACKEND'] == 'django.core.cache.backends.locmem.LocMemCache':
-            raise ImproperlyConfigured('django-axes does not work properly with LocMemCache as the default cache backend')
+        if settings.CACHES[getattr(settings, 'AXES_CACHE', 'default')]['BACKEND'] == \
+                'django.core.cache.backends.locmem.LocMemCache':
+            raise ImproperlyConfigured(
+                'django-axes does not work properly with LocMemCache as the default cache backend')
 
         from django.contrib.auth.views import LoginView
         from django.utils.decorators import method_decorator
