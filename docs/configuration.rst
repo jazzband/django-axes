@@ -37,6 +37,8 @@ cache backend in Django cache ``BACKEND`` setting.
 There are no known problems in other cache backends such as
 ``DummyCache``, ``FileBasedCache``, or ``MemcachedCache`` backends.
 
+Alternative, set ``AXES_USE_CACHE=False``
+
 Customizing Axes
 ----------------
 
@@ -79,6 +81,9 @@ These should be defined in your ``settings.py`` file.
 * ``AXES_NEVER_LOCKOUT_WHITELIST``: If ``True``, users can always login from whitelisted IP addresses.
   Default: ``False``
 * ``AXES_IP_WHITELIST``: A list of IP's to be whitelisted. For example: AXES_IP_WHITELIST=['0.0.0.0']. Default: []
-  Default: ``False``
 * ``AXES_DISABLE_ACCESS_LOG``: If ``True``, disable all access logging, so the admin interface will be empty. Default: ``False``
 * ``AXES_DISABLE_SUCCESS_ACCESS_LOG``: If ``True``, successful logins will not be logged, so the access log shown in the admin interface will only list unsuccessful login attempts. Default: ``False``
+* ``AXES_USE_CACHE`` : If ``False`` disables use of Django's cache backend when
+  checking for failure limit. This is useful to avoid the known configuration
+  problem when ``django.core.cache.backends.locmem.LocMemCache`` is used.
+  Default: ``True``

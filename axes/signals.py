@@ -52,7 +52,8 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     cache_timeout = get_cache_timeout()
 
     failures_cached = cache.get(cache_hash_key)
-    if failures_cached is not None:
+    if failures_cached is not None and \
+        settings.AXES_USE_CACHE:
         failures = failures_cached
     else:
         for attempt in attempts:
