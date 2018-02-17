@@ -1,10 +1,8 @@
 import logging
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth.signals import user_login_failed
-from django.core.cache import cache
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.dispatch import Signal
@@ -21,6 +19,7 @@ from axes.attempts import ip_in_whitelist
 from axes.models import AccessLog, AccessAttempt
 from axes.utils import get_client_str
 from axes.utils import query2str
+from axes.utils import get_axes_cache
 
 
 log = logging.getLogger(settings.AXES_LOGGER)
@@ -51,7 +50,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     cache_hash_key = get_cache_key(request)
     cache_timeout = get_cache_timeout()
 
-    failures_cached = cache.get(cache_hash_key)
+    failures_cached = get_axes_cache().get(cache_hash_key)
     if failures_cached is not None:
         failures = failures_cached
     else:
@@ -60,7 +59,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
 
     # add a failed attempt for this user
     failures += 1
-    cache.set(cache_hash_key, failures, cache_timeout)
+    get_axes_cache().set(cache_hash_key, failures, cache_timeout)
 
     # has already attempted, update the info
     if len(attempts):
@@ -164,12 +163,12 @@ def log_user_logged_out(sender, request, user, **kwargs):
 @receiver(post_save, sender=AccessAttempt)
 def update_cache_after_save(instance, **kwargs):
     cache_hash_key = get_cache_key(instance)
-    if not cache.get(cache_hash_key):
+    if not get_axes_cache().get(cache_hash_key):
         cache_timeout = get_cache_timeout()
-        cache.set(cache_hash_key, instance.failures_since_start, cache_timeout)
+        get_axes_cache().set(cache_hash_key, instance.failures_since_start, cache_timeout)
 
 
 @receiver(post_delete, sender=AccessAttempt)
 def delete_cache_after_delete(instance, **kwargs):
     cache_hash_key = get_cache_key(instance)
-    cache.delete(cache_hash_key)
+    get_axes_cache().delete(cache_hash_key)

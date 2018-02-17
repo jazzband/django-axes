@@ -2,13 +2,13 @@ from datetime import timedelta
 from hashlib import md5
 
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.utils import timezone
 
 from ipware.ip import get_ip
 
 from axes.conf import settings
 from axes.models import AccessAttempt
+from axes.utils import get_axes_cache
 
 
 def _query_user_attempts(request):
@@ -112,13 +112,13 @@ def get_user_attempts(request):
                 if attempt.trusted:
                     attempt.failures_since_start = 0
                     attempt.save()
-                    cache.set(cache_hash_key, 0, cache_timeout)
+                    get_axes_cache().set(cache_hash_key, 0, cache_timeout)
                 else:
                     attempt.delete()
                     force_reload = True
-                    failures_cached = cache.get(cache_hash_key)
+                    failures_cached = get_axes_cache().get(cache_hash_key)
                     if failures_cached is not None:
-                        cache.set(
+                        get_axes_cache().set(
                             cache_hash_key, failures_cached - 1, cache_timeout
                         )
 
@@ -197,7 +197,7 @@ def is_already_locked(request):
         return False
 
     cache_hash_key = get_cache_key(request)
-    failures_cached = cache.get(cache_hash_key)
+    failures_cached = get_axes_cache().get(cache_hash_key)
     if failures_cached is not None:
         return (
             failures_cached >= settings.AXES_FAILURE_LIMIT and
