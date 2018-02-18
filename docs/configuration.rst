@@ -50,7 +50,7 @@ add an extra cache to ``CACHES`` with a name of your choice::
 The next step is to tell axes to use this cache through adding ``AXES_CACHE``
 to your ``settings.py`` file::
 
-    AXES_CACHE = "axes_cache"
+    AXES_CACHE = 'axes_cache'
 
 There are no known problems in other cache backends such as
 ``DummyCache``, ``FileBasedCache``, or ``MemcachedCache`` backends.
