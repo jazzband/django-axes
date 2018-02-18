@@ -11,12 +11,14 @@ class AppConfig(apps.AppConfig):
         if settings.CACHES[getattr(settings, 'AXES_CACHE', 'default')]['BACKEND'] == \
                 'django.core.cache.backends.locmem.LocMemCache':
             raise ImproperlyConfigured(
-                'django-axes does not work properly with LocMemCache as the default cache backend')
+                'django-axes does not work properly with LocMemCache as the default cache backend'
+                ' please add e.g. a DummyCache backend for axes and configure it with AXES_CACHE'
+            )
 
         from django.contrib.auth.views import LoginView
         from django.utils.decorators import method_decorator
 
-        from axes import signals    # we must load signals
+        from axes import signals
         from axes.decorators import axes_dispatch
         from axes.decorators import axes_form_invalid
 
