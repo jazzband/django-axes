@@ -1,7 +1,9 @@
 from .test_settings import *
 
+AXES_CACHE = 'axes'
+
 CACHES = {
-    'default': {
+    'axes': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
     }
 }
