@@ -1,6 +1,16 @@
 Changes
 =======
 
+4.1.0 (2018-02-18)
+------------------
+
+- Add AXES_CACHE setting for configuring `axes` specific caching.
+  [JWvDronkelaar]
+
+- Add checks and tests for faulty LocMemCache usage in application setup.
+  [aleksihakli]
+
+
 4.0.2 (2018-01-19)
 ------------------
 

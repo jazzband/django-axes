@@ -12,6 +12,6 @@ and follow the `guidelines <https://jazzband.co/about/guidelines>`_.
 Running tests
 -------------
 
-Clone the repository and install the django version you want. Then run::
+Clone the repository and install the Django version you want. Then run::
 
-    $ ./runtests.py
+    $ tox
