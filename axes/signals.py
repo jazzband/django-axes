@@ -46,7 +46,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
         return
 
     failures = 0
-    attempts = get_user_attempts(request)
+    attempts = get_user_attempts(request, username)
     cache_hash_key = get_cache_key(request)
     cache_timeout = get_cache_timeout()
 
