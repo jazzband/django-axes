@@ -10,8 +10,7 @@ from django.shortcuts import render
 from axes import get_version
 from axes.conf import settings
 from axes.attempts import is_already_locked
-from axes.utils import iso8601
-
+from axes.utils import iso8601, get_lockout_message
 
 log = logging.getLogger(settings.AXES_LOGGER)
 if settings.AXES_VERBOSE:
@@ -77,10 +76,6 @@ def lockout_response(request):
         return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
 
     else:
-        msg = 'Account locked: too many login attempts. {0}'
-        if settings.AXES_COOLOFF_TIME:
-            msg = msg.format('Please try again later.')
-        else:
-            msg = msg.format('Contact an admin to unlock your account.')
+        msg = get_lockout_message()
 
         return HttpResponse(msg, status=403)
