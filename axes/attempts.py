@@ -11,12 +11,11 @@ from axes.models import AccessAttempt
 from axes.utils import get_axes_cache
 
 
-def _query_user_attempts(request):
+def _query_user_attempts(request, username):
     """Returns access attempt record if it exists.
     Otherwise return None.
     """
     ip, _ = get_client_ip(request)
-    username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
     if settings.AXES_ONLY_USER_FAILURES:
         attempts = AccessAttempt.objects.filter(username=username)
@@ -96,9 +95,14 @@ def get_cache_timeout():
     return cache_timeout
 
 
-def get_user_attempts(request):
+def get_user_attempts(request, username):
+    """
+    Get AccessAttempts for given user.
+    :param request: request object to use to query for attempts (ip, user agent, etc.)
+    :param username: username of user to filter attempts on.
+    """
     force_reload = False
-    attempts = _query_user_attempts(request)
+    attempts = _query_user_attempts(request, username)
     cache_hash_key = get_cache_key(request)
     cache_timeout = get_cache_timeout()
 
@@ -125,7 +129,7 @@ def get_user_attempts(request):
     # If objects were deleted, we need to update the queryset to reflect this,
     # so force a reload.
     if force_reload:
-        attempts = _query_user_attempts(request)
+        attempts = _query_user_attempts(request, username)
 
     return attempts
 
