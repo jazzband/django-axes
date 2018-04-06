@@ -21,6 +21,9 @@ class AxesModelBackend(ModelBackend):
         :return: Nothing, but will update return_context with lockout message if user is locked out.
         """
 
+        if request is None:
+            raise ValueError('DjangoAxesModelBackend requires calls to authenticate to pass `request`')
+
         if is_already_locked(request):
             # locked out, don't try to authenticate, just update return_context and return
             # Its a bit weird to pass a context and expect a response value but its nice to get a "why" back.
