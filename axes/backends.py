@@ -7,6 +7,13 @@ from axes.utils import get_lockout_message
 
 class AxesModelBackend(ModelBackend):
 
+    class RequestParameterRequired(Exception):
+        msg = 'DjangoAxesModelBackend requires calls to authenticate to pass `request`'
+
+        def __init__(self):
+            super(AxesModelBackend.RequestParameterRequired, self).__init__(
+                AxesModelBackend.RequestParameterRequired.msg)
+
     def authenticate(self, request, username=None, password=None, **kwargs):
         """
         Add django-axes handling and add allow adding errors directly to a passed return_context.
@@ -22,7 +29,7 @@ class AxesModelBackend(ModelBackend):
         """
 
         if request is None:
-            raise ValueError('DjangoAxesModelBackend requires calls to authenticate to pass `request`')
+            raise AxesModelBackend.RequestParameterRequired()
 
         if is_already_locked(request):
             # locked out, don't try to authenticate, just update return_context and return
