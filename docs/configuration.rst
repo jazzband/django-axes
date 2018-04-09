@@ -36,7 +36,7 @@ Things to you might need to change in your code, especially if you get a ``AxesM
 - make sure any auth libraries you use that call the authentication middleware stack pass request. Notably Django Rest
   Framework (DRF) ``BasicAuthentication`` does not pass request. `Here is an example workaround for DRF`_.
 
-.. _Here is an example workaround for DRF: http://www.python.org
+.. _Here is an example workaround for DRF: https://gist.github.com/markddavidoff/7e442b1ea2a2e68d390e76731c35afe7
 
 
 Known configuration problems
