@@ -68,6 +68,9 @@ them as per the example.
     from myapp.forms import LoginForm
     from myapp.auth import custom_authenticate, custom_login
 
+    from axes.decorators import axes_dispatch
+
+    @method_decorator(axes_dispatch, name='dispatch')
     @method_decorator(csrf_exempt, name='dispatch')
     class Login(View):
         ''' Custom login view that takes JSON credentials '''
