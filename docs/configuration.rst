@@ -3,7 +3,7 @@
 Configuration
 =============
 
-Just add `axes` to your ``INSTALLED_APPS``::
+Add `axes` to your ``INSTALLED_APPS``::
 
     INSTALLED_APPS = (
         'django.contrib.admin',
@@ -16,7 +16,13 @@ Just add `axes` to your ``INSTALLED_APPS``::
         ...
     )
 
-Remember to run ``python manage.py migrate`` to sync the database.
+Run ``python manage.py migrate`` to sync the database.
+
+Configure `django-ipware <https://github.com/un33k/django-ipware/>`_ to your liking. Pay close attention to the  `IPWARE_META_PRECEDENCE_ORDER <https://github.com/un33k/django-ipware#precedence-order>`_ setting. Please note that this configuration is required for functional security in your project. A good staarting point for a project running without a reverse proxy could be::
+
+    IPWARE_META_PRECEDENCE_ORDER = (
+        'REMOTE_ADDR',
+    )
 
 Known configuration problems
 ----------------------------
