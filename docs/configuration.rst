@@ -3,9 +3,7 @@
 Configuration
 =============
 
-3 Simple Steps!
-
-- add `axes` to your ``INSTALLED_APPS``::
+Add `axes` to your ``INSTALLED_APPS``::
 
     INSTALLED_APPS = (
         'django.contrib.admin',
@@ -13,21 +11,27 @@ Configuration
         'django.contrib.contenttypes',
         'django.contrib.sessions',
         'django.contrib.sites',
-        ...
+        # ...
         'axes',
-        ...
+        # ...
     )
 
-- add Axes to the top of ``AUTHENTICATION_BACKENDS``::
+Add ``axes.backends.AxesModelBackend`` to the top of ``AUTHENTICATION_BACKENDS``::
 
     AUTHENTICATION_BACKENDS = [
-        'axes.middleware.DjangoAxesAuthBackend',
-        ...
+        'axes.backends.AxesModelBackend',
+        # ...
         'django.contrib.auth.backends.ModelBackend',
-        ...
+        # ...
     ]
 
-- run ``python manage.py migrate`` to sync the database.
+Run ``python manage.py migrate`` to sync the database.
+
+Configure `django-ipware <https://github.com/un33k/django-ipware/>`_ to your liking. Pay close attention to the  `IPWARE_META_PRECEDENCE_ORDER <https://github.com/un33k/django-ipware#precedence-order>`_ setting. Please note that this configuration is required for functional security in your project. A good starting point for a project running without a reverse proxy could be::
+
+    IPWARE_META_PRECEDENCE_ORDER = (
+        'REMOTE_ADDR',
+    )
 
 Things to you might need to change in your code, especially if you get a ``AxesModelBackend.RequestParameterRequired``:
 
