@@ -19,6 +19,11 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
+AUTHENTICATION_BACKENDS = (
+    'axes.backends.AxesModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
 ROOT_URLCONF = 'axes.test_urls'
 
 INSTALLED_APPS = (

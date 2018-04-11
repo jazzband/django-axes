@@ -5,6 +5,7 @@ import random
 import string
 import time
 
+from django.http import HttpRequest
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth import authenticate
@@ -386,6 +387,8 @@ class AccessAttemptTest(TestCase):
         ``log_user_login_failed`` should shortcircuit if an attempt to authenticate
         with a custom authentication backend fails.
         '''
-        authenticate(foo='bar')
 
+        request = HttpRequest()
+        request.user = self.user
+        authenticate(request=request, foo='bar')
         self.assertEqual(AccessLog.objects.all().count(), 0)
