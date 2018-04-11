@@ -47,3 +47,9 @@ class MyAppConf(AppConf):
     IP_WHITELIST = None
 
     IP_BLACKLIST = None
+
+    # message to show when locked out and have cooloff enabled
+    AXES_COOLOFF_MESSAGE = 'Account locked: too many login attempts. Please try again later'
+
+    # message to show when locked out and have cooloff disabled
+    AXES_PERMALOCK_MESSAGE = 'Account locked: too many login attempts. Contact an admin to unlock your account.'

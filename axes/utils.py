@@ -92,3 +92,10 @@ def iso8601(timestamp):
         if value]
     )
     return 'P' + date + ('T' + time if time else '')
+
+
+def get_lockout_message():
+    if settings.AXES_COOLOFF_TIME:
+        return settings.AXES_COOLOFF_MESSAGE
+    else:
+        return settings.AXES_PERMALOCK_MESSAGE

@@ -3,7 +3,9 @@
 Configuration
 =============
 
-Just add `axes` to your ``INSTALLED_APPS``::
+3 Simple Steps!
+
+- add `axes` to your ``INSTALLED_APPS``::
 
     INSTALLED_APPS = (
         'django.contrib.admin',
@@ -16,7 +18,26 @@ Just add `axes` to your ``INSTALLED_APPS``::
         ...
     )
 
-Remember to run ``python manage.py migrate`` to sync the database.
+- add Axes to the top of ``AUTHENTICATION_BACKENDS``::
+
+    AUTHENTICATION_BACKENDS = [
+        'axes.middleware.DjangoAxesAuthBackend',
+        ...
+        'django.contrib.auth.backends.ModelBackend',
+        ...
+    ]
+
+- run ``python manage.py migrate`` to sync the database.
+
+Things to you might need to change in your code, especially if you get a ``AxesModelBackend.RequestParameterRequired``:
+
+- make sure any calls to ``django.contrib.auth.authenticate`` pass the request.
+
+- make sure any auth libraries you use that call the authentication middleware stack pass request. Notably Django Rest
+  Framework (DRF) ``BasicAuthentication`` does not pass request. `Here is an example workaround for DRF`_.
+
+.. _Here is an example workaround for DRF: https://gist.github.com/markddavidoff/7e442b1ea2a2e68d390e76731c35afe7
+
 
 Known configuration problems
 ----------------------------
