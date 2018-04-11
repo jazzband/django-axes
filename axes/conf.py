@@ -53,3 +53,23 @@ class MyAppConf(AppConf):
 
     # message to show when locked out and have cooloff disabled
     PERMALOCK_MESSAGE = 'Account locked: too many login attempts. Contact an admin to unlock your account.'
+
+    # if your deployment is using reverse proxies, set this value to 'left-most' or 'right-most' per your configuration
+    PROXY_ORDER = 'left-most'
+
+    # if your deployment is using reverse proxies, set this value to the number of proxies in front of Django
+    PROXY_COUNT = None
+
+    # if your deployment is using reverse proxies, set to your trusted proxy IP addresses prefixes if needed
+    PROXY_TRUSTED_IPS = None
+
+    # set to the names of request.META attributes that should be checked for the IP address of the client
+    # if your deployment is using reverse proxies, ensure that the header attributes are securely set by the proxy
+    # ensure that the client can not spoof the headers by setting them and sending them through the proxy
+    META_PRECEDENCE_ORDER = getattr(
+        settings, 'AXES_META_PRECEDENCE_ORDER', getattr(
+            settings, 'IPWARE_META_PRECEDENCE_ORDER', (
+                'REMOTE_ADDR',
+            )
+        )
+    )

@@ -4,18 +4,16 @@ from hashlib import md5
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from ipware.ip2 import get_client_ip
-
 from axes.conf import settings
 from axes.models import AccessAttempt
-from axes.utils import get_axes_cache
+from axes.utils import get_axes_cache, get_client_ip
 
 
 def _query_user_attempts(request):
     """Returns access attempt record if it exists.
     Otherwise return None.
     """
-    ip, _ = get_client_ip(request)
+    ip = get_client_ip(request)
     username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
     if settings.AXES_ONLY_USER_FAILURES:
@@ -60,7 +58,7 @@ def get_cache_key(request_or_obj):
         un = request_or_obj.username
         ua = request_or_obj.user_agent
     else:
-        ip, _ = get_client_ip(request_or_obj)
+        ip = get_client_ip(request_or_obj)
         un = request_or_obj.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
         ua = request_or_obj.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
@@ -176,7 +174,7 @@ def is_user_lockable(request):
 
 
 def is_already_locked(request):
-    ip, _ = get_client_ip(request)
+    ip = get_client_ip(request)
 
     if (
         settings.AXES_ONLY_USER_FAILURES or

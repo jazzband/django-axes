@@ -189,7 +189,7 @@ class AccessAttemptTest(TestCase):
         # Make a login attempt again
         self.test_valid_login()
 
-    @patch('ipware.ip.get_ip', return_value='127.0.0.1')
+    @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
     def test_get_cache_key(self, get_ip_mock):
         """ Test the cache key format"""
         # Getting cache key from request
