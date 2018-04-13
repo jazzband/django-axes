@@ -7,6 +7,8 @@ from socket import inet_pton, AF_INET6, error
 from django.core.cache import cache, caches
 from django.utils import six
 
+import ipware.ip2
+
 from axes.conf import settings
 from axes.models import AccessAttempt
 
@@ -47,6 +49,21 @@ def get_client_str(username, ip_address, user_agent=None, path_info=None):
         client += '(user-agent={0})'.format(user_agent)
 
     return client
+
+
+def get_client_ip(request):
+    client_ip_attribute = 'axes_client_ip'
+
+    if not hasattr(request, client_ip_attribute):
+        client_ip, _ = ipware.ip2.get_client_ip(
+            request,
+            proxy_order=settings.AXES_PROXY_ORDER,
+            proxy_count=settings.AXES_PROXY_COUNT,
+            proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
+            request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
+        )
+        setattr(request, client_ip_attribute, client_ip)
+    return getattr(request, client_ip_attribute)
 
 
 def is_ipv6(ip):

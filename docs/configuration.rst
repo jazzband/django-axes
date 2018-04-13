@@ -3,7 +3,7 @@
 Configuration
 =============
 
-Add `axes` to your ``INSTALLED_APPS``::
+Add ``axes`` to your ``INSTALLED_APPS``::
 
     INSTALLED_APPS = (
         'django.contrib.admin',
@@ -27,24 +27,14 @@ Add ``axes.backends.AxesModelBackend`` to the top of ``AUTHENTICATION_BACKENDS``
 
 Run ``python manage.py migrate`` to sync the database.
 
-Configure `django-ipware <https://github.com/un33k/django-ipware/>`_ to your liking. Pay close attention to the  `IPWARE_META_PRECEDENCE_ORDER <https://github.com/un33k/django-ipware#precedence-order>`_ setting. Please note that this configuration is required for functional security in your project. A good starting point for a project running without a reverse proxy could be::
-
-    IPWARE_META_PRECEDENCE_ORDER = (
-        'REMOTE_ADDR',
-    )
-
-Things to you might need to change in your code, especially if you get a ``AxesModelBackend.RequestParameterRequired``:
-
-- make sure any calls to ``django.contrib.auth.authenticate`` pass the request.
-
-- make sure any auth libraries you use that call the authentication middleware stack pass request. Notably Django Rest
-  Framework (DRF) ``BasicAuthentication`` does not pass request. `Here is an example workaround for DRF`_.
-
-.. _Here is an example workaround for DRF: https://gist.github.com/markddavidoff/7e442b1ea2a2e68d390e76731c35afe7
-
-
 Known configuration problems
 ----------------------------
+
+Axes has a few configuration issues with external packages and specific cache backends
+due to their internal implementations.
+
+Cache problems
+~~~~~~~~~~~~~~
 
 If you are running Axes on a deployment with in-memory Django cache,
 the ``axes_reset`` functionality might not work predictably.
@@ -79,6 +69,28 @@ to your ``settings.py`` file::
 
 There are no known problems in other cache backends such as
 ``DummyCache``, ``FileBasedCache``, or ``MemcachedCache`` backends.
+
+Authentication backend problems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you get ``AxesModelBackend.RequestParameterRequired`` exceptions,
+make sure any auth libraries and middleware you use pass the request object to authenticate.
+Notably Django Rest Framework (DRF) ``BasicAuthentication`` does not pass request.
+`Here is an example workaround for DRF <https://gist.github.com/markddavidoff/7e442b1ea2a2e68d390e76731c35afe7>`_.
+
+Reverse proxy configuration
+---------------------------
+
+Django Axes makes use of ``django-ipware`` package to detect the IP address of the client
+and uses some conservative configuration parameters by default for security.
+
+If you are using reverse proxies, you will need to configure one or more of the
+following settings to suit your set up to correctly resolve client IP addresses:
+
+* ``AXES_PROXY_COUNT``: The number of reverse proxies in front of Django as an integer. Default: ``None``
+* ``AXES_META_PRECEDENCE_ORDER``: The names of ``request.META`` attributes as a tuple of strings
+  to check to get the client IP address. Check the Django documentation for header naming conventions.
+  Default: ``IPWARE_META_PRECEDENCE_ORDER`` setting if set, else ``('REMOTE_ADDR', )``
 
 Customizing Axes
 ----------------

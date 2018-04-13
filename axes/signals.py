@@ -8,8 +8,6 @@ from django.dispatch import receiver
 from django.dispatch import Signal
 from django.utils import timezone
 
-from ipware.ip import get_ip
-
 from axes.conf import settings
 from axes.attempts import get_cache_key
 from axes.attempts import get_cache_timeout
@@ -19,7 +17,7 @@ from axes.attempts import ip_in_whitelist
 from axes.models import AccessLog, AccessAttempt
 from axes.utils import get_client_str
 from axes.utils import query2str
-from axes.utils import get_axes_cache
+from axes.utils import get_axes_cache, get_client_ip
 
 
 log = logging.getLogger(settings.AXES_LOGGER)
@@ -36,7 +34,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
         log.error('Attempt to authenticate with a custom backend failed.')
         return
 
-    ip_address = get_ip(request)
+    ip_address = get_client_ip(request)
     username = credentials[settings.AXES_USERNAME_FORM_FIELD]
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
@@ -128,7 +126,7 @@ def log_user_logged_in(sender, request, user, **kwargs):
     """ When a user logs in, update the access log
     """
     username = user.get_username()
-    ip_address = get_ip(request)
+    ip_address = get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
