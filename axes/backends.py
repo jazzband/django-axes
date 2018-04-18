@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from django.contrib.auth.backends import ModelBackend
 from django.core.exceptions import PermissionDenied
 

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from .test_settings import *
 
 AXES_CACHE = 'axes'

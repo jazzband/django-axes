@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from platform import python_version
 from sys import platform
 if python_version() < '3.4' and platform == 'win32':
