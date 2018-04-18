@@ -1,6 +1,13 @@
 Changes
 =======
 
+4.2.1 (2018-04-18)
+------------------
+
+- Fix unicode string interpolation on Python 2.7
+  [aleksihakli]
+
+
 4.2.0 (2018-04-13)
 ------------------
 
