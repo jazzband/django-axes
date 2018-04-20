@@ -1,0 +1,14 @@
+ignore-paths:
+  - docs
+  - axes/migrations
+
+pep8:
+  options:
+    max-line-length: 119
+
+pyflakes:
+  disable:
+    - F401
+
+dodgy:
+  run: false
