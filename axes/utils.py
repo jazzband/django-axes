@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
 
-from platform import python_version
-from sys import platform
-if python_version() < '3.4' and platform == 'win32':
-    import win_inet_pton
-from socket import inet_pton, AF_INET6, error
+try:
+    import win_inet_pton  # pylint: disable=unused-import
+except ImportError:
+    pass
+
+from socket import error, inet_pton, AF_INET6
 
 from django.core.cache import caches
 from django.utils import six

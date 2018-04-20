@@ -20,7 +20,8 @@ class AppConfig(apps.AppConfig):
         from django.contrib.auth.views import LoginView
         from django.utils.decorators import method_decorator
 
-        from axes import signals
+        from axes import signals  # pylint: disable=unused-import,unused-variable
+
         from axes.decorators import axes_dispatch
         from axes.decorators import axes_form_invalid
 
