@@ -55,7 +55,7 @@ def lockout_response(request):
 
     cool_off = settings.AXES_COOLOFF_TIME
     if cool_off:
-        if (isinstance(cool_off, int) or isinstance(cool_off, float)):
+        if isinstance(cool_off, (int, float)):
             cool_off = timedelta(hours=cool_off)
 
         context.update({
