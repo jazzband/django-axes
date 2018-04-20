@@ -62,7 +62,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     get_axes_cache().set(cache_hash_key, failures, cache_timeout)
 
     # has already attempted, update the info
-    if len(attempts):
+    if attempts:
         for attempt in attempts:
             attempt.get_data = '%s\n---------\n%s' % (
                 attempt.get_data,
@@ -78,13 +78,12 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
             attempt.attempt_time = timezone.now()
             attempt.save()
 
-            fail_msg = 'AXES: Repeated login failure by {0}.'.format(
-                get_client_str(username, ip_address, user_agent, path_info)
+            log.info(
+                'AXES: Repeated login failure by %s. Count = %d of %d',
+                get_client_str(username, ip_address, user_agent, path_info),
+                failures,
+                settings.AXES_FAILURE_LIMIT
             )
-            count_msg = 'Count = {0} of {1}'.format(
-                failures, settings.AXES_FAILURE_LIMIT
-            )
-            log.info('{0} {1}'.format(fail_msg, count_msg))
     else:
         # Record failed attempt. Whether or not the IP address or user agent is
         # used in counting failures is handled elsewhere, so we just record
@@ -101,9 +100,8 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
         )
 
         log.info(
-            'AXES: New login failure by {0}. Creating access record.'.format(
-                get_client_str(username, ip_address, user_agent, path_info)
-            )
+            'AXES: New login failure by %s. Creating access record.',
+            get_client_str(username, ip_address, user_agent, path_info)
         )
 
     # no matter what, we want to lock them out if they're past the number of
@@ -113,9 +111,10 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
         settings.AXES_LOCK_OUT_AT_FAILURE and
         is_user_lockable(request)
     ):
-        log.warning('AXES: locked out {0} after repeated login attempts.'.format(
+        log.warning(
+            'AXES: locked out %s after repeated login attempts.',
             get_client_str(username, ip_address, user_agent, path_info)
-        ))
+        )
 
         # send signal when someone is locked out.
         user_locked_out.send(
@@ -132,9 +131,10 @@ def log_user_logged_in(sender, request, user, **kwargs):
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
-    log.info('AXES: Successful login by {0}.'.format(
+    log.info(
+        'AXES: Successful login by %s.',
         get_client_str(username, ip_address, user_agent, path_info)
-    ))
+    )
 
     if not settings.AXES_DISABLE_SUCCESS_ACCESS_LOG:
         AccessLog.objects.create(
@@ -151,7 +151,7 @@ def log_user_logged_in(sender, request, user, **kwargs):
 def log_user_logged_out(sender, request, user, **kwargs):
     """ When a user logs out, update the access log
     """
-    log.info('AXES: Successful logout by {0}.'.format(user))
+    log.info('AXES: Successful logout by %s.', user)
 
     if user and not settings.AXES_DISABLE_ACCESS_LOG:
         AccessLog.objects.filter(

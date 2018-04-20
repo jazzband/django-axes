@@ -17,7 +17,7 @@ from axes.utils import iso8601, get_lockout_message
 log = logging.getLogger(settings.AXES_LOGGER)
 if settings.AXES_VERBOSE:
     log.info('AXES: BEGIN LOG')
-    log.info('AXES: Using django-axes ' + get_version())
+    log.info('AXES: Using django-axes %s', get_version())
     if settings.AXES_ONLY_USER_FAILURES:
         log.info('AXES: blocking by username only.')
     elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
@@ -55,7 +55,7 @@ def lockout_response(request):
 
     cool_off = settings.AXES_COOLOFF_TIME
     if cool_off:
-        if (isinstance(cool_off, int) or isinstance(cool_off, float)):
+        if isinstance(cool_off, (int, float)):
             cool_off = timedelta(hours=cool_off)
 
         context.update({

@@ -88,7 +88,7 @@ def get_cache_timeout():
     cache_timeout = None
     cool_off = settings.AXES_COOLOFF_TIME
     if cool_off:
-        if (isinstance(cool_off, int) or isinstance(cool_off, float)):
+        if isinstance(cool_off, (int, float)):
             cache_timeout = timedelta(hours=cool_off).total_seconds()
         else:
             cache_timeout = cool_off.total_seconds()
@@ -104,7 +104,7 @@ def get_user_attempts(request):
 
     cool_off = settings.AXES_COOLOFF_TIME
     if cool_off:
-        if (isinstance(cool_off, int) or isinstance(cool_off, float)):
+        if isinstance(cool_off, (int, float)):
             cool_off = timedelta(hours=cool_off)
 
         for attempt in attempts:
