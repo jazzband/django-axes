@@ -1,6 +1,22 @@
 Changes
 =======
 
+4.3.0 (2018-04-21)
+------------------
+
+- Refactor and clean up code layout
+  [aleksihakli]
+
+- Add prospector linting and code checks to toolchain
+  [aleksihakli]
+
+- Clean up log message formatting and refactor type checks
+  [EvaSDK]
+
+- Fix faulty user locking with user agent when AXES_ONLY_USER_FAILURES is set
+  [EvaSDK]
+
+
 4.2.1 (2018-04-18)
 ------------------
 
