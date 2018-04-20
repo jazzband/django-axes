@@ -77,7 +77,4 @@ def lockout_response(request):
     elif settings.AXES_LOCKOUT_URL:
         return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
 
-    else:
-        msg = get_lockout_message()
-
-        return HttpResponse(msg, status=403)
+    return HttpResponse(get_lockout_message(), status=403)
