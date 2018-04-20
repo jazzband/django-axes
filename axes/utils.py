@@ -6,7 +6,7 @@ if python_version() < '3.4' and platform == 'win32':
     import win_inet_pton
 from socket import inet_pton, AF_INET6, error
 
-from django.core.cache import cache, caches
+from django.core.cache import caches
 from django.utils import six
 
 import ipware.ip2
