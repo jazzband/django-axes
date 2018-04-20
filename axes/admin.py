@@ -55,7 +55,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         'failures_since_start'
     ]
 
-    def has_add_permission(self, request, obj=None):
+    def has_add_permission(self, request):
         return False
 
 admin.site.register(AccessAttempt, AccessAttemptAdmin)
@@ -106,7 +106,7 @@ class AccessLogAdmin(admin.ModelAdmin):
         'logout_time'
     ]
 
-    def has_add_permission(self, request, obj=None):
+    def has_add_permission(self, request):
         return False
 
 admin.site.register(AccessLog, AccessLogAdmin)
