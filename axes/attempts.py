@@ -41,7 +41,7 @@ def _query_user_attempts(request):
         else:
             params['ip_address'] = ip
 
-        if settings.AXES_USE_USER_AGENT:
+        if settings.AXES_USE_USER_AGENT and not settings.AXES_ONLY_USER_FAILURES:
             params['user_agent'] = ua
 
         attempts = AccessAttempt.objects.filter(**params)
@@ -75,7 +75,7 @@ def get_cache_key(request_or_obj):
     else:
         attributes = ip
 
-    if settings.AXES_USE_USER_AGENT:
+    if settings.AXES_USE_USER_AGENT and not settings.AXES_ONLY_USER_FAILURES:
         attributes += ua
 
     cache_hash_key = 'axes-{}'.format(md5(attributes).hexdigest())
