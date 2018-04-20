@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
 
-from platform import python_version
-from sys import platform
-if python_version() < '3.4' and platform == 'win32':
-    import win_inet_pton
-from socket import inet_pton, AF_INET6, error
+try:
+    import win_inet_pton  # pylint: disable=unused-import
+except ImportError:
+    pass
 
-from django.core.cache import cache, caches
+from socket import error, inet_pton, AF_INET6
+
+from django.core.cache import caches
 from django.utils import six
 
 import ipware.ip2
@@ -116,5 +117,4 @@ def iso8601(timestamp):
 def get_lockout_message():
     if settings.AXES_COOLOFF_TIME:
         return settings.AXES_COOLOFF_MESSAGE
-    else:
-        return settings.AXES_PERMALOCK_MESSAGE
+    return settings.AXES_PERMALOCK_MESSAGE

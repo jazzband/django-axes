@@ -1,3 +1,4 @@
-Django
+django
+prospector
 sphinx-rtd-theme
 -e .
