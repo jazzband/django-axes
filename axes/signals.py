@@ -62,7 +62,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     get_axes_cache().set(cache_hash_key, failures, cache_timeout)
 
     # has already attempted, update the info
-    if len(attempts):
+    if attempts:
         for attempt in attempts:
             attempt.get_data = '%s\n---------\n%s' % (
                 attempt.get_data,
