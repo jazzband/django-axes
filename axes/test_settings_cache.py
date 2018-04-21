@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from .test_settings import *
+from .test_settings import *  # pylint: disable=unused-wildcard-import
 
 AXES_CACHE = 'axes'
 

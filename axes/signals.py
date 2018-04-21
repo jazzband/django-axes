@@ -29,7 +29,7 @@ user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 
 
 @receiver(user_login_failed)
-def log_user_login_failed(sender, credentials, request, **kwargs):
+def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: disable=unused-argument
     """ Create an AccessAttempt record if the login wasn't successful
     """
     if request is None or settings.AXES_USERNAME_FORM_FIELD not in credentials:
@@ -123,7 +123,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
 
 
 @receiver(user_logged_in)
-def log_user_logged_in(sender, request, user, **kwargs):
+def log_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unused-argument
     """ When a user logs in, update the access log
     """
     username = user.get_username()
@@ -148,7 +148,7 @@ def log_user_logged_in(sender, request, user, **kwargs):
 
 
 @receiver(user_logged_out)
-def log_user_logged_out(sender, request, user, **kwargs):
+def log_user_logged_out(sender, request, user, **kwargs):  # pylint: disable=unused-argument
     """ When a user logs out, update the access log
     """
     log.info('AXES: Successful logout by %s.', user)
@@ -161,7 +161,7 @@ def log_user_logged_out(sender, request, user, **kwargs):
 
 
 @receiver(post_save, sender=AccessAttempt)
-def update_cache_after_save(instance, **kwargs):
+def update_cache_after_save(instance, **kwargs):  # pylint: disable=unused-argument
     cache_hash_key = get_cache_key(instance)
     if not get_axes_cache().get(cache_hash_key):
         cache_timeout = get_cache_timeout()
@@ -169,6 +169,6 @@ def update_cache_after_save(instance, **kwargs):
 
 
 @receiver(post_delete, sender=AccessAttempt)
-def delete_cache_after_delete(instance, **kwargs):
+def delete_cache_after_delete(instance, **kwargs):  # pylint: disable=unused-argument
     cache_hash_key = get_cache_key(instance)
     get_axes_cache().delete(cache_hash_key)
