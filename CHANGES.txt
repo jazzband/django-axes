@@ -1,6 +1,19 @@
 Changes
 =======
 
+4.3.1 (2018-04-21)
+------------------
+
+- Change custom authentication backend failures from error to warning log level
+  [aleksihakli]
+
+- Set up strict code linting for CI pipeline that fails builds if linting does not pass
+  [aleksihakli]
+
+- Clean up old code base and tests based on linter errors
+  [aleksihakli]
+
+
 4.3.0 (2018-04-21)
 ------------------
 
