@@ -86,7 +86,7 @@ class AccessAttemptTest(TestCase):
         than failure limit
         """
         # test until one try before the limit
-        for i in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
@@ -100,14 +100,14 @@ class AccessAttemptTest(TestCase):
         """Tests the login lock trying to login a lot of times more
         than failure limit
         """
-        for i in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
 
         # So, we shouldn't have gotten a lock-out yet.
         # We should get a locked message each time we try again
-        for i in range(0, random.randrange(1, settings.AXES_FAILURE_LIMIT)):
+        for _ in range(random.randrange(1, settings.AXES_FAILURE_LIMIT)):
             response = self._login()
             self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
@@ -162,7 +162,7 @@ class AccessAttemptTest(TestCase):
         """Tests if can handle a long user agent with failure
         """
         long_user_agent = 'ie6' * 1024
-        for i in range(0, settings.AXES_FAILURE_LIMIT + 1):
+        for _ in range(settings.AXES_FAILURE_LIMIT + 1):
             response = self._login(user_agent=long_user_agent)
 
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
@@ -253,7 +253,7 @@ class AccessAttemptTest(TestCase):
         when AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True
         """
         # test until one try before the limit
-        for i in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login(
                 is_valid_username=True,
                 is_valid_password=False,
@@ -272,7 +272,7 @@ class AccessAttemptTest(TestCase):
         when AXES_ONLY_USER_FAILURES is True
         """
         # test until one try before the limit
-        for i in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login(
                 is_valid_username=True,
                 is_valid_password=False,
@@ -297,7 +297,7 @@ class AccessAttemptTest(TestCase):
 
         # now create failure_limit + 1 failed logins and then we should still
         # be able to login with valid_username
-        for i in range(1, settings.AXES_FAILURE_LIMIT + 1):
+        for _ in range(settings.AXES_FAILURE_LIMIT):
             response = self._login(
                 is_valid_username=False,
                 is_valid_password=False,

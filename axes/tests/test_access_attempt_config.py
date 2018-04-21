@@ -54,7 +54,7 @@ class AccessAttemptConfigTest(TestCase):
         return response
 
     def _lockout_user_from_ip(self, username, ip_addr):
-        for i in range(1, settings.AXES_FAILURE_LIMIT + 1):
+        for _ in range(settings.AXES_FAILURE_LIMIT):
             response = self._login(
                 username=username,
                 password=self.WRONG_PASSWORD,
