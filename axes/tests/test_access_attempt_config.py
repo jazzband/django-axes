@@ -187,9 +187,7 @@ class AccessAttemptConfigTest(TestCase):
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
-    def test_lockout_by_user_with_empty_username_allows_other_users_without_cache(
-        self, cache_get_mock=None, cache_set_mock=None
-    ):
+    def test_lockout_by_user_with_empty_username_allows_other_users_without_cache(self):
         # User with empty username is locked out from IP 1.
         self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
 
@@ -252,9 +250,7 @@ class AccessAttemptConfigTest(TestCase):
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
-    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_without_cache(
-        self, cache_get_mock=None, cache_set_mock=None
-    ):
+    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_without_cache(self):
         # User with empty username is locked out from IP 1.
         self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
 
@@ -313,9 +309,7 @@ class AccessAttemptConfigTest(TestCase):
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
-    def test_lockout_by_user_with_empty_username_allows_other_users_using_cache(
-        self, cache_get_mock=None, cache_set_mock=None
-    ):
+    def test_lockout_by_user_with_empty_username_allows_other_users_using_cache(self):
         # User with empty username is locked out from IP 1.
         self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
 
@@ -432,9 +426,7 @@ class AccessAttemptConfigTest(TestCase):
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
-    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_using_cache(
-        self, cache_get_mock=None, cache_set_mock=None
-    ):
+    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_using_cache(self):
         # User with empty username is locked out from IP 1.
         self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
 

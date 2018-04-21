@@ -192,7 +192,7 @@ class AccessAttemptTest(TestCase):
         self.test_valid_login()
 
     @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
-    def test_get_cache_key(self, get_ip_mock):
+    def test_get_cache_key(self, _):
         """ Test the cache key format"""
         # Getting cache key from request
         ip_address = '127.0.0.1'
@@ -230,7 +230,7 @@ class AccessAttemptTest(TestCase):
         scope = Scope()
         scope.signal_received = 0
 
-        def signal_handler(request, username, ip_address, *args, **kwargs):
+        def signal_handler(request, username, ip_address, *args, **kwargs):  # pylint: disable=unused-argument
             scope.signal_received += 1
             self.assertIsNotNone(request)
 
