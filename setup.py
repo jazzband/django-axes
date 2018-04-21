@@ -27,7 +27,7 @@ setup(
         'pytz',
         'django-appconf',
         'django-ipware>=2.0.2',
-        'win_inet_pton ; python_version < "3.4" and sys_platform == "win32"'
+        'win_inet_pton ; python_version < "3.4" and sys_platform == "win32"',
     ],
     include_package_data=True,
     packages=find_packages(),
