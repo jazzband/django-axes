@@ -42,7 +42,7 @@ class CommonAccess(models.Model):
         auto_now_add=True,
     )
 
-    class Meta:
+    class Meta(object):
         app_label = 'axes'
         abstract = True
         ordering = ['-attempt_time']
