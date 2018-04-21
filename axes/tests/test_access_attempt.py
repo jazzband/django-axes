@@ -121,10 +121,10 @@ class AccessAttemptTest(TestCase):
         """Tests a valid logout and make sure the logout_time is updated
         """
         response = self._login(is_valid_username=True, is_valid_password=True)
-        self.assertEquals(AccessLog.objects.latest('id').logout_time, None)
+        self.assertEqual(AccessLog.objects.latest('id').logout_time, None)
 
         response = self.client.get(reverse('admin:logout'))
-        self.assertNotEquals(AccessLog.objects.latest('id').logout_time, None)
+        self.assertNotEqual(AccessLog.objects.latest('id').logout_time, None)
         self.assertContains(response, 'Logged out')
 
     def test_cooling_off(self):
@@ -239,13 +239,13 @@ class AccessAttemptTest(TestCase):
 
         # Make a lockout
         self.test_failure_limit_once()
-        self.assertEquals(scope.signal_received, 1)
+        self.assertEqual(scope.signal_received, 1)
 
         reset()
 
         # Make another lockout
         self.test_failure_limit_once()
-        self.assertEquals(scope.signal_received, 2)
+        self.assertEqual(scope.signal_received, 2)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_combination_user_and_ip(self):
@@ -313,7 +313,7 @@ class AccessAttemptTest(TestCase):
         # An impossibly large post dict
         extra_data = {string.ascii_letters * x: x for x in range(0, 1000)}
         self._login(**extra_data)
-        self.assertEquals(
+        self.assertEqual(
             len(AccessAttempt.objects.latest('id').post_data), 1024
         )
 
@@ -322,8 +322,8 @@ class AccessAttemptTest(TestCase):
         """
         self.test_failure_limit_once()
         response = self._login(is_json=True)
-        self.assertEquals(response.status_code, 403)
-        self.assertEquals(response.get('Content-Type'), 'application/json')
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get('Content-Type'), 'application/json')
 
     @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
     def test_valid_logout_without_success_log(self):
@@ -332,7 +332,7 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_valid_username=True, is_valid_password=True)
         response = self.client.get(reverse('admin:logout'))
 
-        self.assertEquals(AccessLog.objects.all().count(), 0)
+        self.assertEqual(AccessLog.objects.all().count(), 0)
         self.assertContains(response, 'Logged out')
 
     @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
@@ -355,7 +355,7 @@ class AccessAttemptTest(TestCase):
         response = self._login(is_valid_username=True, is_valid_password=True)
         response = self.client.get(reverse('admin:logout'))
 
-        self.assertEquals(AccessLog.objects.first().logout_time, None)
+        self.assertEqual(AccessLog.objects.first().logout_time, None)
         self.assertContains(response, 'Logged out')
 
     @override_settings(AXES_DISABLE_ACCESS_LOG=True)
@@ -367,9 +367,9 @@ class AccessAttemptTest(TestCase):
         AccessLog.objects.all().delete()
 
         response = self._login(is_valid_username=True, is_valid_password=False)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
-        self.assertEquals(AccessLog.objects.all().count(), 0)
+        self.assertEqual(AccessLog.objects.all().count(), 0)
 
     @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_check_is_not_made_on_GET(self):
