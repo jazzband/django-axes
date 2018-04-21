@@ -33,7 +33,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
     """ Create an AccessAttempt record if the login wasn't successful
     """
     if request is None or settings.AXES_USERNAME_FORM_FIELD not in credentials:
-        log.error('Attempt to authenticate with a custom backend failed.')
+        log.warning('Attempt to authenticate with a custom backend failed.')
         return
 
     ip_address = get_client_ip(request)
