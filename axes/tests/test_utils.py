@@ -2,10 +2,11 @@ from __future__ import unicode_literals
 
 import datetime
 
+from django.http import HttpRequest
 from django.test import TestCase, override_settings
 from django.utils import six
 
-from axes.utils import iso8601, is_ipv6, get_client_str
+from axes.utils import iso8601, is_ipv6, get_client_str, get_client_username
 
 
 class UtilsTest(TestCase):
@@ -141,5 +142,32 @@ class UtilsTest(TestCase):
 
         expected = ip + '(user-agent={0})'.format(user_agent)
         actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @override_settings(AXES_USERNAME_FORM_FIELD='username')
+    def test_default_get_client_username(self):
+        expected = 'test-username'
+
+        request = HttpRequest()
+        request.POST['username'] = expected
+
+        actual = get_client_username(request)
+
+        self.assertEqual(expected, actual)
+
+    def sample_customize_username(request):
+        return 'prefixed-' + request.POST.get('username')
+
+    @override_settings(AXES_USERNAME_FORM_FIELD='username')
+    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username)
+    def test_custom_get_client_username(self):
+        provided = 'test-username'
+        expected = 'prefixed-' + provided
+
+        request = HttpRequest()
+        request.POST['username'] = provided
+
+        actual = get_client_username(request)
 
         self.assertEqual(expected, actual)

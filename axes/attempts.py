@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from axes.conf import settings
 from axes.models import AccessAttempt
-from axes.utils import get_axes_cache, get_client_ip
+from axes.utils import get_axes_cache, get_client_ip, get_client_username
 
 
 def _query_user_attempts(request):
@@ -16,7 +16,7 @@ def _query_user_attempts(request):
     Otherwise return None.
     """
     ip = get_client_ip(request)
-    username = request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+    username = get_client_username(request)
 
     if settings.AXES_ONLY_USER_FAILURES:
         attempts = AccessAttempt.objects.filter(username=username)
@@ -158,7 +158,7 @@ def is_user_lockable(request):
     try:
         field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
         kwargs = {
-            field: request.POST.get(settings.AXES_USERNAME_FORM_FIELD)
+            field: get_client_username(request)
         }
         user = get_user_model().objects.get(**kwargs)
 

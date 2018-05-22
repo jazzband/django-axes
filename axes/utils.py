@@ -69,6 +69,12 @@ def get_client_ip(request):
     return getattr(request, client_ip_attribute)
 
 
+def get_client_username(request):
+    if settings.AXES_USERNAME_CALLABLE:
+        return settings.AXES_USERNAME_CALLABLE(request)
+    return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+
+
 def is_ipv6(ip):
     try:
         inet_pton(AF_INET6, ip)
