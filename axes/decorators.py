@@ -12,7 +12,7 @@ from django.shortcuts import render
 from axes import get_version
 from axes.conf import settings
 from axes.attempts import is_already_locked
-from axes.utils import iso8601, get_lockout_message
+from axes.utils import iso8601, get_client_username, get_lockout_message
 
 log = logging.getLogger(settings.AXES_LOGGER)
 if settings.AXES_VERBOSE:
@@ -50,7 +50,7 @@ def axes_form_invalid(func):
 def lockout_response(request):
     context = {
         'failure_limit': settings.AXES_FAILURE_LIMIT,
-        'username': request.POST.get(settings.AXES_USERNAME_FORM_FIELD, '')
+        'username': get_client_username(request) or ''
     }
 
     cool_off = settings.AXES_COOLOFF_TIME

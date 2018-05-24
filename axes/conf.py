@@ -20,6 +20,9 @@ class MyAppConf(AppConf):
     # use a specific password field to retrieve from login POST data
     PASSWORD_FORM_FIELD = 'password'
 
+    # use a provided callable to transform the POSTed username into the one used in credentials
+    USERNAME_CALLABLE = None
+
     # only check user name and not location or user_agent
     ONLY_USER_FAILURES = False
 
