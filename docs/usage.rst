@@ -177,3 +177,32 @@ do the patching of views yourself.
         url(r'^accounts/', include('allauth.urls')),
         # ...
     ]
+
+Altering username before login
+------------------------------
+
+In special cases, you may have the need to modify the username that is
+submitted before attempting to authenticate. For example, adding namespacing or
+removing client-set prefixes. In these cases, ``axes`` needs to know how to make
+these changes so that it can correctly identify the user without any form
+cleaning or validation. This is where the ``AXES_USERNAME_CALLABLE`` setting
+comes in. You can define how to make these modifications in a callable that
+takes a request object, and provide that callable to ``axes`` via this setting.
+
+For example, a function like this could take a post body with something like
+``username='prefixed-username'`` and ``namespace=my_namespace`` and turn it
+into ``my_namespace-username``:
+
+*settings.py:* ::
+
+    def sample_username_modifier(request):
+        provided_username = request.POST.get('username')
+        some_namespace = request.POST.get('namespace')
+        return '-'.join([some_namespace, provided_username[9:]])
+
+    AXES_USERNAME_CALLABLE = sample_username_modifier
+
+NOTE: You still have to make these modifications yourself before calling
+authenticate. If you want to re-use the same function for consistency, that's
+fine, but ``axes`` doesn't inject these changes into the authentication flow
+for you.
