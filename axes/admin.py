@@ -58,6 +58,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+
 admin.site.register(AccessAttempt, AccessAttemptAdmin)
 
 
@@ -108,5 +109,6 @@ class AccessLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
 
 admin.site.register(AccessLog, AccessLogAdmin)
