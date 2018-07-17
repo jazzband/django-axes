@@ -4,6 +4,7 @@
 .DS_Store
 .project
 .pydevproject
+.python-version
 .tox
 build/
 dist/

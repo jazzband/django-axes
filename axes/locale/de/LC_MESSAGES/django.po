@@ -1,0 +1,97 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-07-17 15:56+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: axes/admin.py:38
+msgid "Form Data"
+msgstr "Form-Daten"
+
+#: axes/admin.py:41 axes/admin.py:95
+msgid "Meta Data"
+msgstr "Meta-Daten"
+
+#: axes/conf.py:58
+msgid "Account locked: too many login attempts. Please try again later"
+msgstr ""
+"Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen "
+"Sie es später erneut."
+
+#: axes/conf.py:61
+msgid ""
+"Account locked: too many login attempts. Contact an admin to unlock your "
+"account."
+msgstr ""
+"Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Kontaktieren Sie "
+"einen Administrator, um Ihren Zugang zu entsperren."
+
+#: axes/models.py:9
+msgid "User Agent"
+msgstr "Browserkennung"
+
+#: axes/models.py:15
+msgid "IP Address"
+msgstr "IP-Adresse"
+
+#: axes/models.py:21
+msgid "Username"
+msgstr "Benutzername"
+
+#: axes/models.py:35
+msgid "HTTP Accept"
+msgstr ""
+
+#: axes/models.py:40
+msgid "Path"
+msgstr "Pfad"
+
+#: axes/models.py:45
+msgid "Attempt Time"
+msgstr "Zugriffszeitpunkt"
+
+#: axes/models.py:57
+msgid "GET Data"
+msgstr "GET-Daten"
+
+#: axes/models.py:61
+msgid "POST Data"
+msgstr "POST-Daten"
+
+#: axes/models.py:65
+msgid "Failed Logins"
+msgstr "Fehlgeschlagene Anmeldeversuche"
+
+#: axes/models.py:76
+msgid "access attempt"
+msgstr "Zugriffsversuch"
+
+#: axes/models.py:77
+msgid "access attempts"
+msgstr "Zugriffsversuche"
+
+#: axes/models.py:81
+msgid "Logout Time"
+msgstr "Abmeldezeitpunkt"
+
+#: axes/models.py:90
+msgid "access log"
+msgstr "Zugriffslog"
+
+#: axes/models.py:91
+msgid "access logs"
+msgstr "Zugriffslogs"

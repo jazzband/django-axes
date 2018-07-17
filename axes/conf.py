@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 from appconf import AppConf
 
@@ -54,10 +55,10 @@ class MyAppConf(AppConf):
     IP_BLACKLIST = None
 
     # message to show when locked out and have cooloff enabled
-    COOLOFF_MESSAGE = 'Account locked: too many login attempts. Please try again later'
+    COOLOFF_MESSAGE = _('Account locked: too many login attempts. Please try again later')
 
     # message to show when locked out and have cooloff disabled
-    PERMALOCK_MESSAGE = 'Account locked: too many login attempts. Contact an admin to unlock your account.'
+    PERMALOCK_MESSAGE = _('Account locked: too many login attempts. Contact an admin to unlock your account.')
 
     # if your deployment is using reverse proxies, set this value to 'left-most' or 'right-most' per your configuration
     PROXY_ORDER = 'left-most'

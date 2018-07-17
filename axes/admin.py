@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from axes.models import AccessLog
 from axes.models import AccessAttempt
@@ -34,10 +35,10 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('path_info', 'failures_since_start')
         }),
-        ('Form Data', {
+        (_('Form Data'), {
             'fields': ('get_data', 'post_data')
         }),
-        ('Meta Data', {
+        (_('Meta Data'), {
             'fields': ('user_agent', 'ip_address', 'http_accept')
         })
     )
@@ -91,7 +92,7 @@ class AccessLogAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('path_info',)
         }),
-        ('Meta Data', {
+        (_('Meta Data'), {
             'fields': ('user_agent', 'ip_address', 'http_accept')
         })
     )
