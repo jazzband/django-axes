@@ -6,7 +6,7 @@ from django.utils.translation import gettext as _
 
 class CommonAccess(models.Model):
     user_agent = models.CharField(
-        verbose+name=_('User Agent'),
+        verbose_name=_('User Agent'),
         max_length=255,
         db_index=True,
     )
