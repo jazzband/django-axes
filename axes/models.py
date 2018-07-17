@@ -1,21 +1,24 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils.translation import gettext as _
 
 
 class CommonAccess(models.Model):
     user_agent = models.CharField(
+        verbose+name=_('User Agent'),
         max_length=255,
         db_index=True,
     )
 
     ip_address = models.GenericIPAddressField(
-        verbose_name='IP Address',
+        verbose_name=_('IP Address'),
         null=True,
         db_index=True,
     )
 
     username = models.CharField(
+        verbose_name=_('Username'),
         max_length=255,
         null=True,
         db_index=True,
@@ -29,16 +32,17 @@ class CommonAccess(models.Model):
     )
 
     http_accept = models.CharField(
-        verbose_name='HTTP Accept',
+        verbose_name=_('HTTP Accept'),
         max_length=1025,
     )
 
     path_info = models.CharField(
-        verbose_name='Path',
+        verbose_name=_('Path'),
         max_length=255,
     )
 
     attempt_time = models.DateTimeField(
+        verbose_name=_('Attempt Time'),
         auto_now_add=True,
     )
 
@@ -50,15 +54,15 @@ class CommonAccess(models.Model):
 
 class AccessAttempt(CommonAccess):
     get_data = models.TextField(
-        verbose_name='GET Data',
+        verbose_name=_('GET Data'),
     )
 
     post_data = models.TextField(
-        verbose_name='POST Data',
+        verbose_name=_('POST Data'),
     )
 
     failures_since_start = models.PositiveIntegerField(
-        verbose_name='Failed Logins',
+        verbose_name=_('Failed Logins'),
     )
 
     @property
@@ -71,6 +75,7 @@ class AccessAttempt(CommonAccess):
 
 class AccessLog(CommonAccess):
     logout_time = models.DateTimeField(
+        verbose_name=_('Logout Time'),
         null=True,
         blank=True,
     )
