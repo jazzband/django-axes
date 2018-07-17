@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-ifrom django.utils.translation import gettext as _
+from django.utils.translation import gettext as _
 
 from appconf import AppConf
 
