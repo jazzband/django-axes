@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-07-17 14:57+0200\n"
+"POT-Creation-Date: 2018-07-17 15:36+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,13 +20,17 @@ msgstr ""
 
 #: axes/conf.py:58
 msgid "Account locked: too many login attempts. Please try again later"
-msgstr "Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen Sie es später erneut."
+msgstr ""
+"Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen "
+"Sie es später erneut."
 
 #: axes/conf.py:61
 msgid ""
 "Account locked: too many login attempts. Contact an admin to unlock your "
 "account."
-msgstr "Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Kontaktieren Sie einen Administrator, um Ihren Zugang zu entsperren."
+msgstr ""
+"Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Kontaktieren Sie "
+"einen Administrator, um Ihren Zugang zu entsperren."
 
 #: axes/models.py:9
 msgid "User Agent"
@@ -64,6 +68,22 @@ msgstr "POST-Daten"
 msgid "Failed Logins"
 msgstr "Fehlgeschlagene Anmeldeversuche"
 
-#: axes/models.py:78
+#: axes/models.py:76
+msgid "access attempt"
+msgstr "Zugriffsversuch"
+
+#: axes/models.py:77
+msgid "access attempts"
+msgstr "Zugriffsversuche"
+
+#: axes/models.py:81
 msgid "Logout Time"
 msgstr "Abmeldezeitpunkt"
+
+#: axes/models.py:90
+msgid "access log"
+msgstr "Zugriffslog"
+
+#: axes/models.py:91
+msgid "access logs"
+msgstr "Zugriffslogs"

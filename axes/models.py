@@ -72,6 +72,9 @@ class AccessAttempt(CommonAccess):
     def __str__(self):
         return 'Attempted Access: %s' % self.attempt_time
 
+    class Meta(object):
+        verbose_name = _('access attempt')
+        verbose_name_plural = _('access attempts')
 
 class AccessLog(CommonAccess):
     logout_time = models.DateTimeField(
@@ -82,3 +85,7 @@ class AccessLog(CommonAccess):
 
     def __str__(self):
         return 'Access Log for %s @ %s' % (self.username, self.attempt_time)
+
+    class Meta(object):
+        verbose_name = _('access log')
+        verbose_name_plural = _('access logs')
