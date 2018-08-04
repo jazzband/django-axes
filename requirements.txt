@@ -1,4 +1,5 @@
 django
-prospector
+astroid==1.6.5 
+prospector==0.12.11
 sphinx-rtd-theme
 -e .
