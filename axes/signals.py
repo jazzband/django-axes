@@ -19,7 +19,7 @@ from axes.attempts import ip_in_whitelist
 from axes.models import AccessLog, AccessAttempt
 from axes.utils import get_client_str
 from axes.utils import query2str
-from axes.utils import get_axes_cache, get_client_ip
+from axes.utils import get_axes_cache, get_client_ip, get_client_username
 
 
 log = logging.getLogger(settings.AXES_LOGGER)
@@ -32,12 +32,12 @@ user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: disable=unused-argument
     """ Create an AccessAttempt record if the login wasn't successful
     """
-    if request is None or settings.AXES_USERNAME_FORM_FIELD not in credentials:
+    if request is None:
         log.warning('Attempt to authenticate with a custom backend failed.')
         return
 
     ip_address = get_client_ip(request)
-    username = credentials[settings.AXES_USERNAME_FORM_FIELD]
+    username = get_client_username(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
