@@ -75,7 +75,7 @@ Authentication backend problems
 
 If you get ``AxesModelBackend.RequestParameterRequired`` exceptions,
 make sure any auth libraries and middleware you use pass the request object to authenticate.
-Notably Django Rest Framework (DRF) ``BasicAuthentication`` does not pass request.
+Notably in older versions of Django Rest Framework (DRF) (before 3.7.0), ``BasicAuthentication`` does not pass request.
 `Here is an example workaround for DRF <https://gist.github.com/markddavidoff/7e442b1ea2a2e68d390e76731c35afe7>`_.
 
 Reverse proxy configuration
