@@ -142,3 +142,4 @@ These should be defined in your ``settings.py`` file.
   Default: ``False``
 * ``AXES_DISABLE_ACCESS_LOG``: If ``True``, disable all access logging, so the admin interface will be empty. Default: ``False``
 * ``AXES_DISABLE_SUCCESS_ACCESS_LOG``: If ``True``, successful logins will not be logged, so the access log shown in the admin interface will only list unsuccessful login attempts. Default: ``False``
+* ``AXES_RESET_ON_SUCCESS``: If ``True``, a successful login will reset the number of failed logins. Default: ``False``

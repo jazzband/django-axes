@@ -76,6 +76,7 @@ class AccessAttempt(CommonAccess):
         verbose_name = _('access attempt')
         verbose_name_plural = _('access attempts')
 
+
 class AccessLog(CommonAccess):
     logout_time = models.DateTimeField(
         _('Logout Time'),

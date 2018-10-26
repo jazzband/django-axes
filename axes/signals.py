@@ -16,6 +16,7 @@ from axes.attempts import get_cache_timeout
 from axes.attempts import get_user_attempts
 from axes.attempts import is_user_lockable
 from axes.attempts import ip_in_whitelist
+from axes.attempts import reset_user_attempts
 from axes.models import AccessLog, AccessAttempt
 from axes.utils import get_client_str
 from axes.utils import query2str
@@ -144,6 +145,13 @@ def log_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unus
             http_accept=http_accept,
             path_info=path_info,
             trusted=True,
+        )
+
+    if settings.AXES_RESET_ON_SUCCESS:
+        count = reset_user_attempts(request)
+        log.info(
+            'AXES: Deleted %d failed login attempts by %s.', count,
+            get_client_str(username, ip_address, user_agent, path_info)
         )
 
 

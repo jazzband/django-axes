@@ -394,3 +394,49 @@ class AccessAttemptTest(TestCase):
         request.user = self.user
         authenticate(request=request, foo='bar')
         self.assertEqual(AccessLog.objects.all().count(), 0)
+
+    # by default, AXES_RESET_ON_SUCCESS = False
+    def test_reset_on_success_default(self):
+        """Tests that the failure attempts does not reset after one successful
+        attempt by default.
+        """
+        print('RESET = FALSE')
+        # test until one try before the limit
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+            response = self._login()
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY)
+
+        # Perform a valid login
+        self._login(is_valid_username=True, is_valid_password=True)
+
+        # So, we shouldn't have gotten a lock-out yet.
+        # But we should get one now
+        response = self._login()
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+
+    @override_settings(AXES_RESET_ON_SUCCESS=True)
+    def test_reset_on_success(self):
+        """Tests that the failure attempts resets after one successful
+        attempt when using the corresponding setting.
+        """
+        print('RESET = TRUE')
+        # test until one try before the limit
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+            response = self._login()
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY)
+
+        # Perform a valid login
+        self._login(is_valid_username=True, is_valid_password=True)
+
+        # So, we shouldn't have gotten a lock-out yet.
+        # And we shouldn't get one now
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+            response = self._login()
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY)
+
+        # But we should get one now
+        response = self._login()
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
