@@ -1,7 +1,7 @@
 Changes
 =======
 
-4.4.1 (2018-10-18)
+4.4.1 (2018-10-24)
 ------------------
 
 - Add a German translation
@@ -15,6 +15,9 @@ Changes
 
 - pin prospector to 0.12.11, and pin astroid to 1.6.5
   [hsiaoyi0504]
+
+- fix missing migration and add check to prevent it happening again.
+  [markddavidoff]
 
 4.4.0 (2018-05-26)
 ------------------
