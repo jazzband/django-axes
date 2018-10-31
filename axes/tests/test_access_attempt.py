@@ -394,3 +394,48 @@ class AccessAttemptTest(TestCase):
         request.user = self.user
         authenticate(request=request, foo='bar')
         self.assertEqual(AccessLog.objects.all().count(), 0)
+
+    def _assert_resets_on_success(self):
+        """Sets up for testing the AXES_RESET_ON_SUCCESS setting.
+        """
+        # test until one try before the limit
+        for _ in range(settings.AXES_FAILURE_LIMIT - 1):
+            response = self._login()
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY)
+
+        # Perform a valid login
+        response = self._login(is_valid_username=True, is_valid_password=True)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
+
+        return self._login()
+
+    # by default, AXES_RESET_ON_SUCCESS = False
+    def test_reset_on_success_default(self):
+        """Tests that the failure attempts does not reset after one successful
+        attempt by default.
+        """
+        response = self._assert_resets_on_success()
+
+        # So, we shouldn't have found a lock-out yet.
+        # But we should find one now
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+
+    @override_settings(AXES_RESET_ON_SUCCESS=True)
+    def test_reset_on_success(self):
+        """Tests that the failure attempts resets after one successful
+        attempt when using the corresponding setting.
+        """
+        response = self._assert_resets_on_success()
+
+        # So, we shouldn't have found a lock-out yet.
+        # And we shouldn't find one now
+        self.assertContains(response, self.LOGIN_FORM_KEY)
+        for _ in range(settings.AXES_FAILURE_LIMIT - 2):
+            response = self._login()
+            # Check if we are on the same login page.
+            self.assertContains(response, self.LOGIN_FORM_KEY)
+
+        # But we should find one now
+        response = self._login()
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)

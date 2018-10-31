@@ -27,6 +27,9 @@ class MyAppConf(AppConf):
     # only check user name and not location or user_agent
     ONLY_USER_FAILURES = False
 
+    # reset the number of failed attempts after one successful attempt
+    RESET_ON_SUCCESS = False
+
     # lock out user from particular IP based on combination USER+IP
     LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
 

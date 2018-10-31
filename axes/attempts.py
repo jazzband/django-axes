@@ -130,6 +130,13 @@ def get_user_attempts(request):
     return attempts
 
 
+def reset_user_attempts(request):
+    attempts = _query_user_attempts(request)
+    count, _ = attempts.delete()
+
+    return count
+
+
 def ip_in_whitelist(ip):
     if not settings.AXES_IP_WHITELIST:
         return False
