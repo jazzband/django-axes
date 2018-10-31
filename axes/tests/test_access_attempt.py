@@ -401,7 +401,7 @@ class AccessAttemptTest(TestCase):
         attempt by default.
         """
         # test until one try before the limit
-        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(settings.AXES_FAILURE_LIMIT - 1):
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
@@ -430,7 +430,7 @@ class AccessAttemptTest(TestCase):
 
         # So, we shouldn't have gotten a lock-out yet.
         # And we shouldn't get one now
-        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(settings.AXES_FAILURE_LIMIT - 1):
             response = self._login()
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY)
