@@ -150,7 +150,8 @@ def log_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unus
     if settings.AXES_RESET_ON_SUCCESS:
         count = reset_user_attempts(request)
         log.info(
-            'AXES: Deleted %d failed login attempts by %s.', count,
+            'AXES: Deleted %d failed login attempts by %s.',
+            count,
             get_client_str(username, ip_address, user_agent, path_info)
         )
 
