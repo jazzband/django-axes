@@ -400,7 +400,6 @@ class AccessAttemptTest(TestCase):
         """Tests that the failure attempts does not reset after one successful
         attempt by default.
         """
-        print('RESET = FALSE')
         # test until one try before the limit
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
@@ -420,7 +419,6 @@ class AccessAttemptTest(TestCase):
         """Tests that the failure attempts resets after one successful
         attempt when using the corresponding setting.
         """
-        print('RESET = TRUE')
         # test until one try before the limit
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
