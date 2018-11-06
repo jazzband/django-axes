@@ -10,7 +10,7 @@ from axes.utils import get_lockout_message
 class AxesModelBackend(ModelBackend):
 
     class RequestParameterRequired(Exception):
-        msg = 'DjangoAxesModelBackend requires calls to authenticate to pass `request`'
+        msg = 'AxesModelBackend requires calls to authenticate to pass `request` as an argument.'
 
         def __init__(self):
             super(AxesModelBackend.RequestParameterRequired, self).__init__(
