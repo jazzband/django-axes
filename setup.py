@@ -25,6 +25,7 @@ setup(
     package_dir={'axes': 'axes'},
     install_requires=[
         'pytz',
+        'django',
         'django-appconf',
         'django-ipware>=2.0.2',
         'win_inet_pton ; python_version < "3.4" and sys_platform == "win32"',
@@ -48,6 +49,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Internet :: Log Analysis',
         'Topic :: Security',
         'Topic :: System :: Logging',

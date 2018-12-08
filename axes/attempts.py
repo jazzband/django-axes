@@ -210,12 +210,12 @@ def is_already_locked(request):
             failures_cached >= settings.AXES_FAILURE_LIMIT and
             settings.AXES_LOCK_OUT_AT_FAILURE
         )
-    else:
-        for attempt in get_user_attempts(request):
-            if (
-                attempt.failures_since_start >= settings.AXES_FAILURE_LIMIT and
-                settings.AXES_LOCK_OUT_AT_FAILURE
-            ):
-                return True
+
+    for attempt in get_user_attempts(request):
+        if (
+            attempt.failures_since_start >= settings.AXES_FAILURE_LIMIT and
+            settings.AXES_LOCK_OUT_AT_FAILURE
+        ):
+            return True
 
     return False

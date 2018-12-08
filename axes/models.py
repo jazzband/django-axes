@@ -46,7 +46,7 @@ class CommonAccess(models.Model):
         auto_now_add=True,
     )
 
-    class Meta(object):
+    class Meta:
         app_label = 'axes'
         abstract = True
         ordering = ['-attempt_time']
@@ -72,7 +72,7 @@ class AccessAttempt(CommonAccess):
     def __str__(self):
         return 'Attempted Access: %s' % self.attempt_time
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('access attempt')
         verbose_name_plural = _('access attempts')
 
@@ -87,6 +87,6 @@ class AccessLog(CommonAccess):
     def __str__(self):
         return 'Access Log for %s @ %s' % (self.username, self.attempt_time)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('access log')
         verbose_name_plural = _('access logs')

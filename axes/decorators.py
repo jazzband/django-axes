@@ -69,12 +69,12 @@ def lockout_response(request):
             status=403,
         )
 
-    elif settings.AXES_LOCKOUT_TEMPLATE:
+    if settings.AXES_LOCKOUT_TEMPLATE:
         return render(
             request, settings.AXES_LOCKOUT_TEMPLATE, context, status=403
         )
 
-    elif settings.AXES_LOCKOUT_URL:
+    if settings.AXES_LOCKOUT_URL:
         return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
 
     return HttpResponse(get_lockout_message(), status=403)
