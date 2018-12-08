@@ -1,6 +1,16 @@
 Changes
 =======
 
+4.4.3 (2018-12-08)
+------------------
+
+- Fix MANIFEST.in missing German translations
+  [aleksihakli]
+
+- Add `AXES_RESET_ON_SUCCESS` configuration flag
+  [arjenzijlstra]
+
+
 4.4.2 (2018-10-30)
 ------------------
 
