@@ -5,23 +5,27 @@ import logging
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth.signals import user_login_failed
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
+from django.db.models.signals import post_delete
+from django.db.models.signals import post_save
 from django.dispatch import Signal
+from django.dispatch import receiver
 from django.utils import timezone
 
-from axes.conf import settings
 from axes.attempts import get_cache_key
 from axes.attempts import get_cache_timeout
 from axes.attempts import get_user_attempts
-from axes.attempts import is_user_lockable
 from axes.attempts import ip_in_whitelist
+from axes.attempts import is_user_lockable
 from axes.attempts import reset_user_attempts
-from axes.models import AccessLog, AccessAttempt
+from axes.conf import settings
+from axes.models import AccessAttempt
+from axes.models import AccessLog
+from axes.models import UserAccessFailureLog
+from axes.utils import get_axes_cache
+from axes.utils import get_client_ip
 from axes.utils import get_client_str
+from axes.utils import get_client_username
 from axes.utils import query2str
-from axes.utils import get_axes_cache, get_client_ip, get_client_username
-
 
 log = logging.getLogger(settings.AXES_LOGGER)
 
@@ -62,6 +66,12 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
     failures += 1
     get_axes_cache().set(cache_hash_key, failures, cache_timeout)
 
+    # add a failed attempt for the user
+    # for more detail see docstring for UserAccessFailureLog
+    if settings.AXES_FAILURE_LIMIT_MAX_BY_USER:
+        username = get_client_username(request)
+        UserAccessFailureLog.create_or_update(username)
+
     # has already attempted, update the info
     if attempts:
         for attempt in attempts:
@@ -79,12 +89,20 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
             attempt.attempt_time = timezone.now()
             attempt.save()
 
-            log.info(
-                'AXES: Repeated login failure by %s. Count = %d of %d',
-                get_client_str(username, ip_address, user_agent, path_info),
-                failures,
-                settings.AXES_FAILURE_LIMIT
-            )
+            if settings.AXES_FAILURE_LIMIT is not None:
+                    log.info(
+                        'AXES: Repeated login failure by %s. Count = %d of %d',
+                        get_client_str(username, ip_address, user_agent, path_info),
+                        failures,
+                        settings.AXES_FAILURE_LIMIT
+                    )
+            else:
+                log.info(
+                    'AXES: Repeated login failure by %s. Count = %d',
+                    get_client_str(username, ip_address, user_agent, path_info),
+                    failures,
+                )
+
     else:
         # Record failed attempt. Whether or not the IP address or user agent is
         # used in counting failures is handled elsewhere, so we just record
@@ -107,6 +125,10 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
 
     # no matter what, we want to lock them out if they're past the number of
     # attempts allowed, unless the user is set to notlockable
+    failure_limit_valid = settings.AXES_FAILURE_LIMIT is not None
+    if not failure_limit_valid:
+        return
+
     if (
         failures >= settings.AXES_FAILURE_LIMIT and
         settings.AXES_LOCK_OUT_AT_FAILURE and

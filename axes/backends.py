@@ -33,12 +33,21 @@ class AxesModelBackend(ModelBackend):
         if request is None:
             raise AxesModelBackend.RequestParameterRequired()
 
-        if is_already_locked(request):
+        already_locked, context = is_already_locked(request)
+        if already_locked:
             # locked out, don't try to authenticate, just update return_context and return
             # Its a bit weird to pass a context and expect a response value but its nice to get a "why" back.
-            error_msg = get_lockout_message()
+            error_msg = get_lockout_message(request, context)
             response_context = kwargs.get('response_context', {})
             response_context['error'] = error_msg
+
+            # FIXME: If ANY attempts for username
+            #   need to be counted (valid and invalid) on
+            #   AXES_FAILURE_LIMIT_MAX_BY_USER, then uncomment the code below.
+
+            # username = get_client_username(request)
+            # if settings.AXES_FAILURE_LIMIT_MAX_BY_USER:
+            #     UserAccessFailureLog.create_or_update(username)
             raise PermissionDenied(error_msg)
 
         # No-op

@@ -25,6 +25,7 @@ class AccessAttemptConfigTest(TestCase):
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
     ALLOWED = 302
     BLOCKED = 403
+    RELOAD = 200
 
     def _login(self, username, password, ip_addr='127.0.0.1',
                is_json=False, **kwargs):
@@ -62,8 +63,27 @@ class AccessAttemptConfigTest(TestCase):
             )
         return response
 
+    def _lockout_user_from_ip_by_max(self, username, ip_addr):
+        attempts = settings.AXES_FAILURE_LIMIT_MAX_BY_USER
+        self._make_failing_attempts(username, ip_addr, attempts=attempts)
+
+    def _make_failing_attempts(self, username, ip_addr, attempts):
+        for _ in range(attempts):
+            response = self._login(
+                username=username,
+                password=self.WRONG_PASSWORD,
+                ip_addr=ip_addr,
+            )
+        return response
+
     def _lockout_user1_from_ip1(self):
         return self._lockout_user_from_ip(
+            username=self.USER_1,
+            ip_addr=self.IP_1,
+        )
+
+    def _lockout_user1_from_ip1_by_max(self):
+        return self._lockout_user_from_ip_by_max(
             username=self.USER_1,
             ip_addr=self.IP_1,
         )
@@ -107,6 +127,56 @@ class AccessAttemptConfigTest(TestCase):
             ip_addr=self.IP_2
         )
         self.assertEqual(response.status_code, self.ALLOWED)
+
+    @override_settings(AXES_FAILURE_LIMIT=None)
+    def test_lockout_by_ip_by_max_blocks_when_same_user_diff_ip_without_cache(self):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1_by_max()
+
+        # User 1 can still login from IP 2.
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @override_settings(AXES_FAILURE_LIMIT=None)
+    def test_lockout_by_ip_allows_when_diff_user_same_ip_without_cache(self):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1_by_max()
+
+        # User 2 is also locked out from IP 1.
+        response = self._login(
+            self.USER_2,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_1
+        )
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @override_settings(AXES_FAILURE_LIMIT=None)
+    def test_user_lockout_when_diff_ip_without_cache(self):
+        # User 1 is locked out from IP 1.
+        attempts = settings.AXES_FAILURE_LIMIT_MAX_BY_USER - 1
+        response = self._make_failing_attempts(self.USER_1, self.IP_1,
+                                               attempts=attempts)
+
+        self.assertEqual(response.status_code, self.RELOAD)
+
+        # User 2 is also locked out from IP 1.
+        response = self._login(
+            self.USER_1,
+            self.WRONG_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        response = self._login(
+            self.USER_1,
+            self.VALID_PASSWORD,
+            ip_addr=self.IP_2
+        )
+        self.assertEqual(response.status_code, self.BLOCKED)
 
     def test_lockout_by_ip_blocks_when_diff_user_same_ip_without_cache(self):
         # User 1 is locked out from IP 1.

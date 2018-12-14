@@ -1,0 +1,172 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-12-13 10:16-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: axes/admin.py:38
+msgid "Form Data"
+msgstr ""
+
+#: axes/admin.py:41 axes/admin.py:95
+msgid "Meta Data"
+msgstr ""
+
+#: axes/conf.py:12 axes/test_settings.py:91
+msgid ""
+"Attempt {failures_by_user} of {failure_limit_by_user}. After invalid attempt "
+"{failure_limit_by_user} account will be blocked."
+msgstr ""
+"Попытка {failures_by_user} из {failure_limit_by_user}. После неудачной "
+"попытки {failure_limit_by_user} учетная запись будет заблокирована."
+
+#: axes/conf.py:15 axes/test_settings.py:94
+msgid ""
+"Attempt {failures_since_start} of {failure_limit}. After invalid attempt "
+"{failure_limit} account will be blocked for time {cooloff_time}."
+msgstr ""
+"Попытка {failures_since_start} из {failure_limit}. После неудачной "
+"попытки {failure_limit} учетная запись будет заблокирована на "
+"{cooloff_time}."
+
+#: axes/conf.py:18 axes/test_settings.py:97
+msgid ""
+"On next invalid attempt account will be blocked for time {cooloff_time}."
+msgstr ""
+"При следующей не верной попытке ваша учетная запись будет заблокирована на "
+"{cooloff_time}."
+
+#: axes/conf.py:20 axes/test_settings.py:99
+msgid "Account is temporary blocked for time {cooloff_time}."
+msgstr ""
+"Ваша учетная запись заблокирована на {cooloff_time}. Повторите попытку позже."
+
+#: axes/conf.py:21 axes/conf.py:31 axes/test_settings.py:100
+#: axes/test_settings.py:110
+msgid "On next invalid attempt account will be blocked."
+msgstr ""
+"При следующей не верной попытке ваша учетная запись будет заблокирована. "
+"(Для снятия блокировки необходимо обратиться к оператору ИС)."
+
+#: axes/conf.py:22 axes/conf.py:29 axes/test_settings.py:101
+#: axes/test_settings.py:108
+msgid "Account is blocked. Contract admin to unlock account."
+msgstr ""
+"Ваша учетная запись заблокирована, для снятия блокировки необходимо "
+"обратиться к оператору ИС."
+
+#: axes/conf.py:23 axes/test_settings.py:102
+msgid ""
+"Account is blocked. (Not in white list). Contract admin to unlock account."
+msgstr ""
+"Ваша учетная запись заблокирована, для снятия блокировки необходимо "
+"обратиться к оператору ИС."
+
+#: axes/conf.py:25 axes/test_settings.py:104
+msgid "Account is blocked. (In black list). Contract admin to unlock account."
+msgstr ""
+"Ваша учетная запись заблокирована, для снятия блокировки необходимо "
+"обратиться к оператору ИС."
+
+#: axes/conf.py:32 axes/test_settings.py:111
+msgid ""
+"Attempt {failures_since_start} of {failure_limit}. After invalid attempt "
+"{failure_limit} account will be blocked."
+msgstr ""
+"Попытка {failures_since_start} из {failure_limit}. После неудачной "
+"попытки {failure_limit} учетная запись будет заблокирована. "
+"(Для снятия блокировки необходимо обратиться к оператору ИС)."
+
+#: axes/conf.py:100
+msgid "Account locked: too many login attempts. Please try again later"
+msgstr ""
+
+#: axes/conf.py:103
+msgid ""
+"Account locked: too many login attempts. Contact an admin to unlock your "
+"account."
+msgstr ""
+
+#: axes/models.py:9
+msgid "User Agent"
+msgstr ""
+
+#: axes/models.py:15
+msgid "IP Address"
+msgstr ""
+
+#: axes/models.py:21 axes/models.py:103
+msgid "Username"
+msgstr ""
+
+#: axes/models.py:35
+msgid "HTTP Accept"
+msgstr ""
+
+#: axes/models.py:40
+msgid "Path"
+msgstr ""
+
+#: axes/models.py:45 axes/models.py:110
+msgid "Attempt Time"
+msgstr ""
+
+#: axes/models.py:57
+msgid "GET Data"
+msgstr ""
+
+#: axes/models.py:61
+msgid "POST Data"
+msgstr ""
+
+#: axes/models.py:65
+msgid "Failed Logins"
+msgstr ""
+
+#: axes/models.py:76
+msgid "access attempt"
+msgstr ""
+
+#: axes/models.py:77
+msgid "access attempts"
+msgstr ""
+
+#: axes/models.py:82
+msgid "Logout Time"
+msgstr ""
+
+#: axes/models.py:91
+msgid "access log"
+msgstr ""
+
+#: axes/models.py:92
+msgid "access logs"
+msgstr ""
+
+#: axes/models.py:115
+msgid "Total Failed Logins"
+msgstr ""
+
+#: axes/models.py:123
+msgid "user access failure log"
+msgstr ""
+
+#: axes/models.py:124
+msgid "user access failure logs"
+msgstr ""

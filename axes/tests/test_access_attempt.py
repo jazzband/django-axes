@@ -94,7 +94,7 @@ class AccessAttemptTest(TestCase):
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self._login()
-        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+        self.assertContains(response, 1004, status_code=403)
 
     def test_failure_limit_many(self):
         """Tests the login lock trying to login a lot of times more
@@ -109,7 +109,7 @@ class AccessAttemptTest(TestCase):
         # We should get a locked message each time we try again
         for _ in range(random.randrange(1, settings.AXES_FAILURE_LIMIT)):
             response = self._login()
-            self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+            self.assertContains(response, 1004, status_code=403)
 
     def test_valid_login(self):
         """Tests a valid login for a real username
@@ -165,7 +165,7 @@ class AccessAttemptTest(TestCase):
         for _ in range(settings.AXES_FAILURE_LIMIT + 1):
             response = self._login(user_agent=long_user_agent)
 
-        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+        self.assertContains(response, 1004, status_code=403)
 
     def test_reset_ip(self):
         """Tests if can reset an ip address
@@ -264,7 +264,29 @@ class AccessAttemptTest(TestCase):
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self._login(is_valid_username=True, is_valid_password=False)
-        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+        self.assertContains(response, 1004, status_code=403)
+
+    @override_settings(AXES_FAILURE_LIMIT=None)
+    def test_not_lockout_if_failure_limit_none(self):
+        for _ in range(1, settings.AXES_FAILURE_LIMIT_MAX_BY_USER - 1):
+            response = self._login()
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY)
+
+    @override_settings(AXES_FAILURE_LIMIT=None)
+    def test_lockout_max_by_user(self):
+        for _ in range(1, settings.AXES_FAILURE_LIMIT_MAX_BY_USER):
+            response = self._login(
+                is_valid_username=True,
+                is_valid_password=False,
+            )
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY)
+
+        # So, we shouldn't have gotten a lock-out yet.
+        # But we should get one now
+        response = self._login(is_valid_username=True, is_valid_password=False)
+        self.assertContains(response, 1006, status_code=403)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_only(self):
@@ -283,7 +305,7 @@ class AccessAttemptTest(TestCase):
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self._login(is_valid_username=True, is_valid_password=False)
-        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+        self.assertContains(response, 1004, status_code=403)
 
         # reset the username only and make sure we can log in now even though
         # our IP has failed each time
@@ -419,7 +441,7 @@ class AccessAttemptTest(TestCase):
 
         # So, we shouldn't have found a lock-out yet.
         # But we should find one now
-        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+        self.assertContains(response, 1004, status_code=403)
 
     @override_settings(AXES_RESET_ON_SUCCESS=True)
     def test_reset_on_success(self):
@@ -438,4 +460,4 @@ class AccessAttemptTest(TestCase):
 
         # But we should find one now
         response = self._login()
-        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+        self.assertContains(response, 1004, status_code=403)

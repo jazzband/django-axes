@@ -90,3 +90,50 @@ class AccessLog(CommonAccess):
     class Meta(object):
         verbose_name = _('access log')
         verbose_name_plural = _('access logs')
+
+
+class UserAccessFailureLog(models.Model):
+    """Model that logs and stores number of all failing
+    attempts by username, if setting AXES_FAILURE_LIMIT_MAX_BY_USER is set.
+
+    Failing attempts number doesnt reset on successful login
+    or by timeout.
+    """
+    username = models.CharField(
+        _('Username'),
+        max_length=255,
+        null=True,
+        db_index=True,
+    )
+
+    attempt_time = models.DateTimeField(
+        _('Attempt Time'),
+        auto_now_add=True,
+    )
+
+    failures = models.PositiveIntegerField(
+        _('Total Failed Logins'), default=1,
+    )
+
+    def __str__(self):
+        return 'Total user access failures Log for %s @ %s' % (
+        self.username, self.attempt_time)
+
+    class Meta(object):
+        verbose_name = _('user access failure log')
+        verbose_name_plural = _('user access failure logs')
+        app_label = 'axes'
+        ordering = ['-attempt_time']
+
+    @classmethod
+    def create_or_update(cls, username):
+        """Created new log record for username or
+        updates failures count.
+        """
+        if not username:
+            return
+        failure_log, created = cls.objects.get_or_create(
+            username=username)
+        if not created:
+            failure_log.failures += 1
+            failure_log.save()

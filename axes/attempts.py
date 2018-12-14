@@ -7,8 +7,31 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from axes.conf import settings
+from axes.decorators import set_priority_message
 from axes.models import AccessAttempt
-from axes.utils import get_axes_cache, get_client_ip, get_client_username
+from axes.models import UserAccessFailureLog
+from axes.utils import get_axes_cache
+from axes.utils import get_client_ip
+from axes.utils import get_client_username
+
+
+def max_reached(total_attempts):
+    """True if total failing attempts for username
+    reached AXES_FAILURE_LIMIT_MAX_BY_USER.
+    """
+    if total_attempts is None:
+        return False
+    return total_attempts >= settings.AXES_FAILURE_LIMIT_MAX_BY_USER
+
+
+def permblock_on_next(failures_by_user):
+    """True if on next failure, setting
+    AXES_FAILURE_LIMIT_MAX_BY_USER will be triggered.
+    """
+    if (failures_by_user is None or
+            settings.AXES_FAILURE_LIMIT_MAX_BY_USER is None):
+        return False
+    return failures_by_user + 1 == settings.AXES_FAILURE_LIMIT_MAX_BY_USER
 
 
 def _query_user_attempts(request):
@@ -61,7 +84,7 @@ def get_cache_key(request_or_obj):
         ua = request_or_obj.user_agent
     else:
         ip = get_client_ip(request_or_obj)
-        un = request_or_obj.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+        un = get_client_username(request_or_obj)
         ua = request_or_obj.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
     ip = ip.encode('utf-8') if ip else ''.encode('utf-8')
@@ -182,40 +205,133 @@ def is_user_lockable(request):
     return True
 
 
+@set_priority_message
 def is_already_locked(request):
+    """
+    1)If request is already blocked,
+    returns True, and provides context containing
+    message code and other data required to display
+    message for user:
+        - explaining block reason
+    if appropriate.
+    2)If request is not blocked yet,
+    returns False, and and provides context containing
+    message code and other data required to display
+    message for user:
+        - next failing attempt will trigger blocking
+        - how many failing attempts left until block
+    if appropriate.
+
+    :return: blocked flag, context
+    """
+
     ip = get_client_ip(request)
+    username = get_client_username(request)
+
+    context = dict(failures_by_user=None,
+                   failures_since_start=None,
+                   messages_codes=[])
 
     if (
         settings.AXES_ONLY_USER_FAILURES or
         settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP
-    ) and request.method == 'GET':
-        return False
+    ) and (request.method == 'GET' or not username):
+        return False, context
 
     if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
-        return False
+        return False, context
 
     if settings.AXES_ONLY_WHITELIST and not ip_in_whitelist(ip):
-        return True
+        context['messages_codes'].append(1007)
+        return True, context
 
     if ip_in_blacklist(ip):
-        return True
+        context['messages_codes'].append(1008)
+        return True, context
 
     if not is_user_lockable(request):
-        return False
+        return False, context
+
+    if settings.AXES_FAILURE_LIMIT_MAX_BY_USER:
+        try:
+            failure_log = UserAccessFailureLog.objects.get(username=username)
+        except UserAccessFailureLog.DoesNotExist:
+            context['failures_by_user'] = 0
+        else:
+            context['failures_by_user'] = failure_log.failures
+            if max_reached(failure_log.failures):
+                context['messages_codes'].append(1006)
+                return True, context
+
+        if permblock_on_next(context['failures_by_user']):
+            context['messages_codes'].append(1005)
+        else:
+            context['messages_codes'].append(1001)
+
 
     cache_hash_key = get_cache_key(request)
     failures_cached = get_axes_cache().get(cache_hash_key)
-    if failures_cached is not None:
-        return (
-            failures_cached >= settings.AXES_FAILURE_LIMIT and
-            settings.AXES_LOCK_OUT_AT_FAILURE
-        )
-    else:
-        for attempt in get_user_attempts(request):
-            if (
-                attempt.failures_since_start >= settings.AXES_FAILURE_LIMIT and
-                settings.AXES_LOCK_OUT_AT_FAILURE
-            ):
-                return True
 
-    return False
+    failure_limit_valid = settings.AXES_FAILURE_LIMIT is not None
+    if not failure_limit_valid:
+        return False, context
+
+    if failures_cached is not None:
+        is_locked = (failures_cached >= settings.AXES_FAILURE_LIMIT
+                     and settings.AXES_LOCK_OUT_AT_FAILURE)
+        if is_locked:
+            if not settings.AXES_COOLOFF_TIME:
+                context['messages_codes'].append(1009)
+            else:
+                context['messages_codes'].append(1004)
+            return True, context
+
+        context['failures_since_start'] = failures_cached
+        if failures_cached + 1 == settings.AXES_FAILURE_LIMIT:
+            if settings.AXES_COOLOFF_TIME:
+                context['messages_codes'].append(1003)
+            else:
+                context['messages_codes'].append(1010)
+        else:
+            if settings.AXES_COOLOFF_TIME:
+                context['messages_codes'].append(1002)
+            else:
+                context['messages_codes'].append(1011)
+
+        return False, context
+
+
+    else:
+        failures_since_start_max = None
+        for attempt in get_user_attempts(request):
+            is_locked = (
+                    attempt.failures_since_start >=
+                    settings.AXES_FAILURE_LIMIT
+                    and settings.AXES_LOCK_OUT_AT_FAILURE
+            )
+            if is_locked:
+                if not settings.AXES_COOLOFF_TIME:
+                    context['messages_codes'].append(1009)
+                else:
+                    context['messages_codes'].append(1004)
+                return True, context
+
+            if (failures_since_start_max is None
+                or attempt.failures_since_start > failures_since_start_max):
+                failures_since_start_max = attempt.failures_since_start
+
+        context['failures_since_start'] = failures_since_start_max
+        if failures_since_start_max is None:
+            failures_since_start_max = 1
+        if failures_since_start_max + 1 == settings.AXES_FAILURE_LIMIT:
+            if settings.AXES_COOLOFF_TIME:
+                context['messages_codes'].append(1003)
+            else:
+                context['messages_codes'].append(1010)
+        else:
+            if settings.AXES_COOLOFF_TIME:
+                context['messages_codes'].append(1002)
+            else:
+                context['messages_codes'].append(1011)
+
+    return False, context

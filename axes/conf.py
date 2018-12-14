@@ -1,14 +1,53 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
 from appconf import AppConf
 
 
 class MyAppConf(AppConf):
+    MESSAGE_CODE_DESC_MAP = {
+        1001: _('Attempt {failures_by_user} of {failure_limit_by_user}.'
+                ' After invalid attempt {failure_limit_by_user}'
+                ' account will be blocked.'),
+        1002: _('Attempt {failures_since_start} of {failure_limit}.'
+                ' After invalid attempt {failure_limit} account '
+                'will be blocked for time {cooloff_time}.'),
+        1003: _('On next invalid attempt account'
+                ' will be blocked for time {cooloff_time}.'),
+        1004: _('Account is temporary blocked for time {cooloff_time}.'),
+        1005: _('On next invalid attempt account will be blocked.'),
+        1006: _('Account is blocked. Contract admin to unlock account.'),
+        1007: _('Account is blocked. (Not in white list).'
+                ' Contract admin to unlock account.'),
+        1008: _('Account is blocked. (In black list).'
+                ' Contract admin to unlock account.'),
+
+        # When blocked by FAILURE_LIMIT but no COOLOFF_TIME
+        1009: _('Account is blocked. Contract admin to unlock account.'),
+        # When will be blocked by FAILURE_LIMIT but no COOLOFF_TIME
+        1010: _('On next invalid attempt account will be blocked.'),
+        1011: _('Attempt {failures_since_start} of {failure_limit}.'
+                ' After invalid attempt {failure_limit}'
+                ' account will be blocked.'),
+    }
+
     # see if the user has overridden the failure limit
     FAILURE_LIMIT = 3
+
+    FAILURE_LIMIT_MAX_BY_USER = 10
+
+    if (FAILURE_LIMIT is not None and
+            FAILURE_LIMIT_MAX_BY_USER is not None and
+            FAILURE_LIMIT >= FAILURE_LIMIT_MAX_BY_USER):
+        raise ImproperlyConfigured(
+            'If both set, AXES_FAILURE_LIMIT must be less'
+            ' than AXES_FAILURE_LIMIT_MAX_BY_USER'
+        )
+
+    COOLOFF_TIME_FORMATTER_CALLABLE = None
 
     # see if the user has set axes to lock out logins after failure limit
     LOCK_OUT_AT_FAILURE = True

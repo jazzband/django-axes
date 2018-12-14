@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 
+import datetime
+import logging
+
 try:
     import win_inet_pton  # pylint: disable=unused-import
 except ImportError:
@@ -16,8 +19,24 @@ from axes.conf import settings
 from axes.models import AccessAttempt
 
 
+log = logging.getLogger(settings.AXES_LOGGER)
+
+
 def get_axes_cache():
     return caches[getattr(settings, 'AXES_CACHE', 'default')]
+
+
+def get_axes_cool_off(cool_off):
+    """cool_off is a datetime.timedelta object
+    You can provide custom callable for formatting the cool_off
+    output that end user will see.
+
+    default: iso8601
+    """
+    formatter = settings.AXES_COOLOFF_TIME_FORMATTER_CALLABLE
+    if formatter:
+        return formatter(cool_off)
+    return iso8601(cool_off)
 
 
 def query2str(items, max_length=1024):
@@ -70,6 +89,11 @@ def get_client_ip(request):
 
 
 def get_client_username(request):
+    # Additional option to support 'username' field from headers
+    username_field = request.META.get('AXES_USERNAME_FORM_FIELD')
+    if username_field:
+        return request.POST.get(username_field, None)
+
     if settings.AXES_USERNAME_CALLABLE:
         return settings.AXES_USERNAME_CALLABLE(request)
     return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
@@ -120,7 +144,98 @@ def iso8601(timestamp):
     return 'P' + date + ('T' + time if time else '')
 
 
-def get_lockout_message():
-    if settings.AXES_COOLOFF_TIME:
-        return settings.AXES_COOLOFF_MESSAGE
-    return settings.AXES_PERMALOCK_MESSAGE
+def get_lockout_message(request, context=None):
+    """Creates message that user will see on
+    failing login.
+    """
+
+    if context is None:
+        return ''
+
+    context.update({
+        'failure_limit': settings.AXES_FAILURE_LIMIT,
+        'failure_limit_by_user': settings.AXES_FAILURE_LIMIT_MAX_BY_USER,
+        'username': get_client_username(request) or ''
+    })
+
+    cool_off = settings.AXES_COOLOFF_TIME
+    if cool_off:
+        if isinstance(cool_off, (int, float)):
+            cool_off = datetime.timedelta(hours=cool_off)
+
+        context.update({
+            'cooloff_time': get_axes_cool_off(cool_off),
+        })
+
+    log.debug('Msg code: %d' % context.get('code'))
+    msg = context.pop('message')
+    str_msg = msg.format(**context)
+    # log.debug('Msg description: %s' % str_msg)
+
+    return str_msg
+
+
+def is_m3_request(request):
+    """Checks if request is made by M3 platform."""
+    return request.META.get('AXES_PLATFORM') == 'M3'
+
+
+def get_msg_code_by_priority(message_codes):
+    """Returns tuple of top ONE message and code
+    from message_codes.
+
+    Since method "is_already_locked" generates many message codes,
+    but only one of them (message) eventually needs to be shown to user,
+    we need a way to define which one.
+
+    PRIORITY is a priority order for codes. The greater index,
+    the higher priority.
+
+    If message_codes is empty -  ('', None)
+    Logs error if code not found in PRIORITY
+    or no description found in AXES_MESSAGE_CODE_DESC_MAP setting.
+    """
+
+    if not message_codes:
+        return '', None
+
+    PRIORITY = [
+        1001,
+        1011,
+        1002,
+        1010,
+        1003,
+        1009,
+        1004,
+        1005,
+        1006,
+        1007,
+        1008,
+    ]
+
+    message_codes = list(set(message_codes))
+
+    not_in_priority_exist = [x for x in message_codes if x not in PRIORITY]
+    if not_in_priority_exist:
+        log.error(
+            'Message codes not in priority list: {}.'
+            ' Add them to the list.'.format(not_in_priority_exist)
+        )
+        return '', None
+
+    max_rated_index = PRIORITY.index(message_codes[0])
+    for code in message_codes:
+        current_index = PRIORITY.index(code)
+        if current_index > max_rated_index:
+            max_rated_index = current_index
+
+    message_code = PRIORITY[max_rated_index]
+    try:
+        return settings.AXES_MESSAGE_CODE_DESC_MAP[message_code], message_code
+    except KeyError:
+        log.error(
+            'Message code does {} not have a description related to it.'
+            ' Add description to settings.MESSAGE_CODE_DESC_MAP.'
+                .format(not_in_priority_exist)
+        )
+        return '', None
