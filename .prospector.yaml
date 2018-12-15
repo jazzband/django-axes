@@ -10,5 +10,9 @@ pyflakes:
   disable:
     - F401
 
+pylint:
+  disable:
+    - old-style-class
+
 dodgy:
   run: false
