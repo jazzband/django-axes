@@ -10,6 +10,16 @@ class AppConfig(apps.AppConfig):
         from django.conf import settings
         from django.core.exceptions import ImproperlyConfigured
 
+        from axes.conf import settings as axes_settings
+        if (axes_settings.AXES_FAILURE_LIMIT is not None and
+                axes_settings.AXES_FAILURE_LIMIT_MAX_BY_USER is not None and
+                axes_settings.AXES_FAILURE_LIMIT >=
+                axes_settings.AXES_FAILURE_LIMIT_MAX_BY_USER):
+            raise ImproperlyConfigured(
+                'If both set, AXES_FAILURE_LIMIT must be less'
+                ' than AXES_FAILURE_LIMIT_MAX_BY_USER'
+            )
+
         if settings.CACHES[getattr(settings, 'AXES_CACHE', 'default')]['BACKEND'] == \
                 'django.core.cache.backends.locmem.LocMemCache':
             raise ImproperlyConfigured(

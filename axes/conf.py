@@ -39,14 +39,6 @@ class MyAppConf(AppConf):
 
     FAILURE_LIMIT_MAX_BY_USER = 10
 
-    if (FAILURE_LIMIT is not None and
-            FAILURE_LIMIT_MAX_BY_USER is not None and
-            FAILURE_LIMIT >= FAILURE_LIMIT_MAX_BY_USER):
-        raise ImproperlyConfigured(
-            'If both set, AXES_FAILURE_LIMIT must be less'
-            ' than AXES_FAILURE_LIMIT_MAX_BY_USER'
-        )
-
     COOLOFF_TIME_FORMATTER_CALLABLE = None
 
     # see if the user has set axes to lock out logins after failure limit
