@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-12-13 09:46-0600\n"
+"POT-Creation-Date: 2018-07-17 15:56+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,80 +26,13 @@ msgstr "Form-Daten"
 msgid "Meta Data"
 msgstr "Meta-Daten"
 
-#: axes/conf.py:12
-#, python-brace-format
-msgid ""
-"Attempt {failures_by_user} of {failure_limit_by_user}. After invalid attempt "
-"{failure_limit_by_user} account will be blocked."
-msgstr ""
-
-#: axes/conf.py:15
-#, python-brace-format
-msgid ""
-"Attempt {failures_since_start} of {failure_limit}. After invalid attempt "
-"{failure_limit} account will be blocked for time {cooloff_time}."
-msgstr ""
-
-#: axes/conf.py:18
-#, python-brace-format
-msgid ""
-"On next invalid attempt account will be blocked for time {cooloff_time}."
-msgstr ""
-
-#: axes/conf.py:20
-#, python-brace-format
-msgid "Account is temporary blocked for time {cooloff_time}."
-msgstr ""
-
-#: axes/conf.py:21 axes/conf.py:31
-msgid "On next invalid attempt account will be blocked."
-msgstr ""
-
-#: axes/conf.py:22 axes/conf.py:29
-#, fuzzy
-#| msgid ""
-#| "Account locked: too many login attempts. Contact an admin to unlock your "
-#| "account."
-msgid "Account is blocked. Contract admin to unlock account."
-msgstr ""
-"Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Kontaktieren Sie "
-"einen Administrator, um Ihren Zugang zu entsperren."
-
-#: axes/conf.py:23
-#, fuzzy
-#| msgid ""
-#| "Account locked: too many login attempts. Contact an admin to unlock your "
-#| "account."
-msgid ""
-"Account is blocked. (Not in white list). Contract admin to unlock account."
-msgstr ""
-"Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Kontaktieren Sie "
-"einen Administrator, um Ihren Zugang zu entsperren."
-
-#: axes/conf.py:25
-#, fuzzy
-#| msgid ""
-#| "Account locked: too many login attempts. Contact an admin to unlock your "
-#| "account."
-msgid "Account is blocked. (In black list). Contract admin to unlock account."
-msgstr ""
-"Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Kontaktieren Sie "
-"einen Administrator, um Ihren Zugang zu entsperren."
-
-#: axes/conf.py:32
-#, python-brace-format
-msgid ""
-"Attempt {failures_since_start} of {failure_limit}. After invalid attempt "
-"{failure_limit} account will be blocked."
-msgstr ""
-
-#: axes/conf.py:100
+#: axes/conf.py:58
 msgid "Account locked: too many login attempts. Please try again later"
 msgstr ""
 "Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen "
 "Sie es später erneut."
 
-#: axes/conf.py:103
+#: axes/conf.py:61
 msgid ""
 "Account locked: too many login attempts. Contact an admin to unlock your "
 "account."
@@ -115,7 +48,7 @@ msgstr "Browserkennung"
 msgid "IP Address"
 msgstr "IP-Adresse"
 
-#: axes/models.py:21 axes/models.py:103
+#: axes/models.py:21
 msgid "Username"
 msgstr "Benutzername"
 
@@ -127,7 +60,7 @@ msgstr ""
 msgid "Path"
 msgstr "Pfad"
 
-#: axes/models.py:45 axes/models.py:110
+#: axes/models.py:45
 msgid "Attempt Time"
 msgstr "Zugriffszeitpunkt"
 
@@ -151,32 +84,14 @@ msgstr "Zugriffsversuch"
 msgid "access attempts"
 msgstr "Zugriffsversuche"
 
-#: axes/models.py:82
+#: axes/models.py:81
 msgid "Logout Time"
 msgstr "Abmeldezeitpunkt"
 
-#: axes/models.py:91
+#: axes/models.py:90
 msgid "access log"
 msgstr "Zugriffslog"
 
-#: axes/models.py:92
+#: axes/models.py:91
 msgid "access logs"
-msgstr "Zugriffslogs"
-
-#: axes/models.py:115
-#, fuzzy
-#| msgid "Failed Logins"
-msgid "Total Failed Logins"
-msgstr "Fehlgeschlagene Anmeldeversuche"
-
-#: axes/models.py:123
-#, fuzzy
-#| msgid "access log"
-msgid "user access failure log"
-msgstr "Zugriffslog"
-
-#: axes/models.py:124
-#, fuzzy
-#| msgid "access logs"
-msgid "user access failure logs"
 msgstr "Zugriffslogs"
