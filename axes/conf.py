@@ -37,8 +37,10 @@ class MyAppConf(AppConf):
     # see if the user has overridden the failure limit
     FAILURE_LIMIT = 3
 
+    # see if the user has overridden the failure limit max by user
     FAILURE_LIMIT_MAX_BY_USER = 10
 
+    # use a provided callable to transform cooloff time that end user will see
     COOLOFF_TIME_FORMATTER_CALLABLE = None
 
     # see if the user has set axes to lock out logins after failure limit

@@ -102,6 +102,10 @@ These should be defined in your ``settings.py`` file.
   Default: ``'default'``
 * ``AXES_FAILURE_LIMIT``: The number of login attempts allowed before a
   record is created for the failed logins.  Default: ``3``
+* ``AXES_FAILURE_LIMIT_MAX_BY_USER``: If not None, all failing login attempts
+  by username are stored independently from other settings.
+  If the number exceeds the user will be locked by the username until
+  explicitly unlocked. Default: ``10``
 * ``AXES_LOCK_OUT_AT_FAILURE``: After the number of allowed login attempts
   are exceeded, should we lock out this IP (and optional user agent)?
   Default: ``True``
@@ -112,6 +116,8 @@ These should be defined in your ``settings.py`` file.
   old failed login attempts will be forgotten. Can be set to a python
   timedelta object or an integer. If an integer, will be interpreted as a
   number of hours.  Default: ``None``
+* ``COOLOFF_TIME_FORMATTER_CALLABLE``: A callable function that takes cooloff
+  timedelta and transforms it. Default: ``None``
 * ``AXES_LOGGER``: If set, specifies a logging mechanism for axes to use.
   Default: ``'axes.watch_login'``
 * ``AXES_LOCKOUT_TEMPLATE``: If set, specifies a template to render when a

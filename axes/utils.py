@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import datetime
 import logging
 
+from axes.models import UserAccessFailureLog
+
 try:
     import win_inet_pton  # pylint: disable=unused-import
 except ImportError:
@@ -113,11 +115,14 @@ def reset(ip=None, username=None):
     """
 
     attempts = AccessAttempt.objects.all()
+    failure_logs = UserAccessFailureLog.objects.all()
     if ip:
         attempts = attempts.filter(ip_address=ip)
     if username:
         attempts = attempts.filter(username=username)
+        failure_logs = failure_logs.filter(username=username)
 
+    failure_logs.delete()
     count, _ = attempts.delete()
 
     return count
