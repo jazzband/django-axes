@@ -96,7 +96,7 @@ them as per the example.
                 request = request,
                 username = form.cleaned_data.get('username'),
                 password = form.cleaned_data.get('password'),
-            )
+            ) 
 
             if user is not None:
                 custom_login(request, user)
@@ -129,22 +129,22 @@ Integration with django-allauth
 -------------------------------
 
 ``axes`` relies on having login information stored under ``AXES_USERNAME_FORM_FIELD`` key
-both in ``request.POST`` and in ``credentials`` dict passed to
-``user_login_failed`` signal. This is not the case with ``allauth``.
+both in ``request.POST`` and in ``credentials`` dict passed to 
+``user_login_failed`` signal. This is not the case with ``allauth``. 
 ``allauth`` always uses ``login`` key in post POST data but it becomes ``username``
 key in ``credentials`` dict in signal handler.
 
 To overcome this you need to use custom login form that duplicates the value
-of ``username`` key under a ``login`` key in that dict
+of ``username`` key under a ``login`` key in that dict 
 (and set ``AXES_USERNAME_FORM_FIELD = 'login'``).
 
-You also need to decorate ``dispatch()`` and ``form_invalid()`` methods
-of the ``allauth`` login view. By default ``axes`` is patching only the
+You also need to decorate ``dispatch()`` and ``form_invalid()`` methods 
+of the ``allauth`` login view. By default ``axes`` is patching only the 
 ``LoginView`` from ``django.contrib.auth`` app and with ``allauth`` you have to
 do the patching of views yourself.
 
 *settings.py:* ::
-
+    
     AXES_USERNAME_FORM_FIELD = 'login'
 
 *forms.py:* ::
