@@ -63,10 +63,7 @@ def get_cache_key(request_or_obj, credentials=None):
     else:
         ip = get_client_ip(request_or_obj)
         ua = request_or_obj.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-        if credentials is None:
-            un = request_or_obj.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
-        else:
-            un = credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
+        un = get_client_username(request_or_obj, credentials)
 
     ip = ip.encode('utf-8') if ip else ''.encode('utf-8')
     un = un.encode('utf-8') if un else ''.encode('utf-8')
