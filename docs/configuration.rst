@@ -124,10 +124,10 @@ These should be defined in your ``settings.py`` file.
   Default: ``True``
 * ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
   users usernames. Default: ``username``
-* ``AXES_USERNAME_CALLABLE``: A callable function that takes a request object
-  and returns the username. If empty, axes just fetches it from the POST body
+* ``AXES_USERNAME_CALLABLE``: A callable function that takes a request object and a credentials dictionary
+  and returns the username. If empty, axes just fetches it from the credentials or requst.POST fields
   based on ``AXES_USERNAME_FORM_FIELD``. Default: ``None``
-* ``AXES_PASSWORD_FORM_FIELD``: the name of the form field that contains your
+* ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your
   users password. Default: ``password``
 * ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True`` prevents the login
   from IP under a particular user if the attempt limit has been exceeded,
