@@ -146,7 +146,7 @@ class UtilsTest(TestCase):
         self.assertEqual(expected, actual)
 
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
-    def test_default_get_client_username(self):
+    def test_default_get_client_username_from_request(self):
         expected = 'test-username'
 
         request = HttpRequest()
@@ -156,12 +156,27 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    def sample_customize_username(request):
+    @override_settings(AXES_USERNAME_FORM_FIELD='username')
+    def test_default_get_client_username_from_credentials(self):
+        expected = 'test-username'
+        expected_in_credentials = 'test-credentials-username'
+
+        request = HttpRequest()
+        request.POST['username'] = expected
+        credentials = {
+            'username': expected_in_credentials
+        }
+
+        actual = get_client_username(request, credentials)
+
+        self.assertEqual(expected_in_credentials, actual)
+
+    def sample_customize_username_from_request(request, credentials):
         return 'prefixed-' + request.POST.get('username')
 
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
-    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username)
-    def test_custom_get_client_username(self):
+    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username_from_request)
+    def test_custom_get_client_username_from_request(self):
         provided = 'test-username'
         expected = 'prefixed-' + provided
 
@@ -171,3 +186,22 @@ class UtilsTest(TestCase):
         actual = get_client_username(request)
 
         self.assertEqual(expected, actual)
+
+    def sample_customize_username_from_credentials(request, credentials):
+        return 'prefixed-' + credentials.get('username')
+
+    @override_settings(AXES_USERNAME_FORM_FIELD='username')
+    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username_from_credentials)
+    def test_custom_get_client_username_from_credentials(self):
+        provided = 'test-username'
+        expected = 'prefixed-' + provided
+        provided_in_credentials = 'test-username'
+        expected_in_credentials = 'prefixed-' + provided_in_credentials
+
+        request = HttpRequest()
+        request.POST['username'] = provided
+        credentials = {'username': provided_in_credentials}
+
+        actual = get_client_username(request, credentials)
+
+        self.assertEqual(expected_in_credentials, actual)

@@ -69,10 +69,12 @@ def get_client_ip(request):
     return getattr(request, client_ip_attribute)
 
 
-def get_client_username(request):
+def get_client_username(request, credentials=None):
     if settings.AXES_USERNAME_CALLABLE:
-        return settings.AXES_USERNAME_CALLABLE(request)
-    return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+        return settings.AXES_USERNAME_CALLABLE(request, credentials)
+    if credentials is None:
+        return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+    return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
 def is_ipv6(ip):

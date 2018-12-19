@@ -38,7 +38,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
         return
 
     ip_address = get_client_ip(request)
-    username = get_client_username(request)
+    username = get_client_username(request, credentials)
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
@@ -47,8 +47,8 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
         return
 
     failures = 0
-    attempts = get_user_attempts(request)
-    cache_hash_key = get_cache_key(request)
+    attempts = get_user_attempts(request, credentials)
+    cache_hash_key = get_cache_key(request, credentials)
     cache_timeout = get_cache_timeout()
 
     failures_cached = get_axes_cache().get(cache_hash_key)
@@ -110,7 +110,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
     if (
         failures >= settings.AXES_FAILURE_LIMIT and
         settings.AXES_LOCK_OUT_AT_FAILURE and
-        is_user_lockable(request)
+        is_user_lockable(request, credentials)
     ):
         log.warning(
             'AXES: locked out %s after repeated login attempts.',
@@ -148,7 +148,9 @@ def log_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unus
         )
 
     if settings.AXES_RESET_ON_SUCCESS:
-        count = reset_user_attempts(request)
+        # Create credentials dictionary from the username field
+        credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
+        count = reset_user_attempts(request, credentials)
         log.info(
             'AXES: Deleted %d failed login attempts by %s.',
             count,

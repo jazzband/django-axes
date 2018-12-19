@@ -206,8 +206,11 @@ class AccessAttemptTest(TestCase):
                                            'username': self.VALID_USERNAME,
                                            'password': 'test'
                                        })
+        credentials = {
+            'username': self.VALID_USERNAME
+        }
 
-        self.assertEqual(cache_hash_key, get_cache_key(request))
+        self.assertEqual(cache_hash_key, get_cache_key(request, credentials))
 
         # Getting cache key from AccessAttempt Object
         attempt = AccessAttempt(

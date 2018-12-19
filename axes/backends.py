@@ -4,6 +4,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.core.exceptions import PermissionDenied
 
 from axes.attempts import is_already_locked
+from axes.conf import settings
 from axes.utils import get_lockout_message
 
 
@@ -30,10 +31,13 @@ class AxesModelBackend(ModelBackend):
         :return: Nothing, but will update return_context with lockout message if user is locked out.
         """
 
+        # Create credentials dictionary from username field
+        credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
+
         if request is None:
             raise AxesModelBackend.RequestParameterRequired()
 
-        if is_already_locked(request):
+        if is_already_locked(request, credentials):
             # locked out, don't try to authenticate, just update return_context and return
             # Its a bit weird to pass a context and expect a response value but its nice to get a "why" back.
             error_msg = get_lockout_message()
