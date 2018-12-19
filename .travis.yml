@@ -1,19 +1,33 @@
-sudo: false
+dist: xenial
 language: python
 cache: pip
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
+  - 3.7
+env:
+  - DJANGO=1.11
+  - DJANGO=2.0
+  - DJANGO=2.1
+  - DJANGO=master
 matrix:
-  include:
+  exclude:
     - python: 2.7
+      env: DJANGO=2.0
+    - python: 2.7
+      env: DJANGO=2.1
+    - python: 2.7
+      env: DJANGO=master
     - python: 3.4
-    - python: 3.5
-    - python: 3.6
-    - python: 3.7
-      dist: xenial
-      sudo: true
+      env: DJANGO=2.1
+    - python: 3.4
+      env: DJANGO=master
 install: pip install tox-travis
 script: tox
 after_success:
-- coveralls
+  - coveralls
 deploy:
   provider: pypi
   user: jazzband
