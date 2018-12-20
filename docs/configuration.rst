@@ -124,8 +124,12 @@ These should be defined in your ``settings.py`` file.
   Default: ``True``
 * ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
   users usernames. Default: ``username``
-* ``AXES_USERNAME_CALLABLE``: A callable function that takes a request object and a credentials dictionary
-  and returns the username. If empty, axes just fetches it from the credentials or requst.POST fields
+* ``AXES_USERNAME_CALLABLE``: A callable function that takes two arguments:
+  The request object and A dictionary of keyword arguments containing the user credentials
+  that were passed to authenticate() or your own custom authentication backend.
+  Credentials matching a set of ‘sensitive’ patterns, (including password) are not contained.
+  The function must return the username.
+  If no function is supplied, axes just fetches the username from the credentials or requst.POST fields
   based on ``AXES_USERNAME_FORM_FIELD``. Default: ``None``
 * ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your
   users password. Default: ``password``
