@@ -73,7 +73,7 @@ def get_client_username(request, credentials=None):
     if settings.AXES_USERNAME_CALLABLE:
         return settings.AXES_USERNAME_CALLABLE(request, credentials)
     if credentials is None:
-        return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+        return request.POST.get('username', None)
     return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
