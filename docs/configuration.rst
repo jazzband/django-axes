@@ -124,13 +124,12 @@ These should be defined in your ``settings.py`` file.
   Default: ``True``
 * ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
   users usernames. Default: ``username``
-* ``AXES_USERNAME_CALLABLE``: A callable function that takes two arguments:
-  The request object and A dictionary of keyword arguments containing the user credentials
-  that were passed to authenticate() or your own custom authentication backend.
-  Credentials matching a set of ‘sensitive’ patterns, (including password) are not contained.
-  The function must return the username.
-  If no function is supplied, axes just fetches the username from the credentials or requst.POST fields
-  based on ``AXES_USERNAME_FORM_FIELD``. Default: ``None``
+* ``AXES_USERNAME_CALLABLE``: A callable function that takes either one or two arguments:
+  ``AXES_USERNAME_CALLABLE(request)`` or ``AXES_USERNAME_CALLABLE(request, credentials)``.
+  The ``request`` is a HttpRequest like object and the ``credentials`` is a dictionary like object.
+  ``credentials`` are the ones that were passed to Django ``authenticate()`` in the login flow.
+  If no function is supplied, axes fetches the username from the ``credentials`` or ``request.POST``
+  dictionaries based on ``AXES_USERNAME_FORM_FIELD``. Default: ``None``
 * ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your
   users password. Default: ``password``
 * ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True`` prevents the login

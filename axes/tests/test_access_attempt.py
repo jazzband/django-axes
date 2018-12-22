@@ -206,9 +206,41 @@ class AccessAttemptTest(TestCase):
                                            'username': self.VALID_USERNAME,
                                            'password': 'test'
                                        })
-        credentials = {
-            'username': self.VALID_USERNAME
-        }
+
+        self.assertEqual(cache_hash_key, get_cache_key(request))
+
+        # Getting cache key from AccessAttempt Object
+        attempt = AccessAttempt(
+            user_agent='<unknown>',
+            ip_address=ip_address,
+            username=self.VALID_USERNAME,
+            get_data='',
+            post_data='',
+            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+            path_info=request.META.get('PATH_INFO', '<unknown>'),
+            failures_since_start=0,
+        )
+        self.assertEqual(cache_hash_key, get_cache_key(attempt))
+
+
+    @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
+    def test_get_cache_key_credentials(self, _):
+        """ Test the cache key format"""
+        # Getting cache key from request
+        ip_address = '127.0.0.1'
+        cache_hash_key = 'axes-{}'.format(
+            hashlib.md5(ip_address.encode()).hexdigest()
+        )
+
+        request_factory = RequestFactory()
+        request = request_factory.post('/admin/login/',
+                                       data={
+                                           'username': self.VALID_USERNAME,
+                                           'password': 'test'
+                                       })
+
+        # Difference between the upper test: new call signature with credentials
+        credentials = {'username': self.VALID_USERNAME}
 
         self.assertEqual(cache_hash_key, get_cache_key(request, credentials))
 

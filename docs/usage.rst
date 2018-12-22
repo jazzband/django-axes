@@ -196,12 +196,23 @@ into ``my_namespace-username``:
 
 *settings.py:* ::
 
-    def sample_username_modifier(request, credentials):
+    def sample_username_modifier(request):
         provided_username = request.POST.get('username')
         some_namespace = request.POST.get('namespace')
         return '-'.join([some_namespace, provided_username[9:]])
 
     AXES_USERNAME_CALLABLE = sample_username_modifier
+
+    # New format that can also be used
+    # the credentials argument is provided if the
+    # function signature has two arguments instead of one
+
+    def sample_username_modifier_credentials(request, credentials):
+        provided_username = credentials.get('username')
+        some_namespace = credentials.get('namespace')
+        return '-'.join([some_namespace, provided_username[9:]])
+
+    AXES_USERNAME_CALLABLE = sample_username_modifier_new
 
 NOTE: You still have to make these modifications yourself before calling
 authenticate. If you want to re-use the same function for consistency, that's
