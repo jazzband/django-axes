@@ -20,7 +20,7 @@ from axes.attempts import reset_user_attempts
 from axes.models import AccessLog, AccessAttempt
 from axes.utils import get_client_str
 from axes.utils import query2str
-from axes.utils import get_axes_cache, get_client_ip, get_client_username
+from axes.utils import get_axes_cache, get_client_ip, get_client_username, get_credentials
 
 
 log = logging.getLogger(settings.AXES_LOGGER)
@@ -128,6 +128,7 @@ def log_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unus
     """ When a user logs in, update the access log
     """
     username = user.get_username()
+    credentials = get_credentials(username)
     ip_address = get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
@@ -148,8 +149,6 @@ def log_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unus
         )
 
     if settings.AXES_RESET_ON_SUCCESS:
-        # Create credentials dictionary from the username field
-        credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
         count = reset_user_attempts(request, credentials)
         log.info(
             'AXES: Deleted %d failed login attempts by %s.',

@@ -1,5 +1,6 @@
 *.egg-info
 *.pyc
+*.swp
 .coverage
 .DS_Store
 .project

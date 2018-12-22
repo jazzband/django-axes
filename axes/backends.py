@@ -4,8 +4,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.core.exceptions import PermissionDenied
 
 from axes.attempts import is_already_locked
-from axes.conf import settings
-from axes.utils import get_lockout_message
+from axes.utils import get_credentials, get_lockout_message
 
 
 class AxesModelBackend(ModelBackend):
@@ -17,25 +16,27 @@ class AxesModelBackend(ModelBackend):
             super(AxesModelBackend.RequestParameterRequired, self).__init__(
                 AxesModelBackend.RequestParameterRequired.msg)
 
-    def authenticate(self, request, username=None, password=None, **kwargs):
-        """
-        Add django-axes handling and add allow adding errors directly to a passed return_context.
-        Will never actually authenticate a user, just blocks locked out uses so don't use this as your only back end.
-        :param request: see ModelBackend.authenticate
-        :param username: see ModelBackend.authenticate
-        :param password: see ModelBackend.authenticate
-        :keyword response_context: context dict that will be returned/used in the response template.
-            NOTE: will overwrite 'error' field in dict
-        :param kwargs: see ModelBackend.authenticate
-        :raises PermissionDenied: if user is already locked out.
-        :return: Nothing, but will update return_context with lockout message if user is locked out.
-        """
+    def authenticate(self, request, **kwargs):
+        """Checks user lock out status and raises PermissionDenied if user is not allowed to log in.
 
-        # Create credentials dictionary from username field
-        credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
+        Inserts errors directly to `return_context` that is supplied as a keyword argument.
+
+        Use this on top of your AUTHENTICATION_BACKENDS list to prevent locked out users
+        from being authenticated in the standard Django authentication flow.
+
+        Note that this method does not log your user in and delegates login to other backends.
+
+        :param request: see ModelBackend.authenticate
+        :param kwargs: see ModelBackend.authenticate
+        :keyword response_context: context dict that will be updated with error information
+        :raises PermissionDenied: if user is already locked out
+        :return: None
+        """
 
         if request is None:
             raise AxesModelBackend.RequestParameterRequired()
+
+        credentials = get_credentials(**kwargs)
 
         if is_already_locked(request, credentials):
             # locked out, don't try to authenticate, just update return_context and return

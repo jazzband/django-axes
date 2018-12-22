@@ -5,6 +5,8 @@ try:
 except ImportError:
     pass
 
+from inspect import getargspec
+from logging import getLogger
 from socket import error, inet_pton, AF_INET6
 
 from django.core.cache import caches
@@ -15,6 +17,7 @@ import ipware.ip2
 from axes.conf import settings
 from axes.models import AccessAttempt
 
+logger = getLogger(__name__)
 
 def get_axes_cache():
     return caches[getattr(settings, 'AXES_CACHE', 'default')]
@@ -70,11 +73,47 @@ def get_client_ip(request):
 
 
 def get_client_username(request, credentials=None):
+    """Resolve client username from the given request or credentials if supplied
+
+    The order of preference for fetching the username is as follows:
+
+    1. If configured, use `AXES_USERNAME_CALLABLE`, and supply either `request` or `request, credentials` as arguments
+       depending on the function argument count (multiple signatures are supported for backwards compatibility)
+    2. If given, use `credentials` and fetch username from `AXES_USERNAME_FORM_FIELD` (defaults to `username`)
+    3. Use request.POST and fetch username from `AXES_USERNAME_FORM_FIELD` (defaults to `username`)
+
+    :param request: incoming Django `HttpRequest` or similar object from authentication backend or other source
+    :param credentials: incoming credentials `dict` or similar object from authentication backend or other source
+    """
+
     if settings.AXES_USERNAME_CALLABLE:
-        return settings.AXES_USERNAME_CALLABLE(request, credentials)
-    if credentials is None:
-        return request.POST.get('username', None)
-    return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
+        num_args = len(
+            getargspec(settings.AXES_USERNAME_CALLABLE).args  # pylint: disable=deprecated-method
+        )
+
+        if num_args == 2:
+            logger.debug('Using AXES_USERNAME_CALLABLE for username with two arguments: request, credentials')
+            return settings.AXES_USERNAME_CALLABLE(request, credentials)
+
+        if num_args == 1:
+            logger.debug('Using AXES_USERNAME_CALLABLE for username with one argument: request')
+            return settings.AXES_USERNAME_CALLABLE(request)
+
+        logger.error('Using AXES_USERNAME_CALLABLE for username failed: wrong number of arguments %s', num_args)
+        raise TypeError('Wrong number of arguments in function call to AXES_USERNAME_CALLABLE', num_args)
+
+    if credentials:
+        logger.debug('Using `credentials` to get username with key AXES_USERNAME_FORM_FIELD')
+        return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
+
+    logger.debug('Using `request.POST` to get username with key AXES_USERNAME_FORM_FIELD')
+    return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+
+
+def get_credentials(username=None, **kwargs):
+    credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
+    credentials.update(kwargs)
+    return credentials
 
 
 def is_ipv6(ip):

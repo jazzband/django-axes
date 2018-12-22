@@ -11,7 +11,7 @@ from axes.models import AccessAttempt
 from axes.utils import get_axes_cache, get_client_ip, get_client_username
 
 
-def _query_user_attempts(request, credentials):
+def _query_user_attempts(request, credentials=None):
     """Returns access attempt record if it exists.
     Otherwise return None.
     """
@@ -53,7 +53,6 @@ def get_cache_key(request_or_obj, credentials=None):
     """
     Build cache key name from request or AccessAttempt object.
     :param  request_or_obj: Request or AccessAttempt object
-    :param  credentials: Dictionary with access credentials - Only supplied when request_or_obj is not an AccessAttempt
     :return cache-key: String, key to be used in cache system
     """
     if isinstance(request_or_obj, AccessAttempt):
@@ -62,8 +61,8 @@ def get_cache_key(request_or_obj, credentials=None):
         ua = request_or_obj.user_agent
     else:
         ip = get_client_ip(request_or_obj)
-        ua = request_or_obj.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
         un = get_client_username(request_or_obj, credentials)
+        ua = request_or_obj.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
     ip = ip.encode('utf-8') if ip else ''.encode('utf-8')
     un = un.encode('utf-8') if un else ''.encode('utf-8')
@@ -97,7 +96,7 @@ def get_cache_timeout():
     return cache_timeout
 
 
-def get_user_attempts(request, credentials):
+def get_user_attempts(request, credentials=None):
     force_reload = False
     attempts = _query_user_attempts(request, credentials)
     cache_hash_key = get_cache_key(request, credentials)
@@ -131,7 +130,7 @@ def get_user_attempts(request, credentials):
     return attempts
 
 
-def reset_user_attempts(request, credentials):
+def reset_user_attempts(request, credentials=None):
     attempts = _query_user_attempts(request, credentials)
     count, _ = attempts.delete()
 
@@ -152,7 +151,7 @@ def ip_in_blacklist(ip):
     return ip in settings.AXES_IP_BLACKLIST
 
 
-def is_user_lockable(request, credentials):
+def is_user_lockable(request, credentials=None):
     """Check if the user has a profile with nolockout
     If so, then return the value to see if this user is special
     and doesn't get their account locked out

@@ -146,7 +146,7 @@ class UtilsTest(TestCase):
         self.assertEqual(expected, actual)
 
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
-    def test_default_get_client_username_from_request(self):
+    def test_default_get_client_username(self):
         expected = 'test-username'
 
         request = HttpRequest()
@@ -157,7 +157,7 @@ class UtilsTest(TestCase):
         self.assertEqual(expected, actual)
 
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
-    def test_default_get_client_username_from_credentials(self):
+    def test_default_get_client_username_credentials(self):
         expected = 'test-username'
         expected_in_credentials = 'test-credentials-username'
 
@@ -171,12 +171,12 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected_in_credentials, actual)
 
-    def sample_customize_username_from_request(request, credentials):
+    def sample_customize_username(request):
         return 'prefixed-' + request.POST.get('username')
 
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
-    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username_from_request)
-    def test_custom_get_client_username_from_request(self):
+    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username)
+    def test_custom_get_client_username(self):
         provided = 'test-username'
         expected = 'prefixed-' + provided
 
@@ -187,11 +187,11 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
-    def sample_customize_username_from_credentials(request, credentials):
+    def sample_customize_username_credentials(request, credentials):
         return 'prefixed-' + credentials.get('username')
 
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
-    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username_from_credentials)
+    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username_credentials)
     def test_custom_get_client_username_from_credentials(self):
         provided = 'test-username'
         expected = 'prefixed-' + provided
