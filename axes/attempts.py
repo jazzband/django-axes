@@ -11,12 +11,12 @@ from axes.models import AccessAttempt
 from axes.utils import get_axes_cache, get_client_ip, get_client_username
 
 
-def _query_user_attempts(request):
+def _query_user_attempts(request, credentials):
     """Returns access attempt record if it exists.
     Otherwise return None.
     """
     ip = get_client_ip(request)
-    username = get_client_username(request)
+    username = get_client_username(request, credentials)
 
     if settings.AXES_ONLY_USER_FAILURES:
         attempts = AccessAttempt.objects.filter(username=username)
@@ -49,10 +49,11 @@ def _query_user_attempts(request):
     return attempts
 
 
-def get_cache_key(request_or_obj):
+def get_cache_key(request_or_obj, credentials=None):
     """
     Build cache key name from request or AccessAttempt object.
     :param  request_or_obj: Request or AccessAttempt object
+    :param  credentials: Dictionary with access credentials - Only supplied when request_or_obj is not an AccessAttempt
     :return cache-key: String, key to be used in cache system
     """
     if isinstance(request_or_obj, AccessAttempt):
@@ -61,8 +62,8 @@ def get_cache_key(request_or_obj):
         ua = request_or_obj.user_agent
     else:
         ip = get_client_ip(request_or_obj)
-        un = request_or_obj.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
         ua = request_or_obj.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
+        un = get_client_username(request_or_obj, credentials)
 
     ip = ip.encode('utf-8') if ip else ''.encode('utf-8')
     un = un.encode('utf-8') if un else ''.encode('utf-8')
@@ -96,10 +97,10 @@ def get_cache_timeout():
     return cache_timeout
 
 
-def get_user_attempts(request):
+def get_user_attempts(request, credentials):
     force_reload = False
-    attempts = _query_user_attempts(request)
-    cache_hash_key = get_cache_key(request)
+    attempts = _query_user_attempts(request, credentials)
+    cache_hash_key = get_cache_key(request, credentials)
     cache_timeout = get_cache_timeout()
 
     cool_off = settings.AXES_COOLOFF_TIME
@@ -125,13 +126,13 @@ def get_user_attempts(request):
     # If objects were deleted, we need to update the queryset to reflect this,
     # so force a reload.
     if force_reload:
-        attempts = _query_user_attempts(request)
+        attempts = _query_user_attempts(request, credentials)
 
     return attempts
 
 
-def reset_user_attempts(request):
-    attempts = _query_user_attempts(request)
+def reset_user_attempts(request, credentials):
+    attempts = _query_user_attempts(request, credentials)
     count, _ = attempts.delete()
 
     return count
@@ -151,7 +152,7 @@ def ip_in_blacklist(ip):
     return ip in settings.AXES_IP_BLACKLIST
 
 
-def is_user_lockable(request):
+def is_user_lockable(request, credentials):
     """Check if the user has a profile with nolockout
     If so, then return the value to see if this user is special
     and doesn't get their account locked out
@@ -165,7 +166,7 @@ def is_user_lockable(request):
     try:
         field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
         kwargs = {
-            field: get_client_username(request)
+            field: get_client_username(request, credentials)
         }
         user = get_user_model().objects.get(**kwargs)
 
@@ -182,7 +183,7 @@ def is_user_lockable(request):
     return True
 
 
-def is_already_locked(request):
+def is_already_locked(request, credentials=None):
     ip = get_client_ip(request)
 
     if (
@@ -200,10 +201,10 @@ def is_already_locked(request):
     if ip_in_blacklist(ip):
         return True
 
-    if not is_user_lockable(request):
+    if not is_user_lockable(request, credentials):
         return False
 
-    cache_hash_key = get_cache_key(request)
+    cache_hash_key = get_cache_key(request, credentials)
     failures_cached = get_axes_cache().get(cache_hash_key)
     if failures_cached is not None:
         return (
@@ -211,7 +212,7 @@ def is_already_locked(request):
             settings.AXES_LOCK_OUT_AT_FAILURE
         )
 
-    for attempt in get_user_attempts(request):
+    for attempt in get_user_attempts(request, credentials):
         if (
             attempt.failures_since_start >= settings.AXES_FAILURE_LIMIT and
             settings.AXES_LOCK_OUT_AT_FAILURE
