@@ -187,6 +187,22 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected, actual)
 
+    @override_settings(AXES_USERNAME_FORM_FIELD='username')
+    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username)
+    def test_custom_get_client_username_from_request(self):
+        provided = 'test-username'
+        expected = 'prefixed-' + provided
+        provided_in_credentials = 'test-credentials-username'
+        expected_in_credentials = 'prefixed-' + provided_in_credentials
+
+        request = HttpRequest()
+        request.POST['username'] = provided
+        credentials = {'username': provided_in_credentials}
+
+        actual = get_client_username(request, credentials)
+
+        self.assertEqual(expected, actual)
+
     def sample_customize_username_credentials(request, credentials):
         return 'prefixed-' + credentials.get('username')
 
@@ -195,7 +211,7 @@ class UtilsTest(TestCase):
     def test_custom_get_client_username_from_credentials(self):
         provided = 'test-username'
         expected = 'prefixed-' + provided
-        provided_in_credentials = 'test-username'
+        provided_in_credentials = 'test-credentials-username'
         expected_in_credentials = 'prefixed-' + provided_in_credentials
 
         request = HttpRequest()
