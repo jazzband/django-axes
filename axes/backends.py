@@ -16,7 +16,7 @@ class AxesModelBackend(ModelBackend):
             super(AxesModelBackend.RequestParameterRequired, self).__init__(
                 AxesModelBackend.RequestParameterRequired.msg)
 
-    def authenticate(self, request, **kwargs):
+    def authenticate(self, request, username=None, password=None, **kwargs):
         """Checks user lock out status and raises PermissionDenied if user is not allowed to log in.
 
         Inserts errors directly to `return_context` that is supplied as a keyword argument.
@@ -36,7 +36,7 @@ class AxesModelBackend(ModelBackend):
         if request is None:
             raise AxesModelBackend.RequestParameterRequired()
 
-        credentials = get_credentials(**kwargs)
+        credentials = get_credentials(username=username, password=password, **kwargs)
 
         if is_already_locked(request, credentials):
             # locked out, don't try to authenticate, just update return_context and return
