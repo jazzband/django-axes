@@ -47,7 +47,6 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         'user_agent',
         'ip_address',
         'username',
-        'trusted',
         'http_accept',
         'path_info',
         'attempt_time',
