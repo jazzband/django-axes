@@ -221,3 +221,19 @@ class UtilsTest(TestCase):
         actual = get_client_username(request, credentials)
 
         self.assertEqual(expected_in_credentials, actual)
+
+    def sample_get_client_username_too_few_arguments():
+        pass
+
+    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username_too_few_arguments)
+    def test_get_client_username_too_few_arguments_invalid_callable(self):
+        with self.assertRaises(TypeError):
+            actual = get_client_username(HttpRequest(), {})
+
+    def sample_get_client_username_too_many_arguments(one, two, three):
+        pass
+
+    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username_too_many_arguments)
+    def test_get_client_username_too_many_arguments_invalid_callable(self):
+        with self.assertRaises(TypeError):
+            actual = get_client_username(HttpRequest(), {})
