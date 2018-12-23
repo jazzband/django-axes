@@ -23,15 +23,15 @@ def _query_user_attempts(request, credentials=None):
     elif settings.AXES_USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
         attempts = AccessAttempt.objects.filter(
-            user_agent=ua, ip_address=ip, username=username, trusted=True
+            user_agent=ua, ip_address=ip, username=username
         )
     else:
         attempts = AccessAttempt.objects.filter(
-            ip_address=ip, username=username, trusted=True
+            ip_address=ip, username=username
         )
 
     if not attempts:
-        params = {'trusted': False}
+        params = {}
 
         if settings.AXES_ONLY_USER_FAILURES:
             params['username'] = username
@@ -109,18 +109,13 @@ def get_user_attempts(request, credentials=None):
 
         for attempt in attempts:
             if attempt.attempt_time + cool_off < timezone.now():
-                if attempt.trusted:
-                    attempt.failures_since_start = 0
-                    attempt.save()
-                    get_axes_cache().set(cache_hash_key, 0, cache_timeout)
-                else:
-                    attempt.delete()
-                    force_reload = True
-                    failures_cached = get_axes_cache().get(cache_hash_key)
-                    if failures_cached is not None:
-                        get_axes_cache().set(
-                            cache_hash_key, failures_cached - 1, cache_timeout
-                        )
+                attempt.delete()
+                force_reload = True
+                failures_cached = get_axes_cache().get(cache_hash_key)
+                if failures_cached is not None:
+                    get_axes_cache().set(
+                        cache_hash_key, failures_cached - 1, cache_timeout
+                    )
 
     # If objects were deleted, we need to update the queryset to reflect this,
     # so force a reload.

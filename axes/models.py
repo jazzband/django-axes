@@ -24,13 +24,6 @@ class CommonAccess(models.Model):
         db_index=True,
     )
 
-    # Once a user logs in from an ip, that combination is trusted and not
-    # locked out in case of a distributed attack
-    trusted = models.BooleanField(
-        default=False,
-        db_index=True,
-    )
-
     http_accept = models.CharField(
         _('HTTP Accept'),
         max_length=1025,
@@ -78,6 +71,13 @@ class AccessAttempt(CommonAccess):
 
 
 class AccessLog(CommonAccess):
+    # Once a user logs in from an ip, that combination is trusted and not
+    # locked out in case of a distributed attack
+    trusted = models.BooleanField(
+        default=False,
+        db_index=True,
+    )
+
     logout_time = models.DateTimeField(
         _('Logout Time'),
         null=True,
