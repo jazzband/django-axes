@@ -193,7 +193,7 @@ class AccessAttemptConfigTest(TestCase):
 
         # Still possible to access the login page
         response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
-        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
 
     # Test for true and false positives when blocking by user and IP together.
     # Cache disabled. When LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
@@ -256,7 +256,7 @@ class AccessAttemptConfigTest(TestCase):
 
         # Still possible to access the login page
         response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
-        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
 
     # Test for true and false positives when blocking by IP *OR* user (default)
     # With cache enabled. Default criteria.
@@ -315,7 +315,7 @@ class AccessAttemptConfigTest(TestCase):
 
         # Still possible to access the login page
         response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
-        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
 
     # Test for true and false positives when blocking by user only.
     # With cache enabled. When AXES_ONLY_USER_FAILURES = True
@@ -432,4 +432,4 @@ class AccessAttemptConfigTest(TestCase):
 
         # Still possible to access the login page
         response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
-        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)

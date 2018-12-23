@@ -89,7 +89,7 @@ class AccessAttemptTest(TestCase):
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
-            self.assertContains(response, self.LOGIN_FORM_KEY)
+            self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
@@ -103,7 +103,7 @@ class AccessAttemptTest(TestCase):
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
-            self.assertContains(response, self.LOGIN_FORM_KEY)
+            self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
 
         # So, we shouldn't have gotten a lock-out yet.
         # We should get a locked message each time we try again
@@ -115,7 +115,7 @@ class AccessAttemptTest(TestCase):
         """Tests a valid login for a real username
         """
         response = self._login(is_valid_username=True, is_valid_password=True)
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
     def test_valid_logout(self):
         """Tests a valid logout and make sure the logout_time is updated
@@ -156,7 +156,7 @@ class AccessAttemptTest(TestCase):
             is_valid_password=True,
             user_agent=long_user_agent,
         )
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
     def test_long_user_agent_not_valid(self):
         """Tests if can handle a long user agent with failure
@@ -294,7 +294,7 @@ class AccessAttemptTest(TestCase):
                 is_valid_password=False,
             )
             # Check if we are in the same login page
-            self.assertContains(response, self.LOGIN_FORM_KEY)
+            self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
@@ -313,7 +313,7 @@ class AccessAttemptTest(TestCase):
                 is_valid_password=False,
             )
             # Check if we are in the same login page
-            self.assertContains(response, self.LOGIN_FORM_KEY)
+            self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
 
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
@@ -328,7 +328,7 @@ class AccessAttemptTest(TestCase):
             is_valid_password=True,
         )
         # Check if we are still in the login page
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
         # now create failure_limit + 1 failed logins and then we should still
         # be able to login with valid_username
@@ -339,7 +339,7 @@ class AccessAttemptTest(TestCase):
             )
         # Check if we can still log in with valid user
         response = self._login(is_valid_username=True, is_valid_password=True)
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
     def test_log_data_truncated(self):
         """Tests that query2str properly truncates data to the
@@ -368,7 +368,7 @@ class AccessAttemptTest(TestCase):
         response = self.client.get(reverse('admin:logout'))
 
         self.assertEqual(AccessLog.objects.all().count(), 0)
-        self.assertContains(response, 'Logged out')
+        self.assertContains(response, 'Logged out', html=True)
 
     @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
     def test_valid_login_without_success_log(self):
@@ -391,7 +391,7 @@ class AccessAttemptTest(TestCase):
         response = self.client.get(reverse('admin:logout'))
 
         self.assertEqual(AccessLog.objects.first().logout_time, None)
-        self.assertContains(response, 'Logged out')
+        self.assertContains(response, 'Logged out', html=True)
 
     @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_non_valid_login_without_log(self):
@@ -437,11 +437,11 @@ class AccessAttemptTest(TestCase):
         for _ in range(settings.AXES_FAILURE_LIMIT - 1):
             response = self._login()
             # Check if we are in the same login page
-            self.assertContains(response, self.LOGIN_FORM_KEY)
+            self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
 
         # Perform a valid login
         response = self._login(is_valid_username=True, is_valid_password=True)
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
         return self._login()
 
@@ -465,11 +465,11 @@ class AccessAttemptTest(TestCase):
 
         # So, we shouldn't have found a lock-out yet.
         # And we shouldn't find one now
-        self.assertContains(response, self.LOGIN_FORM_KEY)
+        self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
         for _ in range(settings.AXES_FAILURE_LIMIT - 2):
             response = self._login()
             # Check if we are on the same login page.
-            self.assertContains(response, self.LOGIN_FORM_KEY)
+            self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
 
         # But we should find one now
         response = self._login()
