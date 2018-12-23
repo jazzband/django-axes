@@ -24,10 +24,10 @@ matrix:
       env: DJANGO=2.1
     - python: 3.4
       env: DJANGO=master
-install: pip install tox-travis
+install: pip install tox-travis codecov
 script: tox
 after_success:
-  - coveralls
+  - codecov
 deploy:
   provider: pypi
   user: jazzband
