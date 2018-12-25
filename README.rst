@@ -25,11 +25,31 @@ sort of a geeky pun, since ``axes`` can be read interpreted as:
   definition) your website. Hilarious, right? That's what I thought too!
 
 
+Documentation
+-------------
+
 For more information see the documentation at:
 
 https://django-axes.readthedocs.io/
 
-If you have questions or have trouble using the app please file a bug report
-at:
+
+Issues
+------
+
+If you have questions or have trouble using the app please file a bug report at:
 
 https://github.com/jazzband/django-axes/issues
+
+
+Contributing
+------------
+
+Open issues and pull requests against the ``development`` branch.
+
+Please separate proposed changes into small, different patches by type
+so that they can be merged faster into upstream and released quicker:
+
+* Feature
+* Bugfix
+* Documentation
+* Code style and whitespace
