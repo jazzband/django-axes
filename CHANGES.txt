@@ -1,6 +1,29 @@
 Changes
 =======
 
+4.5.0 (2018-12-25)
+------------------
+
+- Improve support for custom authentication credentials using the
+  ``AXES_USERNAME_FORM_FIELD`` and ``AXES_USERNAME_CALLABLE`` settings.
+  [mastacheata]
+
+- Updated behaviour for fetching username from request or credentials:
+  If no ``AXES_USERNAME_CALLABLE`` is configured, the optional
+  ``credentials`` that are supplied to the axes utility methods
+  are now the default source for client username and the HTTP
+  request POST is the fallback for fetching the user information.
+  ``AXES_USERNAME_CALLABLE`` implements an alternative signature with two
+  arguments ``request, credentials`` in addition to the old ``request``
+  call argument signature in a backwards compatible fashion.
+  [aleksihakli]
+
+- Add official support for the Django 2.1 LTS version and Python 3.7.
+  [aleksihakli]
+
+- Improve the requirements, documentation, tests, and CI setup.
+  [aleksihakli]
+
 4.4.3 (2018-12-08)
 ------------------
 
