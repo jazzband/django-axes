@@ -35,6 +35,7 @@ deploy:
   distributions: sdist bdist_wheel
   password:
     secure: TCH5tGIggL2wsWce2svMwpEpPiwVOYqq1R3uSBTexszleP0OafNq/wZk2KZEReR5w1Aq68qp5F5Eeh2ZjJTq4f9M4LtTvqQzrmyNP55DYk/uB1rBJm9b4gBgMtAknxdI2g7unkhQEDo4suuPCVofM7rrDughySNpmvlUQYDttHQ=
+  skip_existing: true
   on:
     tags: true
     repo: jazzband/django-axes
