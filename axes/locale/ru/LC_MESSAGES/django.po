@@ -50,7 +50,7 @@ msgstr "Адрес IP"
 
 #: axes/models.py:21
 msgid "Username"
-msgstr "Имя пользователя"
+msgstr "Пользователь"
 
 #: axes/models.py:35
 msgid "HTTP Accept"
@@ -62,7 +62,7 @@ msgstr "Путь"
 
 #: axes/models.py:45
 msgid "Attempt Time"
-msgstr "Время доступа"
+msgstr "Время входа"
 
 #: axes/models.py:57
 msgid "GET Data"
@@ -74,11 +74,11 @@ msgstr "Данные POST-запроса"
 
 #: axes/models.py:65
 msgid "Failed Logins"
-msgstr "Ошибочные логины"
+msgstr "Ошибочные попытки"
 
 #: axes/models.py:76
 msgid "access attempt"
-msgstr "Попытка доступа"
+msgstr "Запись о попытке доступа"
 
 #: axes/models.py:77
 msgid "access attempts"
@@ -90,8 +90,8 @@ msgstr "Время выхода"
 
 #: axes/models.py:90
 msgid "access log"
-msgstr "Лог входа"
+msgstr "Запись о доступе"
 
 #: axes/models.py:91
 msgid "access logs"
-msgstr "Логи входа"
+msgstr "Логи доступа"
