@@ -1,6 +1,13 @@
 Changes
 =======
 
+4.5.1 (2019-01-11)
+------------------
+
+- Removed duplicated check that was causing issues when using APIs.
+  [camilonova]
+
+
 4.5.0 (2018-12-25)
 ------------------
 
@@ -24,6 +31,7 @@ Changes
 - Improve the requirements, documentation, tests, and CI setup.
   [aleksihakli]
 
+
 4.4.3 (2018-12-08)
 ------------------
 
@@ -40,6 +48,7 @@ Changes
 - fix missing migration and add check to prevent it happening again.
   [markddavidoff]
 
+
 4.4.1 (2018-10-24)
 ------------------
 
@@ -54,6 +63,7 @@ Changes
 
 - pin prospector to 0.12.11, and pin astroid to 1.6.5
   [hsiaoyi0504]
+
 
 4.4.0 (2018-05-26)
 ------------------
