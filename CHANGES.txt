@@ -1,11 +1,21 @@
 Changes
 =======
 
+4.5.2 (2019-01-12)
+------------------
+
+- Added Turkish translations
+  [obayhan]
+
+
 4.5.1 (2019-01-11)
 ------------------
 
 - Removed duplicated check that was causing issues when using APIs.
   [camilonova]
+
+- Added Russian translations
+  [lubicz-sielski]
 
 
 4.5.0 (2018-12-25)
