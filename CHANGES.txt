@@ -1,6 +1,16 @@
 Changes
 =======
 
+4.5.3 (2019-01-14)
+------------------
+
+- Remove the unused ``AccessAttempt.trusted`` flag from models
+  [aleksihakli]
+
+- Improve README and Travis CI setups
+  [aleksihakli]
+
+
 4.5.2 (2019-01-12)
 ------------------
 
