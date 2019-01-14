@@ -52,12 +52,10 @@ https://github.com/jazzband/django-axes/issues
 Contributing
 ------------
 
-Please open issues and pull requests for contributions and patches.
-
-Separate the proposed changes into small, distinct patches by type
+Separate proposed changes and PRs into small, distinct patches by type
 so that they can be merged faster into upstream and released quicker:
 
 * Feature
 * Bugfix
+* Code style
 * Documentation
-* Code style and whitespace
