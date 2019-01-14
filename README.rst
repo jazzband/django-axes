@@ -21,6 +21,10 @@ Django Axes
    :target: https://codecov.io/gh/jazzband/django-axes
    :alt: Coverage
 
+.. image:: https://img.shields.io/github/stars/jazzband/django-axes.svg?label=Stars&style=socialcA
+   :target: https://github.com/jazzband/django-axes
+   :alt: GitHub
+
 
 ``django-axes`` is a very simple way for you to keep track of failed login
 attempts, both for the Django admin and for the rest of your site. The name is
