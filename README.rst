@@ -5,6 +5,14 @@ Django Axes
    :target: https://jazzband.co/
    :alt: Jazzband
 
+.. image:: https://img.shields.io/pypi/v/django-axes.svg
+   :target: https://pypi.org/project/django-axes/
+   :alt: PyPI release
+
+.. image:: https://img.shields.io/readthedocs/django-axes.svg
+   :target: https://django-axes.readthedocs.io/
+   :alt: Documentation
+
 .. image:: https://secure.travis-ci.org/jazzband/django-axes.svg?branch=master
    :target: http://travis-ci.org/jazzband/django-axes
    :alt: Build Status
@@ -44,9 +52,9 @@ https://github.com/jazzband/django-axes/issues
 Contributing
 ------------
 
-Open issues and pull requests against the ``development`` branch.
+Please open issues and pull requests for contributions and patches.
 
-Please separate proposed changes into small, different patches by type
+Separate the proposed changes into small, distinct patches by type
 so that they can be merged faster into upstream and released quicker:
 
 * Feature
