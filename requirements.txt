@@ -3,4 +3,4 @@ coverage==4.5.2
 mock==2.0.0 ; python_version <= "2.7"
 prospector==1.1.6.2
 sphinx_rtd_theme==0.4.2
-tox==3.6.0
+tox==3.7.0
