@@ -5,6 +5,10 @@ Django Axes
    :target: https://jazzband.co/
    :alt: Jazzband
 
+.. image:: https://img.shields.io/github/stars/jazzband/django-axes.svg?label=Stars&style=socialcA
+   :target: https://github.com/jazzband/django-axes
+   :alt: GitHub
+
 .. image:: https://img.shields.io/pypi/v/django-axes.svg
    :target: https://pypi.org/project/django-axes/
    :alt: PyPI release
@@ -21,9 +25,9 @@ Django Axes
    :target: https://codecov.io/gh/jazzband/django-axes
    :alt: Coverage
 
-.. image:: https://img.shields.io/github/stars/jazzband/django-axes.svg?label=Stars&style=socialcA
-   :target: https://github.com/jazzband/django-axes
-   :alt: GitHub
+.. image:: https://pyup.io/repos/github/jazzband/django-axes/shield.svg
+   :target: https://pyup.io/repos/github/jazzband/django-axes/
+   :alt: Updates
 
 
 ``django-axes`` is a very simple way for you to keep track of failed login
