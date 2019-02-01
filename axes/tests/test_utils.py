@@ -9,6 +9,11 @@ from django.utils import six
 from axes.utils import iso8601, is_ipv6, get_client_str, get_client_username
 
 
+def get_expected_client_str(*args, **kwargs):
+    client_str_template = '{{user: "{0}", ip: "{1}", user-agent: "{2}", path: "{3}"}}'
+    return client_str_template.format(*args, **kwargs)
+
+
 class UtilsTest(TestCase):
     def test_iso8601(self):
         """Tests iso8601 correctly translates datetime.timdelta to ISO 8601
@@ -46,8 +51,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
-        expected = details.format(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -72,8 +76,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
-        expected = details.format(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -99,8 +102,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
-        expected = details.format(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -126,8 +128,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
-        expected = details.format(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
