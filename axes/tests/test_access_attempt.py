@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import datetime
 import hashlib
-import json
 import random
 import string
 import time
@@ -31,8 +30,7 @@ class AccessAttemptTest(TestCase):
     LOCKED_MESSAGE = 'Account locked: too many login attempts.'
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
 
-    def _login(self, is_valid_username=False, is_valid_password=False,
-               is_json=False, **kwargs):
+    def _login(self, is_valid_username=False, is_valid_password=False, **kwargs):
         """Login a user. A valid credential is used when is_valid_username is True,
         otherwise it will use a random string to make a failed login.
         """
@@ -59,18 +57,11 @@ class AccessAttemptTest(TestCase):
         }
         post_data.update(kwargs)
 
-        if is_json:
-            headers.update({
-                'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest',
-                'content_type': 'application/json',
-            })
-            post_data = json.dumps(post_data)
-
-        response = self.client.post(
-            reverse('admin:login'), post_data, **headers
+        return self.client.post(
+            reverse('admin:login'),
+            post_data,
+            **headers
         )
-
-        return response
 
     def setUp(self):
         """Create a valid user for login
@@ -351,14 +342,6 @@ class AccessAttemptTest(TestCase):
         self.assertEqual(
             len(AccessAttempt.objects.latest('id').post_data), 1024
         )
-
-    def test_json_response(self):
-        """Tests response content type and status code for the ajax request
-        """
-        self.test_failure_limit_once()
-        response = self._login(is_json=True)
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.get('Content-Type'), 'application/json')
 
     @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
     def test_valid_logout_without_success_log(self):
