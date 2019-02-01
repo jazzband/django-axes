@@ -24,6 +24,8 @@ matrix:
       env: DJANGO=2.1
     - python: 3.4
       env: DJANGO=master
+    - python: 3.5
+      env: DJANGO=master
 install: pip install tox-travis codecov
 script: tox
 after_success:
