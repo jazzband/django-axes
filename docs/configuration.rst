@@ -27,6 +27,18 @@ Add ``axes.backends.AxesModelBackend`` to the top of ``AUTHENTICATION_BACKENDS``
 
 Run ``python manage.py migrate`` to sync the database.
 
+Running checks
+--------------
+
+Use the ``python manage.py check`` command to verify the correct configuration in both
+development and production environments. It is probably best to use this step as part
+of your regular CI workflows to verify that your project is not misconfigured.
+
+django-axes uses the checks to verify your cache configuration to see that your caches
+should be functional with the configuration axes. Many people have different configurations
+for their development and production environments.
+
+
 Known configuration problems
 ----------------------------
 
