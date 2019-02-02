@@ -1,6 +1,24 @@
 Changes
 =======
 
+5.0.0 (WIP)
+-----------
+
+- Add a Django native authentication stack that utilizes
+  ``AUTHENTICATION_BACKENDS``, ``MIDDLEWARE``, and signal handlers
+  for tracking login attempts and implementing user lockouts.
+  This results in configuration changes, refer to the documentation.
+  [aleksihakli]
+
+- Remove automatic decoration of Django login views and forms.
+  Leave decorations available for application users who wish to
+  decorate their own login or other views as before.
+  [aleksihakli]
+
+- Clean up code, tests, and documentation.
+  [aleksihakli]
+
+
 4.5.4 (2019-01-15)
 ------------------
 

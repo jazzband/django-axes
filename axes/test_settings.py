@@ -20,10 +20,13 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+
+    'axes.middleware.AxesMiddleware',
 )
 
 AUTHENTICATION_BACKENDS = (
-    'axes.backends.AxesModelBackend',
+    'axes.backends.AxesBackend',
+
     'django.contrib.auth.backends.ModelBackend',
 )
 

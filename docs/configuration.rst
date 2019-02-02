@@ -5,27 +5,138 @@ Configuration
 
 Add ``axes`` to your ``INSTALLED_APPS``::
 
-    INSTALLED_APPS = (
+    INSTALLED_APPS = [
         'django.contrib.admin',
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
-        'django.contrib.sites',
-        # ...
-        'axes',
-        # ...
-    )
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
 
-Add ``axes.backends.AxesModelBackend`` to the top of ``AUTHENTICATION_BACKENDS``::
+        # ... other applications per your preference.
+
+        'axes',
+    ]
+
+Add ``axes.backends.AxesBackend`` to the top of ``AUTHENTICATION_BACKENDS``::
 
     AUTHENTICATION_BACKENDS = [
-        'axes.backends.AxesModelBackend',
-        # ...
+        # AxesBackend should be the first backend in the list.
+        # It stops the authentication flow when a user is locked out.
+        'axes.backends.AxesBackend',
+
+        # ... other authentication backends per your preference.
+
+        # Django ModelBackend is the default authentication backend.
         'django.contrib.auth.backends.ModelBackend',
-        # ...
+    ]
+
+Add ``axes.middleware.AxesMiddleware`` to your list of ``MIDDLEWARE``::
+
+    MIDDLEWARE = [
+        # The following is the list of default middleware in new Django projects.
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+        # ... other middleware per your preference.
+
+        # AxesMiddleware should be the last middleware in the list.
+        # It pretty formats authentication errors into readable responses.
+        'axes.middleware.AxesMiddleware',
     ]
 
 Run ``python manage.py migrate`` to sync the database.
+
+How does Axes function?
+-----------------------
+
+When a user tries to log in in Django, the login is usually performed
+by running a number of authentication backends that check user login
+information by calling the ``django.contrib.auth.authenticate`` function.
+
+If an authentication backend does not approve of a user login,
+it can raise a ``django.core.exceptions.PermissionDenied`` exception.
+
+If a login fails, Django then fires a
+``from django.contrib.auth.signals.user_login_failed`` signal.
+
+If this signal raises an exception, it is propagated through the
+Django middleware stack where it can be caught, or alternatively
+where it can bubble up to the default Django exception handlers.
+
+A normal login flow for Django runs as follows::
+
+    1. Django or plugin login view is called by
+       for example user sending form data with browser.
+
+    2. django.contrib.auth.authenticate is called by
+       the view code to check the authentication request
+       for user and return a user object matching it.
+
+    3. AUTHENTICATION_BACKENDS are iterated over
+       and their authenticate methods called one-by-one.
+
+    4. An authentication backend either returns
+       a user object which results in that user
+       being logged in or returns None.
+       If a PermissionDenied error is raised
+       by any of the authentication backends
+       the whole request authentication flow
+       is aborted and signal handlers triggered.
+
+Axes monitors logins with the ``user_login_failed`` signal handler
+and after login attempts exceed the given maximum, starts blocking them.
+
+The blocking is done by ``AxesBackend`` which checks every request
+coming through the Django authentication flow and verifies they
+are not blocked, and allows the requests to go through if the check passes.
+
+If any of the checks fails, an exception is raised which interrupts
+the login process and triggers the Django login failed signal handlers.
+
+Another exception is raised by a Axes signal handler, which is
+then caught by ``AxesMiddleware`` and converted into a readable
+error because the user is currently locked out of the system.
+
+Axes implements the lockout flow as follows::
+
+    1. Django or plugin login view is called.
+
+    2. django.contrib.auth.authenticate is called.
+
+    3. AUTHENTICATION_BACKENDS are iterated over
+       where axes.backends.AxesBackend is the first.
+
+    4. AxesBackend checks authentication request
+       for lockouts rules and either aborts the
+       authentication flow or lets the authentication
+       process proceed to the next
+       configured authentication backend.
+
+    [The lockout happens at this stage if appropriate]
+
+    5. User is locked out and signal handlers
+       are notified of the failed login attempt.
+
+    6. axes.signals.log_user_login_failed runs
+       and raises a AxesSignalPermissionDenied
+       exception that bubbles up the middleware stack.
+
+    7. AxesMiddleware processes the exception
+       and returns a readable error to the user.
+
+This plugin assumes that the login views either call
+the django.contrib.auth.authenticate method to log in users
+or otherwise take care of notifying Axes of authentication
+attempts or login failures the same way Django does.
+
+The login flows can be customized and the Axes
+authentication backend or middleware can be easily swapped.
 
 Running checks
 --------------
@@ -85,7 +196,7 @@ There are no known problems in other cache backends such as
 Authentication backend problems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you get ``AxesModelBackend.RequestParameterRequired`` exceptions,
+If you get ``AxesBackendRequestParameterRequired`` exceptions,
 make sure any auth libraries and middleware you use pass the request object to authenticate.
 Notably in older versions of Django Rest Framework (DRF) (before 3.7.0), ``BasicAuthentication`` does not pass request.
 `Here is an example workaround for DRF <https://gist.github.com/markddavidoff/7e442b1ea2a2e68d390e76731c35afe7>`_.

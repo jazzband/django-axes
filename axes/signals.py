@@ -17,6 +17,7 @@ from axes.attempts import get_user_attempts
 from axes.attempts import is_user_lockable
 from axes.attempts import ip_in_whitelist
 from axes.attempts import reset_user_attempts
+from axes.exceptions import AxesSignalPermissionDenied
 from axes.models import AccessLog, AccessAttempt
 from axes.utils import get_client_str
 from axes.utils import query2str
@@ -121,6 +122,8 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
         user_locked_out.send(
             'axes', request=request, username=username, ip_address=ip_address
         )
+
+        raise AxesSignalPermissionDenied('User locked out due to failed login attempts')
 
 
 @receiver(user_logged_in)

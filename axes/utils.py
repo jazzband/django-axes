@@ -5,11 +5,14 @@ try:
 except ImportError:
     pass
 
+from datetime import timedelta
 from inspect import getargspec
 from logging import getLogger
 from socket import error, inet_pton, AF_INET6
 
 from django.core.cache import caches
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import render
 from django.utils import six
 
 import ipware.ip2
@@ -165,3 +168,40 @@ def get_lockout_message():
     if settings.AXES_COOLOFF_TIME:
         return settings.AXES_COOLOFF_MESSAGE
     return settings.AXES_PERMALOCK_MESSAGE
+
+
+def get_lockout_response(request):
+    context = {
+        'failure_limit': settings.AXES_FAILURE_LIMIT,
+        'username': get_client_username(request) or ''
+    }
+
+    cool_off = settings.AXES_COOLOFF_TIME
+    if cool_off:
+        if isinstance(cool_off, (int, float)):
+            cool_off = timedelta(hours=cool_off)
+
+        context.update({
+            'cooloff_time': iso8601(cool_off)
+        })
+
+    status = 403
+
+    if request.is_ajax():
+        return JsonResponse(
+            context,
+            status=status,
+        )
+
+    if settings.AXES_LOCKOUT_TEMPLATE:
+        return render(
+            request,
+            settings.AXES_LOCKOUT_TEMPLATE,
+            context,
+            status=status,
+        )
+
+    if settings.AXES_LOCKOUT_URL:
+        return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
+
+    return HttpResponse(get_lockout_message(), status=status)
