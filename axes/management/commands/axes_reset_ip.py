@@ -6,10 +6,16 @@ from axes.utils import reset
 
 
 class Command(BaseCommand):
-    help = 'Reset all access attempts and lockouts'
+    help = 'Reset all access attempts and lockouts for given IP addresses'
 
-    def handle(self, *args, **options):  # pylint: disable=unused-argument
-        count = reset()
+    def add_arguments(self, parser):
+        parser.add_argument('ip', nargs='+', type=str)
+
+    def handle(self, *args, **options):
+        count = 0
+
+        for ip in options['ip']:
+            count += reset(ip=ip)
 
         if count:
             self.stdout.write('{0} attempts removed.'.format(count))

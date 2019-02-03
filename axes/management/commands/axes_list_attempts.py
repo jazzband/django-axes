@@ -6,10 +6,9 @@ from axes.models import AccessAttempt
 
 
 class Command(BaseCommand):
-    args = ''
-    help = ('List registered login attempts')
+    help = 'List access attempts'
 
-    def handle(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def handle(self, *args, **options):  # pylint: disable=unused-argument
         for obj in AccessAttempt.objects.all():
             self.stdout.write('{ip}\t{username}\t{failures}'.format(
                 ip=obj.ip_address,

@@ -4,6 +4,11 @@ Changes
 5.0.0 (WIP)
 -----------
 
+- Improve managment commands and separate commands for resetting
+  all access attempts, attempts by IP and attempts by username.
+  Add tests for the management commands for better coverage.
+  [aleksihakli]
+
 - Add a Django native authentication stack that utilizes
   ``AUTHENTICATION_BACKENDS``, ``MIDDLEWARE``, and signal handlers
   for tracking login attempts and implementing user lockouts.
