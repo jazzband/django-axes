@@ -209,6 +209,7 @@ class AccessAttemptTest(TestCase):
             path_info=request.META.get('PATH_INFO', '<unknown>'),
             failures_since_start=0,
         )
+
         self.assertEqual(cache_hash_key, get_cache_key(attempt))
 
     @patch('axes.utils.get_client_ip', return_value='127.0.0.1')

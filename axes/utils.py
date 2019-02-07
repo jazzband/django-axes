@@ -15,6 +15,7 @@ from axes.models import AccessAttempt
 
 logger = getLogger(__name__)
 
+
 def get_axes_cache():
     return caches[getattr(settings, 'AXES_CACHE', 'default')]
 
