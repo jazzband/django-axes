@@ -35,6 +35,8 @@ class MyAppConf(AppConf):
 
     DISABLE_SUCCESS_ACCESS_LOG = False
 
+    HANDLER = 'axes.handlers.AxesHandler'
+
     LOGGER = 'axes.watch_login'
 
     LOCKOUT_TEMPLATE = None
