@@ -190,11 +190,13 @@ class AccessAttemptTest(TestCase):
         )
 
         request_factory = RequestFactory()
-        request = request_factory.post('/admin/login/',
-                                       data={
-                                           'username': self.VALID_USERNAME,
-                                           'password': 'test'
-                                       })
+        request = request_factory.post(
+            '/admin/login/',
+            data={
+                'username': self.VALID_USERNAME,
+                'password': 'test',
+            },
+        )
 
         self.assertEqual(cache_hash_key, get_cache_key(request))
 
