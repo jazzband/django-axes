@@ -4,7 +4,7 @@ from axes.utils import get_lockout_response
 
 class AxesMiddleware:
     """
-    Middleware that maps lockout signals into readable HTTP 403 Forbidden responses
+    Middleware that maps lockout signals into readable HTTP 403 Forbidden responses.
 
     Without this middleware the backend returns HTTP 403 errors with the
     django.views.defaults.permission_denied view that renders the 403.html
@@ -26,7 +26,7 @@ class AxesMiddleware:
 
     def process_exception(self, request, exception):  # pylint: disable=inconsistent-return-statements
         """
-        Exception handler that processes exceptions raised by the axes signal handler when request fails with login
+        Exception handler that processes exceptions raised by the axes signal handler when request fails with login.
 
         Refer to axes.signals.log_user_login_failed for the error code.
 

@@ -7,11 +7,12 @@ from axes.utils import get_credentials, get_lockout_message
 
 class AxesBackend(ModelBackend):
     """
-    Authentication backend that forbids login attempts for locked out users
+    Authentication backend that forbids login attempts for locked out users.
     """
 
     def authenticate(self, request, username=None, password=None, **kwargs):
-        """Checks user lock out status and raises PermissionDenied if user is not allowed to log in.
+        """
+        Check user lock out status and raises PermissionDenied if user is not allowed to log in.
 
         Inserts errors directly to `return_context` that is supplied as a keyword argument.
 

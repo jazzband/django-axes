@@ -14,8 +14,10 @@ def get_expected_client_str(*args, **kwargs):
 
 class UtilsTest(TestCase):
     def test_iso8601(self):
-        """Tests iso8601 correctly translates datetime.timdelta to ISO 8601
-        formatted duration."""
+        """
+        Test iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
+        """
+
         EXPECTED = {
             datetime.timedelta(days=1, hours=25, minutes=42, seconds=8):
                 'P2DT1H42M8S',

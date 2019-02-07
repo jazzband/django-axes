@@ -10,9 +10,10 @@ from axes.utils import get_axes_cache, get_client_ip, get_client_username
 
 
 def _query_user_attempts(request, credentials=None):
-    """Returns access attempt record if it exists.
-    Otherwise return None.
     """
+    Return access attempt record if it exists. Otherwise return None.
+    """
+
     ip = get_client_ip(request)
     username = get_client_username(request, credentials)
 
@@ -50,9 +51,11 @@ def _query_user_attempts(request, credentials=None):
 def get_cache_key(request_or_obj, credentials=None):
     """
     Build cache key name from request or AccessAttempt object.
+
     :param  request_or_obj: Request or AccessAttempt object
     :return cache-key: String, key to be used in cache system
     """
+
     if isinstance(request_or_obj, AccessAttempt):
         ip = request_or_obj.ip_address
         un = request_or_obj.username
@@ -82,7 +85,10 @@ def get_cache_key(request_or_obj, credentials=None):
 
 
 def get_cache_timeout():
-    """Returns timeout according to COOLOFF_TIME."""
+    """
+    Return timeout according to COOLOFF_TIME.
+    """
+
     cache_timeout = None
     cool_off = settings.AXES_COOLOFF_TIME
     if cool_off:
@@ -145,10 +151,12 @@ def ip_in_blacklist(ip):
 
 
 def is_user_lockable(request, credentials=None):
-    """Check if the user has a profile with nolockout
-    If so, then return the value to see if this user is special
-    and doesn't get their account locked out
     """
+    Check if the user has a profile with nolockout attribute set.
+
+    If so, then return the value to see if this user is special and does not get their account locked out.
+    """
+
     if request.method != 'POST':
         return True
 

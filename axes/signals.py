@@ -30,8 +30,10 @@ user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 
 @receiver(user_login_failed)
 def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: disable=unused-argument
-    """ Create an AccessAttempt record if the login wasn't successful
     """
+    When user login fails, create an AccessAttempt record.
+    """
+
     if request is None:
         log.warning('Attempt to authenticate with a custom backend failed.')
         return
@@ -126,8 +128,10 @@ def log_user_login_failed(sender, credentials, request, **kwargs):  # pylint: di
 
 @receiver(user_logged_in)
 def log_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unused-argument
-    """ When a user logs in, update the access log
     """
+    When user logs in, update the access log.
+    """
+
     username = user.get_username()
     credentials = get_credentials(username)
     ip_address = get_client_ip(request)
@@ -160,8 +164,10 @@ def log_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unus
 
 @receiver(user_logged_out)
 def log_user_logged_out(sender, request, user, **kwargs):  # pylint: disable=unused-argument
-    """ When a user logs out, update the access log
     """
+    When user logs out, update the access log.
+    """
+
     log.info('AXES: Successful logout by %s.', user)
 
     if user and not settings.AXES_DISABLE_ACCESS_LOG:

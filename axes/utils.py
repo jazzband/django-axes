@@ -21,13 +21,14 @@ def get_axes_cache():
 
 
 def query2str(items, max_length=1024):
-    """Turns a dictionary into an easy-to-read list of key-value pairs.
-
-    If there's a field called "password" it will be excluded from the output.
-
-    The length of the output is limited to max_length to avoid a DoS attack
-    via excessively large payloads.
     """
+    Turns a dictionary into an easy-to-read list of key-value pairs.
+
+    If there is a field called password it will be excluded from the output.
+
+    The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
+    """
+
     return '\n'.join([
         '%s=%s' % (k, v) for k, v in six.iteritems(items)
         if k != settings.AXES_PASSWORD_FORM_FIELD
@@ -70,7 +71,8 @@ def get_client_ip(request):
 
 
 def get_client_username(request, credentials=None):
-    """Resolve client username from the given request or credentials if supplied
+    """
+    Resolve client username from the given request or credentials if supplied.
 
     The order of preference for fetching the username is as follows:
 
@@ -122,8 +124,8 @@ def is_ipv6(ip):
 
 
 def reset(ip=None, username=None):
-    """Reset records that match ip or username, and
-    return the count of removed attempts.
+    """
+    Reset records that match IP or username, and return the count of removed attempts.
     """
 
     attempts = AccessAttempt.objects.all()
@@ -138,8 +140,10 @@ def reset(ip=None, username=None):
 
 
 def iso8601(timestamp):
-    """Returns datetime.timedelta translated to ISO 8601 formatted duration.
     """
+    Return datetime.timedelta translated to ISO 8601 formatted duration.
+    """
+
     seconds = timestamp.total_seconds()
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
