@@ -1,5 +1,3 @@
-import json
-
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -24,8 +22,7 @@ class AccessAttemptConfigTest(TestCase):
     ALLOWED = 302
     BLOCKED = 403
 
-    def _login(self, username, password, ip_addr='127.0.0.1',
-               is_json=False, **kwargs):
+    def _login(self, username, password, ip_addr='127.0.0.1', **kwargs):
         """Login a user and get the response.
         IP address can be configured to test IP blocking functionality.
         """
@@ -39,17 +36,12 @@ class AccessAttemptConfigTest(TestCase):
         }
         post_data.update(kwargs)
 
-        if is_json:
-            headers.update({
-                'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest',
-                'content_type': 'application/json',
-            })
-            post_data = json.dumps(post_data)
-
-        response = self.client.post(
-            reverse('admin:login'), post_data, REMOTE_ADDR=ip_addr, **headers
+        return self.client.post(
+            reverse('admin:login'),
+            post_data,
+            REMOTE_ADDR=ip_addr,
+            **headers
         )
-        return response
 
     def _lockout_user_from_ip(self, username, ip_addr):
         for _ in range(settings.AXES_FAILURE_LIMIT):
