@@ -1,8 +1,4 @@
-from __future__ import unicode_literals
-
 from io import StringIO
-from sys import version_info
-from unittest import skipIf
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -10,7 +6,6 @@ from django.test import TestCase
 from axes.models import AccessAttempt
 
 
-@skipIf(version_info < (3, ), 'Not supported on Python 2.x')
 class ManagementCommandTestCase(TestCase):
     def setUp(self):
         AccessAttempt.objects.create(

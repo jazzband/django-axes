@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.core.checks import run_checks, Error
 from django.conf import settings
 from django.test import TestCase, override_settings

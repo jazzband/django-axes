@@ -1,10 +1,3 @@
-from __future__ import unicode_literals
-
-try:
-    import win_inet_pton  # pylint: disable=unused-import
-except ImportError:
-    pass
-
 from datetime import timedelta
 from inspect import getargspec
 from logging import getLogger

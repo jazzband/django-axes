@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Django Axes documentation build configuration file, created by
 # sphinx-quickstart on Sat Jul 30 16:37:41 2016.
 #

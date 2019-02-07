@@ -1,10 +1,9 @@
-from __future__ import unicode_literals
-
 import datetime
 import hashlib
 import random
 import string
 import time
+from unittest.mock import patch
 
 from django.http import HttpRequest
 from django.test import TestCase, override_settings
@@ -17,7 +16,6 @@ from axes.conf import settings
 from axes.attempts import get_cache_key
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
-from axes.tests.compatibility import patch
 from axes.utils import reset
 
 
@@ -212,7 +210,6 @@ class AccessAttemptTest(TestCase):
             failures_since_start=0,
         )
         self.assertEqual(cache_hash_key, get_cache_key(attempt))
-
 
     @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
     def test_get_cache_key_credentials(self, _):

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.contrib.auth.backends import ModelBackend
 
 from axes.attempts import is_already_locked

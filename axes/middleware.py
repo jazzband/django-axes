@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from axes.exceptions import AxesSignalPermissionDenied
 from axes.utils import get_lockout_response
 

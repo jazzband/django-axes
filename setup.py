@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
 
 import codecs
 from setuptools import setup, find_packages
@@ -28,7 +25,6 @@ setup(
         'django',
         'django-appconf',
         'django-ipware>=2.0.2',
-        'win_inet_pton ; python_version < "3.4" and sys_platform == "win32"',
     ],
     include_package_data=True,
     packages=find_packages(),
@@ -44,10 +40,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
