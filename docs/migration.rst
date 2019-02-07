@@ -33,3 +33,5 @@ API endpoints or names for compatibility reasons.
   ``axes.exceptions.AxesSignalPermissionDenied`` on lockouts.
 - ``AxesMiddleware`` was added to return lockout responses.
   The middleware handles ``axes.exception.AxesSignalPermissionDenied``.
+- ``AXES_USERNAME_CALLABLE`` is now always called with two arguments,
+  ``request`` and ``credentials`` instead of ``request``.

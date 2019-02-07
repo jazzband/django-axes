@@ -26,6 +26,9 @@ Changes
 - Drop support for Python 2.7 and Python 3.4.
   [aleksihakli]
 
+- Drop old single-argument signature format for ``AXES_USERNAME_CALLABLE``.
+  [aleksihakli]
+
 
 4.5.4 (2019-01-15)
 ------------------

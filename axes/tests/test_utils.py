@@ -172,21 +172,8 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected_in_credentials, actual)
 
-    def sample_customize_username(request):
+    def sample_customize_username(request, credentials):
         return 'prefixed-' + request.POST.get('username')
-
-    @override_settings(AXES_USERNAME_FORM_FIELD='username')
-    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username)
-    def test_custom_get_client_username(self):
-        provided = 'test-username'
-        expected = 'prefixed-' + provided
-
-        request = HttpRequest()
-        request.POST['username'] = provided
-
-        actual = get_client_username(request)
-
-        self.assertEqual(expected, actual)
 
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
     @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username)
@@ -223,18 +210,30 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected_in_credentials, actual)
 
-    def sample_get_client_username_too_few_arguments():
+    def sample_get_client_username(request, credentials):
+        return 'example'
+
+    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username)
+    def test_get_client_username(self):
+        self.assertEqual('example', get_client_username(HttpRequest(), {}))
+
+    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username)
+    def test_get_client_username_too_many_arguments(self):
+        with self.assertRaises(TypeError):
+            actual = get_client_username(HttpRequest(), {}, None)
+
+    def sample_get_client_username_too_few_arguments(request):
         pass
 
     @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username_too_few_arguments)
-    def test_get_client_username_too_few_arguments_invalid_callable(self):
+    def test_get_client_username_invalid_callable_too_few_arguments(self):
         with self.assertRaises(TypeError):
             actual = get_client_username(HttpRequest(), {})
 
-    def sample_get_client_username_too_many_arguments(one, two, three):
+    def sample_get_client_username_too_many_arguments(request, credentials, extra_argument):
         pass
 
     @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username_too_many_arguments)
-    def test_get_client_username_too_many_arguments_invalid_callable(self):
+    def test_get_client_username_invalid_callable_too_many_arguments(self):
         with self.assertRaises(TypeError):
             actual = get_client_username(HttpRequest(), {})

@@ -145,8 +145,8 @@ Use the ``python manage.py check`` command to verify the correct configuration i
 development and production environments. It is probably best to use this step as part
 of your regular CI workflows to verify that your project is not misconfigured.
 
-django-axes uses the checks to verify your cache configuration to see that your caches
-should be functional with the configuration axes. Many people have different configurations
+Axes uses the checks to verify your cache configuration to see that your caches
+should be functional with the configuration of Axes. Many people have different configurations
 for their development and production environments.
 
 
@@ -185,7 +185,7 @@ add an extra cache to ``CACHES`` with a name of your choice::
         }
     }
 
-The next step is to tell axes to use this cache through adding ``AXES_CACHE``
+The next step is to tell Axes to use this cache through adding ``AXES_CACHE``
 to your ``settings.py`` file::
 
     AXES_CACHE = 'axes_cache'
@@ -221,7 +221,7 @@ Customizing Axes
 You have a couple options available to you to customize ``django-axes`` a bit.
 These should be defined in your ``settings.py`` file.
 
-* ``AXES_CACHE``: The name of the cache for axes to use.
+* ``AXES_CACHE``: The name of the cache for Axes to use.
   Default: ``'default'``
 * ``AXES_FAILURE_LIMIT``: The number of login attempts allowed before a
   record is created for the failed logins.  Default: ``3``
@@ -235,7 +235,7 @@ These should be defined in your ``settings.py`` file.
   old failed login attempts will be forgotten. Can be set to a python
   timedelta object or an integer. If an integer, will be interpreted as a
   number of hours.  Default: ``None``
-* ``AXES_LOGGER``: If set, specifies a logging mechanism for axes to use.
+* ``AXES_LOGGER``: If set, specifies a logging mechanism for Axes to use.
   Default: ``'axes.watch_login'``
 * ``AXES_LOCKOUT_TEMPLATE``: If set, specifies a template to render when a
   user is locked out. Template receives cooloff_time and failure_limit as
@@ -247,11 +247,11 @@ These should be defined in your ``settings.py`` file.
   Default: ``True``
 * ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
   users usernames. Default: ``username``
-* ``AXES_USERNAME_CALLABLE``: A callable function that takes either one or two arguments:
-  ``AXES_USERNAME_CALLABLE(request)`` or ``AXES_USERNAME_CALLABLE(request, credentials)``.
+* ``AXES_USERNAME_CALLABLE``: A callable function that takes two arguments:
+  ``AXES_USERNAME_CALLABLE(request, credentials)``.
   The ``request`` is a HttpRequest like object and the ``credentials`` is a dictionary like object.
   ``credentials`` are the ones that were passed to Django ``authenticate()`` in the login flow.
-  If no function is supplied, axes fetches the username from the ``credentials`` or ``request.POST``
+  If no function is supplied, Axes fetches the username from the ``credentials`` or ``request.POST``
   dictionaries based on ``AXES_USERNAME_FORM_FIELD``. Default: ``None``
 * ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your
   users password. Default: ``password``

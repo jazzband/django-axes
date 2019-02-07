@@ -21,7 +21,7 @@ Once ``axes`` is in your ``INSTALLED_APPS`` in your project settings file, you c
 login and logout of your application via the ``django.contrib.auth`` views.
 The attempts will be logged and visible in the "Access Attempts" section in admin.
 
-By default, django-axes will lock out repeated access attempts from the same IP address.
+By default, Axes will lock out repeated access attempts from the same IP address.
 You can allow this IP to attempt again by deleting relevant ``AccessAttempt`` records.
 
 Records can be deleted, for example, by using the Django admin application.
