@@ -60,6 +60,11 @@ https://github.com/jazzband/django-axes/issues
 Contributing
 ------------
 
+This is a `Jazzband <https://jazzband.co>`_ project.
+By contributing you agree to abide by the
+`Contributor Code of Conduct <https://jazzband.co/about/conduct>`_
+and follow the `guidelines <https://jazzband.co/about/guidelines>`_.
+
 Separate proposed changes and PRs into small, distinct patches by type
 so that they can be merged faster into upstream and released quicker:
 
