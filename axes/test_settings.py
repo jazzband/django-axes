@@ -13,20 +13,20 @@ CACHES = {
 
 SITE_ID = 1
 
-MIDDLEWARE = (
+MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 
     'axes.middleware.AxesMiddleware',
-)
+]
 
-AUTHENTICATION_BACKENDS = (
+AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesBackend',
 
     'django.contrib.auth.backends.ModelBackend',
-)
+]
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
@@ -34,15 +34,16 @@ PASSWORD_HASHERS = [
 
 ROOT_URLCONF = 'axes.test_urls'
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.admin',
+
     'axes',
-)
+]
 
 TEMPLATES = [
     {
