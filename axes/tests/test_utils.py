@@ -2,7 +2,6 @@ import datetime
 
 from django.http import HttpRequest
 from django.test import TestCase, override_settings
-from django.utils import six
 
 from axes.utils import iso8601, is_ipv6, get_client_str, get_client_username
 
@@ -18,7 +17,7 @@ class UtilsTest(TestCase):
         Test iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
         """
 
-        EXPECTED = {
+        expected = {
             datetime.timedelta(days=1, hours=25, minutes=42, seconds=8):
                 'P2DT1H42M8S',
             datetime.timedelta(days=7, seconds=342):
@@ -36,8 +35,10 @@ class UtilsTest(TestCase):
             datetime.timedelta(days=15):
                 'P15D'
         }
-        for timedelta, iso_duration in six.iteritems(EXPECTED):
-            self.assertEqual(iso8601(timedelta), iso_duration)
+
+        for timedelta, iso_duration in expected.items():
+            with self.subTest(iso_duration):
+                self.assertEqual(iso8601(timedelta), iso_duration)
 
     def test_is_ipv6(self):
         self.assertTrue(is_ipv6('ff80::220:16ff:fec9:1'))

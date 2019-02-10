@@ -5,7 +5,6 @@ from socket import error, inet_pton, AF_INET6
 from django.core.cache import caches
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
-from django.utils import six
 
 import ipware.ip2
 
@@ -19,7 +18,7 @@ def get_axes_cache():
     return caches[getattr(settings, 'AXES_CACHE', 'default')]
 
 
-def query2str(items, max_length=1024):
+def query2str(dictionary, max_length=1024):
     """
     Turns a dictionary into an easy-to-read list of key-value pairs.
 
@@ -29,7 +28,7 @@ def query2str(items, max_length=1024):
     """
 
     return '\n'.join([
-        '%s=%s' % (k, v) for k, v in six.iteritems(items)
+        '%s=%s' % (k, v) for k, v in dictionary.items()
         if k != settings.AXES_PASSWORD_FORM_FIELD
     ][:int(max_length / 2)])[:max_length]
 
