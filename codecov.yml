@@ -4,6 +4,6 @@ coverage:
     project:
       default:
         # Minimum test coverage required for pass
-        target: 80%
+        target: 90%
         # Maximum test coverage change allowed for pass
         threshold: 20%

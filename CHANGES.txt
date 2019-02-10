@@ -29,6 +29,8 @@ Changes
 - Drop old single-argument signature format for ``AXES_USERNAME_CALLABLE``.
   [aleksihakli]
 
+- Improve tests and raise Codecov monitoring threshold to 90%.
+  [aleksihakli]
 
 4.5.4 (2019-01-15)
 ------------------
