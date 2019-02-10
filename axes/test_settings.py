@@ -28,6 +28,10 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+]
+
 ROOT_URLCONF = 'axes.test_urls'
 
 INSTALLED_APPS = (
