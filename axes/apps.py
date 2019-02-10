@@ -1,9 +1,45 @@
+import logging
+
 from django import apps
+
+from axes import get_version
+from axes.conf import settings
+
+log = logging.getLogger(settings.AXES_LOGGER)
 
 
 class AppConfig(apps.AppConfig):
     name = 'axes'
+    logging_initialized = False
+
+    @classmethod
+    def log(cls):
+        """
+        Initialize Axes logging and show version information.
+
+        This method is re-entrant and can be called multiple times.
+        It displays version information exactly once at application startup.
+        """
+
+        if cls.logging_initialized:
+            return
+        cls.logging_initialized = True
+
+        if not settings.AXES_VERBOSE:
+            return
+
+        log.info('AXES: BEGIN LOG')
+        log.info('AXES: Using django-axes %s', get_version())
+
+        if settings.AXES_ONLY_USER_FAILURES:
+            log.info('AXES: blocking by username only.')
+        elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+            log.info('AXES: blocking by combination of username and IP.')
+        else:
+            log.info('AXES: blocking by IP only.')
 
     def ready(self):
+        self.log()
+
         from axes import signals
         signals.ProxyHandler.initialize()
