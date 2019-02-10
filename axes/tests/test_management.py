@@ -34,6 +34,16 @@ class ManagementCommandTestCase(TestCase):
         expected = '2 attempts removed.\n'
         self.assertEqual(expected, out.getvalue())
 
+    def test_axes_reset_not_found(self):
+        out = StringIO()
+        call_command('axes_reset', stdout=out)
+
+        out = StringIO()
+        call_command('axes_reset', stdout=out)
+
+        expected = 'No attempts found.\n'
+        self.assertEqual(expected, out.getvalue())
+
     def test_axes_reset_ip(self):
         out = StringIO()
         call_command('axes_reset_ip', '10.0.0.1', stdout=out)
