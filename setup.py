@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import codecs
 from setuptools import setup, find_packages
 
 from axes import get_version
@@ -9,17 +8,31 @@ setup(
     name='django-axes',
     version=get_version(),
     description='Keep track of failed login attempts in Django-powered sites.',
-    long_description=(
-        codecs.open('README.rst', encoding='utf-8').read() + '\n' +
-        codecs.open('CHANGES.txt', encoding='utf-8').read()),
-    keywords='authentication django pci security'.split(),
-    author='Josh VanderLinden, Philip Neustrom, Michael Blume, Camilo Nova',
+    long_description='\n'.join([
+        open('README.rst', encoding='utf-8').read(),
+        open('CHANGES.txt', encoding='utf-8').read(),
+    ]),
+    keywords='authentication django pci security',
+    author=', '.join([
+        'Josh VanderLinden',
+        'Philip Neustrom',
+        'Michael Blume',
+        'Alex Clark',
+        'Camilo Nova',
+        'Aleksi Hakli',
+    ]),
     author_email='codekoala@gmail.com',
-    maintainer='Alex Clark',
-    maintainer_email='aclark@aclark.net',
+    maintainer='Jazzband',
+    maintainer_email='security@jazzband.co',
     url='https://github.com/jazzband/django-axes',
+    project_urls={
+        'Documentation': 'https://django-axes.readthedocs.io/',
+        'Source': 'https://github.com/jazzband/django-axes',
+        'Tracker': 'https://github.com/jazzband/django-axes/issues',
+    },
     license='MIT',
     package_dir={'axes': 'axes'},
+    python_requires='~=3.5',
     install_requires=[
         'pytz',
         'django',

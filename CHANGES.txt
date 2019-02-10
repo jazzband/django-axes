@@ -23,7 +23,7 @@ Changes
 - Clean up code, tests, and documentation.
   [aleksihakli]
 
-- Drop support for Python 2.7 and Python 3.4.
+- Drop support for Python 2.7 and Python 3.4. Require Python 3.5+ from now on.
   [aleksihakli]
 
 - Drop old single-argument signature format for ``AXES_USERNAME_CALLABLE``.
