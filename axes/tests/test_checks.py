@@ -1,8 +1,8 @@
 from django.core.checks import run_checks, Error
-from django.conf import settings
 from django.test import TestCase, override_settings
 
 from axes.checks import Messages, Hints, Codes
+from axes.conf import settings
 
 
 class CacheCheckTestCase(TestCase):

@@ -1,6 +1,6 @@
 from django.core.checks import Error, Tags, register
 
-from django.conf import settings
+from axes.conf import settings
 
 
 class Messages:

@@ -5,15 +5,15 @@ import string
 import time
 from unittest.mock import patch
 
-from django.http import HttpRequest
-from django.test import TestCase, override_settings
-from django.urls import reverse
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.http import HttpRequest
+from django.test import TestCase, override_settings
 from django.test.client import RequestFactory
+from django.urls import reverse
 
-from axes.conf import settings
 from axes.attempts import get_cache_key
+from axes.conf import settings
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
 from axes.utils import reset

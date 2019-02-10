@@ -2,13 +2,13 @@ import logging
 
 from django.utils.timezone import now
 
-from axes.conf import settings
 from axes.attempts import get_cache_key
 from axes.attempts import get_cache_timeout
 from axes.attempts import get_user_attempts
 from axes.attempts import is_user_lockable
 from axes.attempts import ip_in_whitelist
 from axes.attempts import reset_user_attempts
+from axes.conf import settings
 from axes.exceptions import AxesSignalPermissionDenied
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out

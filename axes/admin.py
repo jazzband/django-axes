@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from axes.models import AccessLog
-from axes.models import AccessAttempt
+from axes.models import AccessAttempt, AccessLog
 
 
 @admin.register(AccessAttempt)
