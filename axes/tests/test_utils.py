@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import datetime
 
 from django.http import HttpRequest
@@ -9,10 +7,17 @@ from django.utils import six
 from axes.utils import iso8601, is_ipv6, get_client_str, get_client_username
 
 
+def get_expected_client_str(*args, **kwargs):
+    client_str_template = '{{user: "{0}", ip: "{1}", user-agent: "{2}", path: "{3}"}}'
+    return client_str_template.format(*args, **kwargs)
+
+
 class UtilsTest(TestCase):
     def test_iso8601(self):
-        """Tests iso8601 correctly translates datetime.timdelta to ISO 8601
-        formatted duration."""
+        """
+        Test iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
+        """
+
         EXPECTED = {
             datetime.timedelta(days=1, hours=25, minutes=42, seconds=8):
                 'P2DT1H42M8S',
@@ -46,8 +51,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
-        expected = details.format(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -72,8 +76,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
-        expected = details.format(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -99,8 +102,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
-        expected = details.format(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -126,8 +128,7 @@ class UtilsTest(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        details = "{{user: '{0}', ip: '{1}', user-agent: '{2}', path: '{3}'}}"
-        expected = details.format(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip, user_agent, path_info)
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -171,21 +172,8 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected_in_credentials, actual)
 
-    def sample_customize_username(request):
+    def sample_customize_username(request, credentials):
         return 'prefixed-' + request.POST.get('username')
-
-    @override_settings(AXES_USERNAME_FORM_FIELD='username')
-    @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username)
-    def test_custom_get_client_username(self):
-        provided = 'test-username'
-        expected = 'prefixed-' + provided
-
-        request = HttpRequest()
-        request.POST['username'] = provided
-
-        actual = get_client_username(request)
-
-        self.assertEqual(expected, actual)
 
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
     @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username)
@@ -222,18 +210,30 @@ class UtilsTest(TestCase):
 
         self.assertEqual(expected_in_credentials, actual)
 
-    def sample_get_client_username_too_few_arguments():
+    def sample_get_client_username(request, credentials):
+        return 'example'
+
+    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username)
+    def test_get_client_username(self):
+        self.assertEqual('example', get_client_username(HttpRequest(), {}))
+
+    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username)
+    def test_get_client_username_too_many_arguments(self):
+        with self.assertRaises(TypeError):
+            actual = get_client_username(HttpRequest(), {}, None)
+
+    def sample_get_client_username_too_few_arguments(request):
         pass
 
     @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username_too_few_arguments)
-    def test_get_client_username_too_few_arguments_invalid_callable(self):
+    def test_get_client_username_invalid_callable_too_few_arguments(self):
         with self.assertRaises(TypeError):
             actual = get_client_username(HttpRequest(), {})
 
-    def sample_get_client_username_too_many_arguments(one, two, three):
+    def sample_get_client_username_too_many_arguments(request, credentials, extra_argument):
         pass
 
     @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username_too_many_arguments)
-    def test_get_client_username_too_many_arguments_invalid_callable(self):
+    def test_get_client_username_invalid_callable_too_many_arguments(self):
         with self.assertRaises(TypeError):
             actual = get_client_username(HttpRequest(), {})

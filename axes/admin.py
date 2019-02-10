@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
@@ -7,6 +5,7 @@ from axes.models import AccessLog
 from axes.models import AccessAttempt
 
 
+@admin.register(AccessAttempt)
 class AccessAttemptAdmin(admin.ModelAdmin):
     list_display = (
         'attempt_time',
@@ -59,9 +58,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         return False
 
 
-admin.site.register(AccessAttempt, AccessAttemptAdmin)
-
-
+@admin.register(AccessLog)
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (
         'attempt_time',
@@ -109,6 +106,3 @@ class AccessLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
-
-
-admin.site.register(AccessLog, AccessLogAdmin)

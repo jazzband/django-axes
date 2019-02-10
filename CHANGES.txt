@@ -1,6 +1,37 @@
 Changes
 =======
 
+5.0.0 (WIP)
+-----------
+
+- Improve managment commands and separate commands for resetting
+  all access attempts, attempts by IP and attempts by username.
+  Add tests for the management commands for better coverage.
+  [aleksihakli]
+
+- Add a Django native authentication stack that utilizes
+  ``AUTHENTICATION_BACKENDS``, ``MIDDLEWARE``, and signal handlers
+  for tracking login attempts and implementing user lockouts.
+  This results in configuration changes, refer to the documentation.
+  [aleksihakli]
+
+- Remove automatic decoration of Django login views and forms.
+  Leave decorations available for application users who wish to
+  decorate their own login or other views as before.
+  [aleksihakli]
+
+- Clean up code, tests, and documentation.
+  [aleksihakli]
+
+- Drop support for Python 2.7 and Python 3.4.
+  [aleksihakli]
+
+- Drop old single-argument signature format for ``AXES_USERNAME_CALLABLE``.
+  [aleksihakli]
+
+- Improve tests and raise Codecov monitoring threshold to 90%.
+  [aleksihakli]
+
 4.5.4 (2019-01-15)
 ------------------
 

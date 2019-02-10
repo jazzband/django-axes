@@ -2,6 +2,7 @@
 
 Usage
 =====
+
 ``django-axes`` listens to signals from ``django.contrib.auth.signals`` to
 log access attempts:
 
@@ -16,27 +17,29 @@ log the access attempts.
 Quickstart
 ----------
 
-Once ``axes`` is in your ``INSTALLED_APPS`` in your project settings file,
-you can login and logout of your application via the ``django.contrib.auth``
-views. The access attempts will be logged and visible in the "Access Attempts"
-secion of the admin app.
+Once ``axes`` is in your ``INSTALLED_APPS`` in your project settings file, you can
+login and logout of your application via the ``django.contrib.auth`` views.
+The attempts will be logged and visible in the "Access Attempts" section in admin.
 
-By default, django-axes will lock out repeated attempts from the same IP
-address. You can allow this IP to attempt again by deleting the relevant
-``AccessAttempt`` records in the admin.
+By default, Axes will lock out repeated access attempts from the same IP address.
+You can allow this IP to attempt again by deleting relevant ``AccessAttempt`` records.
 
-You can also use the ``axes_reset`` and ``axes_reset_user`` management commands
-using Django's ``manage.py``.
+Records can be deleted, for example, by using the Django admin application.
+
+You can also use the ``axes_reset``, ``axes_reset_ip``, and ``axes_reset_user``
+management commands with the Django ``manage.py`` command helpers:
 
 * ``manage.py axes_reset`` will reset all lockouts and access records.
-* ``manage.py axes_reset ip`` will clear lockout/records for ip
-* ``manage.py axes_reset_user username`` will clear lockout/records for an username
+* ``manage.py axes_reset_ip ip [ip ...]``
+  will clear lockouts and records for the given IP addresses.
+* ``manage.py axes_reset_user username [username ...]``
+  will clear lockouts and records for the given usernames.
 
-In your code, you can use ``from axes.utils import reset``.
+In your code, you can use the ``axes.utils.reset`` function.
 
 * ``reset()`` will reset all lockouts and access records.
-* ``reset(ip=ip)`` will clear lockout/records for ip
-* ``reset(username=username)`` will clear lockout/records for a username
+* ``reset(ip=ip)`` will clear lockouts and records for the given IP address.
+* ``reset(username=username)`` will clear lockouts and records for the given username.
 
 Example usage
 -------------
@@ -58,63 +61,70 @@ them as per the example.
 
 *views.py:* ::
 
-    from django.views.decorators.csrf import csrf_exempt
-    from django.utils.decorators import method_decorator
     from django.http import JsonResponse, HttpResponse
-    from django.contrib.auth.signals import user_logged_in,\
-        user_logged_out,\
-        user_login_failed
-    import json
+    from django.utils.decorators import method_decorator
+    from django.contrib.auth import signals
+    from django.views import View
+    from django.views.decorators.csrf import csrf_exempt
+
+    from axes.decorators import axes_dispatch
+
     from myapp.forms import LoginForm
     from myapp.auth import custom_authenticate, custom_login
 
-    from axes.decorators import axes_dispatch
 
     @method_decorator(axes_dispatch, name='dispatch')
     @method_decorator(csrf_exempt, name='dispatch')
     class Login(View):
-        ''' Custom login view that takes JSON credentials '''
+        """
+        Custom login view that takes JSON credentials
+        """
 
-        http_method_names = ['post',]
+        http_method_names = ['post']
 
         def post(self, request):
-            # decode post json to dict & validate
-            post_data = json.loads(request.body.decode('utf-8'))
-            form = LoginForm(post_data)
+            form = LoginForm(request.POST)
 
             if not form.is_valid():
-                # inform axes of failed login
-                user_login_failed.send(
-                    sender = User,
-                    request = request,
-                    credentials = {
-                        'username': form.cleaned_data.get('username')
-                    }
+                # inform django-axes of failed login
+                signals.user_login_failed.send(
+                    sender=User,
+                    request=request,
+                    credentials={
+                        'username': form.cleaned_data.get('username'),
+                    },
                 )
                 return HttpResponse(status=400)
+
             user = custom_authenticate(
-                request = request,
-                username = form.cleaned_data.get('username'),
-                password = form.cleaned_data.get('password'),
+                request=request,
+                username=form.cleaned_data.get('username'),
+                password=form.cleaned_data.get('password'),
             )
 
             if user is not None:
                 custom_login(request, user)
-                user_logged_in.send(
-                    sender = User,
-                    request = request,
-                    user = user,
+
+                signals.user_logged_in.send(
+                    sender=User,
+                    request=request,
+                    user=user,
                 )
-                return JsonResponse({'message':'success!'}, status=200)
-            else:
-                user_login_failed.send(
-                    sender = User,
-                    request = request,
-                    credentials = {
-                        'username':form.cleaned_data.get('username')
-                    },
-                )
-                return HttpResponse(status=403)
+
+                return JsonResponse({
+                    'message':'success'
+                }, status=200)
+
+            # inform django-axes of failed login
+            signals.user_login_failed.send(
+                sender=User,
+                request=request,
+                credentials={
+                    'username': form.cleaned_data.get('username'),
+                },
+            )
+
+            return HttpResponse(status=403)
 
 *urls.py:* ::
 

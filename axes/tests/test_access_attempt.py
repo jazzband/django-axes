@@ -1,11 +1,9 @@
-from __future__ import unicode_literals
-
 import datetime
 import hashlib
-import json
 import random
 import string
 import time
+from unittest.mock import patch
 
 from django.http import HttpRequest
 from django.test import TestCase, override_settings
@@ -18,24 +16,28 @@ from axes.conf import settings
 from axes.attempts import get_cache_key
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
-from axes.tests.compatibility import patch
 from axes.utils import reset
 
 
 @override_settings(AXES_COOLOFF_TIME=datetime.timedelta(seconds=2))
 class AccessAttemptTest(TestCase):
-    """Test case using custom settings for testing
     """
+    Test case using custom settings for testing.
+    """
+
     VALID_USERNAME = 'valid-username'
     VALID_PASSWORD = 'valid-password'
     LOCKED_MESSAGE = 'Account locked: too many login attempts.'
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
 
-    def _login(self, is_valid_username=False, is_valid_password=False,
-               is_json=False, **kwargs):
-        """Login a user. A valid credential is used when is_valid_username is True,
+    def _login(self, is_valid_username=False, is_valid_password=False, **kwargs):
+        """
+        Login a user.
+
+        A valid credential is used when is_valid_username is True,
         otherwise it will use a random string to make a failed login.
         """
+
         if is_valid_username:
             # Use a valid username
             username = self.VALID_USERNAME
@@ -59,22 +61,17 @@ class AccessAttemptTest(TestCase):
         }
         post_data.update(kwargs)
 
-        if is_json:
-            headers.update({
-                'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest',
-                'content_type': 'application/json',
-            })
-            post_data = json.dumps(post_data)
-
-        response = self.client.post(
-            reverse('admin:login'), post_data, **headers
+        return self.client.post(
+            reverse('admin:login'),
+            post_data,
+            **headers
         )
 
-        return response
-
     def setUp(self):
-        """Create a valid user for login
         """
+        Create a valid user for login.
+        """
+
         self.user = User.objects.create_superuser(
             username=self.VALID_USERNAME,
             email='test@example.com',
@@ -82,9 +79,10 @@ class AccessAttemptTest(TestCase):
         )
 
     def test_failure_limit_once(self):
-        """Tests the login lock trying to login one more time
-        than failure limit
         """
+        Test the login lock trying to login one more time than failure limit.
+        """
+
         # test until one try before the limit
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
@@ -97,9 +95,10 @@ class AccessAttemptTest(TestCase):
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     def test_failure_limit_many(self):
-        """Tests the login lock trying to login a lot of times more
-        than failure limit
         """
+        Test the login lock trying to login a lot of times more than failure limit.
+        """
+
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login()
             # Check if we are in the same login page
@@ -112,14 +111,18 @@ class AccessAttemptTest(TestCase):
             self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     def test_valid_login(self):
-        """Tests a valid login for a real username
         """
+        Test a valid login for a real username.
+        """
+
         response = self._login(is_valid_username=True, is_valid_password=True)
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
     def test_valid_logout(self):
-        """Tests a valid logout and make sure the logout_time is updated
         """
+        Test a valid logout and make sure the logout_time is updated.
+        """
+
         response = self._login(is_valid_username=True, is_valid_password=True)
         self.assertEqual(AccessLog.objects.latest('id').logout_time, None)
 
@@ -128,8 +131,10 @@ class AccessAttemptTest(TestCase):
         self.assertContains(response, 'Logged out')
 
     def test_cooling_off(self):
-        """Tests if the cooling time allows a user to login
         """
+        Test if the cooling time allows a user to login.
+        """
+
         self.test_failure_limit_once()
 
         # Wait for the cooling off period
@@ -139,8 +144,10 @@ class AccessAttemptTest(TestCase):
         self.test_valid_login()
 
     def test_cooling_off_for_trusted_user(self):
-        """Test the cooling time for a trusted user
         """
+        Test the cooling time for a trusted user.
+        """
+
         # Test successful login-logout, this makes the user trusted.
         self.test_valid_logout()
 
@@ -148,8 +155,10 @@ class AccessAttemptTest(TestCase):
         self.test_cooling_off()
 
     def test_long_user_agent_valid(self):
-        """Tests if can handle a long user agent
         """
+        Test if can handle a long user agent.
+        """
+
         long_user_agent = 'ie6' * 1024
         response = self._login(
             is_valid_username=True,
@@ -159,8 +168,10 @@ class AccessAttemptTest(TestCase):
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
     def test_long_user_agent_not_valid(self):
-        """Tests if can handle a long user agent with failure
         """
+        Test if can handle a long user agent with failure.
+        """
+
         long_user_agent = 'ie6' * 1024
         for _ in range(settings.AXES_FAILURE_LIMIT + 1):
             response = self._login(user_agent=long_user_agent)
@@ -168,8 +179,10 @@ class AccessAttemptTest(TestCase):
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
     def test_reset_ip(self):
-        """Tests if can reset an ip address
         """
+        Test resetting all attempts for an IP address.
+        """
+
         # Make a lockout
         self.test_failure_limit_once()
 
@@ -180,8 +193,10 @@ class AccessAttemptTest(TestCase):
         self.test_valid_login()
 
     def test_reset_all(self):
-        """Tests if can reset all attempts
         """
+        Test resetting all attempts.
+        """
+
         # Make a lockout
         self.test_failure_limit_once()
 
@@ -193,7 +208,10 @@ class AccessAttemptTest(TestCase):
 
     @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
     def test_get_cache_key(self, _):
-        """ Test the cache key format"""
+        """
+        Test the cache key format.
+        """
+
         # Getting cache key from request
         ip_address = '127.0.0.1'
         cache_hash_key = 'axes-{}'.format(
@@ -201,11 +219,13 @@ class AccessAttemptTest(TestCase):
         )
 
         request_factory = RequestFactory()
-        request = request_factory.post('/admin/login/',
-                                       data={
-                                           'username': self.VALID_USERNAME,
-                                           'password': 'test'
-                                       })
+        request = request_factory.post(
+            '/admin/login/',
+            data={
+                'username': self.VALID_USERNAME,
+                'password': 'test',
+            },
+        )
 
         self.assertEqual(cache_hash_key, get_cache_key(request))
 
@@ -220,12 +240,15 @@ class AccessAttemptTest(TestCase):
             path_info=request.META.get('PATH_INFO', '<unknown>'),
             failures_since_start=0,
         )
-        self.assertEqual(cache_hash_key, get_cache_key(attempt))
 
+        self.assertEqual(cache_hash_key, get_cache_key(attempt))
 
     @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
     def test_get_cache_key_credentials(self, _):
-        """ Test the cache key format"""
+        """
+        Test the cache key format.
+        """
+
         # Getting cache key from request
         ip_address = '127.0.0.1'
         cache_hash_key = 'axes-{}'.format(
@@ -258,8 +281,10 @@ class AccessAttemptTest(TestCase):
         self.assertEqual(cache_hash_key, get_cache_key(attempt))
 
     def test_send_lockout_signal(self):
-        """Test if the lockout signal is emitted
         """
+        Test if the lockout signal is emitted.
+        """
+
         # this "hack" is needed so we don't have to use global variables or python3 features
         class Scope(object): pass
         scope = Scope()
@@ -284,9 +309,10 @@ class AccessAttemptTest(TestCase):
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_combination_user_and_ip(self):
-        """Tests the login lock with a valid username and invalid password
-        when AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True
         """
+        Test login failure when AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True.
+        """
+
         # test until one try before the limit
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login(
@@ -303,9 +329,10 @@ class AccessAttemptTest(TestCase):
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_only(self):
-        """Tests the login lock with a valid username and invalid password
-        when AXES_ONLY_USER_FAILURES is True
         """
+        Test login failure when AXES_ONLY_USER_FAILURES is True.
+        """
+
         # test until one try before the limit
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
             response = self._login(
@@ -342,23 +369,16 @@ class AccessAttemptTest(TestCase):
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
     def test_log_data_truncated(self):
-        """Tests that query2str properly truncates data to the
-        max_length (default 1024)
         """
+        Test that query2str properly truncates data to the max_length (default 1024).
+        """
+
         # An impossibly large post dict
         extra_data = {string.ascii_letters * x: x for x in range(0, 1000)}
         self._login(**extra_data)
         self.assertEqual(
             len(AccessAttempt.objects.latest('id').post_data), 1024
         )
-
-    def test_json_response(self):
-        """Tests response content type and status code for the ajax request
-        """
-        self.test_failure_limit_once()
-        response = self._login(is_json=True)
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.get('Content-Type'), 'application/json')
 
     @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
     def test_valid_logout_without_success_log(self):
@@ -373,9 +393,9 @@ class AccessAttemptTest(TestCase):
     @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
     def test_valid_login_without_success_log(self):
         """
-        A valid login doesn't generate an AccessLog when
-        `DISABLE_SUCCESS_ACCESS_LOG=True`.
+        Test that a valid login does not generate an AccessLog when DISABLE_SUCCESS_ACCESS_LOG is True.
         """
+
         AccessLog.objects.all().delete()
 
         response = self._login(is_valid_username=True, is_valid_password=True)
@@ -396,8 +416,7 @@ class AccessAttemptTest(TestCase):
     @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_non_valid_login_without_log(self):
         """
-        A non-valid login does generate an AccessLog when
-        `DISABLE_ACCESS_LOG=True`.
+        Test that a non-valid login does generate an AccessLog when DISABLE_ACCESS_LOG is True.
         """
         AccessLog.objects.all().delete()
 
@@ -420,10 +439,9 @@ class AccessAttemptTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_custom_authentication_backend(self):
-        '''
-        ``log_user_login_failed`` should shortcircuit if an attempt to authenticate
-        with a custom authentication backend fails.
-        '''
+        """
+        Test that log_user_login_failed skips if an attempt to authenticate with a custom authentication backend fails.
+        """
 
         request = HttpRequest()
         request.user = self.user
@@ -431,8 +449,10 @@ class AccessAttemptTest(TestCase):
         self.assertEqual(AccessLog.objects.all().count(), 0)
 
     def _assert_resets_on_success(self):
-        """Sets up for testing the AXES_RESET_ON_SUCCESS setting.
         """
+        Sets the AXES_RESET_ON_SUCCESS up for testing.
+        """
+
         # test until one try before the limit
         for _ in range(settings.AXES_FAILURE_LIMIT - 1):
             response = self._login()
@@ -447,9 +467,10 @@ class AccessAttemptTest(TestCase):
 
     # by default, AXES_RESET_ON_SUCCESS = False
     def test_reset_on_success_default(self):
-        """Tests that the failure attempts does not reset after one successful
-        attempt by default.
         """
+        Test that the failure attempts does not reset after one successful attempt by default.
+        """
+
         response = self._assert_resets_on_success()
 
         # So, we shouldn't have found a lock-out yet.
@@ -458,9 +479,10 @@ class AccessAttemptTest(TestCase):
 
     @override_settings(AXES_RESET_ON_SUCCESS=True)
     def test_reset_on_success(self):
-        """Tests that the failure attempts resets after one successful
-        attempt when using the corresponding setting.
         """
+        Test that the failure attempts resets after one successful attempt when using the corresponding setting.
+        """
+
         response = self._assert_resets_on_success()
 
         # So, we shouldn't have found a lock-out yet.

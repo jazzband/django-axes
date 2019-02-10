@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
@@ -36,6 +34,8 @@ class MyAppConf(AppConf):
     DISABLE_ACCESS_LOG = False
 
     DISABLE_SUCCESS_ACCESS_LOG = False
+
+    HANDLER = 'axes.handlers.AxesHandler'
 
     LOGGER = 'axes.watch_login'
 

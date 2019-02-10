@@ -16,6 +16,7 @@ Contents
 
    installation
    configuration
+   migration
    usage
    requirements
    development

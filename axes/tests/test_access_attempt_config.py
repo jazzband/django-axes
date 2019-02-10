@@ -1,7 +1,3 @@
-from __future__ import unicode_literals
-
-import json
-
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -10,11 +6,13 @@ from axes.conf import settings
 
 
 class AccessAttemptConfigTest(TestCase):
-    """ This set of tests checks for lockouts under different configurations
-    and circumstances to prevent false positives and false negatives.
+    """
+    Test for lockouts under different configurations and circumstances to prevent false positives and false negatives.
+
     Always block attempted logins for the same user from the same IP.
     Always allow attempted logins for a different user from a different IP.
     """
+
     IP_1 = '10.1.1.1'
     IP_2 = '10.2.2.2'
     USER_1 = 'valid-user-1'
@@ -26,11 +24,13 @@ class AccessAttemptConfigTest(TestCase):
     ALLOWED = 302
     BLOCKED = 403
 
-    def _login(self, username, password, ip_addr='127.0.0.1',
-               is_json=False, **kwargs):
-        """Login a user and get the response.
+    def _login(self, username, password, ip_addr='127.0.0.1', **kwargs):
+        """
+        Login a user and get the response.
+
         IP address can be configured to test IP blocking functionality.
         """
+
         headers = {
             'user_agent': 'test-browser'
         }
@@ -41,17 +41,12 @@ class AccessAttemptConfigTest(TestCase):
         }
         post_data.update(kwargs)
 
-        if is_json:
-            headers.update({
-                'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest',
-                'content_type': 'application/json',
-            })
-            post_data = json.dumps(post_data)
-
-        response = self.client.post(
-            reverse('admin:login'), post_data, REMOTE_ADDR=ip_addr, **headers
+        return self.client.post(
+            reverse('admin:login'),
+            post_data,
+            REMOTE_ADDR=ip_addr,
+            **headers
         )
-        return response
 
     def _lockout_user_from_ip(self, username, ip_addr):
         for _ in range(settings.AXES_FAILURE_LIMIT):
@@ -69,8 +64,10 @@ class AccessAttemptConfigTest(TestCase):
         )
 
     def setUp(self):
-        """Create two valid users for authentication.
         """
+        Create two valid users for authentication.
+        """
+
         self.user = User.objects.create_superuser(
             username=self.USER_1,
             email='test_1@example.com',
