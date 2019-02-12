@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-class CommonAccess(models.Model):
+class AccessBase(models.Model):
     user_agent = models.CharField(
         _('User Agent'),
         max_length=255,
@@ -43,7 +43,7 @@ class CommonAccess(models.Model):
         ordering = ['-attempt_time']
 
 
-class AccessAttempt(CommonAccess):
+class AccessAttempt(AccessBase):
     get_data = models.TextField(
         _('GET Data'),
     )
@@ -68,7 +68,7 @@ class AccessAttempt(CommonAccess):
         verbose_name_plural = _('access attempts')
 
 
-class AccessLog(CommonAccess):
+class AccessLog(AccessBase):
     # Once a user logs in from an ip, that combination is trusted and not
     # locked out in case of a distributed attack
     trusted = models.BooleanField(
