@@ -1,5 +1,6 @@
 -e .
 coverage==4.5.2
+mypy==0.670
 prospector==1.1.6.2
 sphinx_rtd_theme==0.4.2
 tox==3.7.0

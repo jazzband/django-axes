@@ -51,7 +51,7 @@ def _query_user_attempts(request, credentials=None):
     return attempts
 
 
-def get_cache_key(request_or_obj, credentials=None):
+def get_cache_key(request_or_obj, credentials=None) -> str:
     """
     Build cache key name from request or AccessAttempt object.
 
@@ -132,28 +132,28 @@ def get_user_attempts(request, credentials=None):
     return attempts
 
 
-def reset_user_attempts(request, credentials=None):
+def reset_user_attempts(request, credentials=None) -> int:
     attempts = _query_user_attempts(request, credentials)
     count, _ = attempts.delete()
 
     return count
 
 
-def ip_in_whitelist(ip):
+def ip_in_whitelist(ip) -> bool:
     if not settings.AXES_IP_WHITELIST:
         return False
 
     return ip in settings.AXES_IP_WHITELIST
 
 
-def ip_in_blacklist(ip):
+def ip_in_blacklist(ip) -> bool:
     if not settings.AXES_IP_BLACKLIST:
         return False
 
     return ip in settings.AXES_IP_BLACKLIST
 
 
-def is_user_lockable(request, credentials=None):
+def is_user_lockable(request, credentials=None) -> bool:
     if request.method != 'POST':
         return True
 
@@ -176,7 +176,7 @@ def is_user_lockable(request, credentials=None):
     return True
 
 
-def is_already_locked(request, credentials=None):
+def is_already_locked(request, credentials=None) -> bool:
     ip = get_client_ip(request)
 
     if (

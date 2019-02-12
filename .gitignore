@@ -4,6 +4,7 @@
 .coverage
 .DS_Store
 .idea
+.mypy_cache/
 .project
 .pydevproject
 .python-version
