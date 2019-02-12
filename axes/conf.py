@@ -17,7 +17,7 @@ class MyAppConf(AppConf):
     USERNAME_FORM_FIELD = 'username'
 
     # use a specific password field to retrieve from login POST data
-    PASSWORD_FORM_FIELD = 'password'
+    PASSWORD_FORM_FIELD = 'password'  # noqa
 
     # use a provided callable to transform the POSTed username into the one used in credentials
     USERNAME_CALLABLE = None
