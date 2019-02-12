@@ -4,18 +4,33 @@ from django.db.migrations.autodetector import MigrationAutodetector
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.state import ProjectState
 from django.test import TestCase
-from django.utils import translation
+
+from axes.models import AccessAttempt, AccessLog
 
 
-class MigrationsCheck(TestCase):
+class ModelsTestCase(TestCase):
     def setUp(self):
-        self.saved_locale = translation.get_language()
-        translation.deactivate_all()
+        self.failures_since_start = 42
 
-    def tearDown(self):
-        if self.saved_locale is not None:
-            translation.activate(self.saved_locale)
+        self.access_attempt = AccessAttempt(
+            failures_since_start=self.failures_since_start,
+        )
+        self.access_log = AccessLog()
 
+    def test_access_attempt_str(self):
+        self.assertIn('Access', str(self.access_attempt))
+
+    def test_access_attempt_failures(self):
+        self.assertEqual(
+            self.access_attempt.failures,
+            self.failures_since_start,
+        )
+
+    def test_access_log_str(self):
+        self.assertIn('Access', str(self.access_log))
+
+
+class MigrationsTestCase(TestCase):
     def test_missing_migrations(self):
         executor = MigrationExecutor(connection)
         autodetector = MigrationAutodetector(

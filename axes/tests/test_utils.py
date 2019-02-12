@@ -1,9 +1,11 @@
 import datetime
+from unittest.mock import patch
 
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse, HttpResponseRedirect, HttpResponse
 from django.test import TestCase, override_settings
 
-from axes.utils import iso8601, is_ipv6, get_client_str, get_client_username
+import axes
+from axes.utils import iso8601, is_ipv6, get_client_str, get_client_username, get_lockout_response
 
 
 def get_expected_client_str(*args, **kwargs):
@@ -11,7 +13,13 @@ def get_expected_client_str(*args, **kwargs):
     return client_str_template.format(*args, **kwargs)
 
 
-class UtilsTest(TestCase):
+class AxesTestCase(TestCase):
+    @patch('axes.__version__', 'test')
+    def test_get_version(self):
+        self.assertEqual(axes.get_version(), 'test')
+
+
+class UtilsTestCase(TestCase):
     def test_iso8601(self):
         """
         Test iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
@@ -53,6 +61,18 @@ class UtilsTest(TestCase):
         path_info = '/admin/'
 
         expected = get_expected_client_str(username, ip, user_agent, path_info)
+        actual = get_client_str(username, ip, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @override_settings(AXES_VERBOSE=True)
+    def test_verbose_ip_only_client_details_tuple(self):
+        username = 'test@example.com'
+        ip = '127.0.0.1'
+        user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
+        path_info = ('admin', 'login')
+
+        expected = get_expected_client_str(username, ip, user_agent, path_info[0])
         actual = get_client_str(username, ip, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -238,3 +258,33 @@ class UtilsTest(TestCase):
     def test_get_client_username_invalid_callable_too_many_arguments(self):
         with self.assertRaises(TypeError):
             actual = get_client_username(HttpRequest(), {})
+
+
+class LockoutResponseTestCase(TestCase):
+    def setUp(self):
+        self.request = HttpRequest()
+
+    @override_settings(AXES_COOLOFF_TIME=42)
+    def test_get_lockout_response_cool_off(self):
+        get_lockout_response(request=self.request)
+
+    @override_settings(AXES_LOCKOUT_TEMPLATE='example.html')
+    @patch('axes.utils.render')
+    def test_get_lockout_response_lockout_template(self, render):
+        self.assertFalse(render.called)
+        get_lockout_response(request=self.request)
+        self.assertTrue(render.called)
+
+    @override_settings(AXES_LOCKOUT_URL='https://example.com')
+    def test_get_lockout_response_lockout_url(self):
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(type(response), HttpResponseRedirect)
+
+    def test_get_lockout_response_lockout_json(self):
+        self.request.is_ajax = lambda: True
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(type(response), JsonResponse)
+
+    def test_get_lockout_response_lockout_response(self):
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(type(response), HttpResponse)
