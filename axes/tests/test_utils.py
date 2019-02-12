@@ -231,33 +231,19 @@ class UtilsTestCase(TestCase):
 
         self.assertEqual(expected_in_credentials, actual)
 
-    def sample_get_client_username(request, credentials):
-        return 'example'
-
-    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username)
+    @override_settings(AXES_USERNAME_CALLABLE=lambda request, credentials: 'example')  # pragma: no cover
     def test_get_client_username(self):
-        self.assertEqual('example', get_client_username(HttpRequest(), {}))
+        self.assertEqual(get_client_username(HttpRequest(), {}), 'example')
 
-    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username)
-    def test_get_client_username_too_many_arguments(self):
-        with self.assertRaises(TypeError):
-            actual = get_client_username(HttpRequest(), {}, None)
-
-    def sample_get_client_username_too_few_arguments(request):
-        pass
-
-    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username_too_few_arguments)
+    @override_settings(AXES_USERNAME_CALLABLE=lambda request: None)  # pragma: no cover
     def test_get_client_username_invalid_callable_too_few_arguments(self):
         with self.assertRaises(TypeError):
-            actual = get_client_username(HttpRequest(), {})
+            get_client_username(HttpRequest(), {})
 
-    def sample_get_client_username_too_many_arguments(request, credentials, extra_argument):
-        pass
-
-    @override_settings(AXES_USERNAME_CALLABLE=sample_get_client_username_too_many_arguments)
+    @override_settings(AXES_USERNAME_CALLABLE=lambda request, credentials, extra: None)  # pragma: no cover
     def test_get_client_username_invalid_callable_too_many_arguments(self):
         with self.assertRaises(TypeError):
-            actual = get_client_username(HttpRequest(), {})
+            get_client_username(HttpRequest(), {})
 
 
 class LockoutResponseTestCase(TestCase):
