@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
-from django.test import TestCase
+from django.http import HttpRequest
+from django.test import TestCase, override_settings
 
 from axes.handlers import AxesHandler
 from axes.signals import ProxyHandler
@@ -59,3 +60,22 @@ class ProxyHandlerTestCase(TestCase):
         self.assertFalse(handler.post_delete_access_attempt.called)
         ProxyHandler().post_delete_access_attempt(self.instance)
         self.assertTrue(handler.post_delete_access_attempt.called)
+
+
+class AxesHandlerTestCase(TestCase):
+    def setUp(self):
+        self.handler = AxesHandler()
+
+    @patch('axes.handlers.log')
+    def test_user_login_failed_no_request(self, log):
+        self.handler.user_login_failed(sender=None, credentials=None, request=None)
+        log.warning.assert_called_with('AxesHandler.user_login_failed does not function without a request.')
+
+    @override_settings(AXES_NEVER_LOCKOUT_WHITELIST=['127.0.0.1'])
+    @patch('axes.handlers.get_client_ip', return_value='127.0.0.1')
+    @patch('axes.handlers.ip_in_whitelist', return_value=True)
+    @patch('axes.handlers.log')
+    def test_user_login_failed_whitelist(self, log, _, __):
+        request = HttpRequest()
+        self.handler.user_login_failed(sender=None, credentials=None, request=request)
+        log.info.assert_called_with('Login failed from whitelisted IP %s.', '127.0.0.1')

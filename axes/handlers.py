@@ -33,7 +33,7 @@ class AxesHandler:  # pylint: disable=too-many-locals
         """
 
         if request is None:
-            log.warning('Attempt to authenticate with a custom backend failed.')
+            log.warning('AxesHandler.user_login_failed does not function without a request.')
             return
 
         ip_address = get_client_ip(request)
@@ -43,6 +43,7 @@ class AxesHandler:  # pylint: disable=too-many-locals
         http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
 
         if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
+            log.info('Login failed from whitelisted IP %s.', ip_address)
             return
 
         failures = 0
