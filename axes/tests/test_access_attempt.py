@@ -5,14 +5,14 @@ import string
 import time
 from unittest.mock import patch
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import User
 from django.http import HttpRequest
 from django.test import TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
 
-from axes.attempts import get_cache_key
+from axes.attempts import get_cache_key, is_user_lockable
 from axes.conf import settings
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
@@ -496,3 +496,24 @@ class AccessAttemptTest(TestCase):
         # But we should find one now
         response = self._login()
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+
+    @patch('axes.attempts.log')
+    def test_is_user_lockable(self, log):
+        request = HttpRequest()
+        request.method = 'POST'
+
+        UserModel = get_user_model()
+        UserModel.objects.create(username='jane.doe')
+
+        with self.subTest('User is marked as nolockout.'):
+            with patch.object(UserModel, 'nolockout', True, create=True):
+                lockable = is_user_lockable(request, {'username': 'jane.doe'})
+                self.assertFalse(lockable)
+
+        with self.subTest('User exists but attemptee can be locked out.'):
+            lockable = is_user_lockable(request, {'username': 'jane.doe'})
+            self.assertTrue(lockable)
+
+        with self.subTest('User does not exist and attemptee can be locked out.'):
+            lockable = is_user_lockable(request, {'username': 'john.doe'})
+            self.assertTrue(lockable)

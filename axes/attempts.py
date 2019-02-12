@@ -1,5 +1,6 @@
 from datetime import timedelta
 from hashlib import md5
+from logging import getLogger
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -7,6 +8,8 @@ from django.utils import timezone
 from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.utils import get_axes_cache, get_client_ip, get_client_username
+
+log = getLogger(settings.AXES_LOGGER)
 
 
 def _query_user_attempts(request, credentials=None):
@@ -151,32 +154,25 @@ def ip_in_blacklist(ip):
 
 
 def is_user_lockable(request, credentials=None):
-    """
-    Check if the user has a profile with nolockout attribute set.
-
-    If so, then return the value to see if this user is special and does not get their account locked out.
-    """
-
     if request.method != 'POST':
         return True
 
+    username_field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
+    username_value = get_client_username(request, credentials)
+    kwargs = {
+        username_field: username_value
+    }
+
+    UserModel = get_user_model()
+
+    # Special users with nolockout attribute set should never be locked out
     try:
-        field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
-        kwargs = {
-            field: get_client_username(request, credentials)
-        }
-        user = get_user_model().objects.get(**kwargs)
+        user = UserModel.objects.get(**kwargs)
+        return not user.nolockout
+    except (UserModel.DoesNotExist, AttributeError):
+        pass
 
-        if hasattr(user, 'nolockout'):
-            # need to invert since we need to return
-            # false for users that can't be blocked
-            return not user.nolockout
-
-    except get_user_model().DoesNotExist:
-        # not a valid user
-        return True
-
-    # Default behavior for a user to be lockable
+    # Default case is that users can be locked out
     return True
 
 
