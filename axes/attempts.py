@@ -46,7 +46,7 @@ def get_filter_kwargs(username: str, ip_address: str, user_agent: str) -> Ordere
     return query
 
 
-def query_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
+def filter_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
     """
     Return a queryset of AccessAttempts that match the given request and credentials.
     """
@@ -87,34 +87,39 @@ def get_cache_key(request_or_attempt, credentials: dict = None) -> str:
     return cache_key
 
 
-def get_user_attempts(request: HttpRequest, credentials: dict = None):
-    force_reload = False
-    attempts = query_user_attempts(request, credentials)
-    cache_hash_key = get_cache_key(request, credentials)
-    cache_timeout = get_cache_timeout()
+def get_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
+    """
+    Get valid user attempts and delete expired attempts which have cool offs in the past.
+    """
+
+    attempts = filter_user_attempts(request, credentials)
+
+    # If settings.AXES_COOLOFF_TIME is not configured return the attempts
     cool_off = get_cool_off()
+    if cool_off is None:
+        return attempts
 
-    if cool_off:
-        for attempt in attempts:
-            if attempt.attempt_time + cool_off < timezone.now():
-                attempt.delete()
-                force_reload = True
-                failures_cached = get_axes_cache().get(cache_hash_key)
-                if failures_cached is not None:
-                    get_axes_cache().set(
-                        cache_hash_key, failures_cached - 1, cache_timeout
-                    )
+    # Else AccessAttempts that have expired need to be cleaned up from the database
+    num_deleted, _ = attempts.filter(attempt_time__lte=timezone.now() - cool_off).delete()
+    if not num_deleted:
+        return attempts
 
-    # If objects were deleted, we need to update the queryset to reflect this,
-    # so force a reload.
-    if force_reload:
-        attempts = query_user_attempts(request, credentials)
+    # If there deletions the cache needs to be updated
+    cache_key = get_cache_key(request, credentials)
+    num_failures_cached = get_axes_cache().get(cache_key)
+    if num_failures_cached is not None:
+        get_axes_cache().set(
+            cache_key,
+            num_failures_cached - num_deleted,
+            get_cache_timeout(),
+        )
 
-    return attempts
+    # AccessAttempts need to be refreshed from the database because of the delete before returning them
+    return attempts.all()
 
 
 def reset_user_attempts(request: HttpRequest, credentials: dict = None) -> int:
-    attempts = query_user_attempts(request, credentials)
+    attempts = filter_user_attempts(request, credentials)
     count, _ = attempts.delete()
 
     return count
@@ -194,8 +199,8 @@ def is_already_locked(request: HttpRequest, credentials: dict = None) -> bool:
 
     1. Is the request HTTP method _whitelisted_? If it is, return ``False``.
     2. Is the request IP address _blacklisted_? If it is, return ``True``.
-    3. Does the request or given credentials refer to a whitelisted user? If it does, return ``False``.
-    4. Does the request exceed the configured maximum attempt limit? If it does, return ``True``.
+    3. Is the request user _whitelisted_? If it is, return ``False``.
+    4. Is the request failure count over the attempt limit? If it is, return ``True``.
 
     Refer to the function source code for the exact implementation.
     """
@@ -209,19 +214,21 @@ def is_already_locked(request: HttpRequest, credentials: dict = None) -> bool:
     if not is_user_lockable(request, credentials):
         return False
 
+    if not settings.AXES_LOCK_OUT_AT_FAILURE:
+        return False
+
+    # Check failure statistics against cache
     cache_hash_key = get_cache_key(request, credentials)
-    failures_cached = get_axes_cache().get(cache_hash_key)
-    if failures_cached is not None:
-        return (
-            failures_cached >= settings.AXES_FAILURE_LIMIT and
-            settings.AXES_LOCK_OUT_AT_FAILURE
-        )
+    num_failures_cached = get_axes_cache().get(cache_hash_key)
 
-    for attempt in get_user_attempts(request, credentials):
-        if (
-            attempt.failures_since_start >= settings.AXES_FAILURE_LIMIT and
-            settings.AXES_LOCK_OUT_AT_FAILURE
-        ):
-            return True
+    # Do not hit the database if we have an answer in the cache
+    if num_failures_cached is not None:
+        return num_failures_cached >= settings.AXES_FAILURE_LIMIT
 
-    return False
+    # Check failure statistics against database
+    attempts = get_user_attempts(request, credentials)
+    failures = attempts.filter(
+        failures_since_start__gte=settings.AXES_FAILURE_LIMIT,
+    )
+
+    return failures.exists()
