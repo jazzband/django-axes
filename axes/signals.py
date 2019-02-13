@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.signals import user_logged_out
@@ -11,7 +11,7 @@ from django.utils.module_loading import import_string
 from axes.conf import settings
 from axes.models import AccessAttempt
 
-log = logging.getLogger(settings.AXES_LOGGER)
+log = getLogger(settings.AXES_LOGGER)
 
 
 user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])

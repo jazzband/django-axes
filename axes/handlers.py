@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 
 from django.utils.timezone import now
 
@@ -17,7 +17,7 @@ from axes.utils import query2str
 from axes.utils import get_axes_cache, get_client_ip, get_client_username, get_credentials
 
 
-log = logging.getLogger(settings.AXES_LOGGER)
+log = getLogger(settings.AXES_LOGGER)
 
 
 class AxesHandler:  # pylint: disable=too-many-locals

@@ -1,10 +1,10 @@
-import datetime
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.http import HttpRequest, JsonResponse, HttpResponseRedirect, HttpResponse
 from django.test import TestCase, override_settings
 
-import axes
+from axes import get_version
 from axes.utils import iso8601, is_ipv6, get_client_str, get_client_username, get_lockout_response
 
 
@@ -16,7 +16,7 @@ def get_expected_client_str(*args, **kwargs):
 class AxesTestCase(TestCase):
     @patch('axes.__version__', 'test')
     def test_get_version(self):
-        self.assertEqual(axes.get_version(), 'test')
+        self.assertEqual(get_version(), 'test')
 
 
 class UtilsTestCase(TestCase):
@@ -26,27 +26,27 @@ class UtilsTestCase(TestCase):
         """
 
         expected = {
-            datetime.timedelta(days=1, hours=25, minutes=42, seconds=8):
+            timedelta(days=1, hours=25, minutes=42, seconds=8):
                 'P2DT1H42M8S',
-            datetime.timedelta(days=7, seconds=342):
+            timedelta(days=7, seconds=342):
                 'P7DT5M42S',
-            datetime.timedelta(days=0, hours=2, minutes=42):
+            timedelta(days=0, hours=2, minutes=42):
                 'PT2H42M',
-            datetime.timedelta(hours=20, seconds=42):
+            timedelta(hours=20, seconds=42):
                 'PT20H42S',
-            datetime.timedelta(seconds=300):
+            timedelta(seconds=300):
                 'PT5M',
-            datetime.timedelta(seconds=9005):
+            timedelta(seconds=9005):
                 'PT2H30M5S',
-            datetime.timedelta(minutes=9005):
+            timedelta(minutes=9005):
                 'P6DT6H5M',
-            datetime.timedelta(days=15):
+            timedelta(days=15):
                 'P15D'
         }
 
-        for timedelta, iso_duration in expected.items():
+        for delta, iso_duration in expected.items():
             with self.subTest(iso_duration):
-                self.assertEqual(iso8601(timedelta), iso_duration)
+                self.assertEqual(iso8601(delta), iso_duration)
 
     def test_is_ipv6(self):
         self.assertTrue(is_ipv6('ff80::220:16ff:fec9:1'))

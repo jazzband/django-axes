@@ -1,11 +1,11 @@
-import logging
+from logging import getLogger
 
 from django import apps
 
 from axes import get_version
 from axes.conf import settings
 
-log = logging.getLogger(settings.AXES_LOGGER)
+log = getLogger(settings.AXES_LOGGER)
 
 
 class AppConfig(apps.AppConfig):
