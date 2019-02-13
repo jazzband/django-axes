@@ -310,8 +310,8 @@ class AccessAttemptTest(TestCase):
             [],
         )
 
-        cache.get.assert_called_once()
-        cache.set.assert_called_once()
+        self.assertTrue(cache.get.call_count)
+        self.assertTrue(cache.set.call_count)
 
     @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
     def test_get_cache_key(self, _):
@@ -661,7 +661,7 @@ class AttemptUtilsTestCase(TestCase):
         get_cache.return_value = cache
 
         self.assertTrue(is_already_locked(self.request, {}))
-        cache.get.assert_called_once()
+        self.assertTrue(cache.get.call_count)
 
     @override_settings(AXES_NEVER_LOCKOUT_GET=True)
     def test_is_already_locked_never_lockout_get(self):

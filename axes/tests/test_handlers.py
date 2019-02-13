@@ -100,8 +100,8 @@ class AxesHandlerTestCase(TestCase):
 
         self.handler.post_save_access_attempt(self.attempt)
 
-        cache.get.assert_called_once()
-        cache.set.assert_called_once()
+        self.assertTrue(cache.get.call_count)
+        self.assertTrue(cache.set.call_count)
 
     @patch('axes.handlers.get_axes_cache')
     def test_user_login_failed_utilizes_cache(self, get_cache):
@@ -118,4 +118,4 @@ class AxesHandlerTestCase(TestCase):
 
         self.handler.user_login_failed(sender, credentials, request)
 
-        self.assertGreater(cache.get.call_count, 0)
+        self.assertTrue(cache.get.call_count)
