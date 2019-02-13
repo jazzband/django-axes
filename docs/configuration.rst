@@ -264,6 +264,8 @@ These should be defined in your ``settings.py`` file.
 * ``AXES_ONLY_USER_FAILURES`` : If ``True`` only locks based on user id and never locks by IP
   if attempts limit exceed, otherwise utilize the existing IP and user locking logic
   Default: ``False``
+* ``AXES_NEVER_LOCKOUT_GET``: If ``True``, Axes will never lock out HTTP GET requests.
+  Default: ``False``
 * ``AXES_NEVER_LOCKOUT_WHITELIST``: If ``True``, users can always login from whitelisted IP addresses.
   Default: ``False``
 * ``AXES_IP_WHITELIST``: An iterable of IPs to be whitelisted. For example: ``AXES_IP_WHITELIST = ['0.0.0.0']``. Default: ``None``

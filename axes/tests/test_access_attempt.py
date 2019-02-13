@@ -3,7 +3,7 @@ import hashlib
 import random
 import string
 import time
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import User
@@ -12,7 +12,16 @@ from django.test import TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
 
-from axes.attempts import get_cache_key, is_user_lockable
+from axes.attempts import (
+    get_cache_key,
+    get_cache_timeout,
+    is_already_locked,
+    ip_in_blacklist,
+    ip_in_whitelist,
+    is_user_lockable,
+    get_filter_kwargs,
+    get_user_attempts,
+)
 from axes.conf import settings
 from axes.models import AccessAttempt, AccessLog
 from axes.signals import user_locked_out
@@ -71,6 +80,10 @@ class AccessAttemptTest(TestCase):
         """
         Create a valid user for login.
         """
+
+        self.username = self.VALID_USERNAME
+        self.ip_address = '127.0.0.1'
+        self.user_agent = 'test-browser'
 
         self.user = User.objects.create_superuser(
             username=self.VALID_USERNAME,
@@ -205,6 +218,100 @@ class AccessAttemptTest(TestCase):
 
         # Make a login attempt again
         self.test_valid_login()
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=True,
+    )
+    def test_get_filter_kwargs_user(self):
+        self.assertEqual(
+            dict(get_filter_kwargs(self.username, self.ip_address, self.user_agent)),
+            {'username': self.username},
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=False,
+        AXES_USE_USER_AGENT=False,
+    )
+    def test_get_filter_kwargs_ip(self):
+        self.assertEqual(
+            dict(get_filter_kwargs(self.username, self.ip_address, self.user_agent)),
+            {'ip_address': self.ip_address},
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True,
+        AXES_USE_USER_AGENT=False,
+    )
+    def test_get_filter_kwargs_user_and_ip(self):
+        self.assertEqual(
+            dict(get_filter_kwargs(self.username, self.ip_address, self.user_agent)),
+            {'username': self.username, 'ip_address': self.ip_address},
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=False,
+        AXES_USE_USER_AGENT=True,
+    )
+    def test_get_filter_kwargs_ip_and_agent(self):
+        self.assertEqual(
+            dict(get_filter_kwargs(self.username, self.ip_address, self.user_agent)),
+            {'ip_address': self.ip_address, 'user_agent': self.user_agent},
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True,
+        AXES_USE_USER_AGENT=True,
+    )
+    def test_get_filter_kwargs_user_ip_agent(self):
+        self.assertEqual(
+            dict(get_filter_kwargs(self.username, self.ip_address, self.user_agent)),
+            {'username': self.username, 'ip_address': self.ip_address, 'user_agent': self.user_agent},
+        )
+
+    @patch('axes.attempts.get_axes_cache')
+    def test_get_user_attempts_updates_cache(self, get_cache):
+        cache = MagicMock()
+        cache.get.return_value = 1
+        cache.set.return_value = None
+        get_cache.return_value = cache
+
+        attempt = AccessAttempt.objects.create(
+            username=self.username,
+            ip_address=self.ip_address,
+            user_agent=self.user_agent,
+            failures_since_start=0,
+        )
+
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = self.ip_address
+        request.META['HTTP_USER_AGENT'] = self.user_agent
+        credentials = {'username': self.username}
+
+        # Check that the function does nothing if cool off has not passed
+        cache.get.assert_not_called()
+        cache.set.assert_not_called()
+
+        self.assertEqual(
+            list(get_user_attempts(request, credentials)),
+            [attempt],
+        )
+
+        cache.get.assert_not_called()
+        cache.set.assert_not_called()
+
+        time.sleep(settings.AXES_COOLOFF_TIME.seconds)
+
+        self.assertEqual(
+            list(get_user_attempts(request, credentials)),
+            [],
+        )
+
+        cache.get.assert_called_once()
+        cache.set.assert_called_once()
 
     @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
     def test_get_cache_key(self, _):
@@ -444,7 +551,7 @@ class AccessAttemptTest(TestCase):
         """
 
         request = HttpRequest()
-        request.user = self.user
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
         authenticate(request=request, foo='bar')
         self.assertEqual(AccessLog.objects.all().count(), 0)
 
@@ -497,23 +604,93 @@ class AccessAttemptTest(TestCase):
         response = self._login()
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
 
-    @patch('axes.attempts.log')
-    def test_is_user_lockable(self, log):
-        request = HttpRequest()
-        request.method = 'POST'
 
+class AttemptUtilsTestCase(TestCase):
+    def setUp(self):
+        self.request = HttpRequest()
+        self.request.method = 'POST'
+        self.request.META['REMOTE_ADDR'] = '127.0.0.1'
+
+    @override_settings(AXES_IP_WHITELIST=None)
+    def test_ip_in_whitelist_none(self):
+        self.assertFalse(ip_in_whitelist('127.0.0.2'))
+
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.1'])
+    def test_ip_in_whitelist(self):
+        self.assertTrue(ip_in_whitelist('127.0.0.1'))
+        self.assertFalse(ip_in_whitelist('127.0.0.2'))
+
+    @override_settings(AXES_IP_BLACKLIST=None)
+    def test_ip_in_blacklist_none(self):
+        self.assertFalse(ip_in_blacklist('127.0.0.2'))
+
+    @override_settings(AXES_IP_BLACKLIST=['127.0.0.1'])
+    def test_ip_in_blacklist(self):
+        self.assertTrue(ip_in_blacklist('127.0.0.1'))
+        self.assertFalse(ip_in_blacklist('127.0.0.2'))
+
+    @override_settings(AXES_IP_BLACKLIST=['127.0.0.1'])
+    def test_is_already_locked_ip_in_blacklist(self):
+        self.assertTrue(is_already_locked(self.request))
+
+    @override_settings(AXES_IP_BLACKLIST=['127.0.0.2'])
+    def test_is_already_locked_ip_not_in_blacklist(self):
+        self.assertFalse(is_already_locked(self.request))
+
+    @override_settings(AXES_NEVER_LOCKOUT_WHITELIST=True)
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.1'])
+    def test_is_already_locked_ip_in_whitelist(self):
+        self.assertFalse(is_already_locked(self.request))
+
+    @override_settings(AXES_ONLY_WHITELIST=True)
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.2'])
+    def test_is_already_locked_ip_not_in_whitelist(self):
+        self.assertTrue(is_already_locked(self.request))
+
+    @override_settings(AXES_COOLOFF_TIME=3)  # hours
+    def test_get_cache_timeout(self):
+        timeout_seconds = float(60 * 60 * 3)
+        self.assertEqual(get_cache_timeout(), timeout_seconds)
+
+    @override_settings(AXES_LOCK_OUT_AT_FAILURE=True)
+    @override_settings(AXES_FAILURE_LIMIT=40)
+    @patch('axes.attempts.get_axes_cache')
+    def test_is_already_locked_cache(self, get_cache):
+        cache = MagicMock()
+        cache.get.return_value = 42
+        get_cache.return_value = cache
+
+        self.assertTrue(is_already_locked(self.request, {}))
+        cache.get.assert_called_once()
+
+    @override_settings(AXES_NEVER_LOCKOUT_GET=True)
+    def test_is_already_locked_never_lockout_get(self):
+        request = HttpRequest()
+        request.method = 'GET'
+        self.assertFalse(is_already_locked(request))
+
+    def test_is_already_locked_nolockable(self):
         UserModel = get_user_model()
-        UserModel.objects.create(username='jane.doe')
+        user = UserModel.objects.create(username='jane.doe')
 
         with self.subTest('User is marked as nolockout.'):
             with patch.object(UserModel, 'nolockout', True, create=True):
-                lockable = is_user_lockable(request, {'username': 'jane.doe'})
+                locked = is_already_locked(self.request, {UserModel.USERNAME_FIELD: user.username})
+                self.assertFalse(locked)
+
+    def test_is_user_lockable(self):
+        UserModel = get_user_model()
+        user = UserModel.objects.create(username='jane.doe')
+
+        with self.subTest('User is marked as nolockout.'):
+            with patch.object(UserModel, 'nolockout', True, create=True):
+                lockable = is_user_lockable(self.request, {UserModel.USERNAME_FIELD: user.username})
                 self.assertFalse(lockable)
 
         with self.subTest('User exists but attemptee can be locked out.'):
-            lockable = is_user_lockable(request, {'username': 'jane.doe'})
+            lockable = is_user_lockable(self.request, {UserModel.USERNAME_FIELD: user.username})
             self.assertTrue(lockable)
 
         with self.subTest('User does not exist and attemptee can be locked out.'):
-            lockable = is_user_lockable(request, {'username': 'john.doe'})
+            lockable = is_user_lockable(self.request, {UserModel.USERNAME_FIELD: 'not.' + user.username})
             self.assertTrue(lockable)

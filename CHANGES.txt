@@ -32,6 +32,10 @@ Changes
 - Improve tests and raise Codecov monitoring threshold to 90%.
   [aleksihakli]
 
+- Add ``AXES_NEVER_LOCKOUT_GET`` flag that allows skipping checks on GET requests.
+  [aleksihakli]
+
+
 4.5.4 (2019-01-15)
 ------------------
 

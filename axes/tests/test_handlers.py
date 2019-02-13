@@ -4,6 +4,7 @@ from django.http import HttpRequest
 from django.test import TestCase, override_settings
 
 from axes.handlers import AxesHandler
+from axes.models import AccessAttempt
 from axes.signals import ProxyHandler
 
 
@@ -66,6 +67,13 @@ class AxesHandlerTestCase(TestCase):
     def setUp(self):
         self.handler = AxesHandler()
 
+        self.attempt = AccessAttempt.objects.create(
+            username='jane.doe',
+            ip_address='127.0.0.1',
+            user_agent='test-browser',
+            failures_since_start=42,
+        )
+
     @patch('axes.handlers.log')
     def test_user_login_failed_no_request(self, log):
         self.handler.user_login_failed(sender=None, credentials=None, request=None)
@@ -79,3 +87,35 @@ class AxesHandlerTestCase(TestCase):
         request = HttpRequest()
         self.handler.user_login_failed(sender=None, credentials=None, request=request)
         log.info.assert_called_with('Login failed from whitelisted IP %s.', '127.0.0.1')
+
+    @patch('axes.handlers.get_axes_cache')
+    def test_post_save_access_attempt_updates_cache(self, get_cache):
+        cache = MagicMock()
+        cache.get.return_value = None
+        cache.set.return_value = None
+        get_cache.return_value = cache
+
+        cache.get.assert_not_called()
+        cache.set.assert_not_called()
+
+        self.handler.post_save_access_attempt(self.attempt)
+
+        cache.get.assert_called_once()
+        cache.set.assert_called_once()
+
+    @patch('axes.handlers.get_axes_cache')
+    def test_user_login_failed_utilizes_cache(self, get_cache):
+        cache = MagicMock()
+        cache.get.return_value = 1
+        get_cache.return_value = cache
+
+        sender = MagicMock()
+        credentials = {'username': self.attempt.username}
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+
+        cache.get.assert_not_called()
+
+        self.handler.user_login_failed(sender, credentials, request)
+
+        self.assertGreater(cache.get.call_count, 0)

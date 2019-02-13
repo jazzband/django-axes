@@ -51,6 +51,8 @@ class MyAppConf(AppConf):
     # TODO: convert the strings to IPv4 on startup to avoid type conversion during processing
     NEVER_LOCKOUT_WHITELIST = False
 
+    NEVER_LOCKOUT_GET = False
+
     ONLY_WHITELIST = False
 
     IP_WHITELIST = None

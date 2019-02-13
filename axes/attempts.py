@@ -1,119 +1,100 @@
-from datetime import timedelta
+from collections import OrderedDict
 from hashlib import md5
 from logging import getLogger
 
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.utils import timezone
 
 from axes.conf import settings
 from axes.models import AccessAttempt
-from axes.utils import get_axes_cache, get_client_ip, get_client_username
+from axes.utils import (
+    get_axes_cache,
+    get_client_ip,
+    get_client_username,
+    get_client_user_agent,
+    get_cache_timeout,
+    get_cool_off,
+)
 
 log = getLogger(settings.AXES_LOGGER)
 
 
-def _query_user_attempts(request, credentials=None):
+def get_filter_kwargs(username: str, ip_address: str, user_agent: str) -> OrderedDict:
     """
-    Return access attempt record if it exists. Otherwise return None.
+    Get query parameters for filtering AccessAttempt queryset.
+
+    This method returns an OrderedDict that guarantees iteration order for keys and values,
+    and can so be used in e.g. the generation of hash keys or other deterministic functions.
     """
 
-    ip = get_client_ip(request)
-    username = get_client_username(request, credentials)
+    query = OrderedDict()  # type: OrderedDict
 
     if settings.AXES_ONLY_USER_FAILURES:
-        attempts = AccessAttempt.objects.filter(username=username)
-    elif settings.AXES_USE_USER_AGENT:
-        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-        attempts = AccessAttempt.objects.filter(
-            user_agent=ua, ip_address=ip, username=username
-        )
+        query['username'] = username
     else:
-        attempts = AccessAttempt.objects.filter(
-            ip_address=ip, username=username
-        )
-
-    if not attempts:
-        params = {}
-
-        if settings.AXES_ONLY_USER_FAILURES:
-            params['username'] = username
-        elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-            params['username'] = username
-            params['ip_address'] = ip
+        if settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+            query['username'] = username
+            query['ip_address'] = ip_address
         else:
-            params['ip_address'] = ip
+            query['ip_address'] = ip_address
 
-        if settings.AXES_USE_USER_AGENT and not settings.AXES_ONLY_USER_FAILURES:
-            params['user_agent'] = ua
+        if settings.AXES_USE_USER_AGENT:
+            query['user_agent'] = user_agent
 
-        attempts = AccessAttempt.objects.filter(**params)
-
-    return attempts
+    return query
 
 
-def get_cache_key(request_or_obj, credentials=None) -> str:
+def query_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
+    """
+    Return a queryset of AccessAttempts that match the given request and credentials.
+    """
+
+    username = get_client_username(request, credentials)
+    ip_address = get_client_ip(request)
+    user_agent = get_client_user_agent(request)
+
+    filter_kwargs = get_filter_kwargs(username, ip_address, user_agent)
+
+    return AccessAttempt.objects.filter(**filter_kwargs)
+
+
+def get_cache_key(request_or_attempt, credentials: dict = None) -> str:
     """
     Build cache key name from request or AccessAttempt object.
 
-    :param  request_or_obj: Request or AccessAttempt object
-    :return cache-key: String, key to be used in cache system
+    :param request_or_attempt: HttpRequest or AccessAttempt object
+    :param credentials: credentials containing user information
+    :return cache_key: Hash key that is usable for Django cache backends
     """
 
-    if isinstance(request_or_obj, AccessAttempt):
-        ip = request_or_obj.ip_address
-        un = request_or_obj.username
-        ua = request_or_obj.user_agent
+    if isinstance(request_or_attempt, AccessAttempt):
+        username = request_or_attempt.username
+        ip_address = request_or_attempt.ip_address
+        user_agent = request_or_attempt.user_agent
     else:
-        ip = get_client_ip(request_or_obj)
-        un = get_client_username(request_or_obj, credentials)
-        ua = request_or_obj.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
+        username = get_client_username(request_or_attempt, credentials)
+        ip_address = get_client_ip(request_or_attempt)
+        user_agent = get_client_user_agent(request_or_attempt)
 
-    ip = ip.encode('utf-8') if ip else ''.encode('utf-8')
-    un = un.encode('utf-8') if un else ''.encode('utf-8')
-    ua = ua.encode('utf-8') if ua else ''.encode('utf-8')
+    filter_kwargs = get_filter_kwargs(username, ip_address, user_agent)
 
-    if settings.AXES_ONLY_USER_FAILURES:
-        attributes = un
-    elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-        attributes = ip + un
-    else:
-        attributes = ip
+    cache_key_components = ''.join(filter_kwargs.values())
+    cache_key_digest = md5(cache_key_components.encode()).hexdigest()
+    cache_key = 'axes-{}'.format(cache_key_digest)
 
-    if settings.AXES_USE_USER_AGENT and not settings.AXES_ONLY_USER_FAILURES:
-        attributes += ua
-
-    cache_hash_key = 'axes-{}'.format(md5(attributes).hexdigest())
-
-    return cache_hash_key
+    return cache_key
 
 
-def get_cache_timeout():
-    """
-    Return timeout according to COOLOFF_TIME.
-    """
-
-    cache_timeout = None
-    cool_off = settings.AXES_COOLOFF_TIME
-    if cool_off:
-        if isinstance(cool_off, (int, float)):
-            cache_timeout = timedelta(hours=cool_off).total_seconds()
-        else:
-            cache_timeout = cool_off.total_seconds()
-
-    return cache_timeout
-
-
-def get_user_attempts(request, credentials=None):
+def get_user_attempts(request: HttpRequest, credentials: dict = None):
     force_reload = False
-    attempts = _query_user_attempts(request, credentials)
+    attempts = query_user_attempts(request, credentials)
     cache_hash_key = get_cache_key(request, credentials)
     cache_timeout = get_cache_timeout()
+    cool_off = get_cool_off()
 
-    cool_off = settings.AXES_COOLOFF_TIME
     if cool_off:
-        if isinstance(cool_off, (int, float)):
-            cool_off = timedelta(hours=cool_off)
-
         for attempt in attempts:
             if attempt.attempt_time + cool_off < timezone.now():
                 attempt.delete()
@@ -127,35 +108,60 @@ def get_user_attempts(request, credentials=None):
     # If objects were deleted, we need to update the queryset to reflect this,
     # so force a reload.
     if force_reload:
-        attempts = _query_user_attempts(request, credentials)
+        attempts = query_user_attempts(request, credentials)
 
     return attempts
 
 
-def reset_user_attempts(request, credentials=None) -> int:
-    attempts = _query_user_attempts(request, credentials)
+def reset_user_attempts(request: HttpRequest, credentials: dict = None) -> int:
+    attempts = query_user_attempts(request, credentials)
     count, _ = attempts.delete()
 
     return count
 
 
-def ip_in_whitelist(ip) -> bool:
+def ip_in_whitelist(ip: str) -> bool:
     if not settings.AXES_IP_WHITELIST:
         return False
 
     return ip in settings.AXES_IP_WHITELIST
 
 
-def ip_in_blacklist(ip) -> bool:
+def ip_in_blacklist(ip: str) -> bool:
     if not settings.AXES_IP_BLACKLIST:
         return False
 
     return ip in settings.AXES_IP_BLACKLIST
 
 
-def is_user_lockable(request, credentials=None) -> bool:
-    if request.method != 'POST':
+def is_ip_blacklisted(request: HttpRequest) -> bool:
+    """
+    Check if the given request refers to a blacklisted IP.
+    """
+
+    ip = get_client_ip(request)
+
+    if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
+        return False
+
+    if settings.AXES_ONLY_WHITELIST and not ip_in_whitelist(ip):
         return True
+
+    if ip_in_blacklist(ip):
+        return True
+
+    return False
+
+
+def is_user_lockable(request: HttpRequest, credentials: dict = None) -> bool:
+    """
+    Check if the given request or credentials refer to a whitelisted user object
+
+    A whitelisted user has the magic ``nolockout`` property set.
+
+    If the property is unknown or False or the user can not be found,
+    this implementation fails gracefully and returns True.
+    """
 
     username_field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
     username_value = get_client_username(request, credentials)
@@ -165,33 +171,39 @@ def is_user_lockable(request, credentials=None) -> bool:
 
     UserModel = get_user_model()
 
-    # Special users with nolockout attribute set should never be locked out
     try:
         user = UserModel.objects.get(**kwargs)
         return not user.nolockout
     except (UserModel.DoesNotExist, AttributeError):
         pass
 
-    # Default case is that users can be locked out
     return True
 
 
-def is_already_locked(request, credentials=None) -> bool:
-    ip = get_client_ip(request)
+def is_already_locked(request: HttpRequest, credentials: dict = None) -> bool:
+    """
+    Check if the request or given credentials are already locked by Axes.
 
-    if (
-        settings.AXES_ONLY_USER_FAILURES or
-        settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP
-    ) and request.method == 'GET':
+    This function is called from
+
+    - function decorators defined in ``axes.decorators``,
+    - authentication backends defined in ``axes.backends``, and
+    - signal handlers defined in ``axes.handlers``.
+
+    This function checks the following facts for a given request:
+
+    1. Is the request HTTP method _whitelisted_? If it is, return ``False``.
+    2. Is the request IP address _blacklisted_? If it is, return ``True``.
+    3. Does the request or given credentials refer to a whitelisted user? If it does, return ``False``.
+    4. Does the request exceed the configured maximum attempt limit? If it does, return ``True``.
+
+    Refer to the function source code for the exact implementation.
+    """
+
+    if settings.AXES_NEVER_LOCKOUT_GET and request.method == 'GET':
         return False
 
-    if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
-        return False
-
-    if settings.AXES_ONLY_WHITELIST and not ip_in_whitelist(ip):
-        return True
-
-    if ip_in_blacklist(ip):
+    if is_ip_blacklisted(request):
         return True
 
     if not is_user_lockable(request, credentials):

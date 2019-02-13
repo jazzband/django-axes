@@ -1,3 +1,4 @@
+from typing import Optional
 from datetime import timedelta
 from logging import getLogger
 from socket import error, inet_pton, AF_INET6
@@ -69,7 +70,7 @@ def get_client_ip(request: HttpRequest) -> str:
     return getattr(request, client_ip_attribute)
 
 
-def get_client_username(request: HttpRequest, credentials: dict = None):
+def get_client_username(request: HttpRequest, credentials: dict = None) -> str:
     """
     Resolve client username from the given request or credentials if supplied.
 
@@ -95,10 +96,51 @@ def get_client_username(request: HttpRequest, credentials: dict = None):
     return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
+def get_client_user_agent(request: HttpRequest) -> str:
+    return request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
+
+
 def get_credentials(username: str = None, **kwargs):
     credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
     credentials.update(kwargs)
     return credentials
+
+
+def get_cool_off() -> Optional[timedelta]:
+    """
+    Return the login cool off time interpreted from settings.AXES_COOLOFF_TIME.
+
+    The return value is either None or timedelta.
+
+    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer of hours,
+    and this function offers a unified _timedelta or None_ representation of that configuration
+    for use with the Axes internal implementations.
+
+    :exception TypeError: if settings.AXES_COOLOFF_TIME is of wrong type.
+    """
+
+    cool_off = settings.AXES_COOLOFF_TIME
+
+    if isinstance(cool_off, int):
+        return timedelta(hours=cool_off)
+    return cool_off
+
+
+def get_cache_timeout() -> Optional[int]:
+    """
+    Return the cache timeout interpreted from settings.AXES_COOLOFF_TIME.
+
+    The cache timeout can be either None if not configured or integer of seconds if configured.
+
+    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, or integer of hours,
+    and this function offers a unified _integer or None_ representation of that configuration
+    for use with the Django cache backends.
+    """
+
+    cool_off = get_cool_off()
+    if cool_off is None:
+        return None
+    return int(cool_off.total_seconds())
 
 
 def is_ipv6(ip: str):
