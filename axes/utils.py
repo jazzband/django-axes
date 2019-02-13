@@ -2,8 +2,8 @@ from datetime import timedelta
 from logging import getLogger
 from socket import error, inet_pton, AF_INET6
 
-from django.core.cache import caches
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.core.cache import caches, BaseCache
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
 from django.shortcuts import render
 
 import ipware.ip2
@@ -14,11 +14,11 @@ from axes.models import AccessAttempt
 logger = getLogger(__name__)
 
 
-def get_axes_cache():
+def get_axes_cache() -> BaseCache:
     return caches[getattr(settings, 'AXES_CACHE', 'default')]
 
 
-def query2str(dictionary, max_length=1024):
+def query2str(dictionary: dict, max_length: int = 1024) -> str:
     """
     Turns a dictionary into an easy-to-read list of key-value pairs.
 
@@ -54,7 +54,7 @@ def get_client_str(username, ip_address, user_agent=None, path_info=None):
     return client
 
 
-def get_client_ip(request):
+def get_client_ip(request: HttpRequest) -> str:
     client_ip_attribute = 'axes_client_ip'
 
     if not hasattr(request, client_ip_attribute):
@@ -69,7 +69,7 @@ def get_client_ip(request):
     return getattr(request, client_ip_attribute)
 
 
-def get_client_username(request, credentials=None):
+def get_client_username(request: HttpRequest, credentials: dict = None):
     """
     Resolve client username from the given request or credentials if supplied.
 
@@ -95,13 +95,13 @@ def get_client_username(request, credentials=None):
     return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
-def get_credentials(username=None, **kwargs):
+def get_credentials(username: str = None, **kwargs):
     credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
     credentials.update(kwargs)
     return credentials
 
 
-def is_ipv6(ip):
+def is_ipv6(ip: str):
     try:
         inet_pton(AF_INET6, ip)
     except (OSError, error):
@@ -109,7 +109,7 @@ def is_ipv6(ip):
     return True
 
 
-def reset(ip=None, username=None):
+def reset(ip: str = None, username: str = None):
     """
     Reset records that match IP or username, and return the count of removed attempts.
     """
@@ -125,12 +125,12 @@ def reset(ip=None, username=None):
     return count
 
 
-def iso8601(timestamp):
+def iso8601(delta: timedelta) -> str:
     """
     Return datetime.timedelta translated to ISO 8601 formatted duration.
     """
 
-    seconds = timestamp.total_seconds()
+    seconds = delta.total_seconds()
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
@@ -148,13 +148,13 @@ def iso8601(timestamp):
     return 'P' + date + ('T' + time if time else '')
 
 
-def get_lockout_message():
+def get_lockout_message() -> str:
     if settings.AXES_COOLOFF_TIME:
         return settings.AXES_COOLOFF_MESSAGE
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def get_lockout_response(request):
+def get_lockout_response(request: HttpRequest) -> HttpResponse:
     context = {
         'failure_limit': settings.AXES_FAILURE_LIMIT,
         'username': get_client_username(request) or ''
