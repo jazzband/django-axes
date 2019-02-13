@@ -663,6 +663,16 @@ class AttemptUtilsTestCase(TestCase):
         self.assertTrue(is_already_locked(self.request, {}))
         self.assertTrue(cache.get.call_count)
 
+    @override_settings(AXES_LOCK_OUT_AT_FAILURE=False)
+    @override_settings(AXES_FAILURE_LIMIT=40)
+    @patch('axes.attempts.get_axes_cache')
+    def test_is_already_locked_do_not_lock_out_at_failure(self, get_cache):
+        cache = MagicMock()
+        cache.get.return_value = 42
+        get_cache.return_value = cache
+
+        self.assertFalse(is_already_locked(self.request))
+
     @override_settings(AXES_NEVER_LOCKOUT_GET=True)
     def test_is_already_locked_never_lockout_get(self):
         request = HttpRequest()
