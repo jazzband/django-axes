@@ -165,7 +165,7 @@ def get_client_ip_address(request: HttpRequest) -> str:
     that is used in the users HTTP proxy or *aaS service layers. Refer to the documentation for more information.
     """
 
-    client_ip_attribute = 'axes_client_ip'
+    client_ip_attribute = settings.AXES_CLIENT_IP_ATTRIBUTE
 
     if not hasattr(request, client_ip_attribute):
         client_ip, _ = ipware.ip2.get_client_ip(

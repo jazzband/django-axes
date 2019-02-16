@@ -58,6 +58,9 @@ class MyAppConf(AppConf):
 
     IP_BLACKLIST = None
 
+    # if no attribute is set by your backend, a value is calculated dynamically with the ipware package
+    CLIENT_IP_ATTRIBUTE = 'axes_client_ip'
+
     # message to show when locked out and have cooloff enabled
     COOLOFF_MESSAGE = _('Account locked: too many login attempts. Please try again later')
 
