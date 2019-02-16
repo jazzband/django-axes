@@ -6,6 +6,7 @@ from socket import error, inet_pton, AF_INET6
 from django.core.cache import caches, BaseCache
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
 from django.shortcuts import render
+from django.utils.module_loading import import_string
 
 import ipware.ip2
 
@@ -85,14 +86,19 @@ def get_client_username(request: HttpRequest, credentials: dict = None) -> str:
     """
 
     if settings.AXES_USERNAME_CALLABLE:
-        logger.debug('Using AXES_USERNAME_CALLABLE to get username')
-        return settings.AXES_USERNAME_CALLABLE(request, credentials)
+        logger.debug('Using settings.AXES_USERNAME_CALLABLE to get username')
+
+        if callable(settings.AXES_USERNAME_CALLABLE):
+            return settings.AXES_USERNAME_CALLABLE(request, credentials)
+        if isinstance(settings.AXES_USERNAME_CALLABLE, str):
+            return import_string(settings.AXES_USERNAME_CALLABLE)(request, credentials)
+        raise TypeError('settings.AXES_USERNAME_CALLABLE needs to be a string, callable, or None.')
 
     if credentials:
-        logger.debug('Using `credentials` to get username with key AXES_USERNAME_FORM_FIELD')
+        logger.debug('Using parameter credentials to get username with key settings.AXES_USERNAME_FORM_FIELD')
         return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
-    logger.debug('Using `request.POST` to get username with key AXES_USERNAME_FORM_FIELD')
+    logger.debug('Using parameter request.POST to get username with key settings.AXES_USERNAME_FORM_FIELD')
     return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 

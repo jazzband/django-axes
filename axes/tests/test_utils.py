@@ -245,6 +245,18 @@ class UtilsTestCase(TestCase):
         with self.assertRaises(TypeError):
             get_client_username(HttpRequest(), {})
 
+    @override_settings(AXES_USERNAME_CALLABLE=True)
+    def test_get_client_username_not_callable(self):
+        with self.assertRaises(TypeError):
+            get_client_username(HttpRequest(), {})
+
+    @override_settings(AXES_USERNAME_CALLABLE='axes.tests.test_utils.get_username')
+    def test_get_client_username_str(self):
+        self.assertEqual(
+            get_client_username(HttpRequest(), {}),
+            'username',
+        )
+
 
 class LockoutResponseTestCase(TestCase):
     def setUp(self):
