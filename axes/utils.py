@@ -228,9 +228,10 @@ def get_client_str(username: str, ip_address: str, user_agent: str, path_info: s
     Example log format would be ``{username: "example", ip_address: "127.0.0.1", path_info: "/example/"}``
     """
 
+    client_dict = OrderedDict()  # type: OrderedDict
+
     if settings.AXES_VERBOSE:
-        # Verbose mode logs every attribute that is given
-        client_dict = OrderedDict()
+        # Verbose mode logs every attribute that is available
         client_dict['username'] = username
         client_dict['ip_address'] = ip_address
         client_dict['user_agent'] = user_agent
