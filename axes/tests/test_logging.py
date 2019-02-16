@@ -10,34 +10,34 @@ from axes.apps import AppConfig
 class AppsTestCase(TestCase):
     def test_axes_config_log_re_entrant(self, log):
         """
-        Test that log call count does not increase on repeat calls.
+        Test that initialize call count does not increase on repeat calls.
         """
 
-        AppConfig.log()
+        AppConfig.initialize()
         calls = log.info.call_count
 
-        AppConfig.log()
+        AppConfig.initialize()
         self.assertTrue(
             calls == log.info.call_count and calls > 0,
-            'AxesConfig.log needs to be re-entrant',
+            'AxesConfig.initialize needs to be re-entrant',
         )
 
     @override_settings(AXES_VERBOSE=False)
     def test_axes_config_log_not_verbose(self, log):
-        AppConfig.log()
+        AppConfig.initialize()
         self.assertFalse(log.info.called)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_axes_config_log_user_only(self, log):
-        AppConfig.log()
+        AppConfig.initialize()
         log.info.assert_called_with('AXES: blocking by username only.')
 
     @override_settings(AXES_ONLY_USER_FAILURES=False)
     def test_axes_config_log_ip_only(self, log):
-        AppConfig.log()
+        AppConfig.initialize()
         log.info.assert_called_with('AXES: blocking by IP only.')
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_axes_config_log_user_ip(self, log):
-        AppConfig.log()
+        AppConfig.initialize()
         log.info.assert_called_with('AXES: blocking by combination of username and IP.')
