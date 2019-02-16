@@ -31,21 +31,19 @@ class AccessAttemptConfigTest(TestCase):
         IP address can be configured to test IP blocking functionality.
         """
 
-        headers = {
-            'user_agent': 'test-browser'
-        }
         post_data = {
             'username': username,
             'password': password,
             'this_is_the_login_form': 1,
         }
+
         post_data.update(kwargs)
 
         return self.client.post(
             reverse('admin:login'),
             post_data,
             REMOTE_ADDR=ip_addr,
-            **headers
+            HTTP_USER_AGENT='test-browser'
         )
 
     def _lockout_user_from_ip(self, username, ip_addr):

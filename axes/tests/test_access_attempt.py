@@ -52,27 +52,25 @@ class AccessAttemptTest(TestCase):
         else:
             # Generate a wrong random username
             chars = string.ascii_uppercase + string.digits
-            username = ''.join(random.choice(chars) for x in range(10))
+            username = ''.join(random.choice(chars) for _ in range(10))
 
         if is_valid_password:
             password = self.VALID_PASSWORD
         else:
             password = 'invalid-password'
 
-        headers = {
-            'user_agent': 'test-browser'
-        }
         post_data = {
             'username': username,
             'password': password,
             'this_is_the_login_form': 1,
         }
+
         post_data.update(kwargs)
 
         return self.client.post(
             reverse('admin:login'),
             post_data,
-            **headers
+            HTTP_USER_AGENT='test-browser',
         )
 
     def setUp(self):
@@ -353,11 +351,13 @@ class AccessAttemptTest(TestCase):
         )
 
         request_factory = RequestFactory()
-        request = request_factory.post('/admin/login/',
-                                       data={
-                                           'username': self.VALID_USERNAME,
-                                           'password': 'test'
-                                       })
+        request = request_factory.post(
+            '/admin/login/',
+            data={
+                'username': self.VALID_USERNAME,
+                'password': 'test'
+            }
+        )
 
         # Difference between the upper test: new call signature with credentials
         credentials = {'username': self.VALID_USERNAME}
