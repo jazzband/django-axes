@@ -1,7 +1,7 @@
-from typing import Optional
+from collections import OrderedDict
 from datetime import timedelta
 from logging import getLogger
-from socket import error, inet_pton, AF_INET6
+from typing import Optional
 
 from django.core.cache import caches, BaseCache
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.utils.module_loading import import_string
 
 import ipware.ip2
+from django.utils.module_loading import import_string
 
 from axes.conf import settings
 from axes.models import AccessAttempt
@@ -16,59 +17,109 @@ from axes.models import AccessAttempt
 logger = getLogger(__name__)
 
 
+def reset(ip: str = None, username: str = None) -> int:
+    """
+    Reset records that match IP or username, and return the count of removed attempts.
+    """
+
+    attempts = AccessAttempt.objects.all()
+    if ip:
+        attempts = attempts.filter(ip_address=ip)
+    if username:
+        attempts = attempts.filter(username=username)
+
+    count, _ = attempts.delete()
+
+    return count
+
+
 def get_axes_cache() -> BaseCache:
+    """
+    Get the cache instance Axes is configured to use with ``settings.AXES_CACHE`` and use ``'default'`` if not set.
+    """
+
     return caches[getattr(settings, 'AXES_CACHE', 'default')]
 
 
-def query2str(dictionary: dict, max_length: int = 1024) -> str:
+def get_cache_timeout() -> Optional[int]:
     """
-    Turns a dictionary into an easy-to-read list of key-value pairs.
+    Return the cache timeout interpreted from settings.AXES_COOLOFF_TIME.
 
-    If there is a field called password it will be excluded from the output.
+    The cache timeout can be either None if not configured or integer of seconds if configured.
 
-    The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
+    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, or integer of hours,
+    and this function offers a unified _integer or None_ representation of that configuration
+    for use with the Django cache backends.
     """
 
-    return '\n'.join([
-        '%s=%s' % (k, v) for k, v in dictionary.items()
-        if k != settings.AXES_PASSWORD_FORM_FIELD
-    ][:int(max_length / 2)])[:max_length]
+    cool_off = get_cool_off()
+    if cool_off is None:
+        return None
+    return int(cool_off.total_seconds())
 
 
-def get_client_str(username, ip_address, user_agent=None, path_info=None):
-    if settings.AXES_VERBOSE:
-        if path_info and isinstance(path_info, tuple):
-            path_info = path_info[0]
+def get_cool_off() -> Optional[timedelta]:
+    """
+    Return the login cool off time interpreted from settings.AXES_COOLOFF_TIME.
 
-        details = '{{user: "{0}", ip: "{1}", user-agent: "{2}", path: "{3}"}}'
-        return details.format(username, ip_address, user_agent, path_info)
+    The return value is either None or timedelta.
 
-    if settings.AXES_ONLY_USER_FAILURES:
-        client = username
-    elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-        client = '{0} from {1}'.format(username, ip_address)
+    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer of hours,
+    and this function offers a unified _timedelta or None_ representation of that configuration
+    for use with the Axes internal implementations.
+
+    :exception TypeError: if settings.AXES_COOLOFF_TIME is of wrong type.
+    """
+
+    cool_off = settings.AXES_COOLOFF_TIME
+
+    if isinstance(cool_off, int):
+        return timedelta(hours=cool_off)
+    return cool_off
+
+
+def get_cool_off_iso8601(delta: timedelta) -> str:
+    """
+    Return datetime.timedelta translated to ISO 8601 formatted duration for use in e.g. cool offs.
+    """
+
+    seconds = delta.total_seconds()
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+
+    days_str = '{:.0f}D'.format(days) if days else ''
+
+    time_str = ''.join(
+        '{value:.0f}{designator}'.format(value=value, designator=designator)
+        for value, designator
+        in [
+            [hours, 'H'],
+            [minutes, 'M'],
+            [seconds, 'S'],
+        ]
+        if value
+    )
+
+    if time_str:
+        template = 'P{days_str}T{time_str}'
     else:
-        client = ip_address
+        template = 'P{days_str}'
 
-    if settings.AXES_USE_USER_AGENT:
-        client += '(user-agent={0})'.format(user_agent)
-
-    return client
+    return template.format(days_str=days_str, time_str=time_str)
 
 
-def get_client_ip(request: HttpRequest) -> str:
-    client_ip_attribute = 'axes_client_ip'
+def get_credentials(username: str = None, **kwargs) -> dict:
+    """
+    Calculate credentials for Axes to use internally from given username and kwargs.
 
-    if not hasattr(request, client_ip_attribute):
-        client_ip, _ = ipware.ip2.get_client_ip(
-            request,
-            proxy_order=settings.AXES_PROXY_ORDER,
-            proxy_count=settings.AXES_PROXY_COUNT,
-            proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
-            request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
-        )
-        setattr(request, client_ip_attribute, client_ip)
-    return getattr(request, client_ip_attribute)
+    Axes will set the username value into the key defined with ``settings.AXES_USERNAME_FORM_FIELD``
+    and update the credentials dictionary with the kwargs given on top of that.
+    """
+
+    credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
+    credentials.update(kwargs)
+    return credentials
 
 
 def get_client_username(request: HttpRequest, credentials: dict = None) -> str:
@@ -102,98 +153,132 @@ def get_client_username(request: HttpRequest, credentials: dict = None) -> str:
     return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
+def get_client_ip_address(request: HttpRequest) -> str:
+    """
+    Get client IP address as configured by the user.
+
+    The primary method is to fetch the reques attribute configured with the
+    ``settings.AXES_IP_ATTRIBUTE`` that can be set by the user on the view layer.
+
+    If the ``settings.AXES_IP_ATTRIBUTE`` is not set, the ``ipware`` package will be utilized to resolve the address
+    according to the client IP configurations that can be defined by the user to suit the reverse proxy configuration
+    that is used in the users HTTP proxy or *aaS service layers. Refer to the documentation for more information.
+    """
+
+    client_ip_attribute = 'axes_client_ip'
+
+    if not hasattr(request, client_ip_attribute):
+        client_ip, _ = ipware.ip2.get_client_ip(
+            request,
+            proxy_order=settings.AXES_PROXY_ORDER,
+            proxy_count=settings.AXES_PROXY_COUNT,
+            proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
+            request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
+        )
+
+        setattr(request, client_ip_attribute, client_ip)
+
+    return getattr(request, client_ip_attribute)
+
+
 def get_client_user_agent(request: HttpRequest) -> str:
     return request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
 
-def get_credentials(username: str = None, **kwargs):
-    credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
-    credentials.update(kwargs)
-    return credentials
+def get_client_path_info(request: HttpRequest) -> str:
+    return request.META.get('PATH_INFO', '<unknown>')[:255]
 
 
-def get_cool_off() -> Optional[timedelta]:
+def get_client_http_accept(request: HttpRequest) -> str:
+    return request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
+
+
+def get_client_parameters(username: str, ip_address: str, user_agent: str) -> OrderedDict:
     """
-    Return the login cool off time interpreted from settings.AXES_COOLOFF_TIME.
+    Get query parameters for filtering AccessAttempt queryset.
 
-    The return value is either None or timedelta.
-
-    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer of hours,
-    and this function offers a unified _timedelta or None_ representation of that configuration
-    for use with the Axes internal implementations.
-
-    :exception TypeError: if settings.AXES_COOLOFF_TIME is of wrong type.
+    This method returns an OrderedDict that guarantees iteration order for keys and values,
+    and can so be used in e.g. the generation of hash keys or other deterministic functions.
     """
 
-    cool_off = settings.AXES_COOLOFF_TIME
+    filter_kwargs = OrderedDict()  # type: OrderedDict
 
-    if isinstance(cool_off, int):
-        return timedelta(hours=cool_off)
-    return cool_off
+    if settings.AXES_ONLY_USER_FAILURES:
+        # 1. Only individual usernames can be tracked with parametrization
+        filter_kwargs['username'] = username
+    else:
+        if settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+            # 2. A combination of username and IP address can be used as well
+            filter_kwargs['username'] = username
+            filter_kwargs['ip_address'] = ip_address
+        else:
+            # 3. Default case is to track the IP address only, which is the most secure option
+            filter_kwargs['ip_address'] = ip_address
+
+        if settings.AXES_USE_USER_AGENT:
+            # 4. The HTTP User-Agent can be used to track e.g. one browser
+            filter_kwargs['user_agent'] = user_agent
+
+    return filter_kwargs
 
 
-def get_cache_timeout() -> Optional[int]:
+def get_client_str(username: str, ip_address: str, user_agent: str, path_info: str) -> str:
     """
-    Return the cache timeout interpreted from settings.AXES_COOLOFF_TIME.
+    Get a readable string that can be used in e.g. logging to distinguish client requests.
 
-    The cache timeout can be either None if not configured or integer of seconds if configured.
-
-    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, or integer of hours,
-    and this function offers a unified _integer or None_ representation of that configuration
-    for use with the Django cache backends.
-    """
-
-    cool_off = get_cool_off()
-    if cool_off is None:
-        return None
-    return int(cool_off.total_seconds())
-
-
-def is_ipv6(ip: str):
-    try:
-        inet_pton(AF_INET6, ip)
-    except (OSError, error):
-        return False
-    return True
-
-
-def reset(ip: str = None, username: str = None):
-    """
-    Reset records that match IP or username, and return the count of removed attempts.
+    Example log format would be ``{username: "example", ip_address: "127.0.0.1", path_info: "/example/"}``
     """
 
-    attempts = AccessAttempt.objects.all()
-    if ip:
-        attempts = attempts.filter(ip_address=ip)
-    if username:
-        attempts = attempts.filter(username=username)
+    if settings.AXES_VERBOSE:
+        # Verbose mode logs every attribute that is given
+        client_dict = OrderedDict()
+        client_dict['username'] = username
+        client_dict['ip_address'] = ip_address
+        client_dict['user_agent'] = user_agent
+    else:
+        # Other modes initialize the attributes that are used for the actual lockouts
+        client_dict = get_client_parameters(username, ip_address, user_agent)
 
-    count, _ = attempts.delete()
+    # Path info is always included as last component in the client string for traceability purposes
+    if path_info and isinstance(path_info, (tuple, list)):
+        path_info = path_info[0]
+    client_dict['path_info'] = path_info
 
-    return count
-
-
-def iso8601(delta: timedelta) -> str:
-    """
-    Return datetime.timedelta translated to ISO 8601 formatted duration.
-    """
-
-    seconds = delta.total_seconds()
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    days, hours = divmod(hours, 24)
-
-    date = '{:.0f}D'.format(days) if days else ''
-
-    time_values = hours, minutes, seconds
-    time_designators = 'H', 'M', 'S'
-
-    time = ''.join([
-        ('{:.0f}'.format(value) + designator)
-        for value, designator in zip(time_values, time_designators)
-        if value]
+    # Template the internal dictionary representation into a readable and concatenated key: "value" format
+    template = ', '.join(
+        '{key}: "{value}"'.format(key=key, value=value)
+        for key, value
+        in client_dict.items()
     )
-    return 'P' + date + ('T' + time if time else '')
+
+    # Wrap the internal dict into a single {key: "value"} bracing in the output
+    # which requires double braces when done with the Python string templating system
+    # i.e. {{key: "value"}} becomes {key: "value"} when run through a .format() call
+    template = '{{' + template + '}}'
+
+    return template.format(client_dict)
+
+
+def get_query_str(query: dict, max_length: int = 1024) -> str:
+    """
+    Turns a query dictionary into an easy-to-read list of key-value pairs.
+
+    If a field is called either ``'password'`` or ``settings.AXES_PASSWORD_FORM_FIELD`` it will be excluded.
+
+    The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
+    """
+
+    query_dict = query.copy()
+    query_dict.pop('password', None)
+    query_dict.pop(settings.AXES_PASSWORD_FORM_FIELD, None)
+
+    query_str = '\n'.join(
+        '{key}={value}'.format(key=key, value=value)
+        for key, value
+        in query_dict.items()
+    )
+
+    return query_str[:max_length]
 
 
 def get_lockout_message() -> str:
@@ -202,22 +287,18 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def get_lockout_response(request: HttpRequest) -> HttpResponse:
+def get_lockout_response(request: HttpRequest, credentials: dict = None) -> HttpResponse:
+    status = 403
     context = {
         'failure_limit': settings.AXES_FAILURE_LIMIT,
-        'username': get_client_username(request) or ''
+        'username': get_client_username(request, credentials) or ''
     }
 
-    cool_off = settings.AXES_COOLOFF_TIME
+    cool_off = get_cool_off()
     if cool_off:
-        if isinstance(cool_off, (int, float)):
-            cool_off = timedelta(hours=cool_off)
-
         context.update({
-            'cooloff_time': iso8601(cool_off)
+            'cool_off': get_cool_off_iso8601(cool_off)
         })
-
-    status = 403
 
     if request.is_ajax():
         return JsonResponse(
@@ -234,6 +315,11 @@ def get_lockout_response(request: HttpRequest) -> HttpResponse:
         )
 
     if settings.AXES_LOCKOUT_URL:
-        return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
+        return HttpResponseRedirect(
+            settings.AXES_LOCKOUT_URL,
+        )
 
-    return HttpResponse(get_lockout_message(), status=status)
+    return HttpResponse(
+        get_lockout_message(),
+        status=status,
+    )

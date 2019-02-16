@@ -5,11 +5,15 @@ from django.http import HttpRequest, JsonResponse, HttpResponseRedirect, HttpRes
 from django.test import TestCase, override_settings
 
 from axes import get_version
-from axes.utils import iso8601, is_ipv6, get_client_str, get_client_username, get_lockout_response
+from axes.utils import get_cool_off_iso8601, get_client_str, get_client_username, get_lockout_response
+
+
+def get_username(request: HttpRequest, credentials: dict) -> str:
+    return 'username'
 
 
 def get_expected_client_str(*args, **kwargs):
-    client_str_template = '{{user: "{0}", ip: "{1}", user-agent: "{2}", path: "{3}"}}'
+    client_str_template = '{{username: "{0}", ip_address: "{1}", user_agent: "{2}", path_info: "{3}"}}'
     return client_str_template.format(*args, **kwargs)
 
 
@@ -22,7 +26,7 @@ class AxesTestCase(TestCase):
 class UtilsTestCase(TestCase):
     def test_iso8601(self):
         """
-        Test iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
+        Test get_cool_off_iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
         """
 
         expected = {
@@ -46,46 +50,41 @@ class UtilsTestCase(TestCase):
 
         for delta, iso_duration in expected.items():
             with self.subTest(iso_duration):
-                self.assertEqual(iso8601(delta), iso_duration)
-
-    def test_is_ipv6(self):
-        self.assertTrue(is_ipv6('ff80::220:16ff:fec9:1'))
-        self.assertFalse(is_ipv6('67.255.125.204'))
-        self.assertFalse(is_ipv6('foo'))
+                self.assertEqual(get_cool_off_iso8601(delta), iso_duration)
 
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_ip_only_client_details(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = get_expected_client_str(username, ip, user_agent, path_info)
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_ip_only_client_details_tuple(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = ('admin', 'login')
 
-        expected = get_expected_client_str(username, ip, user_agent, path_info[0])
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip_address, user_agent, path_info[0])
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 
     @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_ip_only_client_details(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = ip
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = '{ip_address: "127.0.0.1", path_info: "/admin/"}'
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 
@@ -93,12 +92,12 @@ class UtilsTestCase(TestCase):
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_user_only_client_details(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = get_expected_client_str(username, ip, user_agent, path_info)
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 
@@ -106,12 +105,12 @@ class UtilsTestCase(TestCase):
     @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_user_only_client_details(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = username
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = '{username: "test@example.com", path_info: "/admin/"}'
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 
@@ -119,12 +118,12 @@ class UtilsTestCase(TestCase):
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_user_ip_combo_client_details(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = get_expected_client_str(username, ip, user_agent, path_info)
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 
@@ -132,12 +131,12 @@ class UtilsTestCase(TestCase):
     @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_user_ip_combo_client_details(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = '{0} from {1}'.format(username, ip)
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = '{username: "test@example.com", ip_address: "127.0.0.1", path_info: "/admin/"}'
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 
@@ -145,12 +144,12 @@ class UtilsTestCase(TestCase):
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_user_agent_client_details(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = get_expected_client_str(username, ip, user_agent, path_info)
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = get_expected_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 
@@ -158,12 +157,12 @@ class UtilsTestCase(TestCase):
     @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_user_agent_client_details(self):
         username = 'test@example.com'
-        ip = '127.0.0.1'
+        ip_address = '127.0.0.1'
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = ip + '(user-agent={0})'.format(user_agent)
-        actual = get_client_str(username, ip, user_agent, path_info)
+        expected = '{ip_address: "127.0.0.1", user_agent: "Googlebot/2.1 (+http://www.googlebot.com/bot.html)", path_info: "/admin/"}'
+        actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
 

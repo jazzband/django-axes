@@ -12,9 +12,17 @@ from axes.conf import settings
 from axes.exceptions import AxesSignalPermissionDenied
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out
-from axes.utils import get_client_str, get_client_user_agent
-from axes.utils import query2str
-from axes.utils import get_axes_cache, get_client_ip, get_client_username, get_credentials
+from axes.utils import (
+    get_axes_cache,
+    get_client_ip_address,
+    get_client_path_info,
+    get_client_http_accept,
+    get_client_str,
+    get_client_username,
+    get_client_user_agent,
+    get_credentials,
+    get_query_str,
+)
 
 
 log = getLogger(settings.AXES_LOGGER)
@@ -37,10 +45,10 @@ class AxesHandler:  # pylint: disable=too-many-locals
             return
 
         username = get_client_username(request, credentials)
-        ip_address = get_client_ip(request)
+        ip_address = get_client_ip_address(request)
         user_agent = get_client_user_agent(request)
-        path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-        http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
+        path_info = get_client_path_info(request)
+        http_accept = get_client_http_accept(request)
         client_str = get_client_str(username, ip_address, user_agent, path_info)
 
         if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
@@ -76,11 +84,11 @@ class AxesHandler:  # pylint: disable=too-many-locals
 
                 attempt.get_data = template.format(
                     attempt.get_data,
-                    query2str(request.GET),
+                    get_query_str(request.GET),
                 )
                 attempt.post_data = template.format(
                     attempt.post_data,
-                    query2str(request.POST)
+                    get_query_str(request.POST)
                 )
                 attempt.http_accept = http_accept
                 attempt.path_info = path_info
@@ -96,14 +104,14 @@ class AxesHandler:  # pylint: disable=too-many-locals
                 )
         else:
             # Record failed attempt. Whether or not the IP address or user agent is
-            # used in counting failures is handled elsewhere, so we just record # everything here.
+            # used in counting failures is handled elsewhere, so we just record everything here.
             AccessAttempt.objects.create(
                 username=username,
                 ip_address=ip_address,
                 user_agent=user_agent,
 
-                get_data=query2str(request.GET),
-                post_data=query2str(request.POST),
+                get_data=get_query_str(request.GET),
+                post_data=get_query_str(request.POST),
                 http_accept=http_accept,
                 path_info=path_info,
                 failures_since_start=failures,
@@ -136,10 +144,10 @@ class AxesHandler:  # pylint: disable=too-many-locals
 
         username = user.get_username()
         credentials = get_credentials(username)
-        ip_address = get_client_ip(request)
+        ip_address = get_client_ip_address(request)
         user_agent = get_client_user_agent(request)
-        path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-        http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
+        path_info = get_client_path_info(request)
+        http_accept = get_client_http_accept(request)
         client_str = get_client_str(username, ip_address, user_agent, path_info)
 
         log.info(
@@ -170,7 +178,16 @@ class AxesHandler:  # pylint: disable=too-many-locals
         When user logs out, update the AccessLog related to the user.
         """
 
-        log.info('AXES: Successful logout by %s.', user)
+        username = user.get_username()
+        ip_address = get_client_ip_address(request)
+        user_agent = get_client_user_agent(request)
+        path_info = get_client_path_info(request)
+        client_str = get_client_str(username, ip_address, user_agent, path_info)
+
+        log.info(
+            'AXES: Successful logout by %s.',
+            client_str,
+        )
 
         if user and not settings.AXES_DISABLE_ACCESS_LOG:
             AccessLog.objects.filter(

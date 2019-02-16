@@ -89,7 +89,7 @@ class AxesHandlerTestCase(TestCase):
         log.warning.assert_called_with('AxesHandler.user_login_failed does not function without a request.')
 
     @override_settings(AXES_NEVER_LOCKOUT_WHITELIST=['127.0.0.1'])
-    @patch('axes.handlers.get_client_ip', return_value='127.0.0.1')
+    @patch('axes.handlers.get_client_ip_address', return_value='127.0.0.1')
     @patch('axes.handlers.ip_in_whitelist', return_value=True)
     @patch('axes.handlers.log')
     def test_user_login_failed_whitelist(self, log, _, __):

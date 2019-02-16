@@ -1,6 +1,6 @@
-from collections import OrderedDict
 from hashlib import md5
 from logging import getLogger
+from typing import Union
 
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
@@ -11,56 +11,18 @@ from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.utils import (
     get_axes_cache,
-    get_client_ip,
+    get_client_ip_address,
     get_client_username,
     get_client_user_agent,
     get_cache_timeout,
     get_cool_off,
+    get_client_parameters,
 )
 
 log = getLogger(settings.AXES_LOGGER)
 
 
-def get_filter_kwargs(username: str, ip_address: str, user_agent: str) -> OrderedDict:
-    """
-    Get query parameters for filtering AccessAttempt queryset.
-
-    This method returns an OrderedDict that guarantees iteration order for keys and values,
-    and can so be used in e.g. the generation of hash keys or other deterministic functions.
-    """
-
-    query = OrderedDict()  # type: OrderedDict
-
-    if settings.AXES_ONLY_USER_FAILURES:
-        query['username'] = username
-    else:
-        if settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-            query['username'] = username
-            query['ip_address'] = ip_address
-        else:
-            query['ip_address'] = ip_address
-
-        if settings.AXES_USE_USER_AGENT:
-            query['user_agent'] = user_agent
-
-    return query
-
-
-def filter_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
-    """
-    Return a queryset of AccessAttempts that match the given request and credentials.
-    """
-
-    username = get_client_username(request, credentials)
-    ip_address = get_client_ip(request)
-    user_agent = get_client_user_agent(request)
-
-    filter_kwargs = get_filter_kwargs(username, ip_address, user_agent)
-
-    return AccessAttempt.objects.filter(**filter_kwargs)
-
-
-def get_cache_key(request_or_attempt, credentials: dict = None) -> str:
+def get_cache_key(request_or_attempt: Union[HttpRequest, AccessAttempt], credentials: dict = None) -> str:
     """
     Build cache key name from request or AccessAttempt object.
 
@@ -75,16 +37,30 @@ def get_cache_key(request_or_attempt, credentials: dict = None) -> str:
         user_agent = request_or_attempt.user_agent
     else:
         username = get_client_username(request_or_attempt, credentials)
-        ip_address = get_client_ip(request_or_attempt)
+        ip_address = get_client_ip_address(request_or_attempt)
         user_agent = get_client_user_agent(request_or_attempt)
 
-    filter_kwargs = get_filter_kwargs(username, ip_address, user_agent)
+    filter_kwargs = get_client_parameters(username, ip_address, user_agent)
 
     cache_key_components = ''.join(filter_kwargs.values())
     cache_key_digest = md5(cache_key_components.encode()).hexdigest()
     cache_key = 'axes-{}'.format(cache_key_digest)
 
     return cache_key
+
+
+def filter_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
+    """
+    Return a queryset of AccessAttempts that match the given request and credentials.
+    """
+
+    username = get_client_username(request, credentials)
+    ip_address = get_client_ip_address(request)
+    user_agent = get_client_user_agent(request)
+
+    filter_kwargs = get_client_parameters(username, ip_address, user_agent)
+
+    return AccessAttempt.objects.filter(**filter_kwargs)
 
 
 def get_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
@@ -119,6 +95,10 @@ def get_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySe
 
 
 def reset_user_attempts(request: HttpRequest, credentials: dict = None) -> int:
+    """
+    Reset all user attempts that match the given request and credentials.
+    """
+
     attempts = filter_user_attempts(request, credentials)
     count, _ = attempts.delete()
 
@@ -144,7 +124,7 @@ def is_ip_blacklisted(request: HttpRequest) -> bool:
     Check if the given request refers to a blacklisted IP.
     """
 
-    ip = get_client_ip(request)
+    ip = get_client_ip_address(request)
 
     if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip):
         return False
