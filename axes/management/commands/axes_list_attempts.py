@@ -8,8 +8,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):  # pylint: disable=unused-argument
         for obj in AccessAttempt.objects.all():
-            self.stdout.write('{ip}\t{username}\t{failures}'.format(
+            self.stdout.write('{ip}\t{username}\t{failures_since_start}'.format(
                 ip=obj.ip_address,
                 username=obj.username,
-                failures=obj.failures,
+                failures_since_start=obj.failures_since_start,
             ))
