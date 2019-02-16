@@ -86,7 +86,7 @@ Changes
   call argument signature in a backwards compatible fashion.
   [aleksihakli]
 
-- Add official support for the Django 2.1 LTS version and Python 3.7.
+- Add official support for the Django 2.1 version and Python 3.7.
   [aleksihakli]
 
 - Improve the requirements, documentation, tests, and CI setup.
