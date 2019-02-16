@@ -9,7 +9,6 @@ from django.shortcuts import render
 from django.utils.module_loading import import_string
 
 import ipware.ip2
-from django.utils.module_loading import import_string
 
 from axes.conf import settings
 from axes.models import AccessAttempt
