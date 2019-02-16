@@ -16,6 +16,15 @@ class ProxyHandlerTestCase(TestCase):
         self.user = MagicMock()
         self.instance = MagicMock()
 
+    @patch('axes.signals.import_string', return_value=AxesHandler)
+    def test_setting_changed_signal_triggers_handler_reimport(self, importer):
+        self.assertEqual(0, importer.call_count)
+
+        with self.settings(
+            AXES_HANDLER='axes.handlers.AxesHandler'
+        ):
+            self.assertEqual(1, importer.call_count)
+
     @patch('axes.signals.ProxyHandler.implementation', None)
     @patch('axes.signals.import_string', return_value=AxesHandler)
     def test_initialize(self, importer):
