@@ -460,7 +460,7 @@ class AccessAttemptTest(TestCase):
                 is_valid_username=False,
                 is_valid_password=False,
             )
-        # Check if we can still initialize in with valid user
+        # Check if we can still log in with valid user
         response = self._login(is_valid_username=True, is_valid_password=True)
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=302, html=True)
 
