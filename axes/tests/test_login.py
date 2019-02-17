@@ -1,11 +1,15 @@
+"""
+Test access from purely the
+"""
+
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from axes.conf import settings
 
 
-class AccessAttemptConfigTest(TestCase):
+class LoginTestCase(TestCase):
     """
     Test for lockouts under different configurations and circumstances to prevent false positives and false negatives.
 
@@ -66,12 +70,12 @@ class AccessAttemptConfigTest(TestCase):
         Create two valid users for authentication.
         """
 
-        self.user = User.objects.create_superuser(
+        self.user = get_user_model().objects.create_superuser(
             username=self.USER_1,
             email='test_1@example.com',
             password=self.VALID_PASSWORD,
         )
-        self.user = User.objects.create_superuser(
+        self.user = get_user_model().objects.create_superuser(
             username=self.USER_2,
             email='test_2@example.com',
             password=self.VALID_PASSWORD,

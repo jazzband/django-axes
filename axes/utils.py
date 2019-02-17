@@ -1,10 +1,11 @@
 from collections import OrderedDict
 from datetime import timedelta
 from logging import getLogger
-from typing import Optional
+from typing import Optional, Type
 
+from django.contrib.auth import get_user_model
 from django.core.cache import caches, BaseCache
-from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse, QueryDict
 from django.shortcuts import render
 from django.utils.module_loading import import_string
 
@@ -259,7 +260,7 @@ def get_client_str(username: str, ip_address: str, user_agent: str, path_info: s
     return template.format(client_dict)
 
 
-def get_query_str(query: dict, max_length: int = 1024) -> str:
+def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
     """
     Turns a query dictionary into an easy-to-read list of key-value pairs.
 
@@ -323,3 +324,87 @@ def get_lockout_response(request: HttpRequest, credentials: dict = None) -> Http
         get_lockout_message(),
         status=status,
     )
+
+
+def is_ip_address_in_whitelist(ip_address: str) -> bool:
+    if not settings.AXES_IP_WHITELIST:
+        return False
+
+    return ip_address in settings.AXES_IP_WHITELIST
+
+
+def is_ip_address_in_blacklist(ip_address: str) -> bool:
+    if not settings.AXES_IP_BLACKLIST:
+        return False
+
+    return ip_address in settings.AXES_IP_BLACKLIST
+
+
+def is_client_ip_address_whitelisted(request: HttpRequest):
+    """
+    Check if the given request refers to a whitelisted IP.
+    """
+
+    ip_address = get_client_ip_address(request)
+
+    if settings.AXES_NEVER_LOCKOUT_WHITELIST and is_ip_address_in_whitelist(ip_address):
+        return True
+
+    if settings.AXES_ONLY_WHITELIST and is_ip_address_in_whitelist(ip_address):
+        return True
+
+    return False
+
+
+def is_client_ip_address_blacklisted(request: HttpRequest) -> bool:
+    """
+    Check if the given request refers to a blacklisted IP.
+    """
+
+    ip_address = get_client_ip_address(request)
+
+    if is_ip_address_in_blacklist(ip_address):
+        return True
+
+    if settings.AXES_ONLY_WHITELIST and not is_ip_address_in_whitelist(ip_address):
+        return True
+
+    return False
+
+
+def is_client_method_whitelisted(request: HttpRequest) -> bool:
+    """
+    Check if the given request uses a whitelisted method.
+    """
+
+    if settings.AXES_NEVER_LOCKOUT_GET and request.method == 'GET':
+        return True
+
+    return False
+
+
+def is_client_username_whitelisted(request: HttpRequest, credentials: dict = None) -> bool:
+    """
+    Check if the given request or credentials refer to a whitelisted username.
+
+    A whitelisted user has the magic ``nolockout`` property set.
+
+    If the property is unknown or False or the user can not be found,
+    this implementation fails gracefully and returns True.
+    """
+
+    username_field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
+    username_value = get_client_username(request, credentials)
+    kwargs = {
+        username_field: username_value
+    }
+
+    user_model = get_user_model()
+
+    try:
+        user = user_model.objects.get(**kwargs)
+        return user.nolockout
+    except (user_model.DoesNotExist, AttributeError):
+        pass
+
+    return False

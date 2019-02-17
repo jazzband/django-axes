@@ -15,25 +15,25 @@ class DecoratorTestCase(TestCase):
         self.cls = MagicMock(return_value=self.request)
         self.func = MagicMock(return_value=self.SUCCESS_RESPONSE)
 
-    @patch('axes.decorators.is_already_locked', return_value=True)
+    @patch('axes.handlers.proxy.AxesProxyHandler.is_allowed_to_authenticate', return_value=False)
     @patch('axes.decorators.get_lockout_response', return_value=LOCKOUT_RESPONSE)
     def test_axes_dispatch_locks_out(self, _, __):
         response = axes_dispatch(self.func)(self.request)
         self.assertEqual(response.content, self.LOCKOUT_RESPONSE.content)
 
-    @patch('axes.decorators.is_already_locked', return_value=False)
+    @patch('axes.handlers.proxy.AxesProxyHandler.is_allowed_to_authenticate', return_value=True)
     @patch('axes.decorators.get_lockout_response', return_value=LOCKOUT_RESPONSE)
     def test_axes_dispatch_dispatches(self, _, __):
         response = axes_dispatch(self.func)(self.request)
         self.assertEqual(response.content, self.SUCCESS_RESPONSE.content)
 
-    @patch('axes.decorators.is_already_locked', return_value=True)
+    @patch('axes.handlers.proxy.AxesProxyHandler.is_allowed_to_authenticate', return_value=False)
     @patch('axes.decorators.get_lockout_response', return_value=LOCKOUT_RESPONSE)
     def test_axes_form_invalid_locks_out(self, _, __):
         response = axes_form_invalid(self.func)(self.cls)
         self.assertEqual(response.content, self.LOCKOUT_RESPONSE.content)
 
-    @patch('axes.decorators.is_already_locked', return_value=False)
+    @patch('axes.handlers.proxy.AxesProxyHandler.is_allowed_to_authenticate', return_value=True)
     @patch('axes.decorators.get_lockout_response', return_value=LOCKOUT_RESPONSE)
     def test_axes_form_invalid_dispatches(self, _, __):
         response = axes_form_invalid(self.func)(self.cls)

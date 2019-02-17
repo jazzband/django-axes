@@ -1,11 +1,22 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest, JsonResponse, HttpResponseRedirect, HttpResponse
 from django.test import TestCase, override_settings
 
 from axes import get_version
-from axes.utils import get_cool_off_iso8601, get_client_str, get_client_username, get_lockout_response
+from axes.utils import (
+    get_cool_off_iso8601,
+    get_client_str,
+    get_client_username,
+    get_lockout_response,
+    is_client_ip_address_blacklisted,
+    is_ip_address_in_blacklist,
+    is_ip_address_in_whitelist,
+    get_cache_timeout,
+    is_client_username_whitelisted,
+    is_client_ip_address_whitelisted)
 
 
 def get_username(request: HttpRequest, credentials: dict) -> str:
@@ -17,13 +28,46 @@ def get_expected_client_str(*args, **kwargs):
     return client_str_template.format(*args, **kwargs)
 
 
-class AxesTestCase(TestCase):
+class VersionTestCase(TestCase):
     @patch('axes.__version__', 'test')
     def test_get_version(self):
         self.assertEqual(get_version(), 'test')
 
 
-class UtilsTestCase(TestCase):
+class CacheTestCase(TestCase):
+    @override_settings(AXES_COOLOFF_TIME=3)  # hours
+    def test_get_cache_timeout(self):
+        timeout_seconds = float(60 * 60 * 3)
+        self.assertEqual(get_cache_timeout(), timeout_seconds)
+
+
+class UserTestCase(TestCase):
+    def setUp(self):
+        self.user_model = get_user_model()
+        self.user = self.user_model.objects.create(username='jane.doe')
+        self.request = HttpRequest()
+
+    def test_is_client_username_whitelisted(self):
+        with patch.object(self.user_model, 'nolockout', True, create=True):
+            self.assertTrue(is_client_username_whitelisted(
+                self.request,
+                {self.user_model.USERNAME_FIELD: self.user.username},
+            ))
+
+    def test_is_client_username_whitelisted_not(self):
+        self.assertFalse(is_client_username_whitelisted(
+            self.request,
+            {self.user_model.USERNAME_FIELD: self.user.username},
+        ))
+
+    def test_is_client_username_whitelisted_does_not_exist(self):
+        self.assertFalse(is_client_username_whitelisted(
+            self.request,
+            {self.user_model.USERNAME_FIELD: 'not.' + self.user.username},
+        ))
+
+
+class TimestampTestCase(TestCase):
     def test_iso8601(self):
         """
         Test get_cool_off_iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
@@ -52,6 +96,8 @@ class UtilsTestCase(TestCase):
             with self.subTest(iso_duration):
                 self.assertEqual(get_cool_off_iso8601(delta), iso_duration)
 
+
+class ClientStringTestCase(TestCase):
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_ip_only_client_details(self):
         username = 'test@example.com'
@@ -166,6 +212,8 @@ class UtilsTestCase(TestCase):
 
         self.assertEqual(expected, actual)
 
+
+class UsernameTestCase(TestCase):
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
     def test_default_get_client_username(self):
         expected = 'test-username'
@@ -255,6 +303,64 @@ class UtilsTestCase(TestCase):
             get_client_username(HttpRequest(), {}),
             'username',
         )
+
+
+class WhitelistTestCase(TestCase):
+    def setUp(self):
+        self.request = HttpRequest()
+        self.request.method = 'POST'
+        self.request.META['REMOTE_ADDR'] = '127.0.0.1'
+
+    @override_settings(AXES_IP_WHITELIST=None)
+    def test_ip_in_whitelist_none(self):
+        self.assertFalse(is_ip_address_in_whitelist('127.0.0.2'))
+
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.1'])
+    def test_ip_in_whitelist(self):
+        self.assertTrue(is_ip_address_in_whitelist('127.0.0.1'))
+        self.assertFalse(is_ip_address_in_whitelist('127.0.0.2'))
+
+    @override_settings(AXES_IP_BLACKLIST=None)
+    def test_ip_in_blacklist_none(self):
+        self.assertFalse(is_ip_address_in_blacklist('127.0.0.2'))
+
+    @override_settings(AXES_IP_BLACKLIST=['127.0.0.1'])
+    def test_ip_in_blacklist(self):
+        self.assertTrue(is_ip_address_in_blacklist('127.0.0.1'))
+        self.assertFalse(is_ip_address_in_blacklist('127.0.0.2'))
+
+    @override_settings(AXES_IP_BLACKLIST=['127.0.0.1'])
+    def test_is_client_ip_address_blacklisted_ip_in_blacklist(self):
+        self.assertTrue(is_client_ip_address_blacklisted(self.request))
+
+    @override_settings(AXES_IP_BLACKLIST=['127.0.0.2'])
+    def test_is_is_client_ip_address_blacklisted_ip_not_in_blacklist(self):
+        self.assertFalse(is_client_ip_address_blacklisted(self.request))
+
+    @override_settings(AXES_NEVER_LOCKOUT_WHITELIST=True)
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.1'])
+    def test_is_client_ip_address_blacklisted_ip_in_whitelist(self):
+        self.assertFalse(is_client_ip_address_blacklisted(self.request))
+
+    @override_settings(AXES_ONLY_WHITELIST=True)
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.2'])
+    def test_is_already_locked_ip_not_in_whitelist(self):
+        self.assertTrue(is_client_ip_address_blacklisted(self.request))
+
+    @override_settings(AXES_NEVER_LOCKOUT_WHITELIST=True)
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.1'])
+    def test_is_client_ip_address_whitelisted_never_lockout(self):
+        self.assertTrue(is_client_ip_address_whitelisted(self.request))
+
+    @override_settings(AXES_ONLY_WHITELIST=True)
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.1'])
+    def test_is_client_ip_address_whitelisted_only_allow(self):
+        self.assertTrue(is_client_ip_address_whitelisted(self.request))
+
+    @override_settings(AXES_ONLY_WHITELIST=True)
+    @override_settings(AXES_IP_WHITELIST=['127.0.0.2'])
+    def test_is_client_ip_address_whitelisted_not(self):
+        self.assertFalse(is_client_ip_address_whitelisted(self.request))
 
 
 class LockoutResponseTestCase(TestCase):

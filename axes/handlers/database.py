@@ -1,19 +1,23 @@
 from logging import getLogger
+from typing import Any, Dict, Optional
 
 from django.db.models import Max
+from django.http import HttpRequest
 from django.utils.timezone import now
 
-from axes.attempts import get_cache_key, is_already_locked
-from axes.attempts import get_cache_timeout
-from axes.attempts import get_user_attempts
-from axes.attempts import ip_in_whitelist
-from axes.attempts import reset_user_attempts
+from axes.attempts import (
+    get_cache_key,
+    get_user_attempts,
+    reset_user_attempts,
+)
 from axes.conf import settings
 from axes.exceptions import AxesSignalPermissionDenied
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out
+from axes.handlers.base import AxesBaseHandler
 from axes.utils import (
     get_axes_cache,
+    get_cache_timeout,
     get_client_ip_address,
     get_client_path_info,
     get_client_http_accept,
@@ -22,18 +26,76 @@ from axes.utils import (
     get_client_user_agent,
     get_credentials,
     get_query_str,
+    is_ip_address_in_whitelist,
+    is_client_ip_address_blacklisted,
+    is_client_ip_address_whitelisted,
+    is_client_method_whitelisted,
+    is_client_username_whitelisted,
 )
 
 
 log = getLogger(settings.AXES_LOGGER)
 
 
-class AxesHandler:  # pylint: disable=too-many-locals
+class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
     """
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
     """
 
-    def user_login_failed(self, sender, credentials, request, **kwargs):  # pylint: disable=unused-argument
+    def is_allowed_to_authenticate(self, request: HttpRequest, credentials: Optional[Dict[str, Any]] = None) -> bool:
+        """
+        Check if the request or given credentials are already locked by Axes.
+
+        This function is called from
+
+        - function decorators defined in ``axes.decorators``,
+        - authentication backends defined in ``axes.backends``, and
+        - signal handlers defined in ``axes.handlers``.
+
+        This function checks the following facts for a given request:
+
+        1. Is the request IP address _blacklisted_? If it is, return ``False``.
+        2. Is the request IP address _whitelisted_? If it is, return ``True``.
+        4. Is the request HTTP method _whitelisted_? If it is, return ``True``.
+        3. Is the request user _whitelisted_? If it is, return ``True``.
+        5. Is failed authentication attempt always allowed to proceed? If it is, return ``True``.
+        6. Is failed authentication attempt count over the attempt limit? If it is, return ``False``.
+
+        Refer to the function source code for the exact implementation.
+        """
+
+        if is_client_ip_address_blacklisted(request):
+            return False
+
+        if is_client_ip_address_whitelisted(request):
+            return True
+
+        if is_client_method_whitelisted(request):
+            return True
+
+        if is_client_username_whitelisted(request, credentials):
+            return True
+
+        if not settings.AXES_LOCK_OUT_AT_FAILURE:
+            return True
+
+        # Check failure statistics against cache
+        cache_hash_key = get_cache_key(request, credentials)
+        num_failures_cached = get_axes_cache().get(cache_hash_key)
+
+        # Do not hit the database if we have an answer in the cache
+        if num_failures_cached is not None:
+            return num_failures_cached < settings.AXES_FAILURE_LIMIT
+
+        # Check failure statistics against database
+        attempts = get_user_attempts(request, credentials)
+        failures = attempts.filter(
+            failures_since_start__gte=settings.AXES_FAILURE_LIMIT,
+        )
+
+        return not failures.exists()
+
+    def user_login_failed(self, sender, credentials, request, **kwargs):  # pylint: disable=too-many-locals
         """
         When user login fails, save AccessAttempt record in database and lock user out if necessary.
 
@@ -41,7 +103,7 @@ class AxesHandler:  # pylint: disable=too-many-locals
         """
 
         if request is None:
-            log.warning('AxesHandler.user_login_failed does not function without a request.')
+            log.warning('AXES: AxesDatabaseHandler.user_login_failed does not function without a request.')
             return
 
         username = get_client_username(request, credentials)
@@ -51,8 +113,8 @@ class AxesHandler:  # pylint: disable=too-many-locals
         http_accept = get_client_http_accept(request)
         client_str = get_client_str(username, ip_address, user_agent, path_info)
 
-        if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
-            log.info('Login failed from whitelisted IP %s.', ip_address)
+        if settings.AXES_NEVER_LOCKOUT_WHITELIST and is_ip_address_in_whitelist(ip_address):
+            log.info('AXES: Login failed from whitelisted IP %s.', ip_address)
             return
 
         attempts = get_user_attempts(request, credentials)
@@ -122,7 +184,7 @@ class AxesHandler:  # pylint: disable=too-many-locals
                 client_str,
             )
 
-        if is_already_locked(request, credentials):
+        if not self.is_allowed_to_authenticate(request, credentials):
             log.warning(
                 'AXES: Locked out %s after repeated login failures.',
                 client_str,
