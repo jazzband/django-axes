@@ -4,7 +4,7 @@ from typing import Union
 
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from django.utils import timezone
+from django.utils.timezone import now
 
 from axes.conf import settings
 from axes.models import AccessAttempt
@@ -75,7 +75,7 @@ def get_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySe
         return attempts
 
     # Else AccessAttempts that have expired need to be cleaned up from the database
-    num_deleted, _ = attempts.filter(attempt_time__lte=timezone.now() - cool_off).delete()
+    num_deleted, _ = attempts.filter(attempt_time__lte=now() - cool_off).delete()
     if not num_deleted:
         return attempts
 

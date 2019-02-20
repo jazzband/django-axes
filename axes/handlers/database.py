@@ -27,7 +27,6 @@ from axes.utils import (
     get_client_user_agent,
     get_credentials,
     get_query_str,
-    is_ip_address_in_whitelist,
     is_client_ip_address_blacklisted,
     is_client_ip_address_whitelisted,
     is_client_method_whitelisted,
@@ -90,11 +89,12 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
 
         # Check failure statistics against database
         attempts = get_user_attempts(request, credentials)
-        failures = attempts.filter(
+
+        lockouts = attempts.filter(
             failures_since_start__gte=settings.AXES_FAILURE_LIMIT,
         )
 
-        return not failures.exists()
+        return not lockouts.exists()
 
     def user_login_failed(self, sender, credentials, request, **kwargs):  # pylint: disable=too-many-locals
         """
@@ -114,7 +114,11 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
         http_accept = get_client_http_accept(request)
         client_str = get_client_str(username, ip_address, user_agent, path_info)
 
-        if settings.AXES_NEVER_LOCKOUT_WHITELIST and is_ip_address_in_whitelist(ip_address):
+        get_data = get_query_str(request.GET)
+        post_data = get_query_str(request.POST)
+        attempt_time = now()
+
+        if is_client_ip_address_whitelisted(request):
             log.info('AXES: Login failed from whitelisted IP %s.', ip_address)
             return
 
@@ -142,18 +146,6 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
         if attempts:
             # Update existing attempt information but do not touch the username, ip_address, or user_agent fields,
             # because attackers can request the site with multiple different usernames, addresses, or programs.
-            method_data_template = '\n---------\n{query_str}'
-            get_data = method_data_template.format(query_str=get_query_str(request.GET))
-            post_data = method_data_template.format(query_str=get_query_str(request.POST))
-
-            attempts.update(
-                get_data=Concat('get_data', Value(get_data)),
-                post_data=Concat('post_data', Value(post_data)),
-                http_accept=http_accept,
-                path_info=path_info,
-                failures_since_start=failures_since_start,
-                attempt_time=now(),
-            )
 
             log.info(
                 'AXES: Repeated login failure by %s. Count = %d of %d',
@@ -161,24 +153,35 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
                 failures_since_start,
                 settings.AXES_FAILURE_LIMIT,
             )
-        else:
-            # Record failed attempt. Whether or not the IP address or user agent is
-            # used in counting failures is handled elsewhere, so we just record everything here.
-            AccessAttempt.objects.create(
-                username=username,
-                ip_address=ip_address,
-                user_agent=user_agent,
 
-                get_data=get_query_str(request.GET),
-                post_data=get_query_str(request.POST),
+            separator = '\n---------\n'
+            attempts.update(
+                get_data=Concat('get_data', Value(separator + get_data)),
+                post_data=Concat('post_data', Value(separator + post_data)),
                 http_accept=http_accept,
                 path_info=path_info,
                 failures_since_start=failures_since_start,
+                attempt_time=attempt_time,
             )
+        else:
+            # Record failed attempt. Whether or not the username, IP address or user agent is
+            # used in counting failures is handled elsewhere, and we just record everything here.
 
             log.info(
                 'AXES: New login failure by %s. Creating access record.',
                 client_str,
+            )
+
+            AccessAttempt.objects.create(
+                username=username,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                get_data=get_data,
+                post_data=post_data,
+                http_accept=http_accept,
+                path_info=path_info,
+                failures_since_start=failures_since_start,
+                attempt_time=attempt_time,
             )
 
         if not self.is_allowed_to_authenticate(request, credentials):
@@ -216,9 +219,9 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
 
         if not settings.AXES_DISABLE_SUCCESS_ACCESS_LOG:
             AccessLog.objects.create(
-                user_agent=user_agent,
-                ip_address=ip_address,
                 username=username,
+                ip_address=ip_address,
+                user_agent=user_agent,
                 http_accept=http_accept,
                 path_info=path_info,
                 trusted=True,
@@ -242,6 +245,7 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
         user_agent = get_client_user_agent(request)
         path_info = get_client_path_info(request)
         client_str = get_client_str(username, ip_address, user_agent, path_info)
+        logout_time = now()
 
         log.info(
             'AXES: Successful logout by %s.',
@@ -250,10 +254,10 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
 
         if user and not settings.AXES_DISABLE_ACCESS_LOG:
             AccessLog.objects.filter(
-                username=user.get_username(),
+                username=username,
                 logout_time__isnull=True,
             ).update(
-                logout_time=now(),
+                logout_time=logout_time,
             )
 
     def post_save_access_attempt(self, instance, **kwargs):  # pylint: disable=unused-argument

@@ -86,9 +86,8 @@ class AxesDatabaseHandlerTestCase(TestCase):
             'AXES: AxesDatabaseHandler.user_login_failed does not function without a request.'
         )
 
-    @override_settings(AXES_NEVER_LOCKOUT_WHITELIST=['127.0.0.1'])
     @patch('axes.handlers.database.get_client_ip_address', return_value='127.0.0.1')
-    @patch('axes.handlers.database.is_ip_address_in_whitelist', return_value=True)
+    @patch('axes.handlers.database.is_client_ip_address_whitelisted', return_value=True)
     @patch('axes.handlers.database.log')
     def test_user_login_failed_whitelist(self, log, _, __):
         self.handler.user_login_failed(sender=None, credentials={}, request=self.request)
