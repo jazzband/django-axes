@@ -1,7 +1,8 @@
 from logging import getLogger
 from typing import Any, Dict, Optional
 
-from django.db.models import Max
+from django.db.models import Max, Value
+from django.db.models.functions import Concat
 from django.http import HttpRequest
 from django.utils.timezone import now
 
@@ -122,48 +123,44 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
         num_failures_cached = get_axes_cache().get(cache_key)
 
         if num_failures_cached:
-            failures = num_failures_cached
+            failures_since_start = num_failures_cached
         elif attempts:
-            failures = attempts.aggregate(
+            failures_since_start = attempts.aggregate(
                 Max('failures_since_start'),
             )['failures_since_start__max']
         else:
-            failures = 0
+            failures_since_start = 0
 
         # add a failed attempt for this user
-        failures += 1
+        failures_since_start += 1
         get_axes_cache().set(
             cache_key,
-            failures,
+            failures_since_start,
             get_cache_timeout(),
         )
 
         if attempts:
             # Update existing attempt information but do not touch the username, ip_address, or user_agent fields,
             # because attackers can request the site with multiple different usernames, addresses, or programs.
-            for attempt in attempts:
-                template = '{}\n---------\n{}'
+            method_data_template = '\n---------\n{query_str}'
+            get_data = method_data_template.format(query_str=get_query_str(request.GET))
+            post_data = method_data_template.format(query_str=get_query_str(request.POST))
 
-                attempt.get_data = template.format(
-                    attempt.get_data,
-                    get_query_str(request.GET),
-                )
-                attempt.post_data = template.format(
-                    attempt.post_data,
-                    get_query_str(request.POST)
-                )
-                attempt.http_accept = http_accept
-                attempt.path_info = path_info
-                attempt.failures_since_start = failures
-                attempt.attempt_time = now()
-                attempt.save()
+            attempts.update(
+                get_data=Concat('get_data', Value(get_data)),
+                post_data=Concat('post_data', Value(post_data)),
+                http_accept=http_accept,
+                path_info=path_info,
+                failures_since_start=failures_since_start,
+                attempt_time=now(),
+            )
 
-                log.info(
-                    'AXES: Repeated login failure by %s. Count = %d of %d',
-                    client_str,
-                    failures,
-                    settings.AXES_FAILURE_LIMIT,
-                )
+            log.info(
+                'AXES: Repeated login failure by %s. Count = %d of %d',
+                client_str,
+                failures_since_start,
+                settings.AXES_FAILURE_LIMIT,
+            )
         else:
             # Record failed attempt. Whether or not the IP address or user agent is
             # used in counting failures is handled elsewhere, so we just record everything here.
@@ -176,7 +173,7 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
                 post_data=get_query_str(request.POST),
                 http_accept=http_accept,
                 path_info=path_info,
-                failures_since_start=failures,
+                failures_since_start=failures_since_start,
             )
 
             log.info(
