@@ -25,7 +25,7 @@ class AxesProxyHandler(AxesBaseHandler):
     implementation = None  # type: AxesBaseHandler
 
     @classmethod
-    def initialize(cls, force=False):
+    def get_implementation(cls, force=False) -> AxesBaseHandler:
         """
         Fetch and initialize configured handler implementation and memoize it to avoid reinitialization.
 
@@ -33,32 +33,29 @@ class AxesProxyHandler(AxesBaseHandler):
         """
 
         if force or not cls.implementation:
-            cls.implementation = cls.get_implementation()
-
-    @classmethod
-    def get_implementation(cls) -> AxesBaseHandler:
-        return import_string(settings.AXES_HANDLER)()
+            cls.implementation = import_string(settings.AXES_HANDLER)()
+        return cls.implementation
 
     @classmethod
     def is_allowed_to_authenticate(cls, request: HttpRequest, credentials: Optional[Dict[str, Any]] = None) -> bool:
-        return cls.implementation.is_allowed_to_authenticate(request, credentials)
+        return cls.get_implementation().is_allowed_to_authenticate(request, credentials)
 
     @classmethod
     def user_login_failed(cls, sender: Any, credentials: Dict[str, Any], request: HttpRequest, **kwargs):
-        return cls.implementation.user_login_failed(sender, credentials, request, **kwargs)
+        return cls.get_implementation().user_login_failed(sender, credentials, request, **kwargs)
 
     @classmethod
     def user_logged_in(cls, sender: Any, request: HttpRequest, user, **kwargs):
-        return cls.implementation.user_logged_in(sender, request, user, **kwargs)
+        return cls.get_implementation().user_logged_in(sender, request, user, **kwargs)
 
     @classmethod
     def user_logged_out(cls, sender: Any, request: HttpRequest, user, **kwargs):
-        return cls.implementation.user_logged_out(sender, request, user, **kwargs)
+        return cls.get_implementation().user_logged_out(sender, request, user, **kwargs)
 
     @classmethod
     def post_save_access_attempt(cls, instance, **kwargs):
-        return cls.implementation.post_save_access_attempt(instance, **kwargs)
+        return cls.get_implementation().post_save_access_attempt(instance, **kwargs)
 
     @classmethod
     def post_delete_access_attempt(cls, instance, **kwargs):
-        return cls.implementation.post_delete_access_attempt(instance, **kwargs)
+        return cls.get_implementation().post_delete_access_attempt(instance, **kwargs)

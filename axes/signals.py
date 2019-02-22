@@ -48,5 +48,5 @@ def handle_setting_changed(sender, setting, value, enter, **kwargs):  # pylint: 
     in e.g. application reconfiguration or during testing.
     """
 
-    if enter and setting == 'AXES_HANDLER':
-        AxesProxyHandler.initialize(force=enter)
+    if setting == 'AXES_HANDLER':
+        AxesProxyHandler.get_implementation(force=True)

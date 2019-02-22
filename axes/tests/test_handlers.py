@@ -3,19 +3,15 @@ from unittest.mock import MagicMock, patch
 from django.http import HttpRequest
 from django.test import TestCase, override_settings
 
-from axes.handlers.base import AxesBaseHandler
 from axes.handlers.proxy import AxesProxyHandler
 from axes.models import AccessAttempt
 
 
 class AxesBaseHandlerTestCase(TestCase):
+    @override_settings(AXES_HANDLER='axes.handlers.base.AxesBaseHandler')
     def test_base_handler_raises_on_undefined_is_allowed_to_authenticate(self):
-        class FaultyHandler(AxesBaseHandler):
-            pass
-
         with self.assertRaises(NotImplementedError):
-            handler = FaultyHandler()
-            handler.is_allowed_to_authenticate(HttpRequest(), {})
+            AxesProxyHandler.is_allowed_to_authenticate(HttpRequest(), {})
 
 
 class AxesProxyHandlerTestCase(TestCase):
@@ -28,46 +24,44 @@ class AxesProxyHandlerTestCase(TestCase):
 
     @patch('axes.handlers.proxy.AxesProxyHandler.implementation', None)
     def test_setting_changed_signal_triggers_handler_reimport(self):
-            self.assertIsNone(AxesProxyHandler().implementation)
+            self.assertIsNone(AxesProxyHandler.implementation)
 
             with self.settings(AXES_HANDLER='axes.handlers.database.AxesDatabaseHandler'):
-                self.assertIsNotNone(AxesProxyHandler().implementation)
+                self.assertIsNotNone(AxesProxyHandler.implementation)
 
     @patch('axes.handlers.proxy.AxesProxyHandler.implementation')
     def test_user_login_failed(self, handler):
         self.assertFalse(handler.user_login_failed.called)
-        AxesProxyHandler().user_login_failed(self.sender, self.credentials, self.request)
+        AxesProxyHandler.user_login_failed(self.sender, self.credentials, self.request)
         self.assertTrue(handler.user_login_failed.called)
 
     @patch('axes.handlers.proxy.AxesProxyHandler.implementation')
     def test_user_logged_in(self, handler):
         self.assertFalse(handler.user_logged_in.called)
-        AxesProxyHandler().user_logged_in(self.sender, self.request, self.user)
+        AxesProxyHandler.user_logged_in(self.sender, self.request, self.user)
         self.assertTrue(handler.user_logged_in.called)
 
     @patch('axes.handlers.proxy.AxesProxyHandler.implementation')
     def test_user_logged_out(self, handler):
         self.assertFalse(handler.user_logged_out.called)
-        AxesProxyHandler().user_logged_out(self.sender, self.request, self.user)
+        AxesProxyHandler.user_logged_out(self.sender, self.request, self.user)
         self.assertTrue(handler.user_logged_out.called)
 
     @patch('axes.handlers.proxy.AxesProxyHandler.implementation')
     def test_post_save_access_attempt(self, handler):
         self.assertFalse(handler.post_save_access_attempt.called)
-        AxesProxyHandler().post_save_access_attempt(self.instance)
+        AxesProxyHandler.post_save_access_attempt(self.instance)
         self.assertTrue(handler.post_save_access_attempt.called)
 
     @patch('axes.handlers.proxy.AxesProxyHandler.implementation')
     def test_post_delete_access_attempt(self, handler):
         self.assertFalse(handler.post_delete_access_attempt.called)
-        AxesProxyHandler().post_delete_access_attempt(self.instance)
+        AxesProxyHandler.post_delete_access_attempt(self.instance)
         self.assertTrue(handler.post_delete_access_attempt.called)
 
 
 class AxesDatabaseHandlerTestCase(TestCase):
     def setUp(self):
-        self.handler = AxesProxyHandler()
-
         self.attempt = AccessAttempt.objects.create(
             username='jane.doe',
             ip_address='127.0.0.1',
@@ -81,7 +75,7 @@ class AxesDatabaseHandlerTestCase(TestCase):
 
     @patch('axes.handlers.database.log')
     def test_user_login_failed_no_request(self, log):
-        self.handler.user_login_failed(sender=None, credentials={}, request=None)
+        AxesProxyHandler.user_login_failed(sender=None, credentials={}, request=None)
         log.warning.assert_called_with(
             'AXES: AxesDatabaseHandler.user_login_failed does not function without a request.'
         )
@@ -90,7 +84,7 @@ class AxesDatabaseHandlerTestCase(TestCase):
     @patch('axes.handlers.database.is_client_ip_address_whitelisted', return_value=True)
     @patch('axes.handlers.database.log')
     def test_user_login_failed_whitelist(self, log, _, __):
-        self.handler.user_login_failed(sender=None, credentials={}, request=self.request)
+        AxesProxyHandler.user_login_failed(sender=None, credentials={}, request=self.request)
         log.info.assert_called_with('AXES: Login failed from whitelisted IP %s.', '127.0.0.1')
 
     @patch('axes.handlers.database.get_axes_cache')
@@ -104,7 +98,7 @@ class AxesDatabaseHandlerTestCase(TestCase):
         self.assertFalse(cache.get.call_count)
         self.assertFalse(cache.set.call_count)
 
-        self.handler.post_save_access_attempt(self.attempt)
+        AxesProxyHandler.post_save_access_attempt(self.attempt)
 
         self.assertTrue(cache.get.call_count)
         self.assertTrue(cache.set.call_count)
@@ -120,7 +114,7 @@ class AxesDatabaseHandlerTestCase(TestCase):
 
         self.assertFalse(cache.get.call_count)
 
-        self.handler.user_login_failed(sender, credentials, self.request)
+        AxesProxyHandler.user_login_failed(sender, credentials, self.request)
 
         self.assertTrue(cache.get.call_count)
 

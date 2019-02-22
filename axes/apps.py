@@ -4,7 +4,6 @@ from django import apps
 
 from axes import get_version
 from axes.conf import settings
-from axes.handlers.proxy import AxesProxyHandler
 
 log = getLogger(settings.AXES_LOGGER)
 
@@ -41,7 +40,5 @@ class AppConfig(apps.AppConfig):
 
     def ready(self):
         self.initialize()
-
-        AxesProxyHandler.initialize()
 
         from axes import signals  # noqa
