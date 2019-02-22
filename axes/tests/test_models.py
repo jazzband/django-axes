@@ -20,12 +20,6 @@ class ModelsTestCase(TestCase):
     def test_access_attempt_str(self):
         self.assertIn('Access', str(self.access_attempt))
 
-    def test_access_attempt_failures(self):
-        self.assertEqual(
-            self.access_attempt.failures,
-            self.failures_since_start,
-        )
-
     def test_access_log_str(self):
         self.assertIn('Access', str(self.access_log))
 

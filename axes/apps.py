@@ -13,7 +13,7 @@ class AppConfig(apps.AppConfig):
     logging_initialized = False
 
     @classmethod
-    def log(cls):
+    def initialize(cls):
         """
         Initialize Axes logging and show version information.
 
@@ -39,7 +39,6 @@ class AppConfig(apps.AppConfig):
             log.info('AXES: blocking by IP only.')
 
     def ready(self):
-        self.log()
+        self.initialize()
 
-        from axes import signals
-        signals.ProxyHandler.initialize()
+        from axes import signals  # noqa

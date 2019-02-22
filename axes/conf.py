@@ -35,7 +35,7 @@ class MyAppConf(AppConf):
 
     DISABLE_SUCCESS_ACCESS_LOG = False
 
-    HANDLER = 'axes.handlers.AxesHandler'
+    HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
 
     LOGGER = 'axes.watch_login'
 
@@ -48,7 +48,6 @@ class MyAppConf(AppConf):
     VERBOSE = True
 
     # whitelist and blacklist
-    # TODO: convert the strings to IPv4 on startup to avoid type conversion during processing
     NEVER_LOCKOUT_WHITELIST = False
 
     NEVER_LOCKOUT_GET = False
@@ -58,6 +57,9 @@ class MyAppConf(AppConf):
     IP_WHITELIST = None
 
     IP_BLACKLIST = None
+
+    # if no attribute is set by your backend, a value is calculated dynamically with the ipware package
+    CLIENT_IP_ATTRIBUTE = 'axes_client_ip'
 
     # message to show when locked out and have cooloff enabled
     COOLOFF_MESSAGE = _('Account locked: too many login attempts. Please try again later')

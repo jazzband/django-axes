@@ -56,12 +56,8 @@ class AccessAttempt(AccessBase):
         _('Failed Logins'),
     )
 
-    @property
-    def failures(self):
-        return self.failures_since_start
-
     def __str__(self):
-        return 'Attempted Access: %s' % self.attempt_time
+        return 'Attempted Access: {}'.format(self.attempt_time)
 
     class Meta:
         verbose_name = _('access attempt')
@@ -83,7 +79,7 @@ class AccessLog(AccessBase):
     )
 
     def __str__(self):
-        return 'Access Log for %s @ %s' % (self.username, self.attempt_time)
+        return 'Access Log for {} @ {}'.format(self.username, self.attempt_time)
 
     class Meta:
         verbose_name = _('access log')

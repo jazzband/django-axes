@@ -236,7 +236,7 @@ These should be defined in your ``settings.py`` file.
   timedelta object or an integer. If an integer, will be interpreted as a
   number of hours.  Default: ``None``
 * ``AXES_HANDLER``: If set, overrides the default signal handler backend.
-  Default: ``'axes.handlers.AxesHandler'``
+  Default: ``'axes.handlers.database.AxesDatabaseHandler'``
 * ``AXES_LOGGER``: If set, specifies a logging mechanism for Axes to use.
   Default: ``'axes.watch_login'``
 * ``AXES_LOCKOUT_TEMPLATE``: If set, specifies a template to render when a
@@ -249,8 +249,10 @@ These should be defined in your ``settings.py`` file.
   Default: ``True``
 * ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
   users usernames. Default: ``username``
-* ``AXES_USERNAME_CALLABLE``: A callable function that takes two arguments:
-  ``AXES_USERNAME_CALLABLE(request, credentials)``.
+* ``AXES_USERNAME_CALLABLE``: A callable or a string path to function that takes
+  two arguments for user lookups: ``def get_username(request: HttpRequest, credentials: dict) -> str: ...``.
+  This can be any callable such as ``AXES_USERNAME_CALLABLE = lambda request, credentials: 'username'``
+  or a full Python module path to callable such as ``AXES_USERNAME_CALLABLE = 'example.get_username``.
   The ``request`` is a HttpRequest like object and the ``credentials`` is a dictionary like object.
   ``credentials`` are the ones that were passed to Django ``authenticate()`` in the login flow.
   If no function is supplied, Axes fetches the username from the ``credentials`` or ``request.POST``
@@ -268,6 +270,8 @@ These should be defined in your ``settings.py`` file.
   Default: ``False``
 * ``AXES_NEVER_LOCKOUT_WHITELIST``: If ``True``, users can always login from whitelisted IP addresses.
   Default: ``False``
+* ``AXES_CLIENT_IP_ATTRIBUTE``: A string that is used to lookup and set client IP on the request object. Default: ``'axes_client_ip'``
+* ``AXES_IP_BLACKLIST``: An iterable of IPs to be blacklisted. Takes precedence over whitelists. For example: ``AXES_IP_BLACKLIST = ['0.0.0.0']``. Default: ``None``
 * ``AXES_IP_WHITELIST``: An iterable of IPs to be whitelisted. For example: ``AXES_IP_WHITELIST = ['0.0.0.0']``. Default: ``None``
 * ``AXES_DISABLE_ACCESS_LOG``: If ``True``, disable all access logging, so the admin interface will be empty. Default: ``False``
 * ``AXES_DISABLE_SUCCESS_ACCESS_LOG``: If ``True``, successful logins will not be logged, so the access log shown in the admin interface will only list unsuccessful login attempts. Default: ``False``

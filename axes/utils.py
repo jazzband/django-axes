@@ -1,11 +1,13 @@
-from typing import Optional
+from collections import OrderedDict
 from datetime import timedelta
 from logging import getLogger
-from socket import error, inet_pton, AF_INET6
+from typing import Optional, Type
 
+from django.contrib.auth import get_user_model
 from django.core.cache import caches, BaseCache
-from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse, QueryDict
 from django.shortcuts import render
+from django.utils.module_loading import import_string
 
 import ipware.ip2
 
@@ -15,95 +17,45 @@ from axes.models import AccessAttempt
 logger = getLogger(__name__)
 
 
+def reset(ip: str = None, username: str = None) -> int:
+    """
+    Reset records that match IP or username, and return the count of removed attempts.
+    """
+
+    attempts = AccessAttempt.objects.all()
+    if ip:
+        attempts = attempts.filter(ip_address=ip)
+    if username:
+        attempts = attempts.filter(username=username)
+
+    count, _ = attempts.delete()
+
+    return count
+
+
 def get_axes_cache() -> BaseCache:
+    """
+    Get the cache instance Axes is configured to use with ``settings.AXES_CACHE`` and use ``'default'`` if not set.
+    """
+
     return caches[getattr(settings, 'AXES_CACHE', 'default')]
 
 
-def query2str(dictionary: dict, max_length: int = 1024) -> str:
+def get_cache_timeout() -> Optional[int]:
     """
-    Turns a dictionary into an easy-to-read list of key-value pairs.
+    Return the cache timeout interpreted from settings.AXES_COOLOFF_TIME.
 
-    If there is a field called password it will be excluded from the output.
+    The cache timeout can be either None if not configured or integer of seconds if configured.
 
-    The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
-    """
-
-    return '\n'.join([
-        '%s=%s' % (k, v) for k, v in dictionary.items()
-        if k != settings.AXES_PASSWORD_FORM_FIELD
-    ][:int(max_length / 2)])[:max_length]
-
-
-def get_client_str(username, ip_address, user_agent=None, path_info=None):
-    if settings.AXES_VERBOSE:
-        if path_info and isinstance(path_info, tuple):
-            path_info = path_info[0]
-
-        details = '{{user: "{0}", ip: "{1}", user-agent: "{2}", path: "{3}"}}'
-        return details.format(username, ip_address, user_agent, path_info)
-
-    if settings.AXES_ONLY_USER_FAILURES:
-        client = username
-    elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-        client = '{0} from {1}'.format(username, ip_address)
-    else:
-        client = ip_address
-
-    if settings.AXES_USE_USER_AGENT:
-        client += '(user-agent={0})'.format(user_agent)
-
-    return client
-
-
-def get_client_ip(request: HttpRequest) -> str:
-    client_ip_attribute = 'axes_client_ip'
-
-    if not hasattr(request, client_ip_attribute):
-        client_ip, _ = ipware.ip2.get_client_ip(
-            request,
-            proxy_order=settings.AXES_PROXY_ORDER,
-            proxy_count=settings.AXES_PROXY_COUNT,
-            proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
-            request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
-        )
-        setattr(request, client_ip_attribute, client_ip)
-    return getattr(request, client_ip_attribute)
-
-
-def get_client_username(request: HttpRequest, credentials: dict = None) -> str:
-    """
-    Resolve client username from the given request or credentials if supplied.
-
-    The order of preference for fetching the username is as follows:
-
-    1. If configured, use ``AXES_USERNAME_CALLABLE``, and supply ``request, credentials`` as arguments
-    2. If given, use ``credentials`` and fetch username from ``AXES_USERNAME_FORM_FIELD`` (defaults to ``username``)
-    3. Use request.POST and fetch username from ``AXES_USERNAME_FORM_FIELD`` (defaults to ``username``)
-
-    :param request: incoming Django ``HttpRequest`` or similar object from authentication backend or other source
-    :param credentials: incoming credentials ``dict`` or similar object from authentication backend or other source
+    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, or integer of hours,
+    and this function offers a unified _integer or None_ representation of that configuration
+    for use with the Django cache backends.
     """
 
-    if settings.AXES_USERNAME_CALLABLE:
-        logger.debug('Using AXES_USERNAME_CALLABLE to get username')
-        return settings.AXES_USERNAME_CALLABLE(request, credentials)
-
-    if credentials:
-        logger.debug('Using `credentials` to get username with key AXES_USERNAME_FORM_FIELD')
-        return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
-
-    logger.debug('Using `request.POST` to get username with key AXES_USERNAME_FORM_FIELD')
-    return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
-
-
-def get_client_user_agent(request: HttpRequest) -> str:
-    return request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-
-
-def get_credentials(username: str = None, **kwargs):
-    credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
-    credentials.update(kwargs)
-    return credentials
+    cool_off = get_cool_off()
+    if cool_off is None:
+        return None
+    return int(cool_off.total_seconds())
 
 
 def get_cool_off() -> Optional[timedelta]:
@@ -126,50 +78,9 @@ def get_cool_off() -> Optional[timedelta]:
     return cool_off
 
 
-def get_cache_timeout() -> Optional[int]:
+def get_cool_off_iso8601(delta: timedelta) -> str:
     """
-    Return the cache timeout interpreted from settings.AXES_COOLOFF_TIME.
-
-    The cache timeout can be either None if not configured or integer of seconds if configured.
-
-    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, or integer of hours,
-    and this function offers a unified _integer or None_ representation of that configuration
-    for use with the Django cache backends.
-    """
-
-    cool_off = get_cool_off()
-    if cool_off is None:
-        return None
-    return int(cool_off.total_seconds())
-
-
-def is_ipv6(ip: str):
-    try:
-        inet_pton(AF_INET6, ip)
-    except (OSError, error):
-        return False
-    return True
-
-
-def reset(ip: str = None, username: str = None):
-    """
-    Reset records that match IP or username, and return the count of removed attempts.
-    """
-
-    attempts = AccessAttempt.objects.all()
-    if ip:
-        attempts = attempts.filter(ip_address=ip)
-    if username:
-        attempts = attempts.filter(username=username)
-
-    count, _ = attempts.delete()
-
-    return count
-
-
-def iso8601(delta: timedelta) -> str:
-    """
-    Return datetime.timedelta translated to ISO 8601 formatted duration.
+    Return datetime.timedelta translated to ISO 8601 formatted duration for use in e.g. cool offs.
     """
 
     seconds = delta.total_seconds()
@@ -177,17 +88,198 @@ def iso8601(delta: timedelta) -> str:
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
 
-    date = '{:.0f}D'.format(days) if days else ''
+    days_str = '{:.0f}D'.format(days) if days else ''
 
-    time_values = hours, minutes, seconds
-    time_designators = 'H', 'M', 'S'
-
-    time = ''.join([
-        ('{:.0f}'.format(value) + designator)
-        for value, designator in zip(time_values, time_designators)
-        if value]
+    time_str = ''.join(
+        '{value:.0f}{designator}'.format(value=value, designator=designator)
+        for value, designator
+        in [
+            [hours, 'H'],
+            [minutes, 'M'],
+            [seconds, 'S'],
+        ]
+        if value
     )
-    return 'P' + date + ('T' + time if time else '')
+
+    if time_str:
+        template = 'P{days_str}T{time_str}'
+    else:
+        template = 'P{days_str}'
+
+    return template.format(days_str=days_str, time_str=time_str)
+
+
+def get_credentials(username: str = None, **kwargs) -> dict:
+    """
+    Calculate credentials for Axes to use internally from given username and kwargs.
+
+    Axes will set the username value into the key defined with ``settings.AXES_USERNAME_FORM_FIELD``
+    and update the credentials dictionary with the kwargs given on top of that.
+    """
+
+    credentials = {settings.AXES_USERNAME_FORM_FIELD: username}
+    credentials.update(kwargs)
+    return credentials
+
+
+def get_client_username(request: HttpRequest, credentials: dict = None) -> str:
+    """
+    Resolve client username from the given request or credentials if supplied.
+
+    The order of preference for fetching the username is as follows:
+
+    1. If configured, use ``AXES_USERNAME_CALLABLE``, and supply ``request, credentials`` as arguments
+    2. If given, use ``credentials`` and fetch username from ``AXES_USERNAME_FORM_FIELD`` (defaults to ``username``)
+    3. Use request.POST and fetch username from ``AXES_USERNAME_FORM_FIELD`` (defaults to ``username``)
+
+    :param request: incoming Django ``HttpRequest`` or similar object from authentication backend or other source
+    :param credentials: incoming credentials ``dict`` or similar object from authentication backend or other source
+    """
+
+    if settings.AXES_USERNAME_CALLABLE:
+        logger.debug('Using settings.AXES_USERNAME_CALLABLE to get username')
+
+        if callable(settings.AXES_USERNAME_CALLABLE):
+            return settings.AXES_USERNAME_CALLABLE(request, credentials)
+        if isinstance(settings.AXES_USERNAME_CALLABLE, str):
+            return import_string(settings.AXES_USERNAME_CALLABLE)(request, credentials)
+        raise TypeError('settings.AXES_USERNAME_CALLABLE needs to be a string, callable, or None.')
+
+    if credentials:
+        logger.debug('Using parameter credentials to get username with key settings.AXES_USERNAME_FORM_FIELD')
+        return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
+
+    logger.debug('Using parameter request.POST to get username with key settings.AXES_USERNAME_FORM_FIELD')
+    return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+
+
+def get_client_ip_address(request: HttpRequest) -> str:
+    """
+    Get client IP address as configured by the user.
+
+    The primary method is to fetch the reques attribute configured with the
+    ``settings.AXES_IP_ATTRIBUTE`` that can be set by the user on the view layer.
+
+    If the ``settings.AXES_IP_ATTRIBUTE`` is not set, the ``ipware`` package will be utilized to resolve the address
+    according to the client IP configurations that can be defined by the user to suit the reverse proxy configuration
+    that is used in the users HTTP proxy or *aaS service layers. Refer to the documentation for more information.
+    """
+
+    client_ip_attribute = settings.AXES_CLIENT_IP_ATTRIBUTE
+
+    if not hasattr(request, client_ip_attribute):
+        client_ip, _ = ipware.ip2.get_client_ip(
+            request,
+            proxy_order=settings.AXES_PROXY_ORDER,
+            proxy_count=settings.AXES_PROXY_COUNT,
+            proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
+            request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
+        )
+
+        setattr(request, client_ip_attribute, client_ip)
+
+    return getattr(request, client_ip_attribute)
+
+
+def get_client_user_agent(request: HttpRequest) -> str:
+    return request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
+
+
+def get_client_path_info(request: HttpRequest) -> str:
+    return request.META.get('PATH_INFO', '<unknown>')[:255]
+
+
+def get_client_http_accept(request: HttpRequest) -> str:
+    return request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
+
+
+def get_client_parameters(username: str, ip_address: str, user_agent: str) -> OrderedDict:
+    """
+    Get query parameters for filtering AccessAttempt queryset.
+
+    This method returns an OrderedDict that guarantees iteration order for keys and values,
+    and can so be used in e.g. the generation of hash keys or other deterministic functions.
+    """
+
+    filter_kwargs = OrderedDict()  # type: OrderedDict
+
+    if settings.AXES_ONLY_USER_FAILURES:
+        # 1. Only individual usernames can be tracked with parametrization
+        filter_kwargs['username'] = username
+    else:
+        if settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+            # 2. A combination of username and IP address can be used as well
+            filter_kwargs['username'] = username
+            filter_kwargs['ip_address'] = ip_address
+        else:
+            # 3. Default case is to track the IP address only, which is the most secure option
+            filter_kwargs['ip_address'] = ip_address
+
+        if settings.AXES_USE_USER_AGENT:
+            # 4. The HTTP User-Agent can be used to track e.g. one browser
+            filter_kwargs['user_agent'] = user_agent
+
+    return filter_kwargs
+
+
+def get_client_str(username: str, ip_address: str, user_agent: str, path_info: str) -> str:
+    """
+    Get a readable string that can be used in e.g. logging to distinguish client requests.
+
+    Example log format would be ``{username: "example", ip_address: "127.0.0.1", path_info: "/example/"}``
+    """
+
+    client_dict = OrderedDict()  # type: OrderedDict
+
+    if settings.AXES_VERBOSE:
+        # Verbose mode logs every attribute that is available
+        client_dict['username'] = username
+        client_dict['ip_address'] = ip_address
+        client_dict['user_agent'] = user_agent
+    else:
+        # Other modes initialize the attributes that are used for the actual lockouts
+        client_dict = get_client_parameters(username, ip_address, user_agent)
+
+    # Path info is always included as last component in the client string for traceability purposes
+    if path_info and isinstance(path_info, (tuple, list)):
+        path_info = path_info[0]
+    client_dict['path_info'] = path_info
+
+    # Template the internal dictionary representation into a readable and concatenated key: "value" format
+    template = ', '.join(
+        '{key}: "{value}"'.format(key=key, value=value)
+        for key, value
+        in client_dict.items()
+    )
+
+    # Wrap the internal dict into a single {key: "value"} bracing in the output
+    # which requires double braces when done with the Python string templating system
+    # i.e. {{key: "value"}} becomes {key: "value"} when run through a .format() call
+    template = '{{' + template + '}}'
+
+    return template.format(client_dict)
+
+
+def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
+    """
+    Turns a query dictionary into an easy-to-read list of key-value pairs.
+
+    If a field is called either ``'password'`` or ``settings.AXES_PASSWORD_FORM_FIELD`` it will be excluded.
+
+    The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
+    """
+
+    query_dict = query.copy()
+    query_dict.pop('password', None)
+    query_dict.pop(settings.AXES_PASSWORD_FORM_FIELD, None)
+
+    query_str = '\n'.join(
+        '{key}={value}'.format(key=key, value=value)
+        for key, value
+        in query_dict.items()
+    )
+
+    return query_str[:max_length]
 
 
 def get_lockout_message() -> str:
@@ -196,22 +288,18 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def get_lockout_response(request: HttpRequest) -> HttpResponse:
+def get_lockout_response(request: HttpRequest, credentials: dict = None) -> HttpResponse:
+    status = 403
     context = {
         'failure_limit': settings.AXES_FAILURE_LIMIT,
-        'username': get_client_username(request) or ''
+        'username': get_client_username(request, credentials) or ''
     }
 
-    cool_off = settings.AXES_COOLOFF_TIME
+    cool_off = get_cool_off()
     if cool_off:
-        if isinstance(cool_off, (int, float)):
-            cool_off = timedelta(hours=cool_off)
-
         context.update({
-            'cooloff_time': iso8601(cool_off)
+            'cool_off': get_cool_off_iso8601(cool_off)
         })
-
-    status = 403
 
     if request.is_ajax():
         return JsonResponse(
@@ -228,6 +316,95 @@ def get_lockout_response(request: HttpRequest) -> HttpResponse:
         )
 
     if settings.AXES_LOCKOUT_URL:
-        return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
+        return HttpResponseRedirect(
+            settings.AXES_LOCKOUT_URL,
+        )
 
-    return HttpResponse(get_lockout_message(), status=status)
+    return HttpResponse(
+        get_lockout_message(),
+        status=status,
+    )
+
+
+def is_ip_address_in_whitelist(ip_address: str) -> bool:
+    if not settings.AXES_IP_WHITELIST:
+        return False
+
+    return ip_address in settings.AXES_IP_WHITELIST
+
+
+def is_ip_address_in_blacklist(ip_address: str) -> bool:
+    if not settings.AXES_IP_BLACKLIST:
+        return False
+
+    return ip_address in settings.AXES_IP_BLACKLIST
+
+
+def is_client_ip_address_whitelisted(request: HttpRequest):
+    """
+    Check if the given request refers to a whitelisted IP.
+    """
+
+    ip_address = get_client_ip_address(request)
+
+    if settings.AXES_NEVER_LOCKOUT_WHITELIST and is_ip_address_in_whitelist(ip_address):
+        return True
+
+    if settings.AXES_ONLY_WHITELIST and is_ip_address_in_whitelist(ip_address):
+        return True
+
+    return False
+
+
+def is_client_ip_address_blacklisted(request: HttpRequest) -> bool:
+    """
+    Check if the given request refers to a blacklisted IP.
+    """
+
+    ip_address = get_client_ip_address(request)
+
+    if is_ip_address_in_blacklist(ip_address):
+        return True
+
+    if settings.AXES_ONLY_WHITELIST and not is_ip_address_in_whitelist(ip_address):
+        return True
+
+    return False
+
+
+def is_client_method_whitelisted(request: HttpRequest) -> bool:
+    """
+    Check if the given request uses a whitelisted method.
+    """
+
+    if settings.AXES_NEVER_LOCKOUT_GET and request.method == 'GET':
+        return True
+
+    return False
+
+
+def is_client_username_whitelisted(request: HttpRequest, credentials: dict = None) -> bool:
+    """
+    Check if the given request or credentials refer to a whitelisted username.
+
+    A whitelisted user has the magic ``nolockout`` property set.
+
+    If the property is unknown or False or the user can not be found,
+    this implementation fails gracefully and returns True.
+    """
+
+    username_field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
+    username_value = get_client_username(request, credentials)
+    kwargs = {
+        username_field: username_value
+    }
+
+    user_model = get_user_model()
+
+    try:
+        user = user_model.objects.get(**kwargs)
+        return user.nolockout
+    except (user_model.DoesNotExist, AttributeError):
+        pass
+
+    return False
