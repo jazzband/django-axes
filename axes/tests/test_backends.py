@@ -1,12 +1,11 @@
 from unittest.mock import patch, MagicMock
 
-from django.test import TestCase
-
 from axes.backends import AxesBackend
 from axes.exceptions import AxesBackendRequestParameterRequired, AxesBackendPermissionDenied
+from axes.tests.base import AxesTestCase
 
 
-class BackendTestCase(TestCase):
+class BackendTestCase(AxesTestCase):
     def test_authenticate_raises_on_missing_request(self):
         request = None
 

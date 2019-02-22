@@ -1,73 +1,50 @@
 from datetime import timedelta
+from hashlib import md5
 from unittest.mock import patch
 
-from django.contrib.auth import get_user_model
 from django.http import HttpRequest, JsonResponse, HttpResponseRedirect, HttpResponse
-from django.test import TestCase, override_settings
+from django.test import override_settings, RequestFactory
 
 from axes import get_version
+from axes.models import AccessAttempt
+from axes.tests.base import AxesTestCase
 from axes.utils import (
-    get_cool_off_iso8601,
+    get_cache_timeout,
     get_client_str,
     get_client_username,
+    get_client_cache_key,
+    get_client_parameters,
+    get_cool_off_iso8601,
     get_lockout_response,
     is_client_ip_address_blacklisted,
+    is_client_ip_address_whitelisted,
     is_ip_address_in_blacklist,
     is_ip_address_in_whitelist,
-    get_cache_timeout,
-    is_client_username_whitelisted,
-    is_client_ip_address_whitelisted)
+    is_client_method_whitelisted)
 
 
-def get_username(request: HttpRequest, credentials: dict) -> str:
-    return 'username'
-
-
-def get_expected_client_str(*args, **kwargs):
-    client_str_template = '{{username: "{0}", ip_address: "{1}", user_agent: "{2}", path_info: "{3}"}}'
-    return client_str_template.format(*args, **kwargs)
-
-
-class VersionTestCase(TestCase):
+class VersionTestCase(AxesTestCase):
     @patch('axes.__version__', 'test')
     def test_get_version(self):
         self.assertEqual(get_version(), 'test')
 
 
-class CacheTestCase(TestCase):
+class CacheTestCase(AxesTestCase):
     @override_settings(AXES_COOLOFF_TIME=3)  # hours
-    def test_get_cache_timeout(self):
+    def test_get_cache_timeout_integer(self):
         timeout_seconds = float(60 * 60 * 3)
         self.assertEqual(get_cache_timeout(), timeout_seconds)
 
+    @override_settings(AXES_COOLOFF_TIME=timedelta(seconds=420))
+    def test_get_cache_timeout_timedelta(self):
+        self.assertEqual(get_cache_timeout(), 420)
 
-class UserTestCase(TestCase):
-    def setUp(self):
-        self.user_model = get_user_model()
-        self.user = self.user_model.objects.create(username='jane.doe')
-        self.request = HttpRequest()
-
-    def test_is_client_username_whitelisted(self):
-        with patch.object(self.user_model, 'nolockout', True, create=True):
-            self.assertTrue(is_client_username_whitelisted(
-                self.request,
-                {self.user_model.USERNAME_FIELD: self.user.username},
-            ))
-
-    def test_is_client_username_whitelisted_not(self):
-        self.assertFalse(is_client_username_whitelisted(
-            self.request,
-            {self.user_model.USERNAME_FIELD: self.user.username},
-        ))
-
-    def test_is_client_username_whitelisted_does_not_exist(self):
-        self.assertFalse(is_client_username_whitelisted(
-            self.request,
-            {self.user_model.USERNAME_FIELD: 'not.' + self.user.username},
-        ))
+    @override_settings(AXES_COOLOFF_TIME=None)
+    def test_get_cache_timeout_none(self):
+        self.assertEqual(get_cache_timeout(), None)
 
 
-class TimestampTestCase(TestCase):
+class TimestampTestCase(AxesTestCase):
     def test_iso8601(self):
         """
         Test get_cool_off_iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
@@ -97,7 +74,12 @@ class TimestampTestCase(TestCase):
                 self.assertEqual(get_cool_off_iso8601(delta), iso_duration)
 
 
-class ClientStringTestCase(TestCase):
+class ClientStringTestCase(AxesTestCase):
+    @staticmethod
+    def get_expected_client_str(*args, **kwargs):
+        client_str_template = '{{username: "{0}", ip_address: "{1}", user_agent: "{2}", path_info: "{3}"}}'
+        return client_str_template.format(*args, **kwargs)
+
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_ip_only_client_details(self):
         username = 'test@example.com'
@@ -105,7 +87,7 @@ class ClientStringTestCase(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = get_expected_client_str(username, ip_address, user_agent, path_info)
+        expected = self.get_expected_client_str(username, ip_address, user_agent, path_info)
         actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -117,7 +99,7 @@ class ClientStringTestCase(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = ('admin', 'login')
 
-        expected = get_expected_client_str(username, ip_address, user_agent, path_info[0])
+        expected = self.get_expected_client_str(username, ip_address, user_agent, path_info[0])
         actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -142,7 +124,7 @@ class ClientStringTestCase(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = get_expected_client_str(username, ip_address, user_agent, path_info)
+        expected = self.get_expected_client_str(username, ip_address, user_agent, path_info)
         actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -168,7 +150,7 @@ class ClientStringTestCase(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = get_expected_client_str(username, ip_address, user_agent, path_info)
+        expected = self.get_expected_client_str(username, ip_address, user_agent, path_info)
         actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -194,7 +176,7 @@ class ClientStringTestCase(TestCase):
         user_agent = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
         path_info = '/admin/'
 
-        expected = get_expected_client_str(username, ip_address, user_agent, path_info)
+        expected = self.get_expected_client_str(username, ip_address, user_agent, path_info)
         actual = get_client_str(username, ip_address, user_agent, path_info)
 
         self.assertEqual(expected, actual)
@@ -213,7 +195,138 @@ class ClientStringTestCase(TestCase):
         self.assertEqual(expected, actual)
 
 
-class UsernameTestCase(TestCase):
+class ClientParametersTestCase(AxesTestCase):
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=True,
+    )
+    def test_get_filter_kwargs_user(self):
+        self.assertEqual(
+            dict(get_client_parameters(self.username, self.ip_address, self.user_agent)),
+            {'username': self.username},
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=False,
+        AXES_USE_USER_AGENT=False,
+    )
+    def test_get_filter_kwargs_ip(self):
+        self.assertEqual(
+            dict(get_client_parameters(self.username, self.ip_address, self.user_agent)),
+            {'ip_address': self.ip_address},
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True,
+        AXES_USE_USER_AGENT=False,
+    )
+    def test_get_filter_kwargs_user_and_ip(self):
+        self.assertEqual(
+            dict(get_client_parameters(self.username, self.ip_address, self.user_agent)),
+            {'username': self.username, 'ip_address': self.ip_address},
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=False,
+        AXES_USE_USER_AGENT=True,
+    )
+    def test_get_filter_kwargs_ip_and_agent(self):
+        self.assertEqual(
+            dict(get_client_parameters(self.username, self.ip_address, self.user_agent)),
+            {'ip_address': self.ip_address, 'user_agent': self.user_agent},
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True,
+        AXES_USE_USER_AGENT=True,
+    )
+    def test_get_filter_kwargs_user_ip_agent(self):
+        self.assertEqual(
+            dict(get_client_parameters(self.username, self.ip_address, self.user_agent)),
+            {'username': self.username, 'ip_address': self.ip_address, 'user_agent': self.user_agent},
+        )
+
+
+class ClientCacheKeyTestCase(AxesTestCase):
+    def test_get_cache_key(self):
+        """
+        Test the cache key format.
+        """
+
+        # Getting cache key from request
+        cache_hash_key = 'axes-{}'.format(
+            md5(self.ip_address.encode()).hexdigest()
+        )
+
+        request_factory = RequestFactory()
+        request = request_factory.post(
+            '/admin/login/',
+            data={
+                'username': self.username,
+                'password': 'test',
+            },
+        )
+
+        self.assertEqual(cache_hash_key, get_client_cache_key(request))
+
+        # Getting cache key from AccessAttempt Object
+        attempt = AccessAttempt(
+            user_agent='<unknown>',
+            ip_address=self.ip_address,
+            username=self.username,
+            get_data='',
+            post_data='',
+            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+            path_info=request.META.get('PATH_INFO', '<unknown>'),
+            failures_since_start=0,
+        )
+
+        self.assertEqual(cache_hash_key, get_client_cache_key(attempt))
+
+    def test_get_cache_key_credentials(self):
+        """
+        Test the cache key format.
+        """
+
+        # Getting cache key from request
+        ip_address = self.ip_address
+        cache_hash_key = 'axes-{}'.format(
+            md5(ip_address.encode()).hexdigest()
+        )
+
+
+        request_factory = RequestFactory()
+        request = request_factory.post(
+            '/admin/login/',
+            data={
+                'username': self.username,
+                'password': 'test'
+            }
+        )
+
+        # Difference between the upper test: new call signature with credentials
+        credentials = {'username': self.username}
+
+        self.assertEqual(cache_hash_key, get_client_cache_key(request, credentials))
+
+        # Getting cache key from AccessAttempt Object
+        attempt = AccessAttempt(
+            user_agent='<unknown>',
+            ip_address=ip_address,
+            username=self.username,
+            get_data='',
+            post_data='',
+            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+            path_info=request.META.get('PATH_INFO', '<unknown>'),
+            failures_since_start=0,
+        )
+        self.assertEqual(cache_hash_key, get_client_cache_key(attempt))
+
+
+class UsernameTestCase(AxesTestCase):
     @override_settings(AXES_USERNAME_FORM_FIELD='username')
     def test_default_get_client_username(self):
         expected = 'test-username'
@@ -249,7 +362,6 @@ class UsernameTestCase(TestCase):
         provided = 'test-username'
         expected = 'prefixed-' + provided
         provided_in_credentials = 'test-credentials-username'
-        expected_in_credentials = 'prefixed-' + provided_in_credentials
 
         request = HttpRequest()
         request.POST['username'] = provided
@@ -266,7 +378,6 @@ class UsernameTestCase(TestCase):
     @override_settings(AXES_USERNAME_CALLABLE=sample_customize_username_credentials)
     def test_custom_get_client_username_from_credentials(self):
         provided = 'test-username'
-        expected = 'prefixed-' + provided
         provided_in_credentials = 'test-credentials-username'
         expected_in_credentials = 'prefixed-' + provided_in_credentials
 
@@ -305,7 +416,11 @@ class UsernameTestCase(TestCase):
         )
 
 
-class WhitelistTestCase(TestCase):
+def get_username(request: HttpRequest, credentials: dict) -> str:
+    return 'username'
+
+
+class IPWhitelistTestCase(AxesTestCase):
     def setUp(self):
         self.request = HttpRequest()
         self.request.method = 'POST'
@@ -363,7 +478,21 @@ class WhitelistTestCase(TestCase):
         self.assertFalse(is_client_ip_address_whitelisted(self.request))
 
 
-class LockoutResponseTestCase(TestCase):
+class MethodWhitelistTestCase(AxesTestCase):
+    def setUp(self):
+        self.request = HttpRequest()
+        self.request.method = 'GET'
+
+    @override_settings(AXES_NEVER_LOCKOUT_GET=True)
+    def test_is_client_method_whitelisted(self):
+        self.assertTrue(is_client_method_whitelisted(self.request))
+
+    @override_settings(AXES_NEVER_LOCKOUT_GET=False)
+    def test_is_client_method_whitelisted_not(self):
+        self.assertFalse(is_client_method_whitelisted(self.request))
+
+
+class LockoutResponseTestCase(AxesTestCase):
     def setUp(self):
         self.request = HttpRequest()
 

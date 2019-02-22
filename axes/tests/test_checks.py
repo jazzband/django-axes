@@ -1,11 +1,12 @@
 from django.core.checks import run_checks, Error
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from axes.checks import Messages, Hints, Codes
 from axes.conf import settings
+from axes.tests.base import AxesTestCase
 
 
-class CacheCheckTestCase(TestCase):
+class CacheCheckTestCase(AxesTestCase):
     @override_settings(
         AXES_CACHE='nonexistent',
     )

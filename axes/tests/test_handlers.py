@@ -1,20 +1,42 @@
 from unittest.mock import MagicMock, patch
 
 from django.http import HttpRequest
-from django.test import TestCase, override_settings
+from django.test import override_settings
+from django.utils.timezone import timedelta
 
 from axes.handlers.proxy import AxesProxyHandler
-from axes.models import AccessAttempt
+from axes.tests.base import AxesTestCase
+from axes.utils import get_client_str
 
 
-class AxesBaseHandlerTestCase(TestCase):
-    @override_settings(AXES_HANDLER='axes.handlers.base.AxesBaseHandler')
+@override_settings(AXES_HANDLER='axes.handlers.base.AxesBaseHandler')
+class AxesBaseHandlerTestCase(AxesTestCase):
     def test_base_handler_raises_on_undefined_is_allowed_to_authenticate(self):
         with self.assertRaises(NotImplementedError):
-            AxesProxyHandler.is_allowed(HttpRequest(), {})
+            AxesProxyHandler.is_allowed(self.request, {})
+
+    @override_settings(AXES_IP_BLACKLIST=['127.0.0.1'])
+    def test_is_allowed_with_blacklisted_ip_address(self):
+        self.assertFalse(AxesProxyHandler.is_allowed(self.request))
+
+    @override_settings(
+        AXES_NEVER_LOCKOUT_WHITELIST=True,
+        AXES_IP_WHITELIST=['127.0.0.1'],
+    )
+    def test_is_allowed_with_whitelisted_ip_address(self):
+        self.assertTrue(AxesProxyHandler.is_allowed(self.request))
+
+    @override_settings(AXES_NEVER_LOCKOUT_GET=True)
+    def test_is_allowed_with_whitelisted_method(self):
+        self.request.method = 'GET'
+        self.assertTrue(AxesProxyHandler.is_allowed(self.request))
+
+    @override_settings(AXES_LOCK_OUT_AT_FAILURE=False)
+    def test_is_allowed_no_lock_out(self):
+        self.assertTrue(AxesProxyHandler.is_allowed(self.request))
 
 
-class AxesProxyHandlerTestCase(TestCase):
+class AxesProxyHandlerTestCase(AxesTestCase):
     def setUp(self):
         self.sender = MagicMock()
         self.credentials = MagicMock()
@@ -60,86 +82,68 @@ class AxesProxyHandlerTestCase(TestCase):
         self.assertTrue(handler.post_delete_access_attempt.called)
 
 
-class AxesDatabaseHandlerTestCase(TestCase):
-    def setUp(self):
-        self.attempt = AccessAttempt.objects.create(
-            username='jane.doe',
-            ip_address='127.0.0.1',
-            user_agent='test-browser',
-            failures_since_start=42,
-        )
+class AxesHandlerTestCase(AxesTestCase):
+    def check_whitelist(self, log):
+        with override_settings(
+            AXES_NEVER_LOCKOUT_WHITELIST=True,
+            AXES_IP_WHITELIST=[self.ip_address],
+        ):
+            AxesProxyHandler.user_login_failed(sender=None, request=self.request, credentials=self.credentials)
+            client_str = get_client_str(self.username, self.ip_address, self.user_agent, self.path_info)
+            log.info.assert_called_with('AXES: Login failed from whitelisted client %s.', client_str)
 
-        self.request = HttpRequest()
-        self.request.method = 'POST'
-        self.request.META['REMOTE_ADDR'] = '127.0.0.1'
-
-    @patch('axes.handlers.database.log')
-    def test_user_login_failed_no_request(self, log):
+    def check_empty_request(self, log, handler):
         AxesProxyHandler.user_login_failed(sender=None, credentials={}, request=None)
-        log.warning.assert_called_with(
-            'AXES: AxesDatabaseHandler.user_login_failed does not function without a request.'
+        log.error.assert_called_with(
+            'AXES: {handler}.user_login_failed does not function without a request.'.format(handler=handler)
         )
 
-    @patch('axes.handlers.database.get_client_ip_address', return_value='127.0.0.1')
-    @patch('axes.handlers.database.is_client_ip_address_whitelisted', return_value=True)
+
+@override_settings(
+    AXES_HANDLER='axes.handlers.database.AxesDatabaseHandler',
+    AXES_COOLOFF_TIME=timedelta(seconds=1),
+    AXES_RESET_ON_SUCCESS=True,
+)
+class AxesDatabaseHandlerTestCase(AxesHandlerTestCase):
+    @override_settings(AXES_RESET_ON_SUCCESS=True)
+    def test_handler(self):
+        self.check_handler()
+
+    @override_settings(AXES_RESET_ON_SUCCESS=False)
+    def test_handler_without_reset(self):
+        self.check_handler()
+
     @patch('axes.handlers.database.log')
-    def test_user_login_failed_whitelist(self, log, _, __):
-        AxesProxyHandler.user_login_failed(sender=None, credentials={}, request=self.request)
-        log.info.assert_called_with('AXES: Login failed from whitelisted IP %s.', '127.0.0.1')
+    def test_empty_request(self, log):
+        self.check_empty_request(log, 'AxesDatabaseHandler')
 
-    @patch('axes.handlers.database.get_axes_cache')
-    def test_post_save_access_attempt_updates_cache(self, get_cache):
-        cache = MagicMock()
-        cache.get.return_value = None
-        cache.set.return_value = None
+    @patch('axes.handlers.database.log')
+    def test_whitelist(self, log):
+        self.check_whitelist(log)
 
-        get_cache.return_value = cache
+    @patch('axes.handlers.database.is_user_attempt_whitelisted', return_value=True)
+    def test_user_whitelisted(self, is_whitelisted):
+        self.assertFalse(AxesProxyHandler().is_locked(self.request, self.credentials))
+        self.assertEqual(1, is_whitelisted.call_count)
 
-        self.assertFalse(cache.get.call_count)
-        self.assertFalse(cache.set.call_count)
 
-        AxesProxyHandler.post_save_access_attempt(self.attempt)
+@override_settings(
+    AXES_HANDLER='axes.handlers.cache.AxesCacheHandler',
+    AXES_COOLOFF_TIME=timedelta(seconds=1),
+)
+class AxesCacheHandlerTestCase(AxesHandlerTestCase):
+    @override_settings(AXES_RESET_ON_SUCCESS=True)
+    def test_handler(self):
+        self.check_handler()
 
-        self.assertTrue(cache.get.call_count)
-        self.assertTrue(cache.set.call_count)
+    @override_settings(AXES_RESET_ON_SUCCESS=False)
+    def test_handler_without_reset(self):
+        self.check_handler()
 
-    @patch('axes.handlers.database.get_axes_cache')
-    def test_user_login_failed_utilizes_cache(self, get_cache):
-        cache = MagicMock()
-        cache.get.return_value = 1
-        get_cache.return_value = cache
+    @patch('axes.handlers.cache.log')
+    def test_empty_request(self, log):
+        self.check_empty_request(log, 'AxesCacheHandler')
 
-        sender = MagicMock()
-        credentials = {'username': self.attempt.username}
-
-        self.assertFalse(cache.get.call_count)
-
-        AxesProxyHandler.user_login_failed(sender, credentials, self.request)
-
-        self.assertTrue(cache.get.call_count)
-
-    @override_settings(AXES_LOCK_OUT_AT_FAILURE=True)
-    @override_settings(AXES_FAILURE_LIMIT=40)
-    @patch('axes.handlers.database.get_axes_cache')
-    def test_is_already_locked_cache(self, get_cache):
-        cache = MagicMock()
-        cache.get.return_value = 42
-        get_cache.return_value = cache
-
-        self.assertFalse(AxesProxyHandler.is_allowed(self.request, {}))
-
-    @override_settings(AXES_LOCK_OUT_AT_FAILURE=False)
-    @override_settings(AXES_FAILURE_LIMIT=40)
-    @patch('axes.handlers.database.get_axes_cache')
-    def test_is_already_locked_do_not_lock_out_at_failure(self, get_cache):
-        cache = MagicMock()
-        cache.get.return_value = 42
-        get_cache.return_value = cache
-
-        self.assertTrue(AxesProxyHandler.is_allowed(self.request, {}))
-
-    @override_settings(AXES_NEVER_LOCKOUT_GET=True)
-    def test_is_already_locked_never_lockout_get(self):
-        self.request.method = 'GET'
-
-        self.assertTrue(AxesProxyHandler.is_allowed(self.request, {}))
+    @patch('axes.handlers.cache.log')
+    def test_whitelist(self, log):
+        self.check_whitelist(log)

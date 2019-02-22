@@ -1,6 +1,12 @@
-from typing import Any, Dict, Optional
-
 from django.http import HttpRequest
+from django.utils.timezone import datetime
+
+from axes.conf import settings
+from axes.utils import (
+    is_client_ip_address_blacklisted,
+    is_client_ip_address_whitelisted,
+    is_client_method_whitelisted,
+)
 
 
 class AxesBaseHandler:  # pylint: disable=unused-argument
@@ -11,7 +17,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
     and define the class to be used with ``settings.AXES_HANDLER = 'dotted.full.path.to.YourClass'``.
     """
 
-    def is_allowed(self, request: HttpRequest, credentials: Optional[Dict[str, Any]] = None) -> bool:
+    def is_allowed(self, request: HttpRequest, credentials: dict = None) -> bool:
         """
         Check if the user is allowed to access or use given functionality such as a login view or authentication.
 
@@ -26,9 +32,18 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         and inspiration on some common checks and access restrictions before writing your own implementation.
         """
 
-        raise NotImplementedError('The Axes handler class needs a method definition for is_allowed')
+        if self.is_blacklisted(request, credentials):
+            return False
 
-    def user_login_failed(self, sender, credentials: Dict[str, Any], request: HttpRequest, **kwargs):
+        if self.is_whitelisted(request, credentials):
+            return True
+
+        if self.is_locked(request, credentials):
+            return False
+
+        return True
+
+    def user_login_failed(self, sender, credentials: dict, request: HttpRequest = None, **kwargs):
         """
         Handle the Django user_login_failed authentication signal.
         """
@@ -52,3 +67,43 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         """
         Handle the Axes AccessAttempt object post delete signal.
         """
+
+    def is_blacklisted(self, request: HttpRequest, credentials: dict = None) -> bool:  # pylint: disable=unused-argument
+        """
+        Check if the request or given credentials are blacklisted from access.
+        """
+
+        if is_client_ip_address_blacklisted(request):
+            return True
+
+        return False
+
+    def is_whitelisted(self, request: HttpRequest, credentials: dict = None) -> bool:  # pylint: disable=unused-argument
+        """
+        Check if the request or given credentials are whitelisted for access.
+        """
+
+        if is_client_ip_address_whitelisted(request):
+            return True
+
+        if is_client_method_whitelisted(request):
+            return True
+
+        return False
+
+    def is_locked(self, request: HttpRequest, credentials: dict = None, attempt_time: datetime = None) -> bool:
+        """
+        Check if the request or given credentials are locked.
+        """
+
+        if settings.AXES_LOCK_OUT_AT_FAILURE:
+            return self.get_failures(request, credentials, attempt_time) >= settings.AXES_FAILURE_LIMIT
+
+        return False
+
+    def get_failures(self, request: HttpRequest, credentials: dict = None, attempt_time: datetime = None) -> int:
+        """
+        Check the number of failures associated to the given request and credentials.
+        """
+
+        raise NotImplementedError('The Axes handler class needs a method definition for get_failures')

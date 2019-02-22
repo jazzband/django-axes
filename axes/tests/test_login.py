@@ -1,15 +1,19 @@
 """
-Test access from purely the
+Integration tests for the login handling.
+
+TODO: Clean up the tests in this module.
 """
 
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 from axes.conf import settings
+from axes.models import AccessLog, AccessAttempt
+from axes.tests.base import AxesTestCase
 
 
-class LoginTestCase(TestCase):
+class LoginTestCase(AxesTestCase):
     """
     Test for lockouts under different configurations and circumstances to prevent false positives and false negatives.
 
@@ -21,7 +25,15 @@ class LoginTestCase(TestCase):
     IP_2 = '10.2.2.2'
     USER_1 = 'valid-user-1'
     USER_2 = 'valid-user-2'
+    EMAIL_1 = 'valid-email-1@example.com'
+    EMAIL_2 = 'valid-email-2@example.com'
+
+    VALID_USERNAME = USER_1
+    VALID_EMAIL = EMAIL_1
     VALID_PASSWORD = 'valid-password'
+
+    VALID_IP_ADDRESS = IP_1
+
     WRONG_PASSWORD = 'wrong-password'
     LOCKED_MESSAGE = 'Account locked: too many login attempts.'
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
@@ -38,7 +50,6 @@ class LoginTestCase(TestCase):
         post_data = {
             'username': username,
             'password': password,
-            'this_is_the_login_form': 1,
         }
 
         post_data.update(kwargs)
@@ -70,16 +81,118 @@ class LoginTestCase(TestCase):
         Create two valid users for authentication.
         """
 
-        self.user = get_user_model().objects.create_superuser(
-            username=self.USER_1,
-            email='test_1@example.com',
-            password=self.VALID_PASSWORD,
-        )
-        self.user = get_user_model().objects.create_superuser(
+        super().setUp()
+
+        self.user2 = get_user_model().objects.create_superuser(
             username=self.USER_2,
-            email='test_2@example.com',
+            email=self.EMAIL_2,
             password=self.VALID_PASSWORD,
+            is_staff=True,
+            is_superuser=True,
         )
+
+    def test_login(self):
+        """
+        Test a valid login for a real username.
+        """
+
+        response = self._login(self.username, self.password)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True)
+
+    def test_lockout_limit_once(self):
+        """
+        Test the login lock trying to login one more time than failure limit.
+        """
+
+        response = self.lockout()
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+
+    def test_lockout_limit_many(self):
+        """
+        Test the login lock trying to login a lot of times more than failure limit.
+        """
+
+        self.lockout()
+
+        for _ in range(settings.AXES_FAILURE_LIMIT):
+            response = self.login()
+            self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+
+    @override_settings(AXES_RESET_ON_SUCCESS=False)
+    def test_reset_on_success_false(self):
+        self.almost_lockout()
+        self.login(is_valid_username=True, is_valid_password=True)
+
+        response = self.login()
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+        self.assertTrue(AccessAttempt.objects.count())
+
+    @override_settings(AXES_RESET_ON_SUCCESS=True)
+    def test_reset_on_success_true(self):
+        self.almost_lockout()
+        self.assertTrue(AccessAttempt.objects.count())
+
+        self.login(is_valid_username=True, is_valid_password=True)
+        self.assertFalse(AccessAttempt.objects.count())
+
+        response = self.lockout()
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+        self.assertTrue(AccessAttempt.objects.count())
+
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    def test_lockout_by_combination_user_and_ip(self):
+        """
+        Test login failure when AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True.
+        """
+
+        # test until one try before the limit
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+            response = self.login(
+                is_valid_username=True,
+                is_valid_password=False,
+            )
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
+
+        # So, we shouldn't have gotten a lock-out yet.
+        # But we should get one now
+        response = self.login(is_valid_username=True, is_valid_password=False)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    def test_lockout_by_only_user_failures(self):
+        """
+        Test login failure when AXES_ONLY_USER_FAILURES is True.
+        """
+
+        # test until one try before the limit
+        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+            response = self._login(self.username, self.WRONG_PASSWORD)
+
+            # Check if we are in the same login page
+            self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
+
+        # So, we shouldn't have gotten a lock-out yet.
+        # But we should get one now
+        response = self._login(self.username, self.WRONG_PASSWORD)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+
+        # reset the username only and make sure we can log in now even though our IP has failed each time
+        self.reset(username=self.username)
+
+        response = self._login(self.username, self.password)
+
+        # Check if we are still in the login page
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True)
+
+        # now create failure_limit + 1 failed logins and then we should still
+        # be able to login with valid_username
+        for _ in range(settings.AXES_FAILURE_LIMIT):
+            response = self._login(self.username, self.password)
+
+        # Check if we can still log in with valid user
+        response = self._login(self.username, self.password)
+        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True)
 
     # Test for true and false positives when blocking by IP *OR* user (default)
     # Cache disabled. Default settings.

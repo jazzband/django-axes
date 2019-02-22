@@ -1,9 +1,9 @@
 from collections import OrderedDict
 from datetime import timedelta
+from hashlib import md5
 from logging import getLogger
-from typing import Optional, Type
+from typing import Any, Optional, Type, Union
 
-from django.contrib.auth import get_user_model
 from django.core.cache import caches, BaseCache
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse, QueryDict
 from django.shortcuts import render
@@ -12,25 +12,8 @@ from django.utils.module_loading import import_string
 import ipware.ip2
 
 from axes.conf import settings
-from axes.models import AccessAttempt
 
 logger = getLogger(__name__)
-
-
-def reset(ip: str = None, username: str = None) -> int:
-    """
-    Reset records that match IP or username, and return the count of removed attempts.
-    """
-
-    attempts = AccessAttempt.objects.all()
-    if ip:
-        attempts = attempts.filter(ip_address=ip)
-    if username:
-        attempts = attempts.filter(username=username)
-
-    count, _ = attempts.delete()
-
-    return count
 
 
 def get_axes_cache() -> BaseCache:
@@ -383,28 +366,28 @@ def is_client_method_whitelisted(request: HttpRequest) -> bool:
     return False
 
 
-def is_client_username_whitelisted(request: HttpRequest, credentials: dict = None) -> bool:
+def get_client_cache_key(request_or_attempt: Union[HttpRequest, Any], credentials: dict = None) -> str:
     """
-    Check if the given request or credentials refer to a whitelisted username.
+    Build cache key name from request or AccessAttempt object.
 
-    A whitelisted user has the magic ``nolockout`` property set.
-
-    If the property is unknown or False or the user can not be found,
-    this implementation fails gracefully and returns True.
+    :param request_or_attempt: HttpRequest or AccessAttempt object
+    :param credentials: credentials containing user information
+    :return cache_key: Hash key that is usable for Django cache backends
     """
 
-    username_field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
-    username_value = get_client_username(request, credentials)
-    kwargs = {
-        username_field: username_value
-    }
+    if isinstance(request_or_attempt, HttpRequest):
+        username = get_client_username(request_or_attempt, credentials)
+        ip_address = get_client_ip_address(request_or_attempt)
+        user_agent = get_client_user_agent(request_or_attempt)
+    else:
+        username = request_or_attempt.username
+        ip_address = request_or_attempt.ip_address
+        user_agent = request_or_attempt.user_agent
 
-    user_model = get_user_model()
+    filter_kwargs = get_client_parameters(username, ip_address, user_agent)
 
-    try:
-        user = user_model.objects.get(**kwargs)
-        return user.nolockout
-    except (user_model.DoesNotExist, AttributeError):
-        pass
+    cache_key_components = ''.join(filter_kwargs.values())
+    cache_key_digest = md5(cache_key_components.encode()).hexdigest()
+    cache_key = 'axes-{}'.format(cache_key_digest)
 
-    return False
+    return cache_key

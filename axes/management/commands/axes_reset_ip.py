@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from axes.utils import reset
+from axes.attempts import reset
 
 
 class Command(BaseCommand):
