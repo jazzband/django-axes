@@ -28,7 +28,6 @@ from axes.signals import user_locked_out
 from axes.utils import reset
 
 
-@override_settings(AXES_COOLOFF_TIME=datetime.timedelta(seconds=2))
 class AccessAttemptTest(TestCase):
     """
     Test case using custom settings for testing.
@@ -143,7 +142,8 @@ class AccessAttemptTest(TestCase):
         self.assertNotEqual(AccessLog.objects.latest('id').logout_time, None)
         self.assertContains(response, 'Logged out')
 
-    def test_cooling_off(self):
+    @override_settings(AXES_COOLOFF_TIME=datetime.timedelta(milliseconds=420))
+    def test_cool_off_on_login(self):
         """
         Test if the cooling time allows a user to login.
         """
@@ -156,16 +156,47 @@ class AccessAttemptTest(TestCase):
         # It should be possible to login again, make sure it is.
         self.test_valid_login()
 
-    def test_cooling_off_for_trusted_user(self):
-        """
-        Test the cooling time for a trusted user.
-        """
+    @override_settings(AXES_COOLOFF_TIME=datetime.timedelta(milliseconds=420))
+    @patch('axes.attempts.get_axes_cache')
+    def test_cooling_off_on_get_user_attempts_updates_cache(self, get_cache):
+        cache = MagicMock()
+        cache.get.return_value = 1
+        cache.set.return_value = None
+        get_cache.return_value = cache
 
-        # Test successful login-logout, this makes the user trusted.
-        self.test_valid_logout()
+        attempt = AccessAttempt.objects.create(
+            username=self.username,
+            ip_address=self.ip_address,
+            user_agent=self.user_agent,
+            failures_since_start=0,
+        )
 
-        # Try the cooling off time
-        self.test_cooling_off()
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = self.ip_address
+        request.META['HTTP_USER_AGENT'] = self.user_agent
+        credentials = {'username': self.username}
+
+        # Check that the function does nothing if cool off has not passed
+        cache.get.assert_not_called()
+        cache.set.assert_not_called()
+
+        self.assertEqual(
+            list(get_user_attempts(request, credentials)),
+            [attempt],
+        )
+
+        cache.get.assert_not_called()
+        cache.set.assert_not_called()
+
+        time.sleep(settings.AXES_COOLOFF_TIME.total_seconds())
+
+        self.assertEqual(
+            list(get_user_attempts(request, credentials)),
+            [],
+        )
+
+        self.assertTrue(cache.get.call_count)
+        self.assertTrue(cache.set.call_count)
 
     def test_long_user_agent_valid(self):
         """
@@ -271,47 +302,6 @@ class AccessAttemptTest(TestCase):
             dict(get_filter_kwargs(self.username, self.ip_address, self.user_agent)),
             {'username': self.username, 'ip_address': self.ip_address, 'user_agent': self.user_agent},
         )
-
-    @patch('axes.attempts.get_axes_cache')
-    def test_get_user_attempts_updates_cache(self, get_cache):
-        cache = MagicMock()
-        cache.get.return_value = 1
-        cache.set.return_value = None
-        get_cache.return_value = cache
-
-        attempt = AccessAttempt.objects.create(
-            username=self.username,
-            ip_address=self.ip_address,
-            user_agent=self.user_agent,
-            failures_since_start=0,
-        )
-
-        request = HttpRequest()
-        request.META['REMOTE_ADDR'] = self.ip_address
-        request.META['HTTP_USER_AGENT'] = self.user_agent
-        credentials = {'username': self.username}
-
-        # Check that the function does nothing if cool off has not passed
-        cache.get.assert_not_called()
-        cache.set.assert_not_called()
-
-        self.assertEqual(
-            list(get_user_attempts(request, credentials)),
-            [attempt],
-        )
-
-        cache.get.assert_not_called()
-        cache.set.assert_not_called()
-
-        time.sleep(settings.AXES_COOLOFF_TIME.seconds)
-
-        self.assertEqual(
-            list(get_user_attempts(request, credentials)),
-            [],
-        )
-
-        self.assertTrue(cache.get.call_count)
-        self.assertTrue(cache.set.call_count)
 
     @patch('axes.utils.get_client_ip', return_value='127.0.0.1')
     def test_get_cache_key(self, _):

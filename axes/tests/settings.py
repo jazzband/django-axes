@@ -32,7 +32,7 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
 
-ROOT_URLCONF = 'axes.test_urls'
+ROOT_URLCONF = 'axes.tests.urls'
 
 INSTALLED_APPS = [
     'django.contrib.auth',
