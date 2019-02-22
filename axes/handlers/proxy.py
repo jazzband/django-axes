@@ -25,7 +25,7 @@ class AxesProxyHandler(AxesBaseHandler):
     implementation = None  # type: AxesBaseHandler
 
     @classmethod
-    def get_implementation(cls, force=False) -> AxesBaseHandler:
+    def get_implementation(cls, force: bool = False) -> AxesBaseHandler:
         """
         Fetch and initialize configured handler implementation and memoize it to avoid reinitialization.
 
@@ -37,8 +37,8 @@ class AxesProxyHandler(AxesBaseHandler):
         return cls.implementation
 
     @classmethod
-    def is_allowed_to_authenticate(cls, request: HttpRequest, credentials: Optional[Dict[str, Any]] = None) -> bool:
-        return cls.get_implementation().is_allowed_to_authenticate(request, credentials)
+    def is_allowed(cls, request: HttpRequest, credentials: Optional[Dict[str, Any]] = None) -> bool:
+        return cls.get_implementation().is_allowed(request, credentials)
 
     @classmethod
     def user_login_failed(cls, sender: Any, credentials: Dict[str, Any], request: HttpRequest, **kwargs):

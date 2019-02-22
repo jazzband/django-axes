@@ -36,7 +36,7 @@ class AxesBackend(ModelBackend):
 
         credentials = get_credentials(username=username, password=password, **kwargs)
 
-        if AxesProxyHandler.is_allowed_to_authenticate(request, credentials):
+        if AxesProxyHandler.is_allowed(request, credentials):
             return
 
         # Locked out, don't try to authenticate, just update response_context and return.

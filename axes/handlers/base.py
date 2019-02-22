@@ -11,16 +11,22 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
     and define the class to be used with ``settings.AXES_HANDLER = 'dotted.full.path.to.YourClass'``.
     """
 
-    def is_allowed_to_authenticate(
-            self,
-            request: HttpRequest,
-            credentials: Optional[Dict[str, Any]] = None,
-    ) -> bool:
+    def is_allowed(self, request: HttpRequest, credentials: Optional[Dict[str, Any]] = None) -> bool:
         """
-        Check if the user is allowed to authenticate into the site.
+        Check if the user is allowed to access or use given functionality such as a login view or authentication.
+
+        This method is abstract and other backends can specialize it as needed, but the default implementation
+        checks if the user has attempted to authenticate into the site too many times through the
+        Django authentication backends and returns false if user exceeds the configured Axes thresholds.
+
+        This checker can implement arbitrary checks such as IP whitelisting or blacklisting,
+        request frequency checking, failed attempt monitoring or similar functions.
+
+        Please refer to the ``axes.handlers.database.AxesDatabaseHandler`` for the default implementation
+        and inspiration on some common checks and access restrictions before writing your own implementation.
         """
 
-        raise NotImplementedError('The Axes handler class needs a method definition for is_allowed_to_authenticate')
+        raise NotImplementedError('The Axes handler class needs a method definition for is_allowed')
 
     def user_login_failed(self, sender, credentials: Dict[str, Any], request: HttpRequest, **kwargs):
         """

@@ -11,7 +11,7 @@ class AxesBaseHandlerTestCase(TestCase):
     @override_settings(AXES_HANDLER='axes.handlers.base.AxesBaseHandler')
     def test_base_handler_raises_on_undefined_is_allowed_to_authenticate(self):
         with self.assertRaises(NotImplementedError):
-            AxesProxyHandler.is_allowed_to_authenticate(HttpRequest(), {})
+            AxesProxyHandler.is_allowed(HttpRequest(), {})
 
 
 class AxesProxyHandlerTestCase(TestCase):
@@ -126,7 +126,7 @@ class AxesDatabaseHandlerTestCase(TestCase):
         cache.get.return_value = 42
         get_cache.return_value = cache
 
-        self.assertFalse(AxesProxyHandler.is_allowed_to_authenticate(self.request, {}))
+        self.assertFalse(AxesProxyHandler.is_allowed(self.request, {}))
 
     @override_settings(AXES_LOCK_OUT_AT_FAILURE=False)
     @override_settings(AXES_FAILURE_LIMIT=40)
@@ -136,10 +136,10 @@ class AxesDatabaseHandlerTestCase(TestCase):
         cache.get.return_value = 42
         get_cache.return_value = cache
 
-        self.assertTrue(AxesProxyHandler.is_allowed_to_authenticate(self.request, {}))
+        self.assertTrue(AxesProxyHandler.is_allowed(self.request, {}))
 
     @override_settings(AXES_NEVER_LOCKOUT_GET=True)
     def test_is_already_locked_never_lockout_get(self):
         self.request.method = 'GET'
 
-        self.assertTrue(AxesProxyHandler.is_allowed_to_authenticate(self.request, {}))
+        self.assertTrue(AxesProxyHandler.is_allowed(self.request, {}))

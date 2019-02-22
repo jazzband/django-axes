@@ -42,7 +42,7 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
     """
 
-    def is_allowed_to_authenticate(self, request: HttpRequest, credentials: Optional[Dict[str, Any]] = None) -> bool:
+    def is_allowed(self, request: HttpRequest, credentials: Optional[Dict[str, Any]] = None) -> bool:
         """
         Check if the request or given credentials are already locked by Axes.
 
@@ -184,7 +184,7 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
                 attempt_time=attempt_time,
             )
 
-        if not self.is_allowed_to_authenticate(request, credentials):
+        if not self.is_allowed(request, credentials):
             log.warning(
                 'AXES: Locked out %s after repeated login failures.',
                 client_str,

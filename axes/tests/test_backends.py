@@ -13,7 +13,7 @@ class BackendTestCase(TestCase):
         with self.assertRaises(AxesBackendRequestParameterRequired):
             AxesBackend().authenticate(request)
 
-    @patch('axes.handlers.proxy.AxesProxyHandler.is_allowed_to_authenticate', return_value=False)
+    @patch('axes.handlers.proxy.AxesProxyHandler.is_allowed', return_value=False)
     def test_authenticate_raises_on_locked_request(self, _):
         request = MagicMock()
 
