@@ -1,13 +1,13 @@
 from unittest.mock import patch, MagicMock
 
 from django.http import HttpResponse
-from django.test import TestCase
 
 from axes.exceptions import AxesSignalPermissionDenied
 from axes.middleware import AxesMiddleware
+from axes.tests.base import AxesTestCase
 
 
-class MiddlewareTestCase(TestCase):
+class MiddlewareTestCase(AxesTestCase):
     SUCCESS_RESPONSE = HttpResponse(status=200, content='Dispatched')
     LOCKOUT_RESPONSE = HttpResponse(status=403, content='Locked out')
 

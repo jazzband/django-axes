@@ -1,12 +1,12 @@
 from io import StringIO
 
 from django.core.management import call_command
-from django.test import TestCase
 
 from axes.models import AccessAttempt
+from axes.tests.base import AxesTestCase
 
 
-class ManagementCommandTestCase(TestCase):
+class ManagementCommandTestCase(AxesTestCase):
     def setUp(self):
         AccessAttempt.objects.create(
             username='jane.doe',

@@ -1,12 +1,12 @@
 from unittest.mock import MagicMock, patch
 
 from django.http import HttpResponse
-from django.test import TestCase
 
 from axes.decorators import axes_dispatch, axes_form_invalid
+from axes.tests.base import AxesTestCase
 
 
-class DecoratorTestCase(TestCase):
+class DecoratorTestCase(AxesTestCase):
     SUCCESS_RESPONSE = HttpResponse(status=200, content='Dispatched')
     LOCKOUT_RESPONSE = HttpResponse(status=403, content='Locked out')
 

@@ -1,13 +1,18 @@
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.contrib.auth import authenticate
+from django.http import HttpRequest
+from django.test import override_settings
+from django.urls import reverse
 
 from axes.apps import AppConfig
+from axes.models import AccessAttempt, AccessLog
+from axes.tests.base import AxesTestCase
 
 
 @patch('axes.apps.AppConfig.logging_initialized', False)
 @patch('axes.apps.log')
-class AppsTestCase(TestCase):
+class AppsTestCase(AxesTestCase):
     def test_axes_config_log_re_entrant(self, log):
         """
         Test that initialize call count does not increase on repeat calls.
@@ -41,3 +46,85 @@ class AppsTestCase(TestCase):
     def test_axes_config_log_user_ip(self, log):
         AppConfig.initialize()
         log.info.assert_called_with('AXES: blocking by combination of username and IP.')
+
+
+class AccessLogTestCase(AxesTestCase):
+    def test_authenticate_invalid_parameters(self):
+        """
+        Test that logging is not done if an attempt to authenticate with a custom authentication backend fails.
+        """
+
+        request = HttpRequest()
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        authenticate(request=request, foo='bar')
+        self.assertEqual(AccessLog.objects.all().count(), 0)
+
+    def test_access_log_on_logout(self):
+        """
+        Test a valid logout and make sure the logout_time is updated.
+        """
+
+        self.login(is_valid_username=True, is_valid_password=True)
+        self.assertIsNone(AccessLog.objects.latest('id').logout_time)
+
+        response = self.client.get(reverse('admin:logout'))
+        self.assertContains(response, 'Logged out')
+
+        self.assertIsNotNone(AccessLog.objects.latest('id').logout_time)
+
+    def test_log_data_truncated(self):
+        """
+        Test that get_query_str properly truncates data to the max_length (default 1024).
+        """
+
+        # An impossibly large post dict
+        extra_data = {'a' * x: x for x in range(1024)}
+        self.login(**extra_data)
+        self.assertEqual(
+            len(AccessAttempt.objects.latest('id').post_data), 1024
+        )
+
+    @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
+    def test_valid_logout_without_success_log(self):
+        AccessLog.objects.all().delete()
+
+        response = self.login(is_valid_username=True, is_valid_password=True)
+        response = self.client.get(reverse('admin:logout'))
+
+        self.assertEqual(AccessLog.objects.all().count(), 0)
+        self.assertContains(response, 'Logged out', html=True)
+
+    @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
+    def test_valid_login_without_success_log(self):
+        """
+        Test that a valid login does not generate an AccessLog when DISABLE_SUCCESS_ACCESS_LOG is True.
+        """
+
+        AccessLog.objects.all().delete()
+
+        response = self.login(is_valid_username=True, is_valid_password=True)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(AccessLog.objects.all().count(), 0)
+
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
+    def test_valid_logout_without_log(self):
+        AccessLog.objects.all().delete()
+
+        response = self.login(is_valid_username=True, is_valid_password=True)
+        response = self.client.get(reverse('admin:logout'))
+
+        self.assertEqual(AccessLog.objects.first().logout_time, None)
+        self.assertContains(response, 'Logged out', html=True)
+
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
+    def test_non_valid_login_without_log(self):
+        """
+        Test that a non-valid login does generate an AccessLog when DISABLE_ACCESS_LOG is True.
+        """
+        AccessLog.objects.all().delete()
+
+        response = self.login(is_valid_username=True, is_valid_password=False)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(AccessLog.objects.all().count(), 0)

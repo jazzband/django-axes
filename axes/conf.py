@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from appconf import AppConf
 
 
-class MyAppConf(AppConf):
+class AxesAppConf(AppConf):
     # see if the user has overridden the failure limit
     FAILURE_LIMIT = 3
 

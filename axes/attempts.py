@@ -1,51 +1,32 @@
-from hashlib import md5
 from logging import getLogger
-from typing import Union
 
+from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from django.utils.timezone import now
+from django.utils.timezone import datetime, now
 
 from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.utils import (
-    get_axes_cache,
     get_client_ip_address,
     get_client_username,
     get_client_user_agent,
-    get_cache_timeout,
-    get_cool_off,
     get_client_parameters,
+    get_cool_off,
 )
 
 log = getLogger(settings.AXES_LOGGER)
 
 
-def get_cache_key(request_or_attempt: Union[HttpRequest, AccessAttempt], credentials: dict = None) -> str:
+def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:
     """
-    Build cache key name from request or AccessAttempt object.
-
-    :param request_or_attempt: HttpRequest or AccessAttempt object
-    :param credentials: credentials containing user information
-    :return cache_key: Hash key that is usable for Django cache backends
+    Get threshold for fetching access attempts from the database.
     """
 
-    if isinstance(request_or_attempt, AccessAttempt):
-        username = request_or_attempt.username
-        ip_address = request_or_attempt.ip_address
-        user_agent = request_or_attempt.user_agent
-    else:
-        username = get_client_username(request_or_attempt, credentials)
-        ip_address = get_client_ip_address(request_or_attempt)
-        user_agent = get_client_user_agent(request_or_attempt)
+    if attempt_time is None:
+        return now() - get_cool_off()
 
-    filter_kwargs = get_client_parameters(username, ip_address, user_agent)
-
-    cache_key_components = ''.join(filter_kwargs.values())
-    cache_key_digest = md5(cache_key_components.encode()).hexdigest()
-    cache_key = 'axes-{}'.format(cache_key_digest)
-
-    return cache_key
+    return attempt_time - get_cool_off()
 
 
 def filter_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
@@ -62,35 +43,35 @@ def filter_user_attempts(request: HttpRequest, credentials: dict = None) -> Quer
     return AccessAttempt.objects.filter(**filter_kwargs)
 
 
-def get_user_attempts(request: HttpRequest, credentials: dict = None) -> QuerySet:
+def get_user_attempts(request: HttpRequest, credentials: dict = None, attempt_time: datetime = None) -> QuerySet:
     """
-    Get valid user attempts and delete expired attempts which have cool offs in the past.
+    Get valid user attempts that match the given request and credentials.
     """
 
     attempts = filter_user_attempts(request, credentials)
 
-    # If settings.AXES_COOLOFF_TIME is not configured return the attempts
-    cool_off = get_cool_off()
-    if cool_off is None:
+    if settings.AXES_COOLOFF_TIME is None:
+        log.debug('AXES: Getting all access attempts from database because no AXES_COOLOFF_TIME is configured')
         return attempts
 
-    # Else AccessAttempts that have expired need to be cleaned up from the database
-    num_deleted, _ = attempts.filter(attempt_time__lte=now() - cool_off).delete()
-    if not num_deleted:
-        return attempts
+    threshold = get_cool_off_threshold(attempt_time)
+    log.debug('AXES: Getting access attempts that are newer than %s', threshold)
+    return attempts.filter(attempt_time__gte=threshold)
 
-    # If there deletions the cache needs to be updated
-    cache_key = get_cache_key(request, credentials)
-    num_failures_cached = get_axes_cache().get(cache_key)
-    if num_failures_cached is not None:
-        get_axes_cache().set(
-            cache_key,
-            num_failures_cached - num_deleted,
-            get_cache_timeout(),
-        )
 
-    # AccessAttempts need to be refreshed from the database because of the delete before returning them
-    return attempts.all()
+def clean_expired_user_attempts(attempt_time: datetime = None) -> int:
+    """
+    Clean expired user attempts from the database.
+    """
+
+    if settings.AXES_COOLOFF_TIME is None:
+        log.debug('AXES: Skipping clean for expired access attempts because no AXES_COOLOFF_TIME is configured')
+        return 0
+
+    threshold = get_cool_off_threshold(attempt_time)
+    count, _ = AccessAttempt.objects.filter(attempt_time__lt=threshold).delete()
+    log.info('AXES: Cleaned up %s expired access attempts from database that were older than %s', count, threshold)
+    return count
 
 
 def reset_user_attempts(request: HttpRequest, credentials: dict = None) -> int:
@@ -99,6 +80,55 @@ def reset_user_attempts(request: HttpRequest, credentials: dict = None) -> int:
     """
 
     attempts = filter_user_attempts(request, credentials)
+
     count, _ = attempts.delete()
+    log.info('AXES: Reset %s access attempts from database.', count)
 
     return count
+
+
+def reset(ip: str = None, username: str = None) -> int:
+    """
+    Reset records that match IP or username, and return the count of removed attempts.
+
+    This utility method is meant to be used from the CLI or via Python API.
+    """
+
+    attempts = AccessAttempt.objects.all()
+
+    if ip:
+        attempts = attempts.filter(ip_address=ip)
+    if username:
+        attempts = attempts.filter(username=username)
+
+    count, _ = attempts.delete()
+    log.info('AXES: Reset %s access attempts from database.', count)
+
+    return count
+
+
+def is_user_attempt_whitelisted(request: HttpRequest, credentials: dict = None) -> bool:
+    """
+    Check if the given request or credentials refer to a whitelisted username.
+
+    A whitelisted user has the magic ``nolockout`` property set.
+
+    If the property is unknown or False or the user can not be found,
+    this implementation fails gracefully and returns True.
+    """
+
+    username_field = getattr(get_user_model(), 'USERNAME_FIELD', 'username')
+    username_value = get_client_username(request, credentials)
+    kwargs = {
+        username_field: username_value
+    }
+
+    user_model = get_user_model()
+
+    try:
+        user = user_model.objects.get(**kwargs)
+        return user.nolockout
+    except (user_model.DoesNotExist, AttributeError):
+        pass
+
+    return False

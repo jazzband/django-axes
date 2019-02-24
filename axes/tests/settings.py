@@ -1,3 +1,6 @@
+import os.path
+import tempfile
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -7,7 +10,11 @@ DATABASES = {
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache'
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.abspath(os.path.join(tempfile.gettempdir(), 'axes')),
+        'OPTIONS': {
+            'MAX_ENTRIES': 420,
+        }
     }
 }
 

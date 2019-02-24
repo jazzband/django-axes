@@ -3,12 +3,12 @@ from django.db import connection
 from django.db.migrations.autodetector import MigrationAutodetector
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.state import ProjectState
-from django.test import TestCase
 
 from axes.models import AccessAttempt, AccessLog
+from axes.tests.base import AxesTestCase
 
 
-class ModelsTestCase(TestCase):
+class ModelsTestCase(AxesTestCase):
     def setUp(self):
         self.failures_since_start = 42
 
@@ -24,7 +24,7 @@ class ModelsTestCase(TestCase):
         self.assertIn('Access', str(self.access_log))
 
 
-class MigrationsTestCase(TestCase):
+class MigrationsTestCase(AxesTestCase):
     def test_missing_migrations(self):
         executor = MigrationExecutor(connection)
         autodetector = MigrationAutodetector(
