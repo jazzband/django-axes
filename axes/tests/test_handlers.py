@@ -1,9 +1,9 @@
 from unittest.mock import MagicMock, patch
 
-from django.http import HttpRequest
 from django.test import override_settings
 from django.utils.timezone import timedelta
 
+from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.tests.base import AxesTestCase
 from axes.utils import get_client_str
@@ -147,3 +147,14 @@ class AxesCacheHandlerTestCase(AxesHandlerTestCase):
     @patch('axes.handlers.cache.log')
     def test_whitelist(self, log):
         self.check_whitelist(log)
+
+
+@override_settings(
+    AXES_HANDLER='axes.handlers.dummy.AxesDummyHandler',
+)
+class AxesDummyHandlerTestCase(AxesHandlerTestCase):
+    def test_handler(self):
+        for _ in range(settings.AXES_FAILURE_LIMIT):
+            self.login()
+
+        self.check_login()
