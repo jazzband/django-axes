@@ -34,10 +34,11 @@ setup(
     package_dir={'axes': 'axes'},
     python_requires='~=3.5',
     install_requires=[
-        'pytz',
         'django',
         'django-appconf',
         'django-ipware>=2.0.2',
+        'pytz',
+        'six',
     ],
     include_package_data=True,
     packages=find_packages(),

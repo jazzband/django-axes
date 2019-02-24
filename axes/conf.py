@@ -1,3 +1,13 @@
+# TODO: Remove these imports after django-appconf does not depend on django.utils.six
+try:
+    from django.utils import six  # noqa
+except ImportError:  # pragma: no cover
+    import sys
+    import warnings
+
+    sys.modules['django.utils.six'] = __import__('six')
+    warnings.warn('django.utils.six was patched for django-appconf backwards compatibility', ImportWarning)
+
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
