@@ -10,7 +10,7 @@ setup(
     description='Keep track of failed login attempts in Django-powered sites.',
     long_description='\n'.join([
         open('README.rst', encoding='utf-8').read(),
-        open('CHANGES.txt', encoding='utf-8').read(),
+        open('CHANGES.rst', encoding='utf-8').read(),
     ]),
     keywords='authentication django pci security',
     author=', '.join([
