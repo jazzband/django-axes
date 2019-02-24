@@ -24,10 +24,13 @@ class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
     Signal handler implementation that records user login attempts to cache and locks users out if necessary.
     """
 
+    def __init__(self):
+        self.cache = get_axes_cache()
+        self.cache_timeout = get_cool_off().total_seconds()
+
     def get_failures(self, request, credentials=None, attempt_time=None) -> int:
-        cache = get_axes_cache()
         cache_key = get_client_cache_key(request, credentials)
-        return cache.get(cache_key, default=0)
+        return self.cache.get(cache_key, default=0)
 
     def user_login_failed(self, sender, credentials, request=None, **kwargs):  # pylint: disable=too-many-locals
         """
@@ -65,11 +68,8 @@ class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
                 client_str,
             )
 
-        cache = get_axes_cache()
         cache_key = get_client_cache_key(request, credentials)
-        cache_timeout = get_cool_off().total_seconds()
-
-        cache.set(cache_key, failures_since_start, cache_timeout)
+        self.cache.set(cache_key, failures_since_start, self.cache_timeout)
 
         if failures_since_start >= settings.AXES_FAILURE_LIMIT:
             log.warning('AXES: Locking out %s after repeated login failures.', client_str)
@@ -98,13 +98,10 @@ class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
         log.info('AXES: Successful login by %s.', client_str)
 
         if settings.AXES_RESET_ON_SUCCESS:
-            cache = get_axes_cache()
             cache_key = get_client_cache_key(request, credentials)
-
-            failures_since_start = cache.get(cache_key, default=0)
-            log.info('AXES: Deleting %d failed login attempts by %s from cache.', failures_since_start, client_str)
-
-            cache.delete(cache_key)
+            failures_since_start = self.cache.get(cache_key, default=0)
+            self.cache.delete(cache_key)
+            log.info('AXES: Deleted %d failed login attempts by %s from cache.', failures_since_start, client_str)
 
     def user_logged_out(self, sender, request, user, **kwargs):
         username = user.get_username()
