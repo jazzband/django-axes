@@ -15,34 +15,34 @@ Changes
   This results in configuration changes, refer to the documentation.
   [aleksihakli]
 
+- Add ``AxesDatabaseHandler``, ``AxesCacheHandler``, and ``AxesDummyHandler``
+  handler backends for processing user login and logout events and failures.
+  [aleksihakli, jorlugaqui, joshua-s]
+
 - Remove automatic decoration of Django login views and forms.
   Leave decorations available for application users who wish to
   decorate their own login or other views as before.
   [aleksihakli]
 
 - Clean up code, tests, and documentation.
+  Improve test coverage and and raise
+  Codecov monitoring threshold to 90%.
   [aleksihakli]
 
-- Drop support for Python 2.7 and Python 3.4. Require Python 3.5+ from now on.
+- Drop support for Python 2.7 and Python 3.4.
+  Require minimum version of Python 3.5+ from now on.
+  Add support for PyPy 3 in the test matrix.
   [aleksihakli]
 
-- Improve tests and raise Codecov monitoring threshold to 90%.
+- Add support for string import for ``AXES_USERNAME_CALLABLE``
+  that supports dotted paths in addition to the old
+  callable type such as a function or a class method.
   [aleksihakli]
 
-- Add support for string import for ``AXES_USERNAME_CALLABLE`` that supports dotted paths
-  in addition to the old callable type such as a function or a class method.
-  [aleksihakli]
-
-- Drop old single-argument signature format for ``AXES_USERNAME_CALLABLE``.
-  From now on, the callable needs to accept two arguments, the HttpRequest and credentials
-  that are supplied to the Django ``authenticate`` method in authentication backends.
-  [aleksihakli]
-
-- Add ``AXES_NEVER_LOCKOUT_GET`` setting that allows skipping checks on GET requests.
-  [aleksihakli]
-
-- Add ``AXES_CLIENT_IP_ATTRIBUTE`` that defines where Axes fetches from and stores
-  client IP addresses in the request object throughout the request - response cycle.
+- Deprecate one argument call signature for ``AXES_USERNAME_CALLABLE``.
+  From now on, the callable needs to accept two arguments,
+  the HttpRequest and credentials that are supplied to the
+  Django ``authenticate`` method in authentication backends.
   [aleksihakli]
 
 
@@ -51,6 +51,7 @@ Changes
 
 - Improve README and documentation
   [aleksihakli]
+
 
 4.5.3 (2019-01-14)
 ------------------
