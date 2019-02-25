@@ -20,22 +20,22 @@ class Codes:
 
 @register(Tags.caches)
 def axes_cache_backend_check(app_configs, **kwargs):  # pylint: disable=unused-argument
-    errors = []
+    axes_handler = getattr(settings, 'AXES_HANDLER', '')
 
     axes_cache_key = getattr(settings, 'AXES_CACHE', 'default')
     axes_cache_config = settings.CACHES.get(axes_cache_key, {})
     axes_cache_backend = axes_cache_config.get('BACKEND', '')
 
-    axes_cache_incompatible_backends = [
+    axes_cache_backend_incompatible = [
         'django.core.cache.backends.dummy.DummyCache',
         'django.core.cache.backends.locmem.LocMemCache',
         'django.core.cache.backends.filebased.FileBasedCache',
     ]
 
-    axes_handler = getattr(settings, 'AXES_HANDLER', '')
+    errors = []
 
     if axes_handler == 'axes.handlers.cache.AxesCacheHandler':
-        if axes_cache_backend in axes_cache_incompatible_backends:
+        if axes_cache_backend in axes_cache_backend_incompatible:
             errors.append(Error(
                 msg=Messages.CACHE_INVALID,
                 hint=Hints.CACHE_INVALID,
