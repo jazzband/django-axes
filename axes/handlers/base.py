@@ -2,7 +2,7 @@ from django.http import HttpRequest
 from django.utils.timezone import datetime
 
 from axes.conf import settings
-from axes.utils import (
+from axes.helpers import (
     is_client_ip_address_blacklisted,
     is_client_ip_address_whitelisted,
     is_client_method_whitelisted,

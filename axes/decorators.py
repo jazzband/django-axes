@@ -1,7 +1,7 @@
 from functools import wraps
 
 from axes.handlers.proxy import AxesProxyHandler
-from axes.utils import get_lockout_response
+from axes.helpers import get_lockout_response
 
 
 def axes_dispatch(func):

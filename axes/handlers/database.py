@@ -15,7 +15,7 @@ from axes.exceptions import AxesSignalPermissionDenied
 from axes.handlers.base import AxesBaseHandler
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out
-from axes.utils import (
+from axes.helpers import (
     get_client_ip_address,
     get_client_path_info,
     get_client_http_accept,

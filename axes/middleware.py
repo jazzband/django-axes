@@ -1,5 +1,5 @@
 from axes.exceptions import AxesSignalPermissionDenied
-from axes.utils import get_lockout_response
+from axes.helpers import get_lockout_response
 
 
 class AxesMiddleware:

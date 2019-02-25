@@ -22,7 +22,7 @@ management commands with the Django ``manage.py`` command helpers:
 - ``python manage.py axes_reset_username username [username ...]``
   will clear lockouts and records for the given usernames.
 
-In your code, you can use the ``axes.attempts.reset`` function.
+In your code, you can use the ``axes.utils.reset`` function.
 
 - ``reset()`` will reset all lockouts and access records.
 - ``reset(ip=ip)`` will clear lockouts and records for the given IP address.

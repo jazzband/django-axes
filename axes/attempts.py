@@ -7,7 +7,7 @@ from django.utils.timezone import datetime, now
 
 from axes.conf import settings
 from axes.models import AccessAttempt
-from axes.utils import (
+from axes.helpers import (
     get_client_ip_address,
     get_client_username,
     get_client_user_agent,
@@ -87,24 +87,6 @@ def reset_user_attempts(request: HttpRequest, credentials: dict = None) -> int:
     return count
 
 
-def reset(ip: str = None, username: str = None) -> int:
-    """
-    Reset records that match IP or username, and return the count of removed attempts.
-
-    This utility method is meant to be used from the CLI or via Python API.
-    """
-
-    attempts = AccessAttempt.objects.all()
-
-    if ip:
-        attempts = attempts.filter(ip_address=ip)
-    if username:
-        attempts = attempts.filter(username=username)
-
-    count, _ = attempts.delete()
-    log.info('AXES: Reset %s access attempts from database.', count)
-
-    return count
 
 
 def is_user_attempt_whitelisted(request: HttpRequest, credentials: dict = None) -> bool:

@@ -8,7 +8,7 @@ from django.test import override_settings, RequestFactory
 from axes import get_version
 from axes.models import AccessAttempt
 from axes.tests.base import AxesTestCase
-from axes.utils import (
+from axes.helpers import (
     get_cache_timeout,
     get_client_str,
     get_client_username,
@@ -501,7 +501,7 @@ class LockoutResponseTestCase(AxesTestCase):
         get_lockout_response(request=self.request)
 
     @override_settings(AXES_LOCKOUT_TEMPLATE='example.html')
-    @patch('axes.utils.render')
+    @patch('axes.helpers.render')
     def test_get_lockout_response_lockout_template(self, render):
         self.assertFalse(render.called)
         get_lockout_response(request=self.request)

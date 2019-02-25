@@ -6,7 +6,7 @@ from django.utils.timezone import timedelta
 from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.tests.base import AxesTestCase
-from axes.utils import get_client_str
+from axes.helpers import get_client_str
 
 
 @override_settings(AXES_HANDLER='axes.handlers.base.AxesBaseHandler')

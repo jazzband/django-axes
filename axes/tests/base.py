@@ -7,9 +7,9 @@ from django.http import HttpRequest
 from django.test import TestCase
 from django.urls import reverse
 
-from axes.attempts import reset
+from axes.utils import reset
 from axes.conf import settings
-from axes.utils import get_cache, get_cool_off, get_credentials
+from axes.helpers import get_cache, get_cool_off, get_credentials
 from axes.models import AccessLog, AccessAttempt
 
 

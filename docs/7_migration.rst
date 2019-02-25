@@ -18,7 +18,6 @@ API endpoints or names for compatibility reasons.
   Login monitoring is now implemented with signal handlers
   and locking users out is implemented with a combination
   of a custom authentication backend, middleware, and signals.
-- ``axes.utils.reset`` was moved to ``axes.attempts.reset``.
 - ``AxesModelBackend`` was renamed to ``AxesBackend``
   for better naming and preventing the risk of users accidentally
   upgrading without noticing that the APIs have changed.

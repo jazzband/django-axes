@@ -4,7 +4,7 @@ from axes.conf import settings
 from axes.exceptions import AxesSignalPermissionDenied
 from axes.handlers.base import AxesBaseHandler
 from axes.signals import user_locked_out
-from axes.utils import (
+from axes.helpers import (
     get_cache,
     get_cache_timeout,
     get_client_cache_key,

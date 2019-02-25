@@ -2,7 +2,7 @@ from django.contrib.auth.backends import ModelBackend
 
 from axes.exceptions import AxesBackendPermissionDenied, AxesBackendRequestParameterRequired
 from axes.handlers.proxy import AxesProxyHandler
-from axes.utils import get_credentials, get_lockout_message
+from axes.helpers import get_credentials, get_lockout_message
 
 
 class AxesBackend(ModelBackend):

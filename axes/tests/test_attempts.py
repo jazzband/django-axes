@@ -3,12 +3,10 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 
-from axes.attempts import (
-    is_user_attempt_whitelisted,
-    reset,
-)
+from axes.attempts import is_user_attempt_whitelisted
 from axes.models import AccessAttempt
 from axes.tests.base import AxesTestCase
+from axes.utils import reset
 
 
 class ResetTestCase(AxesTestCase):
