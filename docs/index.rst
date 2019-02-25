@@ -14,13 +14,14 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   installation
-   configuration
-   migration
-   usage
    requirements
+   installation
+   usage
+   configuration
+   customization
+   migration
    development
-   captcha
+   architecture
 
 Indices and tables
 ------------------

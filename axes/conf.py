@@ -21,6 +21,13 @@ class AxesAppConf(AppConf):
     # see if the user has set axes to lock out logins after failure limit
     LOCK_OUT_AT_FAILURE = True
 
+    # lock out with the combination of username and IP address
+    LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
+
+    # lock out with username and never the IP or user agent
+    ONLY_USER_FAILURES = False
+
+    # lock out with the user agent, has no effect when ONLY_USER_FAILURES is set
     USE_USER_AGENT = False
 
     # use a specific username field to retrieve from login POST data
@@ -32,14 +39,8 @@ class AxesAppConf(AppConf):
     # use a provided callable to transform the POSTed username into the one used in credentials
     USERNAME_CALLABLE = None
 
-    # only check user name and not location or user_agent
-    ONLY_USER_FAILURES = False
-
     # reset the number of failed attempts after one successful attempt
     RESET_ON_SUCCESS = False
-
-    # lock out user from particular IP based on combination USER+IP
-    LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
 
     DISABLE_ACCESS_LOG = False
 

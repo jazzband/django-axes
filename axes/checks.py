@@ -27,7 +27,9 @@ def axes_cache_backend_check(app_configs, **kwargs):  # pylint: disable=unused-a
     axes_cache_backend = axes_cache_config.get('BACKEND', '')
 
     axes_cache_incompatible_backends = [
+        'django.core.cache.backends.dummy.DummyCache',
         'django.core.cache.backends.locmem.LocMemCache',
+        'django.core.cache.backends.filebased.FileBasedCache',
     ]
 
     axes_handler = getattr(settings, 'AXES_HANDLER', '')

@@ -3,8 +3,13 @@
 Requirements
 ============
 
-``django-axes`` requires a supported Django version. The application is
-intended to work around the Django admin and the regular
-``django.contrib.auth`` login-powered pages.
-Look here https://github.com/jazzband/django-axes/blob/master/.travis.yml
-to check if your django / python version are supported.
+Axes requires a supported Django version and runs on Python and PyPy versions 3.5 and above.
+
+Refer to the project source code repository in
+`GitHub <https://github.com/jazzband/django-axes/>`_ and see the
+`Travis CI configuration <https://github.com/jazzband/django-axes/blob/master/.travis.yml>`_ and
+`Python package definition <https://github.com/jazzband/django-axes/blob/master/setup.py>`_
+to check if your Django and Python version are supported.
+
+The `Travis CI builds <https://travis-ci.org/jazzband/django-axes>`_
+test Axes compatibility with the Django master branch for future compatibility as well.
