@@ -37,7 +37,9 @@ If this signal raises an exception, it is propagated through the
 Django middleware stack where it can be caught, or alternatively
 where it can bubble up to the default Django exception handlers.
 
-A normal login flow for Django runs as follows::
+A normal login flow for Django runs as follows:
+
+.. code-block:: text
 
     1. Login view is called by, for example,
        a user sending form data with browser.
@@ -79,7 +81,9 @@ Another exception is raised by a Axes signal handler, which is
 then caught by ``AxesMiddleware`` and converted into a readable
 error because the user is currently locked out of the system.
 
-Axes implements the lockout flow as follows::
+Axes implements the lockout flow as follows:
+
+.. code-block:: text
 
     1. Login view is called.
 
