@@ -8,20 +8,7 @@ from axes.tests.base import AxesTestCase
 
 class CacheCheckTestCase(AxesTestCase):
     @override_settings(
-        AXES_CACHE='nonexistent',
-    )
-    def test_cache_missing_produces_check_error(self):
-        errors = run_checks()
-        error = Error(
-            msg=Messages.CACHE_MISSING,
-            hint=Hints.CACHE_MISSING,
-            obj=settings.CACHES,
-            id=Codes.CACHE_MISSING,
-        )
-
-        self.assertIn(error, errors)
-
-    @override_settings(
+        AXES_HANDLER='axes.handlers.cache.AxesCacheHandler',
         AXES_CACHE='axes',
         CACHES={
             'axes': {

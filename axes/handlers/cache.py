@@ -5,7 +5,8 @@ from axes.exceptions import AxesSignalPermissionDenied
 from axes.handlers.base import AxesBaseHandler
 from axes.signals import user_locked_out
 from axes.utils import (
-    get_axes_cache,
+    get_cache,
+    get_cache_timeout,
     get_client_cache_key,
     get_client_ip_address,
     get_client_path_info,
@@ -13,7 +14,6 @@ from axes.utils import (
     get_client_username,
     get_client_user_agent,
     get_credentials,
-    get_cool_off,
 )
 
 log = getLogger(settings.AXES_LOGGER)
@@ -25,8 +25,8 @@ class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
     """
 
     def __init__(self):
-        self.cache = get_axes_cache()
-        self.cache_timeout = get_cool_off().total_seconds()
+        self.cache = get_cache()
+        self.cache_timeout = get_cache_timeout()
 
     def get_failures(self, request, credentials=None, attempt_time=None) -> int:
         cache_key = get_client_cache_key(request, credentials)

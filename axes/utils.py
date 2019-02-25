@@ -16,7 +16,7 @@ from axes.conf import settings
 logger = getLogger(__name__)
 
 
-def get_axes_cache() -> BaseCache:
+def get_cache() -> BaseCache:
     """
     Get the cache instance Axes is configured to use with ``settings.AXES_CACHE`` and use ``'default'`` if not set.
     """

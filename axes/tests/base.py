@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from axes.attempts import reset
 from axes.conf import settings
-from axes.utils import get_axes_cache, get_cool_off, get_credentials
+from axes.utils import get_cache, get_cool_off, get_credentials
 from axes.models import AccessLog, AccessAttempt
 
 
@@ -64,7 +64,7 @@ class AxesTestCase(TestCase):
         self.credentials = get_credentials(self.username)
 
     def tearDown(self):
-        get_axes_cache().clear()
+        get_cache().clear()
 
     def get_kwargs_with_defaults(self, **kwargs):
         defaults = {
