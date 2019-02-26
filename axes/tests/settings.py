@@ -11,13 +11,9 @@ DATABASES = {
 CACHES = {
     'default': {
         # This cache backend is OK to use in development and testing
-        # but has the potential to break production setups with more than on server
-        # due to each computer having their own filesystems and cache files
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': os.path.abspath(os.path.join(tempfile.gettempdir(), 'axes')),
-        'OPTIONS': {
-            'MAX_ENTRIES': 420,
-        }
+        # but has the potential to break production setups with more than on process
+        # due to each process having their own local memory based cache
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
 
