@@ -13,6 +13,17 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
     """
     Handler API definition for subclassing handlers that can be used with the AxesProxyHandler.
 
+    Public API methods for this class are:
+
+    - is_allowed
+    - user_login_failed
+    - user_logged_in
+    - user_logged_out
+    - post_save_access_attempt
+    - post_delete_access_attempt
+
+    Other API methods are considered internal and do not have fixed signatures.
+
     If you wish to implement your own handler class just override the methods you wish to specialize
     and define the class to be used with ``settings.AXES_HANDLER = 'dotted.full.path.to.YourClass'``.
     """
