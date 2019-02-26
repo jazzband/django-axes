@@ -6,14 +6,19 @@ from axes.conf import settings
 from axes.tests.base import AxesTestCase
 
 
-@override_settings(AXES_HANDLER='axes.handlers.cache.AxesCacheHandler')
 class CacheCheckTestCase(AxesTestCase):
-    @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache'}})
+    @override_settings(
+        AXES_HANDLER='axes.handlers.cache.AxesCacheHandler',
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache'}},
+    )
     def test_cache_check(self):
         errors = run_checks()
         self.assertEqual([], errors)
 
-    @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}})
+    @override_settings(
+        AXES_HANDLER='axes.handlers.cache.AxesCacheHandler',
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}},
+    )
     def test_cache_check_errors(self):
         errors = run_checks()
         error = Error(
@@ -24,3 +29,11 @@ class CacheCheckTestCase(AxesTestCase):
         )
 
         self.assertEqual([error], errors)
+
+    @override_settings(
+        AXES_HANDLER='axes.handlers.database.AxesDatabaseHandler',
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}},
+    )
+    def test_cache_check_does_not_produce_check_errors_with_database_handler(self):
+        errors = run_checks()
+        self.assertEqual([], errors)
