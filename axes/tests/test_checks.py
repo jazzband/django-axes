@@ -9,7 +9,7 @@ from axes.tests.base import AxesTestCase
 class CacheCheckTestCase(AxesTestCase):
     @override_settings(
         AXES_HANDLER='axes.handlers.cache.AxesCacheHandler',
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache'}},
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.db.DatabaseCache', 'LOCATION': 'axes_cache'}},
     )
     def test_cache_check(self):
         errors = run_checks()
