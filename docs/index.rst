@@ -15,7 +15,7 @@ Contents
    4_configuration
    5_customization
    6_integration
-   7_migration
+   7_upgrading
    8_development
    9_architecture
 
