@@ -2,7 +2,6 @@ from logging import getLogger
 
 from django.db.models import Max, Value
 from django.db.models.functions import Concat
-from django.utils.timezone import now
 
 from axes.attempts import (
     clean_expired_user_attempts,
@@ -13,15 +12,12 @@ from axes.attempts import (
 from axes.conf import settings
 from axes.exceptions import AxesSignalPermissionDenied
 from axes.handlers.base import AxesBaseHandler
+from axes.request import AxesHttpRequest
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out
 from axes.helpers import (
-    get_client_ip_address,
-    get_client_path_info,
-    get_client_http_accept,
     get_client_str,
     get_client_username,
-    get_client_user_agent,
     get_credentials,
     get_query_str,
 )
@@ -35,38 +31,38 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
     """
 
-    def get_failures(self, request, credentials=None, attempt_time=None) -> int:
-        attempts = get_user_attempts(request, credentials, attempt_time)
+    def get_failures(self, request: AxesHttpRequest, credentials: dict = None) -> int:
+        attempts = get_user_attempts(request, credentials)
         return attempts.aggregate(Max('failures_since_start'))['failures_since_start__max'] or 0
 
-    def is_locked(self, request, credentials=None, attempt_time=None):
+    def is_locked(self, request: AxesHttpRequest, credentials: dict = None):
         if is_user_attempt_whitelisted(request, credentials):
             return False
 
-        return super().is_locked(request, credentials, attempt_time)
+        return super().is_locked(request, credentials)
 
-    def user_login_failed(self, sender, credentials, request=None, **kwargs):  # pylint: disable=too-many-locals
+    def user_login_failed(
+            self,
+            sender,
+            credentials: dict,
+            request: AxesHttpRequest = None,
+            **kwargs
+    ):  # pylint: disable=too-many-locals
         """
         When user login fails, save AccessAttempt record in database and lock user out if necessary.
 
         :raises AxesSignalPermissionDenied: if user should be locked out.
         """
 
-        attempt_time = now()
-
-        # 1. database query: Clean up expired user attempts from the database before logging new attempts
-        clean_expired_user_attempts(attempt_time)
-
         if request is None:
             log.error('AXES: AxesDatabaseHandler.user_login_failed does not function without a request.')
             return
 
+        # 1. database query: Clean up expired user attempts from the database before logging new attempts
+        clean_expired_user_attempts(request.axes_attempt_time)
+
         username = get_client_username(request, credentials)
-        ip_address = get_client_ip_address(request)
-        user_agent = get_client_user_agent(request)
-        path_info = get_client_path_info(request)
-        http_accept = get_client_http_accept(request)
-        client_str = get_client_str(username, ip_address, user_agent, path_info)
+        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
         get_data = get_query_str(request.GET)
         post_data = get_query_str(request.POST)
@@ -76,7 +72,7 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
             return
 
         # 2. database query: Calculate the current maximum failure number from the existing attempts
-        failures_since_start = 1 + self.get_failures(request, credentials, attempt_time)
+        failures_since_start = 1 + self.get_failures(request, credentials)
 
         # 3. database query: Insert or update access records with the new failure data
         if failures_since_start > 1:
@@ -93,14 +89,14 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
 
             separator = '\n---------\n'
 
-            attempts = get_user_attempts(request, credentials, attempt_time)
+            attempts = get_user_attempts(request, credentials)
             attempts.update(
                 get_data=Concat('get_data', Value(separator + get_data)),
                 post_data=Concat('post_data', Value(separator + post_data)),
-                http_accept=http_accept,
-                path_info=path_info,
+                http_accept=request.axes_http_accept,
+                path_info=request.axes_path_info,
                 failures_since_start=failures_since_start,
-                attempt_time=attempt_time,
+                attempt_time=request.axes_attempt_time,
             )
         else:
             # Record failed attempt with all the relevant information.
@@ -114,14 +110,14 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
 
             AccessAttempt.objects.create(
                 username=username,
-                ip_address=ip_address,
-                user_agent=user_agent,
+                ip_address=request.axes_ip_address,
+                user_agent=request.axes_user_agent,
                 get_data=get_data,
                 post_data=post_data,
-                http_accept=http_accept,
-                path_info=path_info,
+                http_accept=request.axes_http_accept,
+                path_info=request.axes_path_info,
                 failures_since_start=failures_since_start,
-                attempt_time=attempt_time,
+                attempt_time=request.axes_attempt_time,
             )
 
         if failures_since_start >= settings.AXES_FAILURE_LIMIT:
@@ -131,28 +127,22 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
                 'axes',
                 request=request,
                 username=username,
-                ip_address=ip_address,
+                ip_address=request.axes_ip_address,
             )
 
             raise AxesSignalPermissionDenied('Locked out due to repeated login failures.')
 
-    def user_logged_in(self, sender, request, user, **kwargs):  # pylint: disable=unused-argument
+    def user_logged_in(self, sender, request: AxesHttpRequest, user, **kwargs):  # pylint: disable=unused-argument
         """
         When user logs in, update the AccessLog related to the user.
         """
 
-        attempt_time = now()
-
         # 1. database query: Clean up expired user attempts from the database
-        clean_expired_user_attempts(attempt_time)
+        clean_expired_user_attempts(request.axes_attempt_time)
 
         username = user.get_username()
         credentials = get_credentials(username)
-        ip_address = get_client_ip_address(request)
-        user_agent = get_client_user_agent(request)
-        path_info = get_client_path_info(request)
-        http_accept = get_client_http_accept(request)
-        client_str = get_client_str(username, ip_address, user_agent, path_info)
+        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
         log.info('AXES: Successful login by %s.', client_str)
 
@@ -160,11 +150,11 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
             # 2. database query: Insert new access logs with login time
             AccessLog.objects.create(
                 username=username,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                http_accept=http_accept,
-                path_info=path_info,
-                attempt_time=attempt_time,
+                ip_address=request.axes_ip_address,
+                user_agent=request.axes_user_agent,
+                http_accept=request.axes_http_accept,
+                path_info=request.axes_path_info,
+                attempt_time=request.axes_attempt_time,
                 trusted=True,
             )
 
@@ -173,21 +163,16 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
             count = reset_user_attempts(request, credentials)
             log.info('AXES: Deleted %d failed login attempts by %s from database.', count, client_str)
 
-    def user_logged_out(self, sender, request, user, **kwargs):  # pylint: disable=unused-argument
+    def user_logged_out(self, sender, request: AxesHttpRequest, user, **kwargs):  # pylint: disable=unused-argument
         """
         When user logs out, update the AccessLog related to the user.
         """
 
-        attempt_time = now()
-
         # 1. database query: Clean up expired user attempts from the database
-        clean_expired_user_attempts(attempt_time)
+        clean_expired_user_attempts(request.axes_attempt_time)
 
         username = user.get_username()
-        ip_address = get_client_ip_address(request)
-        user_agent = get_client_user_agent(request)
-        path_info = get_client_path_info(request)
-        client_str = get_client_str(username, ip_address, user_agent, path_info)
+        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
         log.info('AXES: Successful logout by %s.', client_str)
 
@@ -197,5 +182,5 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
                 username=username,
                 logout_time__isnull=True,
             ).update(
-                logout_time=attempt_time,
+                logout_time=request.axes_attempt_time,
             )

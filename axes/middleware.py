@@ -1,5 +1,15 @@
+from django.http import HttpRequest
+from django.utils.timezone import now
+
 from axes.exceptions import AxesSignalPermissionDenied
-from axes.helpers import get_lockout_response
+from axes.helpers import (
+    get_client_ip_address,
+    get_client_user_agent,
+    get_client_path_info,
+    get_client_http_accept,
+    get_lockout_response,
+)
+from axes.request import AxesHttpRequest
 
 
 class AxesMiddleware:
@@ -21,10 +31,16 @@ class AxesMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest):
+        request.axes_attempt_time = now()
+        request.axes_ip_address = get_client_ip_address(request)
+        request.axes_user_agent = get_client_user_agent(request)
+        request.axes_path_info = get_client_path_info(request)
+        request.axes_http_accept = get_client_http_accept(request)
+
         return self.get_response(request)
 
-    def process_exception(self, request, exception):  # pylint: disable=inconsistent-return-statements
+    def process_exception(self, request: AxesHttpRequest, exception):  # pylint: disable=inconsistent-return-statements
         """
         Exception handler that processes exceptions raised by the axes signal handler when request fails with login.
 
