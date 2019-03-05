@@ -49,16 +49,6 @@ class AppsTestCase(AxesTestCase):
 
 
 class AccessLogTestCase(AxesTestCase):
-    def test_authenticate_invalid_parameters(self):
-        """
-        Test that logging is not done if an attempt to authenticate with a custom authentication backend fails.
-        """
-
-        request = HttpRequest()
-        request.META['REMOTE_ADDR'] = '127.0.0.1'
-        authenticate(request=request, foo='bar')
-        self.assertEqual(AccessLog.objects.all().count(), 0)
-
     def test_access_log_on_logout(self):
         """
         Test a valid logout and make sure the logout_time is updated.

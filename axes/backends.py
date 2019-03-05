@@ -3,6 +3,7 @@ from django.contrib.auth.backends import ModelBackend
 from axes.exceptions import AxesBackendPermissionDenied, AxesBackendRequestParameterRequired
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_credentials, get_lockout_message
+from axes.request import AxesHttpRequest
 
 
 class AxesBackend(ModelBackend):
@@ -10,7 +11,7 @@ class AxesBackend(ModelBackend):
     Authentication backend that forbids login attempts for locked out users.
     """
 
-    def authenticate(self, request, username=None, password=None, **kwargs):
+    def authenticate(self, request: AxesHttpRequest, username: str = None, password: str = None, **kwargs):
         """
         Check user lock out status and raises PermissionDenied if user is not allowed to log in.
 

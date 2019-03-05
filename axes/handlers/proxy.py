@@ -1,11 +1,10 @@
 from logging import getLogger
 
-from django.http import HttpRequest
 from django.utils.module_loading import import_string
-from django.utils.timezone import datetime
 
 from axes.conf import settings
 from axes.handlers.base import AxesBaseHandler
+from axes.request import AxesHttpRequest
 
 log = getLogger(settings.AXES_LOGGER)
 
@@ -37,23 +36,23 @@ class AxesProxyHandler(AxesBaseHandler):
         return cls.implementation
 
     @classmethod
-    def is_locked(cls, request: HttpRequest, credentials: dict = None, attempt_time: datetime = None) -> bool:
+    def is_locked(cls, request: AxesHttpRequest, credentials: dict = None) -> bool:
         return cls.get_implementation().is_locked(request, credentials)
 
     @classmethod
-    def is_allowed(cls, request: HttpRequest, credentials: dict = None) -> bool:
+    def is_allowed(cls, request: AxesHttpRequest, credentials: dict = None) -> bool:
         return cls.get_implementation().is_allowed(request, credentials)
 
     @classmethod
-    def user_login_failed(cls, sender, credentials: dict, request: HttpRequest = None, **kwargs):
+    def user_login_failed(cls, sender, credentials: dict, request: AxesHttpRequest = None, **kwargs):
         return cls.get_implementation().user_login_failed(sender, credentials, request, **kwargs)
 
     @classmethod
-    def user_logged_in(cls, sender, request: HttpRequest, user, **kwargs):
+    def user_logged_in(cls, sender, request: AxesHttpRequest, user, **kwargs):
         return cls.get_implementation().user_logged_in(sender, request, user, **kwargs)
 
     @classmethod
-    def user_logged_out(cls, sender, request: HttpRequest, user, **kwargs):
+    def user_logged_out(cls, sender, request: AxesHttpRequest, user, **kwargs):
         return cls.get_implementation().user_logged_out(sender, request, user, **kwargs)
 
     @classmethod

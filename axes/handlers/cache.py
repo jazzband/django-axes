@@ -2,17 +2,15 @@ from logging import getLogger
 
 from axes.conf import settings
 from axes.exceptions import AxesSignalPermissionDenied
+from axes.request import AxesHttpRequest
 from axes.handlers.base import AxesBaseHandler
 from axes.signals import user_locked_out
 from axes.helpers import (
     get_cache,
     get_cache_timeout,
     get_client_cache_key,
-    get_client_ip_address,
-    get_client_path_info,
     get_client_str,
     get_client_username,
-    get_client_user_agent,
     get_credentials,
 )
 
@@ -28,11 +26,17 @@ class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
         self.cache = get_cache()
         self.cache_timeout = get_cache_timeout()
 
-    def get_failures(self, request, credentials=None, attempt_time=None) -> int:
+    def get_failures(self, request: AxesHttpRequest, credentials: dict = None) -> int:
         cache_key = get_client_cache_key(request, credentials)
         return self.cache.get(cache_key, default=0)
 
-    def user_login_failed(self, sender, credentials, request=None, **kwargs):  # pylint: disable=too-many-locals
+    def user_login_failed(
+            self,
+            sender,
+            credentials: dict,
+            request: AxesHttpRequest = None,
+            **kwargs
+    ):  # pylint: disable=too-many-locals
         """
         When user login fails, save attempt record in cache and lock user out if necessary.
 
@@ -44,10 +48,7 @@ class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
             return
 
         username = get_client_username(request, credentials)
-        ip_address = get_client_ip_address(request)
-        user_agent = get_client_user_agent(request)
-        path_info = get_client_path_info(request)
-        client_str = get_client_str(username, ip_address, user_agent, path_info)
+        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
         if self.is_whitelisted(request, credentials):
             log.info('AXES: Login failed from whitelisted client %s.', client_str)
@@ -78,22 +79,19 @@ class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
                 'axes',
                 request=request,
                 username=username,
-                ip_address=ip_address,
+                ip_address=request.axes_ip_address,
             )
 
             raise AxesSignalPermissionDenied('Locked out due to repeated login failures.')
 
-    def user_logged_in(self, sender, request, user, **kwargs):  # pylint: disable=unused-argument
+    def user_logged_in(self, sender, request: AxesHttpRequest, user, **kwargs):  # pylint: disable=unused-argument
         """
         When user logs in, update the AccessLog related to the user.
         """
 
         username = user.get_username()
         credentials = get_credentials(username)
-        ip_address = get_client_ip_address(request)
-        user_agent = get_client_user_agent(request)
-        path_info = get_client_path_info(request)
-        client_str = get_client_str(username, ip_address, user_agent, path_info)
+        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
         log.info('AXES: Successful login by %s.', client_str)
 
@@ -103,11 +101,8 @@ class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
             self.cache.delete(cache_key)
             log.info('AXES: Deleted %d failed login attempts by %s from cache.', failures_since_start, client_str)
 
-    def user_logged_out(self, sender, request, user, **kwargs):
+    def user_logged_out(self, sender, request: AxesHttpRequest, user, **kwargs):
         username = user.get_username()
-        ip_address = get_client_ip_address(request)
-        user_agent = get_client_user_agent(request)
-        path_info = get_client_path_info(request)
-        client_str = get_client_str(username, ip_address, user_agent, path_info)
+        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
         log.info('AXES: Successful logout by %s.', client_str)

@@ -2,7 +2,7 @@ from datetime import timedelta
 from hashlib import md5
 from unittest.mock import patch
 
-from django.http import HttpRequest, JsonResponse, HttpResponseRedirect, HttpResponse
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.test import override_settings, RequestFactory
 
 from axes import get_version
@@ -20,7 +20,9 @@ from axes.helpers import (
     is_client_ip_address_whitelisted,
     is_ip_address_in_blacklist,
     is_ip_address_in_whitelist,
-    is_client_method_whitelisted)
+    is_client_method_whitelisted,
+)
+from axes.request import AxesHttpRequest
 
 
 class VersionTestCase(AxesTestCase):
@@ -331,7 +333,7 @@ class UsernameTestCase(AxesTestCase):
     def test_default_get_client_username(self):
         expected = 'test-username'
 
-        request = HttpRequest()
+        request = AxesHttpRequest()
         request.POST['username'] = expected
 
         actual = get_client_username(request)
@@ -343,7 +345,7 @@ class UsernameTestCase(AxesTestCase):
         expected = 'test-username'
         expected_in_credentials = 'test-credentials-username'
 
-        request = HttpRequest()
+        request = AxesHttpRequest()
         request.POST['username'] = expected
         credentials = {
             'username': expected_in_credentials
@@ -363,7 +365,7 @@ class UsernameTestCase(AxesTestCase):
         expected = 'prefixed-' + provided
         provided_in_credentials = 'test-credentials-username'
 
-        request = HttpRequest()
+        request = AxesHttpRequest()
         request.POST['username'] = provided
         credentials = {'username': provided_in_credentials}
 
@@ -381,7 +383,7 @@ class UsernameTestCase(AxesTestCase):
         provided_in_credentials = 'test-credentials-username'
         expected_in_credentials = 'prefixed-' + provided_in_credentials
 
-        request = HttpRequest()
+        request = AxesHttpRequest()
         request.POST['username'] = provided
         credentials = {'username': provided_in_credentials}
 
@@ -391,40 +393,41 @@ class UsernameTestCase(AxesTestCase):
 
     @override_settings(AXES_USERNAME_CALLABLE=lambda request, credentials: 'example')  # pragma: no cover
     def test_get_client_username(self):
-        self.assertEqual(get_client_username(HttpRequest(), {}), 'example')
+        self.assertEqual(get_client_username(AxesHttpRequest(), {}), 'example')
 
     @override_settings(AXES_USERNAME_CALLABLE=lambda request: None)  # pragma: no cover
     def test_get_client_username_invalid_callable_too_few_arguments(self):
         with self.assertRaises(TypeError):
-            get_client_username(HttpRequest(), {})
+            get_client_username(AxesHttpRequest(), {})
 
     @override_settings(AXES_USERNAME_CALLABLE=lambda request, credentials, extra: None)  # pragma: no cover
     def test_get_client_username_invalid_callable_too_many_arguments(self):
         with self.assertRaises(TypeError):
-            get_client_username(HttpRequest(), {})
+            get_client_username(AxesHttpRequest(), {})
 
     @override_settings(AXES_USERNAME_CALLABLE=True)
     def test_get_client_username_not_callable(self):
         with self.assertRaises(TypeError):
-            get_client_username(HttpRequest(), {})
+            get_client_username(AxesHttpRequest(), {})
 
     @override_settings(AXES_USERNAME_CALLABLE='axes.tests.test_utils.get_username')
     def test_get_client_username_str(self):
         self.assertEqual(
-            get_client_username(HttpRequest(), {}),
+            get_client_username(AxesHttpRequest(), {}),
             'username',
         )
 
 
-def get_username(request: HttpRequest, credentials: dict) -> str:
+def get_username(request: AxesHttpRequest, credentials: dict) -> str:
     return 'username'
 
 
 class IPWhitelistTestCase(AxesTestCase):
     def setUp(self):
-        self.request = HttpRequest()
+        self.request = AxesHttpRequest()
         self.request.method = 'POST'
         self.request.META['REMOTE_ADDR'] = '127.0.0.1'
+        self.request.axes_ip_address = '127.0.0.1'
 
     @override_settings(AXES_IP_WHITELIST=None)
     def test_ip_in_whitelist_none(self):
@@ -480,7 +483,7 @@ class IPWhitelistTestCase(AxesTestCase):
 
 class MethodWhitelistTestCase(AxesTestCase):
     def setUp(self):
-        self.request = HttpRequest()
+        self.request = AxesHttpRequest()
         self.request.method = 'GET'
 
     @override_settings(AXES_NEVER_LOCKOUT_GET=True)
@@ -494,7 +497,7 @@ class MethodWhitelistTestCase(AxesTestCase):
 
 class LockoutResponseTestCase(AxesTestCase):
     def setUp(self):
-        self.request = HttpRequest()
+        self.request = AxesHttpRequest()
 
     @override_settings(AXES_COOLOFF_TIME=42)
     def test_get_lockout_response_cool_off(self):

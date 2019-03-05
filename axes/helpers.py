@@ -1,17 +1,19 @@
 from collections import OrderedDict
 from datetime import timedelta
 from hashlib import md5
+from ipaddress import ip_address
 from logging import getLogger
 from typing import Any, Optional, Type, Union
 
 from django.core.cache import caches, BaseCache
-from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse, QueryDict
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, QueryDict
 from django.shortcuts import render
 from django.utils.module_loading import import_string
 
 import ipware.ip2
 
 from axes.conf import settings
+from axes.request import AxesHttpRequest
 
 log = getLogger(__name__)
 
@@ -105,7 +107,7 @@ def get_credentials(username: str = None, **kwargs) -> dict:
     return credentials
 
 
-def get_client_username(request: HttpRequest, credentials: dict = None) -> str:
+def get_client_username(request: AxesHttpRequest, credentials: dict = None) -> str:
     """
     Resolve client username from the given request or credentials if supplied.
 
@@ -148,20 +150,15 @@ def get_client_ip_address(request: HttpRequest) -> str:
     that is used in the users HTTP proxy or *aaS service layers. Refer to the documentation for more information.
     """
 
-    client_ip_attribute = settings.AXES_CLIENT_IP_ATTRIBUTE
+    client_ip_address, _ = ipware.ip2.get_client_ip(
+        request,
+        proxy_order=settings.AXES_PROXY_ORDER,
+        proxy_count=settings.AXES_PROXY_COUNT,
+        proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
+        request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
+    )
 
-    if not hasattr(request, client_ip_attribute):
-        client_ip, _ = ipware.ip2.get_client_ip(
-            request,
-            proxy_order=settings.AXES_PROXY_ORDER,
-            proxy_count=settings.AXES_PROXY_COUNT,
-            proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
-            request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
-        )
-
-        setattr(request, client_ip_attribute, client_ip)
-
-    return getattr(request, client_ip_attribute)
+    return str(ip_address(client_ip_address))
 
 
 def get_client_user_agent(request: HttpRequest) -> str:
@@ -271,7 +268,7 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def get_lockout_response(request: HttpRequest, credentials: dict = None) -> HttpResponse:
+def get_lockout_response(request: AxesHttpRequest, credentials: dict = None) -> HttpResponse:
     status = 403
     context = {
         'failure_limit': settings.AXES_FAILURE_LIMIT,
@@ -323,39 +320,35 @@ def is_ip_address_in_blacklist(ip_address: str) -> bool:
     return ip_address in settings.AXES_IP_BLACKLIST
 
 
-def is_client_ip_address_whitelisted(request: HttpRequest):
+def is_client_ip_address_whitelisted(request: AxesHttpRequest):
     """
     Check if the given request refers to a whitelisted IP.
     """
 
-    ip_address = get_client_ip_address(request)
-
-    if settings.AXES_NEVER_LOCKOUT_WHITELIST and is_ip_address_in_whitelist(ip_address):
+    if settings.AXES_NEVER_LOCKOUT_WHITELIST and is_ip_address_in_whitelist(request.axes_ip_address):
         return True
 
-    if settings.AXES_ONLY_WHITELIST and is_ip_address_in_whitelist(ip_address):
+    if settings.AXES_ONLY_WHITELIST and is_ip_address_in_whitelist(request.axes_ip_address):
         return True
 
     return False
 
 
-def is_client_ip_address_blacklisted(request: HttpRequest) -> bool:
+def is_client_ip_address_blacklisted(request: AxesHttpRequest) -> bool:
     """
     Check if the given request refers to a blacklisted IP.
     """
 
-    ip_address = get_client_ip_address(request)
-
-    if is_ip_address_in_blacklist(ip_address):
+    if is_ip_address_in_blacklist(request.axes_ip_address):
         return True
 
-    if settings.AXES_ONLY_WHITELIST and not is_ip_address_in_whitelist(ip_address):
+    if settings.AXES_ONLY_WHITELIST and not is_ip_address_in_whitelist(request.axes_ip_address):
         return True
 
     return False
 
 
-def is_client_method_whitelisted(request: HttpRequest) -> bool:
+def is_client_method_whitelisted(request: AxesHttpRequest) -> bool:
     """
     Check if the given request uses a whitelisted method.
     """

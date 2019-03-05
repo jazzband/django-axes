@@ -6,11 +6,20 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.timezone import now
 
 from axes.utils import reset
 from axes.conf import settings
-from axes.helpers import get_cache, get_cool_off, get_credentials
-from axes.models import AccessLog, AccessAttempt
+from axes.helpers import (
+    get_cache,
+    get_client_http_accept,
+    get_client_ip_address,
+    get_client_path_info,
+    get_client_user_agent,
+    get_cool_off,
+    get_credentials,
+)
+from axes.models import AccessAttempt
 
 
 class AxesTestCase(TestCase):
@@ -60,6 +69,12 @@ class AxesTestCase(TestCase):
         self.request.META['REMOTE_ADDR'] = self.ip_address
         self.request.META['HTTP_USER_AGENT'] = self.user_agent
         self.request.META['PATH_INFO'] = self.path_info
+
+        self.request.axes_attempt_time = now()
+        self.request.axes_ip_address = get_client_ip_address(self.request)
+        self.request.axes_user_agent = get_client_user_agent(self.request)
+        self.request.axes_path_info = get_client_path_info(self.request)
+        self.request.axes_http_accept = get_client_http_accept(self.request)
 
         self.credentials = get_credentials(self.username)
 
