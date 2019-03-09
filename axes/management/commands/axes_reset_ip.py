@@ -16,6 +16,6 @@ class Command(BaseCommand):
             count += reset(ip=ip)
 
         if count:
-            self.stdout.write('{0} attempts removed.'.format(count))
+            self.stdout.write(f'{count} attempts removed.')
         else:
             self.stdout.write('No attempts found.')

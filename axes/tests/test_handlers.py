@@ -94,9 +94,7 @@ class AxesHandlerTestCase(AxesTestCase):
 
     def check_empty_request(self, log, handler):
         AxesProxyHandler.user_login_failed(sender=None, credentials={}, request=None)
-        log.error.assert_called_with(
-            'AXES: {handler}.user_login_failed does not function without a request.'.format(handler=handler)
-        )
+        log.error.assert_called_with(f'AXES: {handler}.user_login_failed does not function without a request.')
 
 
 @override_settings(
