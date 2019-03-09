@@ -21,10 +21,13 @@ def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:
     Get threshold for fetching access attempts from the database.
     """
 
-    if attempt_time is None:
-        return now() - get_cool_off()
+    cool_off = get_cool_off()
+    if cool_off is None:
+        raise TypeError('Cool off threshold can not be calculated with settings.AXES_COOLOFF_TIME set to None')
 
-    return attempt_time - get_cool_off()
+    if attempt_time is None:
+        return now() - cool_off
+    return attempt_time - cool_off
 
 
 def filter_user_attempts(request: AxesHttpRequest, credentials: dict = None) -> QuerySet:

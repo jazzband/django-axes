@@ -2,11 +2,33 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
+from django.test import override_settings
+from django.utils.timezone import now
 
-from axes.attempts import is_user_attempt_whitelisted
+from axes.attempts import is_user_attempt_whitelisted, get_cool_off_threshold
 from axes.models import AccessAttempt
 from axes.tests.base import AxesTestCase
 from axes.utils import reset
+
+
+class GetCoolOffThresholdTestCase(AxesTestCase):
+    @override_settings(AXES_COOLOFF_TIME=42)
+    def test_get_cool_off_threshold(self):
+        timestamp = now()
+
+        with patch('axes.attempts.now', return_value=timestamp):
+            attempt_time = timestamp
+            threshold_now = get_cool_off_threshold(attempt_time)
+
+            attempt_time = None
+            threshold_none = get_cool_off_threshold(attempt_time)
+
+        self.assertEqual(threshold_now, threshold_none)
+
+    @override_settings(AXES_COOLOFF_TIME=None)
+    def test_get_cool_off_threshold_error(self):
+        with self.assertRaises(TypeError):
+            get_cool_off_threshold()
 
 
 class ResetTestCase(AxesTestCase):
