@@ -2,8 +2,6 @@ dist: xenial
 language: python
 cache: pip
 python:
-  - pypy3.5
-  - 3.5
   - 3.6
   - 3.7
 env:
@@ -12,11 +10,6 @@ env:
   - DJANGO=2.1
   - DJANGO=master
 matrix:
-  exclude:
-    - python: pypy3.5
-      env: DJANGO=master
-    - python: 3.5
-      env: DJANGO=master
   allow_failures:
     - python: 3.6
       env: DJANGO=master
