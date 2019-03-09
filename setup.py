@@ -35,7 +35,7 @@ setup(
     python_requires='~=3.5',
     install_requires=[
         'django',
-        'django-appconf',
+        'django-appconf>=1.0.3',
         'django-ipware>=2.0.2',
         'pytz',
         'six',
