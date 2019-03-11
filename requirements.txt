@@ -1,5 +1,5 @@
 -e .
-coverage==4.5.2
+coverage==4.5.3
 mypy==0.670 ; platform_python_implementation != 'PyPy'
 prospector==1.1.6.2
 pytest==4.3.0
