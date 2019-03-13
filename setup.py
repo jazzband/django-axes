@@ -34,7 +34,7 @@ setup(
     package_dir={'axes': 'axes'},
     python_requires='~=3.6',
     install_requires=[
-        'django',
+        'django>=1.11',
         'django-appconf>=1.0.3',
         'django-ipware>=2.0.2',
     ],
