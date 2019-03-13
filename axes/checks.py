@@ -15,7 +15,7 @@ class Hints:
 
 
 class Codes:
-    CACHE_INVALID = 'axeslE001'
+    CACHE_INVALID = 'axes.E001'
 
 
 @register(Tags.caches)
