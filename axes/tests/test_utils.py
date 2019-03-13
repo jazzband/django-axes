@@ -258,10 +258,10 @@ class ClientCacheKeyTestCase(AxesTestCase):
         Test the cache key format.
         """
 
+        cache_hash_digest = md5(self.ip_address.encode()).hexdigest()
+
         # Getting cache key from request
-        cache_hash_key = 'axes-{}'.format(
-            md5(self.ip_address.encode()).hexdigest()
-        )
+        cache_hash_key = f'axes-{cache_hash_digest}'
 
         request_factory = RequestFactory()
         request = request_factory.post(
@@ -295,10 +295,8 @@ class ClientCacheKeyTestCase(AxesTestCase):
 
         # Getting cache key from request
         ip_address = self.ip_address
-        cache_hash_key = 'axes-{}'.format(
-            md5(ip_address.encode()).hexdigest()
-        )
-
+        cache_hash_digest = md5(ip_address.encode()).hexdigest()
+        cache_hash_key = f'axes-{cache_hash_digest}'
 
         request_factory = RequestFactory()
         request = request_factory.post(

@@ -35,7 +35,7 @@ setup(
     python_requires='~=3.5',
     install_requires=[
         'django',
-        'django-appconf',
+        'django-appconf>=1.0.3',
         'django-ipware>=2.0.2',
         'pytz',
         'six',
@@ -55,7 +55,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Topic :: Internet :: Log Analysis',

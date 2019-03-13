@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from datetime import timedelta
 from hashlib import md5
 from ipaddress import ip_address
@@ -73,10 +72,10 @@ def get_cool_off_iso8601(delta: timedelta) -> str:
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
 
-    days_str = '{:.0f}D'.format(days) if days else ''
+    days_str = f'{days:.0f}D' if days else ''
 
     time_str = ''.join(
-        '{value:.0f}{designator}'.format(value=value, designator=designator)
+        f'{value:.0f}{designator}'
         for value, designator
         in [
             [hours, 'H'],
@@ -87,11 +86,8 @@ def get_cool_off_iso8601(delta: timedelta) -> str:
     )
 
     if time_str:
-        template = 'P{days_str}T{time_str}'
-    else:
-        template = 'P{days_str}'
-
-    return template.format(days_str=days_str, time_str=time_str)
+        return f'P{days_str}T{time_str}'
+    return f'P{days_str}'
 
 
 def get_credentials(username: str = None, **kwargs) -> dict:
@@ -173,15 +169,15 @@ def get_client_http_accept(request: HttpRequest) -> str:
     return request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
 
 
-def get_client_parameters(username: str, ip_address: str, user_agent: str) -> OrderedDict:
+def get_client_parameters(username: str, ip_address: str, user_agent: str) -> dict:
     """
     Get query parameters for filtering AccessAttempt queryset.
 
-    This method returns an OrderedDict that guarantees iteration order for keys and values,
+    This method returns a dict that guarantees iteration order for keys and values,
     and can so be used in e.g. the generation of hash keys or other deterministic functions.
     """
 
-    filter_kwargs = OrderedDict()  # type: OrderedDict
+    filter_kwargs = dict()
 
     if settings.AXES_ONLY_USER_FAILURES:
         # 1. Only individual usernames can be tracked with parametrization
@@ -209,7 +205,7 @@ def get_client_str(username: str, ip_address: str, user_agent: str, path_info: s
     Example log format would be ``{username: "example", ip_address: "127.0.0.1", path_info: "/example/"}``
     """
 
-    client_dict = OrderedDict()  # type: OrderedDict
+    client_dict = dict()
 
     if settings.AXES_VERBOSE:
         # Verbose mode logs every attribute that is available
@@ -227,7 +223,7 @@ def get_client_str(username: str, ip_address: str, user_agent: str, path_info: s
 
     # Template the internal dictionary representation into a readable and concatenated key: "value" format
     template = ', '.join(
-        '{key}: "{value}"'.format(key=key, value=value)
+        f'{key}: "{value}"'
         for key, value
         in client_dict.items()
     )
@@ -254,7 +250,7 @@ def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
     query_dict.pop(settings.AXES_PASSWORD_FORM_FIELD, None)
 
     query_str = '\n'.join(
-        '{key}={value}'.format(key=key, value=value)
+        f'{key}={value}'
         for key, value
         in query_dict.items()
     )
@@ -381,6 +377,6 @@ def get_client_cache_key(request_or_attempt: Union[HttpRequest, Any], credential
 
     cache_key_components = ''.join(filter_kwargs.values())
     cache_key_digest = md5(cache_key_components.encode()).hexdigest()
-    cache_key = 'axes-{}'.format(cache_key_digest)
+    cache_key = f'axes-{cache_key_digest}'
 
     return cache_key
