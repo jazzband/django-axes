@@ -21,7 +21,6 @@ setup(
         'Camilo Nova',
         'Aleksi Hakli',
     ]),
-    author_email='codekoala@gmail.com',
     maintainer='Jazzband',
     maintainer_email='security@jazzband.co',
     url='https://github.com/jazzband/django-axes',
