@@ -32,7 +32,7 @@ setup(
     },
     license='MIT',
     package_dir={'axes': 'axes'},
-    python_requires='~=3.5',
+    python_requires='~=3.6',
     install_requires=[
         'django',
         'django-appconf>=1.0.3',
