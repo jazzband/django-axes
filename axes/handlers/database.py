@@ -155,7 +155,6 @@ class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
                 http_accept=request.axes_http_accept,
                 path_info=request.axes_path_info,
                 attempt_time=request.axes_attempt_time,
-                trusted=True,
             )
 
         if settings.AXES_RESET_ON_SUCCESS:

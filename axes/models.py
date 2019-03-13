@@ -65,13 +65,6 @@ class AccessAttempt(AccessBase):
 
 
 class AccessLog(AccessBase):
-    # Once a user logs in from an ip, that combination is trusted and not
-    # locked out in case of a distributed attack
-    trusted = models.BooleanField(
-        default=False,
-        db_index=True,
-    )
-
     logout_time = models.DateTimeField(
         _('Logout Time'),
         null=True,
