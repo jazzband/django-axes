@@ -1,6 +1,6 @@
 -e .
 coverage==4.5.3
-mypy==0.670 ; platform_python_implementation != 'PyPy'
+mypy==0.670
 prospector==1.1.6.2
 pytest==4.3.1
 pytest-cov==2.6.1
