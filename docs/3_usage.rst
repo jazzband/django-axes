@@ -1,7 +1,7 @@
 .. _usage:
 
-Usage
-=====
+3. Usage
+========
 
 Once Axes is is installed and configured, you can login and logout
 of your application via the ``django.contrib.auth`` views.

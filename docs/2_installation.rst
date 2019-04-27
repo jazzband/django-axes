@@ -1,7 +1,7 @@
 .. _installation:
 
-Installation
-============
+2. Installation
+===============
 
 Axes is easy to install from the PyPI package::
 

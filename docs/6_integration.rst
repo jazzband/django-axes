@@ -1,7 +1,7 @@
 .. _integration:
 
-Integration
-===========
+6. Integration
+==============
 
 Axes is intended to be pluggable and usable with 3rd party authentication solutions.
 

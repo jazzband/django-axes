@@ -1,7 +1,7 @@
 .. customization:
 
-Customization
-=============
+5. Customization
+================
 
 Axes can be customized and extended by using the correct signals.
 
