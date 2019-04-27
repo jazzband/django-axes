@@ -1,7 +1,7 @@
 .. _configuration:
 
-Configuration
-=============
+4. Configuration
+================
 
 Minimal Axes configuration is done with just ``settings.py`` updates.
 

@@ -1,7 +1,7 @@
 .. _development:
 
-Development
-===========
+8. Development
+==============
 
 You can contribute to this project forking it from GitHub and sending pull requests.
 

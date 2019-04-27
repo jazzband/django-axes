@@ -1,7 +1,7 @@
 .. _architecture:
 
-Architecture
-============
+9. Architecture
+================
 
 Axes is based on the existing Django authentication backend
 architecture and framework for recognizing users and aims to be
