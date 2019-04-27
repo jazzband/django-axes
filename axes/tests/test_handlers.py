@@ -82,7 +82,7 @@ class AxesProxyHandlerTestCase(AxesTestCase):
         self.assertTrue(handler.post_delete_access_attempt.called)
 
 
-class AxesHandlerTestCase(AxesTestCase):
+class AxesHandlerBaseTestCase(AxesTestCase):
     def check_whitelist(self, log):
         with override_settings(
             AXES_NEVER_LOCKOUT_WHITELIST=True,
@@ -102,7 +102,7 @@ class AxesHandlerTestCase(AxesTestCase):
     AXES_COOLOFF_TIME=timedelta(seconds=1),
     AXES_RESET_ON_SUCCESS=True,
 )
-class AxesDatabaseHandlerTestCase(AxesHandlerTestCase):
+class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     @override_settings(AXES_RESET_ON_SUCCESS=True)
     def test_handler(self):
         self.check_handler()
@@ -129,7 +129,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerTestCase):
     AXES_HANDLER='axes.handlers.cache.AxesCacheHandler',
     AXES_COOLOFF_TIME=timedelta(seconds=1),
 )
-class AxesCacheHandlerTestCase(AxesHandlerTestCase):
+class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
     @override_settings(AXES_RESET_ON_SUCCESS=True)
     def test_handler(self):
         self.check_handler()
@@ -150,7 +150,7 @@ class AxesCacheHandlerTestCase(AxesHandlerTestCase):
 @override_settings(
     AXES_HANDLER='axes.handlers.dummy.AxesDummyHandler',
 )
-class AxesDummyHandlerTestCase(AxesHandlerTestCase):
+class AxesDummyHandlerTestCase(AxesHandlerBaseTestCase):
     def test_handler(self):
         for _ in range(settings.AXES_FAILURE_LIMIT):
             self.login()

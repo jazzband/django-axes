@@ -1,6 +1,6 @@
 .. _architecture:
 
-9. Architecture
+7. Architecture
 ================
 
 Axes is based on the existing Django authentication backend
@@ -116,6 +116,7 @@ Axes implements the lockout flow as follows:
 
     8. AxesSignalPermissionDenied exception is raised
        if appropriate and it bubbles up the middleware stack.
+       The exception aborts the Django authentication flow.
 
     9. AxesMiddleware processes the exception
        and returns a readable lockout message to the user.

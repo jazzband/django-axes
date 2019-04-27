@@ -8,28 +8,25 @@ from axes.request import AxesHttpRequest
 
 class AxesBackend(ModelBackend):
     """
-    Authentication backend that forbids login attempts for locked out users.
+    Authentication backend class that forbids login attempts for locked out users.
+
+    Use this class as the first item of ``AUTHENTICATION_BACKENDS`` to
+    prevent locked out users from being logged in by the Django authentication flow.
+
+    **Note:** this backend does not log your user in and delegates login to the
+    backends that are configured after it in the ``AUTHENTICATION_BACKENDS`` list.
     """
 
-    def authenticate(self, request: AxesHttpRequest, username: str = None, password: str = None, **kwargs):
+    def authenticate(self, request: AxesHttpRequest, username: str = None, password: str = None, **kwargs: dict):
         """
-        Check user lock out status and raises PermissionDenied if user is not allowed to log in.
+        Checks user lockout status and raise a PermissionDenied if user is not allowed to log in.
 
-        Inserts errors directly to `return_context` that is supplied as a keyword argument.
+        This method interrupts the login flow and inserts  error message directly to the
+        ``response_context`` attribute that is supplied as a keyword argument.
 
-        Use this on top of your AUTHENTICATION_BACKENDS list to prevent locked out users
-        from being authenticated in the standard Django authentication flow.
-
-        Note that this method does not log your user in and delegates login to other backends.
-
-        :param request: see django.contrib.auth.backends.ModelBackend.authenticate
-        :param username: see django.contrib.auth.backends.ModelBackend.authenticate
-        :param password: see django.contrib.auth.backends.ModelBackend.authenticate
-        :param kwargs: see django.contrib.auth.backends.ModelBackend.authenticate
-        :keyword response_context: context dict that will be updated with error information
-        :raises AxesBackendRequestParameterRequired: if request parameter is not given correctly
-        :raises AxesBackendPermissionDenied: if user is already locked out
-        :return: None
+        :keyword response_context: kwarg that will be have its ``error`` attribute updated with context.
+        :raises AxesBackendRequestParameterRequired: if request parameter is not passed.
+        :raises AxesBackendPermissionDenied: if user is already locked out.
         """
 
         if request is None:

@@ -15,10 +15,10 @@ Contents
    4_configuration
    5_customization
    6_integration
-   7_upgrading
-   8_development
-   9_architecture
-   10_reference
+   7_architecture
+   8_reference
+   9_development
+
 
 Indices and tables
 ------------------
