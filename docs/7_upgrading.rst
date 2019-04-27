@@ -26,11 +26,11 @@ Axes version 5 has a few differences compared to Axes 4.
   If you have implemented a custom callable, you need to add
   the second ``credentials`` argument to the function signature.
 - ``AXES_USERNAME_CALLABLE`` now supports string paths in addition to callables.
-- ``axes.backends.AxesModelBackend.RequestParameterRequired``
+- ``axes.backends.AxesBackend.RequestParameterRequired``
   exception was renamed and retyped from ``Exception`` to ``ValueError``.
-  Exception was moved to ``axes.exception.AxesModelBackendRequestParameterRequired``.
-- ``AxesModelBackend`` now raises a
-  ``axes.exceptions.AxesModelBackendPermissionDenied``
+  Exception was moved to ``axes.exception.AxesBackendRequestParameterRequired``.
+- ``AxesBackend`` now raises a
+  ``axes.exceptions.AxesBackendPermissionDenied``
   exception when user is locked out, which triggers signal handler
   to run on failed logins, checking user lockout statuses.
 - Axes lockout signal handler now raises a

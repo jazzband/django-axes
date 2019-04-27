@@ -1,9 +1,9 @@
 from django.http import HttpRequest
 
-from axes.handlers.base import AxesBaseHandler
+from axes.handlers.base import AxesHandler
 
 
-class AxesDummyHandler(AxesBaseHandler):  # pylint: disable=unused-argument
+class AxesDummyHandler(AxesHandler):  # pylint: disable=unused-argument
     """
     Signal handler implementation that does nothing and can be used to disable signal processing.
     """

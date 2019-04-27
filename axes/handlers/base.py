@@ -7,7 +7,7 @@ from axes.helpers import (
 from axes.request import AxesHttpRequest
 
 
-class AxesBaseHandler:  # pylint: disable=unused-argument
+class AxesHandler:  # pylint: disable=unused-argument
     """
     Handler API definition for subclassing handlers that can be used with the AxesProxyHandler.
 

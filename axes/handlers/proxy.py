@@ -3,13 +3,13 @@ from logging import getLogger
 from django.utils.module_loading import import_string
 
 from axes.conf import settings
-from axes.handlers.base import AxesBaseHandler
+from axes.handlers.base import AxesHandler
 from axes.request import AxesHttpRequest
 
 log = getLogger(settings.AXES_LOGGER)
 
 
-class AxesProxyHandler(AxesBaseHandler):
+class AxesProxyHandler(AxesHandler):
     """
     Proxy interface for configurable Axes signal handler class.
 
@@ -21,10 +21,10 @@ class AxesProxyHandler(AxesBaseHandler):
     Refer to axes.handlers.proxy.AxesProxyHandler for default implementation.
     """
 
-    implementation = None  # type: AxesBaseHandler
+    implementation = None  # type: AxesHandler
 
     @classmethod
-    def get_implementation(cls, force: bool = False) -> AxesBaseHandler:
+    def get_implementation(cls, force: bool = False) -> AxesHandler:
         """
         Fetch and initialize configured handler implementation and memoize it to avoid reinitialization.
 

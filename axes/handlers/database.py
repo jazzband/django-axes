@@ -11,7 +11,7 @@ from axes.attempts import (
 )
 from axes.conf import settings
 from axes.exceptions import AxesSignalPermissionDenied
-from axes.handlers.base import AxesBaseHandler
+from axes.handlers.base import AxesHandler
 from axes.request import AxesHttpRequest
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out
@@ -26,7 +26,7 @@ from axes.helpers import (
 log = getLogger(settings.AXES_LOGGER)
 
 
-class AxesDatabaseHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
+class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
     """
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
     """
