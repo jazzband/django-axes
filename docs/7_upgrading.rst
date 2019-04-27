@@ -12,6 +12,9 @@ Upgrading from Axes version 4 to 5
 
 Axes version 5 has a few differences compared to Axes 4.
 
+- Python 2.7, 3.4 and 3.5 support has been dropped.
+  This is to facilitate new language features and typing support,
+  as maintainers opted for the use of new tools in development.
 - Login and logout view monkey-patching was removed.
   Login monitoring is now implemented with signal handlers
   and locking users out is implemented with a combination
