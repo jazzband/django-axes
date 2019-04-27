@@ -4,34 +4,28 @@ Changes
 5.0.0 (WIP)
 -----------
 
-- Improve managment commands and separate commands for resetting
-  all access attempts, attempts by IP and attempts by username.
-  Add tests for the management commands for better coverage.
+- Improve management commands and separate commands for resetting
+  all access attempts, attempts by IP, and attempts by username.
   [aleksihakli]
 
-- Add a Django native authentication stack that utilizes
-  ``AUTHENTICATION_BACKENDS``, ``MIDDLEWARE``, and signal handlers
-  for tracking login attempts and implementing user lockouts.
-  This results in configuration changes, refer to the documentation.
-  [aleksihakli]
+- Use backend, middleware, and signal handlers for tracking
+  login attempts and implementing user lockouts.
+  [aleksihakli, jorlugaqui, joshua-s]
 
 - Add ``AxesDatabaseHandler``, ``AxesCacheHandler``, and ``AxesDummyHandler``
   handler backends for processing user login and logout events and failures.
   [aleksihakli, jorlugaqui, joshua-s]
 
-- Remove automatic decoration of Django login views and forms.
-  Leave decorations available for application users who wish to
+- Remove automatic decoration and monkey-patching of Django views and forms.
+  Leave decorators available for application users who wish to
   decorate their own login or other views as before.
   [aleksihakli]
 
-- Clean up code, tests, and documentation.
-  Improve test coverage and and raise
-  Codecov monitoring threshold to 90%.
+- Clean up code, documentation, tests, and coverage.
   [aleksihakli]
 
-- Drop support for Python 2.7 and Python 3.4.
-  Require minimum version of Python 3.5+ from now on.
-  Add support for PyPy 3 in the test matrix.
+- Drop support for Python 2.7, 3.4 and 3.5.
+  Require minimum version of Python 3.6+ from now on.
   [aleksihakli]
 
 - Add support for string import for ``AXES_USERNAME_CALLABLE``

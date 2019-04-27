@@ -7,13 +7,9 @@ Axes is easy to install from the PyPI package::
 
     $ pip install django-axes
 
+After installing the package, the project settings need to be configured.
 
-Configuring settings
---------------------
-
-After installing the package, the project ``settings.py`` needs to be configured.
-
-1. add ``axes`` to your ``INSTALLED_APPS``::
+**1.** Add ``axes`` to your ``INSTALLED_APPS``::
 
     INSTALLED_APPS = [
         'django.contrib.admin',
@@ -23,25 +19,21 @@ After installing the package, the project ``settings.py`` needs to be configured
         'django.contrib.messages',
         'django.contrib.staticfiles',
 
-        # ... other applications per your preference.
-
+        # Axes app can be in any position in the INSTALLED_APPS list.
         'axes',
     ]
 
-2. add ``axes.backends.AxesBackend`` to the top of ``AUTHENTICATION_BACKENDS``::
+**2.** Add ``axes.backends.AxesBackend`` to the top of ``AUTHENTICATION_BACKENDS``::
 
     AUTHENTICATION_BACKENDS = [
-        # AxesBackend should be the first backend in the list.
-        # It stops the authentication flow when a user is locked out.
+        # AxesBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
         'axes.backends.AxesBackend',
-
-        # ... other authentication backends per your preference.
 
         # Django ModelBackend is the default authentication backend.
         'django.contrib.auth.backends.ModelBackend',
     ]
 
-3. add ``axes.middleware.AxesMiddleware`` to your list of ``MIDDLEWARE``::
+**3.** Add ``axes.middleware.AxesMiddleware`` to your list of ``MIDDLEWARE``::
 
     MIDDLEWARE = [
         # The following is the list of default middleware in new Django projects.
@@ -53,26 +45,21 @@ After installing the package, the project ``settings.py`` needs to be configured
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-        # ... other middleware per your preference.
-
-        # AxesMiddleware should be the last middleware in the list.
-        # It pretty formats authentication errors into readable responses.
+        # AxesMiddleware should be the last middleware in the MIDDLEWARE list.
         'axes.middleware.AxesMiddleware',
     ]
 
-4. Run ``python manage.py migrate`` to sync the database.
+**4.** Run ``python manage.py check`` to check the configuration.
+
+**5.** Run ``python manage.py migrate`` to sync the database.
 
 Axes is now functional with the default settings and is saving user attempts
 into your database and locking users out if they exceed the maximum attempts.
 
-
-Running Django system checks
-----------------------------
-
-Use the ``python manage.py check`` command to verify the correct configuration in both
-development and production environments. It is probably best to use this step as part
+You should use the ``python manage.py check`` command to verify the correct configuration in both
+development, staging, and production environments. It is probably best to use this step as part
 of your regular CI workflows to verify that your project is not misconfigured.
 
-Axes uses the checks to verify your cache configuration to see that your caches
-should be functional with the configuration of Axes. Many people have different configurations
-for their development and production environments.
+Axes uses checks to verify your Django settings configuration for security and functionality.
+Many people have different configurations for their development and production environments,
+and running the application with misconfigured settings can prevent security features from working.
