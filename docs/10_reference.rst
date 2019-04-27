@@ -5,7 +5,7 @@
 
 Axes offers extendable APIs that you can customize to your liking.
 
-You can specialize the following base classes or altenatively
+You can specialize the following base classes or alternatively
 implement your own classes based on the following base implementations.
 
 
