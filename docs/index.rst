@@ -18,6 +18,7 @@ Contents
    7_upgrading
    8_development
    9_architecture
+   10_reference
 
 Indices and tables
 ------------------
