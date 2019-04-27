@@ -3,7 +3,7 @@ from logging import getLogger
 from axes.conf import settings
 from axes.exceptions import AxesSignalPermissionDenied
 from axes.request import AxesHttpRequest
-from axes.handlers.base import AxesBaseHandler
+from axes.handlers.base import AxesHandler
 from axes.signals import user_locked_out
 from axes.helpers import (
     get_cache,
@@ -17,7 +17,7 @@ from axes.helpers import (
 log = getLogger(settings.AXES_LOGGER)
 
 
-class AxesCacheHandler(AxesBaseHandler):  # pylint: disable=too-many-locals
+class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
     """
     Signal handler implementation that records user login attempts to cache and locks users out if necessary.
     """

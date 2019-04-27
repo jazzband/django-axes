@@ -9,8 +9,8 @@ from axes.tests.base import AxesTestCase
 from axes.helpers import get_client_str
 
 
-@override_settings(AXES_HANDLER='axes.handlers.base.AxesBaseHandler')
-class AxesBaseHandlerTestCase(AxesTestCase):
+@override_settings(AXES_HANDLER='axes.handlers.base.AxesHandler')
+class AxesHandlerTestCase(AxesTestCase):
     def test_base_handler_raises_on_undefined_is_allowed_to_authenticate(self):
         with self.assertRaises(NotImplementedError):
             AxesProxyHandler.is_allowed(self.request, {})
