@@ -17,9 +17,9 @@ management commands with the Django ``manage.py`` command helpers:
 
 - ``python manage.py axes_reset``
   will reset all lockouts and access records.
-- ``python manage.py axes_reset_ip ip [ip ...]``
+- ``python manage.py axes_reset_ip [ip ...]``
   will clear lockouts and records for the given IP addresses.
-- ``python manage.py axes_reset_username username [username ...]``
+- ``python manage.py axes_reset_username [username ...]``
   will clear lockouts and records for the given usernames.
 
 In your code, you can use the ``axes.utils.reset`` function.
