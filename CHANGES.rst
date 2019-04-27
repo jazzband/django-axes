@@ -1,11 +1,14 @@
 Changes
 =======
 
-5.0.0 (WIP)
------------
+5.0a1 (2019-04-27)
+------------------
 
-- Improve management commands and separate commands for resetting
-  all access attempts, attempts by IP, and attempts by username.
+- Deprecate Python 2.7, 3.4 and 3.5 support.
+  [aleksihakli]
+
+- Remove automatic decoration and monkey-patching of Django views and forms.
+  Decorators are available for login function and method decoration as before.
   [aleksihakli]
 
 - Use backend, middleware, and signal handlers for tracking
@@ -14,18 +17,12 @@ Changes
 
 - Add ``AxesDatabaseHandler``, ``AxesCacheHandler``, and ``AxesDummyHandler``
   handler backends for processing user login and logout events and failures.
+  Handlers are configurable with the ``AXES_HANDLER`` setting.
   [aleksihakli, jorlugaqui, joshua-s]
 
-- Remove automatic decoration and monkey-patching of Django views and forms.
-  Leave decorators available for application users who wish to
-  decorate their own login or other views as before.
-  [aleksihakli]
-
-- Clean up code, documentation, tests, and coverage.
-  [aleksihakli]
-
-- Drop support for Python 2.7, 3.4 and 3.5.
-  Require minimum version of Python 3.6+ from now on.
+- Improve management commands and separate commands for resetting
+  all access attempts, attempts by IP, and attempts by username.
+  New command names are ``axes_reset``, ``axes_reset_ip`` and ``axes_reset_username``.
   [aleksihakli]
 
 - Add support for string import for ``AXES_USERNAME_CALLABLE``
@@ -37,6 +34,9 @@ Changes
   From now on, the callable needs to accept two arguments,
   the HttpRequest and credentials that are supplied to the
   Django ``authenticate`` method in authentication backends.
+  [aleksihakli]
+
+- Improve documentation layouting and contents. Add public API reference section.
   [aleksihakli]
 
 
