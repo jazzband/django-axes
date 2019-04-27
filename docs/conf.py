@@ -6,9 +6,15 @@ More information on the configuration options is available at:
     http://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-import sphinx_rtd_theme
+import os
 
 import axes
+import django
+import sphinx_rtd_theme
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'axes.tests.settings')
+django.setup()
+
 
 # -- Extra custom configuration  ------------------------------------------
 
@@ -19,7 +25,7 @@ description = 'Keep track of failed login attempts in Django-powered sites.',
 
 # Add any Sphinx extension module names here, as strings.
 # They can be extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = []
+extensions = ['sphinx.ext.autodoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [
