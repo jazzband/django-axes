@@ -138,12 +138,8 @@ def get_client_ip_address(request: HttpRequest) -> str:
     """
     Get client IP address as configured by the user.
 
-    The primary method is to fetch the reques attribute configured with the
-    ``settings.AXES_IP_ATTRIBUTE`` that can be set by the user on the view layer.
-
-    If the ``settings.AXES_IP_ATTRIBUTE`` is not set, the ``ipware`` package will be utilized to resolve the address
-    according to the client IP configurations that can be defined by the user to suit the reverse proxy configuration
-    that is used in the users HTTP proxy or *aaS service layers. Refer to the documentation for more information.
+    The django-ipware package is used for address resolution
+    and parameters can be configured in the Axes package.
     """
 
     client_ip_address, _ = ipware.ip2.get_client_ip(
