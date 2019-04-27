@@ -110,7 +110,6 @@ them as per the example.
     ]
 
 
-
 Customizing username lookups
 ----------------------------
 
