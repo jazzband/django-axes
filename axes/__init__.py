@@ -1,4 +1,4 @@
-__version__ = '5.0a1'
+__version__ = '5.0b1'
 
 default_app_config = 'axes.apps.AppConfig'
 
