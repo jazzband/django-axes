@@ -1,5 +1,5 @@
 from django.core.checks import run_checks, Error
-from django.test import override_settings
+from django.test import override_settings, modify_settings
 
 from axes.checks import Messages, Hints, Codes
 from axes.conf import settings
@@ -37,3 +37,39 @@ class CacheCheckTestCase(AxesTestCase):
     def test_cache_check_does_not_produce_check_errors_with_database_handler(self):
         errors = run_checks()
         self.assertEqual([], errors)
+
+
+class MiddlewareCheckTestCase(AxesTestCase):
+    @modify_settings(
+        MIDDLEWARE={
+            'remove': ['axes.middleware.AxesMiddleware']
+        },
+    )
+    def test_cache_check_errors(self):
+        errors = run_checks()
+        error = Error(
+            msg=Messages.MIDDLEWARE_INVALID,
+            hint=Hints.MIDDLEWARE_INVALID,
+            obj=settings.MIDDLEWARE,
+            id=Codes.MIDDLEWARE_INVALID,
+        )
+
+        self.assertEqual([error], errors)
+
+
+class BackendCheckTestCase(AxesTestCase):
+    @modify_settings(
+        AUTHENTICATION_BACKENDS={
+            'remove': ['axes.backends.AxesBackend']
+        },
+    )
+    def test_cache_check_errors(self):
+        errors = run_checks()
+        error = Error(
+            msg=Messages.BACKEND_INVALID,
+            hint=Hints.BACKEND_INVALID,
+            obj=settings.AUTHENTICATION_BACKENDS,
+            id=Codes.BACKEND_INVALID,
+        )
+
+        self.assertEqual([error], errors)
