@@ -270,7 +270,7 @@ def get_lockout_response(request: AxesHttpRequest, credentials: dict = None) -> 
     cool_off = get_cool_off()
     if cool_off:
         context.update({
-            'cool_off': get_cool_off_iso8601(cool_off)
+            'cooloff_time': get_cool_off_iso8601(cool_off),  # differing old name is kept for backwards compatibility
         })
 
     if request.is_ajax():
