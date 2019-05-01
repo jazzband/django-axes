@@ -13,13 +13,13 @@ class AxesBackend(ModelBackend):
     Use this class as the first item of ``AUTHENTICATION_BACKENDS`` to
     prevent locked out users from being logged in by the Django authentication flow.
 
-    **Note:** this backend does not log your user in and delegates login to the
-    backends that are configured after it in the ``AUTHENTICATION_BACKENDS`` list.
+    .. note:: This backend does not log your user in. It monitors login attempts.
+              Authentication is handled by the following backends that are configured in ``AUTHENTICATION_BACKENDS``.
     """
 
     def authenticate(self, request: AxesHttpRequest, username: str = None, password: str = None, **kwargs: dict):
         """
-        Checks user lockout status and raise a PermissionDenied if user is not allowed to log in.
+        Checks user lockout status and raises an exception if user is not allowed to log in.
 
         This method interrupts the login flow and inserts  error message directly to the
         ``response_context`` attribute that is supplied as a keyword argument.
@@ -57,4 +57,6 @@ class AxesBackend(ModelBackend):
 class AxesModelBackend(AxesBackend):
     """
     Backwards compatibility class for version 4 to version 5 migration.
+
+    See the ``AxesBackend`` class documentation and implementation.
     """

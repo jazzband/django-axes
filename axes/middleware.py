@@ -16,16 +16,26 @@ from axes.request import AxesHttpRequest
 
 class AxesMiddleware:
     """
-    Middleware that maps lockout signals into readable HTTP 403 Forbidden responses.
+    Middleware that calculates necessary HTTP request attributes for attempt monitoring
+    and maps lockout signals into readable HTTP 403 Forbidden responses.
 
-    Without this middleware the backend returns HTTP 403 errors with the
-    ``django.views.defaults.permission_denied`` view that renders the ``403.html``
-    template from the root template directory if found.
-    This middleware uses the ``axes.helpers.get_lockout_response`` handler
-    for returning a context aware lockout message to the end user.
+    By default Django server returns ``PermissionDenied`` exceptions as HTTP 403 errors
+    with the ``django.views.defaults.permission_denied`` view that renders
+    the ``403.html`` template from the root template directory if found.
 
-    To customize the error rendering, you can subclass this middleware
+    This middleware recognizes the specialized attempt monitoring and lockout exceptions
+    and uses the ``axes.helpers.get_lockout_response`` handler for returning
+    customizable and context aware lockout message to the end user.
+
+    To customize the error handling behaviour further, you can subclass this middleware
     and change the ``process_exception`` handler to your own liking.
+
+    Please see the following configuration flags before customizing this handler:
+
+    - ``AXES_LOCKOUT_TEMPLATE``,
+    - ``AXES_LOCKOUT_URL``,
+    - ``AXES_COOLOFF_MESSAGE``, and
+    - ``AXES_PERMALOCK_MESSAGE``.
     """
 
     def __init__(self, get_response: Callable):
@@ -37,9 +47,11 @@ class AxesMiddleware:
 
     def update_request(self, request: HttpRequest):
         """
-        Update given Django ``HttpRequest`` with necessary attributes
-        before passing it on the ``get_response`` for further
-        Django middleware and view processing.
+        Construct an ``AxesHttpRequest`` from the given ``HttpRequest``
+        by updating the request with necessary attempt tracking attributes.
+
+        This method is called by the middleware class ``__call__`` method
+        when iterating over the middleware stack.
         """
 
         request.axes_attempt_time = now()
@@ -50,9 +62,11 @@ class AxesMiddleware:
 
     def process_exception(self, request: AxesHttpRequest, exception):  # pylint: disable=inconsistent-return-statements
         """
-        Exception handler that processes exceptions raised by the Axes signal handler when request fails with login.
+        Handle exceptions raised by the Axes signal handler class when requests fail checks.
 
-        Only ``axes.exceptions.AxesSignalPermissionDenied`` exception is handled by this middleware.
+        Note that only ``AxesSignalPermissionDenied`` is handled by this middleware class.
+
+        :return: Configured ``HttpResponse`` for failed authentication attempts and lockouts.
         """
 
         if isinstance(exception, AxesSignalPermissionDenied):

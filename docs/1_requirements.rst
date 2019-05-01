@@ -1,7 +1,7 @@
 .. _requirements:
 
-1. Requirements
-===============
+Requirements
+============
 
 Axes requires a supported Django version and runs on Python and PyPy versions 3.5 and above.
 

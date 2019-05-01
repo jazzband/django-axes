@@ -1,7 +1,7 @@
 .. _configuration:
 
-4. Configuration
-================
+Configuration
+=============
 
 Minimal Axes configuration is done with just ``settings.py`` updates.
 
@@ -46,7 +46,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
   user is locked out. Template receives ``cooloff_time`` and ``failure_limit`` as
   context variables. Default: ``None``
 * ``AXES_LOCKOUT_URL``: If set, specifies a URL to redirect to on lockout. If
-  both AXES_LOCKOUT_TEMPLATE and AXES_LOCKOUT_URL are set, the template will
+  both ``AXES_LOCKOUT_TEMPLATE`` and ``AXES_LOCKOUT_URL`` are set, the template will
   be used. Default: ``None``
 * ``AXES_VERBOSE``: If ``True``, you'll see slightly more logging for Axes.
   Default: ``True``
@@ -100,10 +100,10 @@ following settings to suit your set up to correctly resolve client IP addresses:
 Configuring handlers
 --------------------
 
-Axes uses and provides handlers for processing signals and events
+Axes uses handlers for processing signals and events
 from Django authentication and login attempts.
 
-The following handlers are offered by default and can be configured
+The following handlers are implemented by Axes and can be configured
 with the ``AXES_HANDLER`` setting in project configuration:
 
 - ``axes.handlers.database.AxesDatabaseHandler``
@@ -126,6 +126,12 @@ with the ``AXES_HANDLER`` setting in project configuration:
   and is meant to be used on e.g. local development setups
   and testing deployments where login monitoring is not wanted.
 
+To switch to cache based attempt tracking you can do the following::
+
+    AXES_HANDLER = 'axes.handlers.cache.AxesCacheHandler'
+
+See the cache configuration section for suitable cache backends.
+
 
 Configuring caches
 ------------------
@@ -140,8 +146,10 @@ resets made in the command line might not remove lock-outs that are in a sepate
 processes in-memory cache such as the web server serving your login or admin page.
 
 To circumvent this problem, please use somethings else than
-``django.core.cache.backends.locmem.LocMemCache`` as your
-cache backend in Django cache ``BACKEND`` setting.
+``django.core.cache.backends.dummy.DummyCache``,
+``django.core.cache.backends.locmem.LocMemCache``, or
+``django.core.cache.backends.filebased.FileBasedCache``
+as your cache backend in Django cache ``BACKEND`` setting.
 
 If changing the ``'default'`` cache is not an option, you can add a cache
 specifically for use with Axes. This is a two step process. First you need to

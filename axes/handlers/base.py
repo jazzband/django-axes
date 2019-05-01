@@ -9,12 +9,14 @@ from axes.request import AxesHttpRequest
 
 class AxesHandler:  # pylint: disable=unused-argument
     """
-    Virtual handler API definition for subclassing handlers that can be used with the ``AxesProxyHandler``.
+    Handler API definition for implementations that are used by the ``AxesProxyHandler``.
 
-    If you wish to implement your own handler class just override the methods you wish to specialize
-    and define the class to be used with ``settings.AXES_HANDLER = 'path.to.YourClass'``.
+    If you wish to specialize your own handler class, override the necessary methods
+    and configure the class for use by setting ``settings.AXES_HANDLER = 'module.path.to.YourClass'``.
 
-    The default implementation that is actually used by Axes is the ``axes.handlers.database.AxesDatabaseHandler``.
+    The default implementation that is actually used by Axes is ``axes.handlers.database.AxesDatabaseHandler``.
+
+    .. note:: This is a virtual class and **can not be used without specialization**.
     """
 
     def is_allowed(self, request: AxesHttpRequest, credentials: dict = None) -> bool:
@@ -23,7 +25,7 @@ class AxesHandler:  # pylint: disable=unused-argument
 
         This method is abstract and other backends can specialize it as needed, but the default implementation
         checks if the user has attempted to authenticate into the site too many times through the
-        Django authentication backends and returns ``False``if user exceeds the configured Axes thresholds.
+        Django authentication backends and returns ``False`` if user exceeds the configured Axes thresholds.
 
         This checker can implement arbitrary checks such as IP whitelisting or blacklisting,
         request frequency checking, failed attempt monitoring or similar functions.

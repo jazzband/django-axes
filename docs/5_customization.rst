@@ -1,9 +1,20 @@
 .. customization:
 
-5. Customization
-================
+Customization
+=============
 
-Axes can be customized and extended by using the correct signals.
+Axes has multiple options for customization including customizing the
+attempt tracking and lockout handling logic and lockout response formatting.
+
+There are public APIs and the whole Axes tracking system is pluggable.
+You can swap the authentication backend, attempt tracker, failure handlers,
+database or cache backends and error formatters as you see fit.
+
+Check the API reference section for further inspiration on
+implementing custom authentication backends, middleware, and handlers.
+
+Axes uses the stock Django signals for login monitoring and
+can be customized and extended by using them correctly.
 
 Axes listens to the following signals from ``django.contrib.auth.signals`` to log access attempts:
 
@@ -14,6 +25,7 @@ Axes listens to the following signals from ``django.contrib.auth.signals`` to lo
 You can also use Axes with your own auth module, but you'll need
 to ensure that it sends the correct signals in order for Axes to
 log the access attempts.
+
 
 Customizing authentication views
 --------------------------------

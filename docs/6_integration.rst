@@ -1,7 +1,7 @@
 .. _integration:
 
-6. Integration
-==============
+Integration
+===========
 
 Axes is intended to be pluggable and usable with 3rd party authentication solutions.
 
@@ -9,7 +9,7 @@ This document describes the integration with some commonly used 3rd party packag
 such as Django Allauth and Django REST Framework.
 
 
-Integrating with Django Allauth
+Integration with Django Allauth
 -------------------------------
 
 Axes relies on having login information stored under ``AXES_USERNAME_FORM_FIELD`` key
@@ -64,7 +64,7 @@ You also need to decorate ``dispatch()`` and ``form_invalid()`` methods of the A
     ]
 
 
-Integrating with Django REST Framework
+Integration with Django REST Framework
 --------------------------------------
 
 Modern versions of Django REST Framework after 3.7.0 work normally with Axes.
@@ -108,7 +108,7 @@ require the request object to be passed for authentication.
             return (user, None)
 
 
-Integrating with Django Simple Captcha
+Integration with Django Simple Captcha
 --------------------------------------
 
 Axes supports Captcha with the Django Simple Captcha package in the following manner.

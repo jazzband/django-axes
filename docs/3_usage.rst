@@ -1,7 +1,7 @@
 .. _usage:
 
-3. Usage
-========
+Usage
+=====
 
 Once Axes is is installed and configured, you can login and logout
 of your application via the ``django.contrib.auth`` views.
@@ -31,4 +31,4 @@ In your code, you can use the ``axes.utils.reset`` function.
 Please note that if you give both ``username`` and ``ip`` arguments to ``reset``
 that attempts that have both the set IP and username are reset.
 
-The effective behaviour of ``reset`` is to ``and`` the terms instead of ``or``ing them.
+The effective behaviour of ``reset`` is to ``and`` the terms instead of ``or`` ing them.

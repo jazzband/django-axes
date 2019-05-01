@@ -1,7 +1,7 @@
 .. _installation:
 
-2. Installation
-===============
+Installation
+============
 
 Axes is easy to install from the PyPI package::
 
@@ -56,7 +56,7 @@ After installing the package, the project settings need to be configured.
 Axes is now functional with the default settings and is saving user attempts
 into your database and locking users out if they exceed the maximum attempts.
 
-You should use the ``python manage.py check`` command to verify the correct configuration in both
+You should use the ``python manage.py check`` command to verify the correct configuration in
 development, staging, and production environments. It is probably best to use this step as part
 of your regular CI workflows to verify that your project is not misconfigured.
 

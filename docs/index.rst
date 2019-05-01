@@ -8,6 +8,7 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    1_requirements
    2_installation
