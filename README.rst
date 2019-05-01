@@ -36,10 +36,10 @@ login attempts for your login and administration views.
 The name is sort of a geeky pun, since it can be interpreted as:
 
 * ``access``, as in monitoring access attempts, or
-* ``axes``, as in tools you can use hack (generally on wood).
+* ``axes``, as in tools you can use to hack (generally on wood).
 
 In this case, however, the hacking part of it can be taken a bit further:
-Axes is intended to help you *stop* people from hacking the website.
+**Axes is intended to help you stop people from hacking your website**.
 
 
 Functionality
