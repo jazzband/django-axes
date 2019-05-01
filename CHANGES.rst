@@ -438,6 +438,7 @@ Changes
 - BUGFIX: Missing migration
   [smeinel]
 
+
 1.6.0 (2016-01-07)
 ------------------
 
@@ -459,11 +460,13 @@ Changes
 - Add db indexes to CommonAccess model
   [Schweigi]
 
+
 1.5.0 (2015-09-11)
 ------------------
 
 - Fix #_get_user_attempts to include username when filtering AccessAttempts if AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP is True
   [afioca]
+
 
 1.4.0 (2015-08-09)
 ------------------
@@ -471,16 +474,19 @@ Changes
 - Send the user_locked_out signal. Fixes #94.
   [toabi]
 
+
 1.3.9 (2015-02-11)
 ------------------
 
 - Python 3 fix (#104)
+
 
 1.3.8 (2014-10-07)
 ------------------
 
 - Rename GitHub organization from django-security to django-pci to emphasize focus on providing assistance with building PCI compliant websites with Django.
   [aclark4life]
+
 
 1.3.7 (2014-10-05)
 ------------------
@@ -600,87 +606,134 @@ Changes
 1.3.6 (2013-11-23)
 ------------------
 
-- Added AttributeError in case get_profile doesn't exist [camilonova]
-- Improved axes_reset command [camilonova]
+- Added AttributeError in case get_profile doesn't exist
+  [camilonova]
+
+- Improved axes_reset command
+  [camilonova]
 
 
 1.3.5 (2013-11-01)
 ------------------
 
-- Fix an issue with __version__ loading the wrong version [graingert]
+- Fix an issue with __version__ loading the wrong version
+  [graingert]
 
 
 1.3.4 (2013-11-01)
 ------------------
 
-- Update README.rst for PyPI [marty] [camilonova] [graingert]
-- Add cooloff period [visualspace]
+- Update README.rst for PyPI
+  [marty, camilonova, graingert]
+
+- Add cooloff period
+  [visualspace]
 
 
 1.3.3 (2013-07-05)
 ------------------
 
-- Added 'username' field to the Admin table [bkvirendra]
-- Removed fallback logging creation since logging cames by default on django 1.4 or later, if you don't have it is because you explicitly wanted. Fixes #45 [camilonova]
+- Added 'username' field to the Admin table
+  [bkvirendra]
+
+- Removed fallback logging creation since logging cames by default on django 1.4 or later,
+  if you don't have it is because you explicitly wanted. Fixes #45
+  [camilonova]
 
 
 1.3.2 (2013-03-28)
 ------------------
 
-- Fix an issue when a user logout [camilonova]
-- Match pypi version [camilonova]
-- Better User model import method [camilonova]
-- Use only one place to get the version number [camilonova]
-- Fixed an issue when a user on django 1.4 logout [camilonova]
-- Handle exception if there is not user profile model set [camilonova]
-- Made some cleanup and remove a pokemon exception handling [camilonova]
-- Improved tests so it really looks for the rabbit in the hole [camilonova]
-- Match pypi version [camilonova]
+- Fix an issue when a user logout
+  [camilonova]
+
+- Match pypi version
+  [camilonova]
+
+- Better User model import method
+  [camilonova]
+
+- Use only one place to get the version number
+  [camilonova]
+
+- Fixed an issue when a user on django 1.4 logout
+  [camilonova]
+
+- Handle exception if there is not user profile model set
+  [camilonova]
+
+- Made some cleanup and remove a pokemon exception handling
+  [camilonova]
+
+- Improved tests so it really looks for the rabbit in the hole
+  [camilonova]
+
+- Match pypi version
+  [camilonova]
 
 
 1.3.1 (2013-03-19)
 ------------------
 
-- Add support for Django 1.5 [camilonova]
+- Add support for Django 1.5
+  [camilonova]
 
 
 1.3.0 (2013-02-27)
 ------------------
 
-- Bug fix: get_version() format string [csghormley]
+- Bug fix: get_version() format string
+  [csghormley]
 
 
 1.2.9 (2013-02-20)
 ------------------
 
-- Add to and improve test cases [camilonova]
+- Add to and improve test cases
+  [camilonova]
 
 
 1.2.8 (2013-01-23)
 ------------------
 
-- Increased http accept header length [jslatts]
+- Increased http accept header length
+  [jslatts]
 
 
 1.2.7 (2013-01-17)
 ------------------
 
-- Reverse proxy support [rmagee]
-- Clean up README [martey]
+- Reverse proxy support
+  [rmagee]
+
+- Clean up README
+  [martey]
 
 
 1.2.6 (2012-12-04)
 ------------------
 
-- Remove unused import [aclark4life]
+- Remove unused import
+  [aclark4life]
 
 
 1.2.5 (2012-11-28)
 ------------------
 
-- Fix setup.py [aclark4life]
-- Added ability to flag user accounts as unlockable. [kencochrane]
-- Added ipaddress as a param to the user_locked_out signal. [kencochrane]
-- Added a signal receiver for user_logged_out. [kencochrane]
-- Added a signal for when a user gets locked out. [kencochrane]
-- Added AccessLog model to log all access attempts. [kencochrane]
+- Fix setup.py
+  [aclark4life]
+
+- Added ability to flag user accounts as unlockable.
+  [kencochrane]
+
+- Added ipaddress as a param to the user_locked_out signal.
+  [kencochrane]
+
+- Added a signal receiver for user_logged_out.
+  [kencochrane]
+
+- Added a signal for when a user gets locked out.
+  [kencochrane]
+
+- Added AccessLog model to log all access attempts.
+  [kencochrane]
