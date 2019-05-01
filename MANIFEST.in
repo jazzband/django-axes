@@ -1,4 +1,3 @@
 include LICENSE README.rst CHANGES.rst
 recursive-include axes *.py
 recursive-include axes/locale *.mo *.po
-include .travis.yml
