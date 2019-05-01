@@ -41,4 +41,4 @@ class AppConfig(apps.AppConfig):
     def ready(self):
         self.initialize()
 
-        from axes import signals  # noqa
+        from axes import checks, signals  # noqa
