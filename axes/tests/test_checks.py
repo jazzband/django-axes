@@ -1,8 +1,7 @@
-from django.core.checks import run_checks, Error
+from django.core.checks import run_checks, Warning  # pylint: disable=redefined-builtin
 from django.test import override_settings, modify_settings
 
 from axes.checks import Messages, Hints, Codes
-from axes.conf import settings
 from axes.tests.base import AxesTestCase
 
 
@@ -21,10 +20,9 @@ class CacheCheckTestCase(AxesTestCase):
     )
     def test_cache_check_errors(self):
         errors = run_checks()
-        error = Error(
+        error = Warning(
             msg=Messages.CACHE_INVALID,
             hint=Hints.CACHE_INVALID,
-            obj=settings.CACHES,
             id=Codes.CACHE_INVALID,
         )
 
@@ -47,10 +45,9 @@ class MiddlewareCheckTestCase(AxesTestCase):
     )
     def test_cache_check_errors(self):
         errors = run_checks()
-        error = Error(
+        error = Warning(
             msg=Messages.MIDDLEWARE_INVALID,
             hint=Hints.MIDDLEWARE_INVALID,
-            obj=settings.MIDDLEWARE,
             id=Codes.MIDDLEWARE_INVALID,
         )
 
@@ -65,10 +62,9 @@ class BackendCheckTestCase(AxesTestCase):
     )
     def test_cache_check_errors(self):
         errors = run_checks()
-        error = Error(
+        error = Warning(
             msg=Messages.BACKEND_INVALID,
             hint=Hints.BACKEND_INVALID,
-            obj=settings.AUTHENTICATION_BACKENDS,
             id=Codes.BACKEND_INVALID,
         )
 
