@@ -388,7 +388,7 @@ Changes
 ------------------
 
 - Use render shortcut for rendering LOCKOUT_TEMPLATE
-  [Radosław Luter]
+  [Radoslaw Luter]
 
 - Added app_label for RemovedInDjango19Warning
   [yograterol]
@@ -434,7 +434,7 @@ Changes
   [SilasX]
 
 - Issue #155. Lockout response status code changed to 403.
-  [Артур Муллахметов]
+  [Arthur Mullahmetov]
 
 - BUGFIX: Missing migration
   [smeinel]

@@ -8,7 +8,7 @@ Contents
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
+   :numbered: 1
 
    1_requirements
    2_installation
@@ -19,6 +19,7 @@ Contents
    7_architecture
    8_reference
    9_development
+   10_changelog
 
 
 Indices and tables
