@@ -2,6 +2,12 @@
 Changes
 =======
 
+5.0.1 (2019-05-03)
+------------------
+
+- Add changelog to documentation.
+  [aleksihakli]
+
 5.0 (2019-05-01)
 ----------------
 
