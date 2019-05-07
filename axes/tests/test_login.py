@@ -4,13 +4,34 @@ Integration tests for the login handling.
 TODO: Clean up the tests in this module.
 """
 
-from django.test import override_settings
+from django.test import override_settings, TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 from axes.conf import settings
 from axes.models import AccessLog, AccessAttempt
 from axes.tests.base import AxesTestCase
+
+
+@override_settings(AXES_ENABLED=False)
+class DjangoLoginTestCase(TestCase):
+    def setUp(self):
+        self.username = 'john.doe'
+        self.password = 'hunter2'
+
+        self.user = get_user_model().objects.create(username=self.username)
+        self.user.set_password(self.password)
+        self.user.save()
+
+    def test_login(self):
+        self.client.login(username=self.username, password=self.password)
+
+    def test_logout(self):
+        self.client.login(username=self.username, password=self.password)
+        self.client.logout()
+
+    def test_force_login(self):
+        self.client.force_login(self.user)
 
 
 class LoginTestCase(AxesTestCase):

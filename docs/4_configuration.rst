@@ -14,6 +14,8 @@ Configuring project settings
 
 The following ``settings.py`` options are available for customizing Axes behaviour.
 
+* ``AXES_ENABLED``: Enable or disable Axes plugin functionality,
+  for example in test runner setup. Default: ``True``
 * ``AXES_FAILURE_LIMIT``: The number of login attempts allowed before a
   record is created for the failed logins.  Default: ``3``
 * ``AXES_LOCK_OUT_AT_FAILURE``: After the number of allowed login attempts

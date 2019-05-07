@@ -5,6 +5,9 @@ from appconf import AppConf
 
 
 class AxesAppConf(AppConf):
+    # disable plugin when set to False
+    ENABLED = True
+
     # see if the user has overridden the failure limit
     FAILURE_LIMIT = 3
 

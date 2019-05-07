@@ -63,3 +63,11 @@ of your regular CI workflows to verify that your project is not misconfigured.
 Axes uses checks to verify your Django settings configuration for security and functionality.
 Many people have different configurations for their development and production environments,
 and running the application with misconfigured settings can prevent security features from working.
+
+If you get errors when running tests or other configurations, try setting the ``AXES_ENABLED``
+flag to ``False`` in your project or test settings configuration file::
+
+    AXES_ENABLED = False
+
+This disables the Axes middleware, authentication backend and signal handlers
+which might produce errors with exotic test configurations.

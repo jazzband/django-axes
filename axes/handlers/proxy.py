@@ -4,6 +4,7 @@ from django.utils.module_loading import import_string
 
 from axes.conf import settings
 from axes.handlers.base import AxesHandler
+from axes.helpers import toggleable
 from axes.request import AxesHttpRequest
 
 log = getLogger(settings.AXES_LOGGER)
@@ -44,18 +45,22 @@ class AxesProxyHandler(AxesHandler):
         return cls.get_implementation().is_allowed(request, credentials)
 
     @classmethod
+    @toggleable
     def user_login_failed(cls, sender, credentials: dict, request: AxesHttpRequest = None, **kwargs):
         return cls.get_implementation().user_login_failed(sender, credentials, request, **kwargs)
 
     @classmethod
+    @toggleable
     def user_logged_in(cls, sender, request: AxesHttpRequest, user, **kwargs):
         return cls.get_implementation().user_logged_in(sender, request, user, **kwargs)
 
     @classmethod
+    @toggleable
     def user_logged_out(cls, sender, request: AxesHttpRequest, user, **kwargs):
         return cls.get_implementation().user_logged_out(sender, request, user, **kwargs)
 
     @classmethod
+    @toggleable
     def post_save_access_attempt(cls, instance, **kwargs):
         return cls.get_implementation().post_save_access_attempt(instance, **kwargs)
 
