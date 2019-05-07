@@ -2,11 +2,23 @@
 Changes
 =======
 
+
+5.0.2 (2019-05-03)
+------------------
+
+- Add ``AXES_ENABLED`` setting for disabling Axes with e.g. tests
+  that use Django test client ``login``, ``logout``, and ``force_login``
+  methods, which do not supply the ``request`` argument to views,
+  preventing Axes from functioning correctly in certain test setups.
+  [aleksihakli]
+
+
 5.0.1 (2019-05-03)
 ------------------
 
 - Add changelog to documentation.
   [aleksihakli]
+
 
 5.0 (2019-05-01)
 ----------------
