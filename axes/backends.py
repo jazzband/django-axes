@@ -2,7 +2,7 @@ from django.contrib.auth.backends import ModelBackend
 
 from axes.exceptions import AxesBackendPermissionDenied, AxesBackendRequestParameterRequired
 from axes.handlers.proxy import AxesProxyHandler
-from axes.helpers import get_credentials, get_lockout_message
+from axes.helpers import get_credentials, get_lockout_message, toggleable
 from axes.request import AxesHttpRequest
 
 
@@ -17,6 +17,7 @@ class AxesBackend(ModelBackend):
               Authentication is handled by the following backends that are configured in ``AUTHENTICATION_BACKENDS``.
     """
 
+    @toggleable
     def authenticate(self, request: AxesHttpRequest, username: str = None, password: str = None, **kwargs: dict):
         """
         Checks user lockout status and raises an exception if user is not allowed to log in.

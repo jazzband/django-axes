@@ -10,6 +10,7 @@ from axes.helpers import (
     get_client_path_info,
     get_client_http_accept,
     get_lockout_response,
+    toggleable,
 )
 from axes.request import AxesHttpRequest
 
@@ -45,6 +46,7 @@ class AxesMiddleware:
         self.update_request(request)
         return self.get_response(request)
 
+    @toggleable
     def update_request(self, request: HttpRequest):
         """
         Construct an ``AxesHttpRequest`` from the given ``HttpRequest``
@@ -60,6 +62,7 @@ class AxesMiddleware:
         request.axes_path_info = get_client_path_info(request)
         request.axes_http_accept = get_client_http_accept(request)
 
+    @toggleable
     def process_exception(self, request: AxesHttpRequest, exception):  # pylint: disable=inconsistent-return-statements
         """
         Handle exceptions raised by the Axes signal handler class when requests fail checks.

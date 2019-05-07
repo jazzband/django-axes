@@ -2,7 +2,7 @@ from datetime import timedelta
 from hashlib import md5
 from ipaddress import ip_address
 from logging import getLogger
-from typing import Any, Optional, Type, Union
+from typing import Any, Callable, Optional, Type, Union
 
 from django.core.cache import caches, BaseCache
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, QueryDict
@@ -376,3 +376,20 @@ def get_client_cache_key(request_or_attempt: Union[HttpRequest, Any], credential
     cache_key = f'axes-{cache_key_digest}'
 
     return cache_key
+
+
+def toggleable(func) -> Callable:
+    """
+    Decorator that toggles function execution based on settings.
+
+    If the ``settings.AXES_ENABLED`` flag is set to ``False``
+    the decorated function never runs and a None is returned.
+
+    This decorator is only suitable for functions that do not
+    require return values to be passed back to callers.
+    """
+
+    def inner(*args, **kwargs):  # pylint: disable=inconsistent-return-statements
+        if settings.AXES_ENABLED:
+            return func(*args, **kwargs)
+    return inner
