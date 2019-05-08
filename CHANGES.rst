@@ -3,6 +3,22 @@ Changes
 =======
 
 
+5.0.3 (2019-05-08)
+------------------
+
+- Fix ``django.contrib.auth`` module ``login`` and ``logout`` functionality
+  so that they work with the handlers without the an ``AxesHttpRequest``
+  to improve cross compatibility with other Django applications.
+  [aleksihakli]
+
+- Change IP address resolution to allow empty or missing addresses.
+  [aleksihakli]
+
+- Add error logging for missing request attributes in the handler layer
+  so that users get better indicators of misconfigured applications.
+  [aleksihakli]
+
+
 5.0.2 (2019-05-07)
 ------------------
 
