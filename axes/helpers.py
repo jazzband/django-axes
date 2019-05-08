@@ -1,6 +1,5 @@
 from datetime import timedelta
 from hashlib import md5
-from ipaddress import ip_address
 from logging import getLogger
 from typing import Any, Callable, Optional, Type, Union
 
@@ -150,7 +149,7 @@ def get_client_ip_address(request: HttpRequest) -> str:
         request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
     )
 
-    return str(ip_address(client_ip_address))
+    return client_ip_address
 
 
 def get_client_user_agent(request: HttpRequest) -> str:
