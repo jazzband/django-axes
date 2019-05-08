@@ -3,7 +3,7 @@ Changes
 =======
 
 
-5.0.2 (2019-05-03)
+5.0.2 (2019-05-07)
 ------------------
 
 - Add ``AXES_ENABLED`` setting for disabling Axes with e.g. tests
