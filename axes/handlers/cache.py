@@ -47,6 +47,10 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
             log.error('AXES: AxesCacheHandler.user_login_failed does not function without a request.')
             return
 
+        if not hasattr(request, 'axes_attempt_time'):
+            log.error('AXES: AxesCacheHandler.user_login_failed needs a valid AxesHttpRequest object.')
+            return
+
         username = get_client_username(request, credentials)
         client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
@@ -89,6 +93,10 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
         When user logs in, update the AccessLog related to the user.
         """
 
+        if not hasattr(request, 'axes_attempt_time'):
+            log.error('AXES: AxesCacheHandler.user_logged_in needs a valid AxesHttpRequest object.')
+            return
+
         username = user.get_username()
         credentials = get_credentials(username)
         client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
@@ -102,7 +110,11 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
             log.info('AXES: Deleted %d failed login attempts by %s from cache.', failures_since_start, client_str)
 
     def user_logged_out(self, sender, request: AxesHttpRequest, user, **kwargs):
-        username = user.get_username()
+        if not hasattr(request, 'axes_attempt_time'):
+            log.error('AXES: AxesCacheHandler.user_logged_out needs a valid AxesHttpRequest object.')
+            return
+
+        username = user.get_username() if user else None
         client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
         log.info('AXES: Successful logout by %s.', client_str)

@@ -58,6 +58,10 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
             log.error('AXES: AxesDatabaseHandler.user_login_failed does not function without a request.')
             return
 
+        if not hasattr(request, 'axes_attempt_time'):
+            log.error('AXES: AxesDatabaseHandler.user_login_failed needs a valid AxesHttpRequest object.')
+            return
+
         # 1. database query: Clean up expired user attempts from the database before logging new attempts
         clean_expired_user_attempts(request.axes_attempt_time)
 
@@ -137,6 +141,10 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
         When user logs in, update the AccessLog related to the user.
         """
 
+        if not hasattr(request, 'axes_attempt_time'):
+            log.error('AXES: AxesDatabaseHandler.user_logged_in needs a valid AxesHttpRequest object.')
+            return
+
         # 1. database query: Clean up expired user attempts from the database
         clean_expired_user_attempts(request.axes_attempt_time)
 
@@ -167,10 +175,14 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
         When user logs out, update the AccessLog related to the user.
         """
 
+        if not hasattr(request, 'axes_attempt_time'):
+            log.error('AXES: AxesDatabaseHandler.user_logged_out needs a valid AxesHttpRequest object.')
+            return
+
         # 1. database query: Clean up expired user attempts from the database
         clean_expired_user_attempts(request.axes_attempt_time)
 
-        username = user.get_username()
+        username = user.get_username() if user else None
         client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 
         log.info('AXES: Successful logout by %s.', client_str)
