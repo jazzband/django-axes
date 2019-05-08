@@ -25,6 +25,9 @@ class AppConfig(apps.AppConfig):
             return
         cls.logging_initialized = True
 
+        if not settings.AXES_ENABLED:
+            return
+
         if not settings.AXES_VERBOSE:
             return
 
