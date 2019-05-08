@@ -4,33 +4,53 @@ Integration tests for the login handling.
 TODO: Clean up the tests in this module.
 """
 
+from importlib import import_module
+
+from django.http import HttpRequest
 from django.test import override_settings, TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login, logout
 
 from axes.conf import settings
 from axes.models import AccessLog, AccessAttempt
 from axes.tests.base import AxesTestCase
 
 
-@override_settings(AXES_ENABLED=False)
 class DjangoLoginTestCase(TestCase):
     def setUp(self):
+        engine = import_module(settings.SESSION_ENGINE)
+
+        self.request = HttpRequest()
+        self.request.session = engine.SessionStore()
+
         self.username = 'john.doe'
         self.password = 'hunter2'
 
         self.user = get_user_model().objects.create(username=self.username)
         self.user.set_password(self.password)
         self.user.save()
+        self.user.backend = 'django.contrib.auth.backends.ModelBackend'
 
+
+class DjangoContribAuthLoginTestCase(DjangoLoginTestCase):
     def test_login(self):
-        self.client.login(username=self.username, password=self.password)
+        login(self.request, self.user)
 
     def test_logout(self):
+        login(self.request, self.user)
+        logout(self.request)
+
+
+@override_settings(AXES_ENABLED=False)
+class DjangoTestClientLoginTestCase(DjangoLoginTestCase):
+    def test_client_login(self):
+        self.client.login(username=self.username, password=self.password)
+
+    def test_client_logout(self):
         self.client.login(username=self.username, password=self.password)
         self.client.logout()
 
-    def test_force_login(self):
+    def test_client_force_login(self):
         self.client.force_login(self.user)
 
 
