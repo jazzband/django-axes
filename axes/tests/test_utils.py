@@ -259,10 +259,9 @@ class ClientCacheKeyTestCase(AxesTestCase):
         """
 
         cache_hash_digest = md5(self.ip_address.encode()).hexdigest()
-
-        # Getting cache key from request
         cache_hash_key = f'axes-{cache_hash_digest}'
 
+        # Getting cache key from request
         request_factory = RequestFactory()
         request = request_factory.post(
             '/admin/login/',
@@ -288,16 +287,53 @@ class ClientCacheKeyTestCase(AxesTestCase):
 
         self.assertEqual(cache_hash_key, get_client_cache_key(attempt))
 
+    def test_get_cache_key_empty_ip_address(self):
+        """
+        Simulate an empty IP address in the request.
+        """
+
+        empty_ip_address = ''
+
+        cache_hash_digest = md5(empty_ip_address.encode()).hexdigest()
+        cache_hash_key = f'axes-{cache_hash_digest}'
+
+        # Getting cache key from request
+        request_factory = RequestFactory()
+        request = request_factory.post(
+            '/admin/login/',
+            data={
+                'username': self.username,
+                'password': 'test',
+            },
+            REMOTE_ADDR=empty_ip_address,
+        )
+
+        self.assertEqual(cache_hash_key, get_client_cache_key(request))
+
+        # Getting cache key from AccessAttempt Object
+        attempt = AccessAttempt(
+            user_agent='<unknown>',
+            ip_address=empty_ip_address,
+            username=self.username,
+            get_data='',
+            post_data='',
+            http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+            path_info=request.META.get('PATH_INFO', '<unknown>'),
+            failures_since_start=0,
+        )
+
+        self.assertEqual(cache_hash_key, get_client_cache_key(attempt))
+
     def test_get_cache_key_credentials(self):
         """
         Test the cache key format.
         """
 
-        # Getting cache key from request
         ip_address = self.ip_address
         cache_hash_digest = md5(ip_address.encode()).hexdigest()
         cache_hash_key = f'axes-{cache_hash_digest}'
 
+        # Getting cache key from request
         request_factory = RequestFactory()
         request = request_factory.post(
             '/admin/login/',

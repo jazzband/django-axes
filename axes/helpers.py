@@ -370,7 +370,7 @@ def get_client_cache_key(request_or_attempt: Union[HttpRequest, Any], credential
 
     filter_kwargs = get_client_parameters(username, ip_address, user_agent)
 
-    cache_key_components = ''.join(filter_kwargs.values())
+    cache_key_components = ''.join(value for value in filter_kwargs.values() if value)
     cache_key_digest = md5(cache_key_components.encode()).hexdigest()
     cache_key = f'axes-{cache_key_digest}'
 
