@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.0.4 (2019-05-09)
+------------------
+
+- Fix regression with OAuth2 authentication backends not having remote
+  IP addresses set and throwing an exception in cache key calculation.
+
+
 5.0.3 (2019-05-08)
 ------------------
 
