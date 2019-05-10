@@ -8,6 +8,7 @@ Changes
 
 - Fix regression with OAuth2 authentication backends not having remote
   IP addresses set and throwing an exception in cache key calculation.
+  [aleksihakli]
 
 
 5.0.3 (2019-05-08)
