@@ -2,7 +2,7 @@
 coverage==4.5.3
 mypy==0.701
 prospector==1.1.6.2
-pytest==4.4.2
+pytest==4.5.0
 pytest-cov==2.7.1
 pytest-django==3.4.8
 sphinx_rtd_theme==0.4.3
