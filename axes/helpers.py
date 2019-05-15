@@ -1,3 +1,5 @@
+import datetime
+import sys
 from datetime import timedelta
 from hashlib import md5
 from logging import getLogger
@@ -9,8 +11,10 @@ from django.shortcuts import render
 from django.utils.module_loading import import_string
 
 import ipware.ip2
+from pytz import utc
 
 from axes.conf import settings
+from axes.models import AccessLog, AccessAttempt
 from axes.request import AxesHttpRequest
 
 log = getLogger(__name__)
@@ -392,3 +396,20 @@ def toggleable(func) -> Callable:
         if settings.AXES_ENABLED:
             return func(*args, **kwargs)
     return inner
+
+
+def cleanup_old_logged_data(border_days: int, verbose_mode: bool) -> (AccessLog, AccessAttempt):
+    """
+    Find all logged entries from `AccessLog` and `AccessAttempt` which were created at least X days in the past
+    """
+    border = utc.localize(datetime.datetime.utcnow() - datetime.timedelta(days=border_days))
+
+    logs = AccessLog.objects.filter(attempt_time__lt=border)
+    attempts = AccessAttempt.objects.filter(attempt_time__lt=border)
+
+    if verbose_mode:
+        sys.stdout.write('AXES: Deleted %s log(s) and %s attempt(s) for border date %s.' %
+                         (logs.count(), attempts.count(), border.strftime('%Y-%m-%d')))
+
+    logs.delete()
+    attempts.delete()
