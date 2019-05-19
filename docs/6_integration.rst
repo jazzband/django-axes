@@ -3,10 +3,41 @@
 Integration
 ===========
 
-Axes is intended to be pluggable and usable with 3rd party authentication solutions.
+Axes is intended to be pluggable and usable with custom authentication solutions.
+This document describes the integration with some popular 3rd party packages
+such as Django Allauth, Django REST Framework, and other tools.
 
-This document describes the integration with some commonly used 3rd party packages
-such as Django Allauth and Django REST Framework.
+In the following table
+**Compatible** means that a component should be fully compatible out-of-the-box,
+**Functional** means that a component should be functional after customization, and
+**Incompatible** means that a component has been reported as non-functional with Axes.
+
+=======================   =============   ============   ============   ==============
+Project                   Version         Compatible     Functional     Incompatible
+=======================   =============   ============   ============   ==============
+Django REST Framework     |gte| 3.7.0     |check|
+Django REST Framework     |lt| 3.7.0                     |check|
+Django Allauth                                           |check|
+Django Simple Captcha                                    |check|
+Django OAuth Toolkit                                     |check|
+=======================   =============   ============   ============   ==============
+
+.. |check|  unicode:: U+2713
+.. |lt|     unicode:: U+003C
+.. |lte|    unicode:: U+2264
+.. |gte|    unicode:: U+2265
+.. |gt|     unicode:: U+003E
+
+Please note that project compatibility depends on multiple different factors
+such as Django version, Axes version, and 3rd party package versions and
+their unique combinations per project.
+
+.. note::
+   This documentation is mostly provided by Axes users.
+   If you have your own compatibility tweaks and customizations
+   that enable you to use Axes with other tools or have better
+   implementations than the solutions provided here, please do
+   feel free to open an issue or a pull request in GitHub!
 
 
 Integration with Django Allauth
