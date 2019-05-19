@@ -14,6 +14,9 @@ Changes
 - Improve documentation on attempt tracking, resets, and customization.
   [aleksihakli]
 
+- Deprecate the old version 4.x ``axes.backends.AxesModelBackend`` class.
+  [aleksihakli]
+
 
 5.0.4 (2019-05-09)
 ------------------
