@@ -54,10 +54,10 @@ Resetting attempts and lockouts
 
 When Axes locks an IP address, it is not allowed to login again.
 You can allow IPs to attempt again by resetting (deleting)
-the relevant AccessAttempt records.
+the relevant AccessAttempt records in the admin UI, CLI, or your own code.
 
-You can also configure automatic cool down periods, IP whitelists and blacklists
-and even custom programmatic functions for the lockouts. Please check out the
+You can also configure automatic cool down periods, IP whitelists, and custom
+code and handler functions for resetting attempts. Please check out the
 configuration and customization documentation for further information.
 
 .. note::
