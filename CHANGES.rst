@@ -11,10 +11,11 @@ Changes
   Deprecate ``axes.request.AxesHttpRequest`` object type definition.
   [aleksihakli]
 
-- Improve documentation on attempt tracking, resets, and customization.
+- Deprecate the old version 4.x ``axes.backends.AxesModelBackend`` class.
   [aleksihakli]
 
-- Deprecate the old version 4.x ``axes.backends.AxesModelBackend`` class.
+- Improve documentation on attempt tracking, resets, Axes customization,
+  project and component compatibility and integrations, and other things.
   [aleksihakli]
 
 
