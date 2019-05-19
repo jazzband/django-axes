@@ -155,3 +155,44 @@ Axes supports Captcha with the Django Simple Captcha package in the following ma
             <input type="submit" value="Submit" />
         </div>
     </form>
+
+
+Integration with Django OAuth Toolkit
+-------------------------------------
+
+Django OAuth toolkit is not designed to work with Axes,
+but some users have reported that they have configured
+validator classes to function correctly.
+
+
+``example/validators.py``::
+
+    from django.contrib.auth import authenticate
+    from django.http import HttpRequest, QueryDict
+
+    from oauth2_provider.oauth2_validators import OAuth2Validator
+
+    class AxesOAuth2Validator(OAuth2Validator):
+        def validate_user(self, username, password, client, request, *args, **kwargs):
+            """
+            Set defaults for necessary request object attributes for Axes compatibility.
+            The ``request`` argument is not a Django ``HttpRequest`` object.
+            """
+
+            setattr(request, 'GET', getattr(request, 'GET', QueryDict()))
+            setattr(request, 'POST', getattr(request, 'POST', QueryDict()))
+            setattr(request, 'META', getattr(request, 'META', dict()))
+
+            u = authenticate(request=request, username=username, password=password)
+            if u is not None and u.is_active:
+                request.u = user
+                return True
+            return False
+
+
+``settings.py``::
+
+    OAUTH2_PROVIDER = {
+        'OAUTH2_VALIDATOR_CLASS': 'example.validators.AxesOAuth2Validator',
+        'SCOPES': {'read': 'Read scope', 'write': 'Write scope'},
+    }
