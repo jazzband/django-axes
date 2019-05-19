@@ -5,7 +5,6 @@ from django.db.models import QuerySet
 from django.utils.timezone import datetime, now
 
 from axes.conf import settings
-from axes.request import AxesHttpRequest
 from axes.models import AccessAttempt
 from axes.helpers import (
     get_client_username,
@@ -30,7 +29,7 @@ def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:
     return attempt_time - cool_off
 
 
-def filter_user_attempts(request: AxesHttpRequest, credentials: dict = None) -> QuerySet:
+def filter_user_attempts(request, credentials: dict = None) -> QuerySet:
     """
     Return a queryset of AccessAttempts that match the given request and credentials.
     """
@@ -42,7 +41,7 @@ def filter_user_attempts(request: AxesHttpRequest, credentials: dict = None) -> 
     return AccessAttempt.objects.filter(**filter_kwargs)
 
 
-def get_user_attempts(request: AxesHttpRequest, credentials: dict = None) -> QuerySet:
+def get_user_attempts(request, credentials: dict = None) -> QuerySet:
     """
     Get valid user attempts that match the given request and credentials.
     """
@@ -73,7 +72,7 @@ def clean_expired_user_attempts(attempt_time: datetime = None) -> int:
     return count
 
 
-def reset_user_attempts(request: AxesHttpRequest, credentials: dict = None) -> int:
+def reset_user_attempts(request, credentials: dict = None) -> int:
     """
     Reset all user attempts that match the given request and credentials.
     """
@@ -86,7 +85,7 @@ def reset_user_attempts(request: AxesHttpRequest, credentials: dict = None) -> i
     return count
 
 
-def is_user_attempt_whitelisted(request: AxesHttpRequest, credentials: dict = None) -> bool:
+def is_user_attempt_whitelisted(request, credentials: dict = None) -> bool:
     """
     Check if the given request or credentials refer to a whitelisted username.
 

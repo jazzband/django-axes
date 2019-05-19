@@ -1,8 +1,6 @@
 from logging import getLogger
 
 from axes.conf import settings
-from axes.exceptions import AxesSignalPermissionDenied
-from axes.request import AxesHttpRequest
 from axes.handlers.base import AxesHandler
 from axes.signals import user_locked_out
 from axes.helpers import (
@@ -26,7 +24,7 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
         self.cache = get_cache()
         self.cache_timeout = get_cache_timeout()
 
-    def get_failures(self, request: AxesHttpRequest, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: dict = None) -> int:
         cache_key = get_client_cache_key(request, credentials)
         return self.cache.get(cache_key, default=0)
 
@@ -34,7 +32,7 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
             self,
             sender,
             credentials: dict,
-            request: AxesHttpRequest = None,
+            request = None,
             **kwargs
     ):  # pylint: disable=too-many-locals
         """
@@ -45,10 +43,6 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
 
         if request is None:
             log.error('AXES: AxesCacheHandler.user_login_failed does not function without a request.')
-            return
-
-        if not hasattr(request, 'axes_attempt_time'):
-            log.error('AXES: AxesCacheHandler.user_login_failed needs a valid AxesHttpRequest object.')
             return
 
         username = get_client_username(request, credentials)
@@ -79,6 +73,7 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
         if failures_since_start >= settings.AXES_FAILURE_LIMIT:
             log.warning('AXES: Locking out %s after repeated login failures.', client_str)
 
+            request.axes_locked_out = True
             user_locked_out.send(
                 'axes',
                 request=request,
@@ -86,16 +81,10 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
                 ip_address=request.axes_ip_address,
             )
 
-            raise AxesSignalPermissionDenied('Locked out due to repeated login failures.')
-
-    def user_logged_in(self, sender, request: AxesHttpRequest, user, **kwargs):  # pylint: disable=unused-argument
+    def user_logged_in(self, sender, request, user, **kwargs):  # pylint: disable=unused-argument
         """
         When user logs in, update the AccessLog related to the user.
         """
-
-        if not hasattr(request, 'axes_attempt_time'):
-            log.error('AXES: AxesCacheHandler.user_logged_in needs a valid AxesHttpRequest object.')
-            return
 
         username = user.get_username()
         credentials = get_credentials(username)
@@ -109,11 +98,7 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
             self.cache.delete(cache_key)
             log.info('AXES: Deleted %d failed login attempts by %s from cache.', failures_since_start, client_str)
 
-    def user_logged_out(self, sender, request: AxesHttpRequest, user, **kwargs):
-        if not hasattr(request, 'axes_attempt_time'):
-            log.error('AXES: AxesCacheHandler.user_logged_out needs a valid AxesHttpRequest object.')
-            return
-
+    def user_logged_out(self, sender, request, user, **kwargs):
         username = user.get_username() if user else None
         client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
 

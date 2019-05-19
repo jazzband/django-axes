@@ -10,9 +10,7 @@ from axes.attempts import (
     reset_user_attempts,
 )
 from axes.conf import settings
-from axes.exceptions import AxesSignalPermissionDenied
 from axes.handlers.base import AxesHandler
-from axes.request import AxesHttpRequest
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out
 from axes.helpers import (
@@ -31,11 +29,11 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
     """
 
-    def get_failures(self, request: AxesHttpRequest, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: dict = None) -> int:
         attempts = get_user_attempts(request, credentials)
         return attempts.aggregate(Max('failures_since_start'))['failures_since_start__max'] or 0
 
-    def is_locked(self, request: AxesHttpRequest, credentials: dict = None):
+    def is_locked(self, request, credentials: dict = None):
         if is_user_attempt_whitelisted(request, credentials):
             return False
 
@@ -45,7 +43,7 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
             self,
             sender,
             credentials: dict,
-            request: AxesHttpRequest = None,
+            request = None,
             **kwargs
     ):  # pylint: disable=too-many-locals
         """
@@ -56,10 +54,6 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
 
         if request is None:
             log.error('AXES: AxesDatabaseHandler.user_login_failed does not function without a request.')
-            return
-
-        if not hasattr(request, 'axes_attempt_time'):
-            log.error('AXES: AxesDatabaseHandler.user_login_failed needs a valid AxesHttpRequest object.')
             return
 
         # 1. database query: Clean up expired user attempts from the database before logging new attempts
@@ -127,6 +121,8 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
         if failures_since_start >= settings.AXES_FAILURE_LIMIT:
             log.warning('AXES: Locking out %s after repeated login failures.', client_str)
 
+            request.axes_locked_out = True
+
             user_locked_out.send(
                 'axes',
                 request=request,
@@ -134,16 +130,10 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
                 ip_address=request.axes_ip_address,
             )
 
-            raise AxesSignalPermissionDenied('Locked out due to repeated login failures.')
-
-    def user_logged_in(self, sender, request: AxesHttpRequest, user, **kwargs):  # pylint: disable=unused-argument
+    def user_logged_in(self, sender, request, user, **kwargs):  # pylint: disable=unused-argument
         """
         When user logs in, update the AccessLog related to the user.
         """
-
-        if not hasattr(request, 'axes_attempt_time'):
-            log.error('AXES: AxesDatabaseHandler.user_logged_in needs a valid AxesHttpRequest object.')
-            return
 
         # 1. database query: Clean up expired user attempts from the database
         clean_expired_user_attempts(request.axes_attempt_time)
@@ -170,14 +160,10 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
             count = reset_user_attempts(request, credentials)
             log.info('AXES: Deleted %d failed login attempts by %s from database.', count, client_str)
 
-    def user_logged_out(self, sender, request: AxesHttpRequest, user, **kwargs):  # pylint: disable=unused-argument
+    def user_logged_out(self, sender, request, user, **kwargs):  # pylint: disable=unused-argument
         """
         When user logs out, update the AccessLog related to the user.
         """
-
-        if not hasattr(request, 'axes_attempt_time'):
-            log.error('AXES: AxesDatabaseHandler.user_logged_out needs a valid AxesHttpRequest object.')
-            return
 
         # 1. database query: Clean up expired user attempts from the database
         clean_expired_user_attempts(request.axes_attempt_time)

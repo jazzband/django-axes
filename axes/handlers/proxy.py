@@ -1,11 +1,17 @@
 from logging import getLogger
 
 from django.utils.module_loading import import_string
+from django.utils.timezone import now
 
 from axes.conf import settings
 from axes.handlers.base import AxesHandler
-from axes.helpers import toggleable
-from axes.request import AxesHttpRequest
+from axes.helpers import (
+    get_client_ip_address,
+    get_client_user_agent,
+    get_client_path_info,
+    get_client_http_accept,
+    toggleable,
+)
 
 log = getLogger(settings.AXES_LOGGER)
 
@@ -36,27 +42,49 @@ class AxesProxyHandler(AxesHandler):
             cls.implementation = import_string(settings.AXES_HANDLER)()
         return cls.implementation
 
+    @staticmethod
+    def update_request(request):
+        """
+        Update request attributes before passing them into the selected handler class.
+        """
+
+        if request is None:
+            log.error('AXES: AxesProxyHandler.update_request can not set request attributes to a None request')
+            return
+
+        request.axes_locked_out = False
+        request.axes_attempt_time = now()
+        request.axes_ip_address = get_client_ip_address(request)
+        request.axes_user_agent = get_client_user_agent(request)
+        request.axes_path_info = get_client_path_info(request)
+        request.axes_http_accept = get_client_http_accept(request)
+
     @classmethod
-    def is_locked(cls, request: AxesHttpRequest, credentials: dict = None) -> bool:
+    def is_locked(cls, request, credentials: dict = None) -> bool:
+        cls.update_request(request)
         return cls.get_implementation().is_locked(request, credentials)
 
     @classmethod
-    def is_allowed(cls, request: AxesHttpRequest, credentials: dict = None) -> bool:
+    def is_allowed(cls, request, credentials: dict = None) -> bool:
+        cls.update_request(request)
         return cls.get_implementation().is_allowed(request, credentials)
 
     @classmethod
     @toggleable
-    def user_login_failed(cls, sender, credentials: dict, request: AxesHttpRequest = None, **kwargs):
+    def user_login_failed(cls, sender, credentials: dict, request=None, **kwargs):
+        cls.update_request(request)
         return cls.get_implementation().user_login_failed(sender, credentials, request, **kwargs)
 
     @classmethod
     @toggleable
-    def user_logged_in(cls, sender, request: AxesHttpRequest, user, **kwargs):
+    def user_logged_in(cls, sender, request, user, **kwargs):
+        cls.update_request(request)
         return cls.get_implementation().user_logged_in(sender, request, user, **kwargs)
 
     @classmethod
     @toggleable
-    def user_logged_out(cls, sender, request: AxesHttpRequest, user, **kwargs):
+    def user_logged_out(cls, sender, request, user, **kwargs):
+        cls.update_request(request)
         return cls.get_implementation().user_logged_out(sender, request, user, **kwargs)
 
     @classmethod
