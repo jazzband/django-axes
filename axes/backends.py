@@ -52,11 +52,3 @@ class AxesBackend(ModelBackend):
         # in the axes.middleware.AxesMiddleware.process_exception middleware exception handler.
 
         raise AxesBackendPermissionDenied('AxesBackend detected that the given user is locked out')
-
-
-class AxesModelBackend(AxesBackend):
-    """
-    Backwards compatibility class for version 4 to version 5 migration.
-
-    See the ``AxesBackend`` class documentation and implementation.
-    """
