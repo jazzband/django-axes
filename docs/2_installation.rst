@@ -64,6 +64,34 @@ Axes uses checks to verify your Django settings configuration for security and f
 Many people have different configurations for their development and production environments,
 and running the application with misconfigured settings can prevent security features from working.
 
+
+Disabling Axes system checks
+----------------------------
+
+If you are implementing custom authentication, request middleware, or signal handlers
+the Axes checks system might false positives in the Django checks framework.
+
+You can silence the unnecessary warnings by using the following Django settings::
+
+   SILENCED_SYSTEM_CHECKS = ['axes.W003']
+
+
+Axes has the following warnings codes built in:
+
+- ``axes.W001`` for invalid ``CACHES`` configuration.
+- ``axes.W002`` for invalid ``MIDDLEWARE`` configuration.
+- ``axes.W003`` for invalid ``AUTHENTICATION_BACKENDS`` configuration.
+
+
+.. note:
+Only disable the Axes system checks and warnings if you know what you are doing.
+The default checks are implemented to verify and improve your project's security
+and should only produce necessary warnings due to misconfigured settings.
+
+
+Disabling Axes components in tests
+----------------------------------
+
 If you get errors when running tests or other configurations, try setting the ``AXES_ENABLED``
 flag to ``False`` in your project or test settings configuration file::
 
