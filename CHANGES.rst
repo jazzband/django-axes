@@ -2,6 +2,15 @@
 Changes
 =======
 
+5.0.5 (WIP)
+-----------
+
+- Change the lockout response calculation to request flagging
+  instead of exception throwing in the signal handler and middleware.
+  Move request attribute calculation from middleware to handler layer.
+  Deprecate ``axes.request.AxesHttpRequest`` object type definition.
+  [aleksihakli]
+
 
 5.0.4 (2019-05-09)
 ------------------

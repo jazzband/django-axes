@@ -11,7 +11,6 @@ from django.utils.module_loading import import_string
 import ipware.ip2
 
 from axes.conf import settings
-from axes.request import AxesHttpRequest
 
 log = getLogger(__name__)
 
@@ -102,7 +101,7 @@ def get_credentials(username: str = None, **kwargs) -> dict:
     return credentials
 
 
-def get_client_username(request: AxesHttpRequest, credentials: dict = None) -> str:
+def get_client_username(request, credentials: dict = None) -> str:
     """
     Resolve client username from the given request or credentials if supplied.
 
@@ -133,7 +132,7 @@ def get_client_username(request: AxesHttpRequest, credentials: dict = None) -> s
     return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
-def get_client_ip_address(request: HttpRequest) -> str:
+def get_client_ip_address(request) -> str:
     """
     Get client IP address as configured by the user.
 
@@ -152,15 +151,15 @@ def get_client_ip_address(request: HttpRequest) -> str:
     return client_ip_address
 
 
-def get_client_user_agent(request: HttpRequest) -> str:
+def get_client_user_agent(request) -> str:
     return request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
 
 
-def get_client_path_info(request: HttpRequest) -> str:
+def get_client_path_info(request) -> str:
     return request.META.get('PATH_INFO', '<unknown>')[:255]
 
 
-def get_client_http_accept(request: HttpRequest) -> str:
+def get_client_http_accept(request) -> str:
     return request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
 
 
@@ -259,7 +258,7 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def get_lockout_response(request: AxesHttpRequest, credentials: dict = None) -> HttpResponse:
+def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
     status = 403
     context = {
         'failure_limit': settings.AXES_FAILURE_LIMIT,
@@ -311,7 +310,7 @@ def is_ip_address_in_blacklist(ip_address: str) -> bool:
     return ip_address in settings.AXES_IP_BLACKLIST
 
 
-def is_client_ip_address_whitelisted(request: AxesHttpRequest):
+def is_client_ip_address_whitelisted(request):
     """
     Check if the given request refers to a whitelisted IP.
     """
@@ -325,7 +324,7 @@ def is_client_ip_address_whitelisted(request: AxesHttpRequest):
     return False
 
 
-def is_client_ip_address_blacklisted(request: AxesHttpRequest) -> bool:
+def is_client_ip_address_blacklisted(request) -> bool:
     """
     Check if the given request refers to a blacklisted IP.
     """
@@ -339,7 +338,7 @@ def is_client_ip_address_blacklisted(request: AxesHttpRequest) -> bool:
     return False
 
 
-def is_client_method_whitelisted(request: AxesHttpRequest) -> bool:
+def is_client_method_whitelisted(request) -> bool:
     """
     Check if the given request uses a whitelisted method.
     """

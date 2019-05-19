@@ -16,7 +16,3 @@ third party modules as long as they implement the following APIs.
 
 .. automodule:: axes.middleware
    :members:
-
-.. automodule:: axes.request
-   :members:
-   :show-inheritance:

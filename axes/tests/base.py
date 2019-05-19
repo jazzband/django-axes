@@ -41,7 +41,7 @@ class AxesTestCase(TestCase):
     LOGOUT_MESSAGE = 'Logged out'
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
 
-    SUCCESS = 200
+    STATUS_SUCCESS = 200
     ALLOWED = 302
     BLOCKED = 403
 
@@ -161,7 +161,7 @@ class AxesTestCase(TestCase):
 
     def check_logout(self):
         response = self.logout()
-        self.assertContains(response, self.LOGOUT_MESSAGE, status_code=self.SUCCESS)
+        self.assertContains(response, self.LOGOUT_MESSAGE, status_code=self.STATUS_SUCCESS)
 
     def check_handler(self):
         """

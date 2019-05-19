@@ -1,28 +1,30 @@
 from unittest.mock import patch, MagicMock
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 
-from axes.exceptions import AxesSignalPermissionDenied
 from axes.middleware import AxesMiddleware
 from axes.tests.base import AxesTestCase
 
 
 class MiddlewareTestCase(AxesTestCase):
-    SUCCESS_RESPONSE = HttpResponse(status=200, content='Dispatched')
-    LOCKOUT_RESPONSE = HttpResponse(status=403, content='Locked out')
+    STATUS_SUCCESS = 200
+    STATUS_LOCKOUT = 403
 
     def setUp(self):
-        self.request = MagicMock()
-        self.get_response = MagicMock()
+        self.request = HttpRequest()
 
-    @patch('axes.middleware.get_lockout_response', return_value=LOCKOUT_RESPONSE)
-    def test_process_exception_axes(self, _):
-        exception = AxesSignalPermissionDenied()
-        response = AxesMiddleware(self.get_response).process_exception(self.request, exception)
-        self.assertEqual(response, self.LOCKOUT_RESPONSE)
+    def test_success_response(self):
+        def get_response(request):
+            request.axes_locked_out = False
+            return HttpResponse()
 
-    @patch('axes.middleware.get_lockout_response', return_value=LOCKOUT_RESPONSE)
-    def test_process_exception_other(self, _):
-        exception = Exception()
-        response = AxesMiddleware(self.get_response).process_exception(self.request, exception)
-        self.assertEqual(response, None)
+        response = AxesMiddleware(get_response)(self.request)
+        self.assertEqual(response.status_code, self.STATUS_SUCCESS)
+
+    def test_lockout_response(self):
+        def get_response(request):
+            request.axes_locked_out = True
+            return HttpResponse()
+
+        response = AxesMiddleware(get_response)(self.request)
+        self.assertEqual(response.status_code, self.STATUS_LOCKOUT)
