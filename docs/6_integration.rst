@@ -216,7 +216,7 @@ validator classes to function correctly.
 
             u = authenticate(request=request, username=username, password=password)
             if u is not None and u.is_active:
-                request.u = user
+                request.user = u
                 return True
             return False
 
