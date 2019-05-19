@@ -88,6 +88,11 @@ Changes
   Django ``authenticate`` method in authentication backends.
   [aleksihakli]
 
+- Move ``axes.attempts.is_already_locked`` function to ``axes.handlers.AxesProxyHandler.is_locked``.
+  Various other previously undocumented methods have been deprecated and moved inside the project.
+  The new documented public APIs can be considered as stable and can be safely utilized by other projects.
+  [aleksihakli]
+
 - Improve documentation layouting and contents. Add public API reference section.
   [aleksihakli]
 
