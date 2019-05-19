@@ -100,7 +100,7 @@ In your code, you can use the ``axes.utils.reset`` function.
 - ``reset(ip=ip)`` will clear lockouts and records for the given IP address.
 - ``reset(username=username)`` will clear lockouts and records for the given username.
 
-.. note:
+.. note::
    Please note that if you give both ``username`` and ``ip`` arguments to ``reset``
    that attempts that have both the set IP and username are reset.
    The effective behaviour of ``reset`` is to ``and`` the terms instead of ``or`` ing them.
