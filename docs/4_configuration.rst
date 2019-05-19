@@ -124,7 +124,7 @@ with the ``AXES_HANDLER`` setting in project configuration:
 - ``axes.handlers.dummy.AxesDummyHandler``
   does nothing with attempts and can be used to disable Axes handlers
   if the user does not wish Axes to execute any logic on login signals.
-  Note that this effectively disables any Axes security features,
+  Please note that this effectively disables any Axes security features,
   and is meant to be used on e.g. local development setups
   and testing deployments where login monitoring is not wanted.
 
