@@ -21,15 +21,15 @@ class AppConfig(apps.AppConfig):
         It displays version information exactly once at application startup.
         """
 
-        if cls.logging_initialized:
-            return
-        cls.logging_initialized = True
-
         if not settings.AXES_ENABLED:
             return
 
         if not settings.AXES_VERBOSE:
             return
+
+        if cls.logging_initialized:
+            return
+        cls.logging_initialized = True
 
         log.info('AXES: BEGIN LOG')
         log.info('AXES: Using django-axes %s', get_version())

@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponseRedirect, HttpResponse, HttpRe
 from django.test import override_settings, RequestFactory
 
 from axes import get_version
+from axes.apps import AppConfig
 from axes.models import AccessAttempt
 from axes.tests.base import AxesTestCase
 from axes.helpers import (
@@ -21,6 +22,7 @@ from axes.helpers import (
     is_ip_address_in_blacklist,
     is_ip_address_in_whitelist,
     is_client_method_whitelisted,
+    toggleable,
 )
 
 
@@ -28,6 +30,21 @@ class VersionTestCase(AxesTestCase):
     @patch('axes.__version__', 'test')
     def test_get_version(self):
         self.assertEqual(get_version(), 'test')
+
+
+@override_settings(AXES_ENABLED=False)
+class AxesDisabledTestCase(AxesTestCase):
+    def test_initialize(self):
+        AppConfig.logging_initialized = False
+        AppConfig.initialize()
+        self.assertFalse(AppConfig.logging_initialized)
+
+    def test_toggleable(self):
+        def is_true():
+            return True
+
+        self.assertTrue(is_true())
+        self.assertIsNone(toggleable(is_true)())
 
 
 class CacheTestCase(AxesTestCase):
