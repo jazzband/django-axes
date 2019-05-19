@@ -2,8 +2,8 @@
 Changes
 =======
 
-5.0.5 (WIP)
------------
+5.0.5 (2019-05-19)
+------------------
 
 - Change the lockout response calculation to request flagging
   instead of exception throwing in the signal handler and middleware.
