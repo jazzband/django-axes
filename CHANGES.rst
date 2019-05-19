@@ -11,6 +11,9 @@ Changes
   Deprecate ``axes.request.AxesHttpRequest`` object type definition.
   [aleksihakli]
 
+- Improve documentation on attempt tracking, resets, and customization.
+  [aleksihakli]
+
 
 5.0.4 (2019-05-09)
 ------------------
