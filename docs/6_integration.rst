@@ -67,13 +67,14 @@ You also need to decorate ``dispatch()`` and ``form_invalid()`` methods of the A
 Integration with Django REST Framework
 --------------------------------------
 
-Modern versions of Django REST Framework after 3.7.0 work normally with Axes.
+.. note::
+   Modern versions of Django REST Framework after 3.7.0 work normally with Axes
+   out-of-the-box and require no customization in DRF.
 
-Django REST Framework versions prior to
-[3.7.0](https://github.com/encode/django-rest-framework/commit/161dc2df2ccecc5307cdbc05ef6159afd614189e)
-require the request object to be passed for authentication.
 
-``example/authentication.py``::
+Django REST Framework versions prior to 3.7.0
+require the request object to be passed for authentication
+by a customized DRF authentication class::
 
     from rest_framework.authentication import BasicAuthentication
 
