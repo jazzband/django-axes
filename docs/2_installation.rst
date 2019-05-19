@@ -83,7 +83,7 @@ Axes has the following warnings codes built in:
 - ``axes.W003`` for invalid ``AUTHENTICATION_BACKENDS`` configuration.
 
 
-.. note:
+.. note::
    Only disable the Axes system checks and warnings if you know what you are doing.
    The default checks are implemented to verify and improve your project's security
    and should only produce necessary warnings due to misconfigured settings.

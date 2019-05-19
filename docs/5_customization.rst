@@ -149,7 +149,7 @@ into ``my_namespace-username``:
 
     AXES_USERNAME_CALLABLE = 'example.utils.get_username'
 
-.. note:
+.. note::
    You still have to make these modifications yourself before calling
    authenticate. If you want to re-use the same function for consistency, that's
    fine, but Axes does not inject these changes into the authentication flow
