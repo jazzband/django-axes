@@ -3,7 +3,7 @@ Changes
 =======
 
 
-5.0.6 (WIP)
+5.0.6 (2019-05-25)
 ------------------
 
 - Deprecate `AXES_DISABLE_SUCCESS_ACCESS_LOG` flag in favour of
