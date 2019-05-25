@@ -34,10 +34,6 @@ it can raise a ``django.core.exceptions.PermissionDenied`` exception.
 If a login fails, Django then fires a
 ``from django.contrib.auth.signals.user_login_failed`` signal.
 
-If this signal raises an exception, it is propagated through the
-Django middleware stack where it can be caught, or alternatively
-where it can bubble up to the default Django exception handlers.
-
 A normal login flow for Django runs as follows:
 
 .. code-block:: text
@@ -78,10 +74,6 @@ are not blocked, and allows the requests to go through if the check passes.
 If any of the checks fails, an exception is raised which interrupts
 the login process and triggers the Django login failed signal handlers.
 
-Another exception is raised by a Axes signal handler, which is
-then caught by ``AxesMiddleware`` and converted into a readable
-error because the user is currently locked out of the system.
-
 Axes implements the lockout flow as follows:
 
 .. code-block:: text
@@ -113,12 +105,11 @@ Axes implements the lockout flow as follows:
 
     7. Axes logs the failure and increments the failure
        counters which keep track of failure statistics.
+       Axes then updates the request object with a logout
+       status flag that can be processed by
+       view or middleware code as needed.
 
-    8. AxesSignalPermissionDenied exception is raised
-       if appropriate and it bubbles up the middleware stack.
-       The exception aborts the Django authentication flow.
-
-    9. AxesMiddleware processes the exception
+    8. AxesMiddleware processes the lockout request and response
        and returns a readable lockout message to the user.
 
 This plugin assumes that the login views either call

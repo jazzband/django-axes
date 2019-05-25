@@ -8,16 +8,12 @@ class AxesMiddleware:
     Middleware that calculates necessary HTTP request attributes for attempt monitoring
     and maps lockout signals into readable HTTP 403 Forbidden responses.
 
-    By default Django server returns ``PermissionDenied`` exceptions as HTTP 403 errors
-    with the ``django.views.defaults.permission_denied`` view that renders
-    the ``403.html`` template from the root template directory if found.
-
-    This middleware recognizes the specialized attempt monitoring and lockout exceptions
+    This middleware recognizes a logout monitoring flag in the request and
     and uses the ``axes.helpers.get_lockout_response`` handler for returning
-    customizable and context aware lockout message to the end user.
+    customizable and context aware lockout message to the end user if necessary.
 
-    To customize the error handling behaviour further, you can subclass this middleware
-    and change the ``process_exception`` handler to your own liking.
+    To customize the lockout handling behaviour further, you can subclass this middleware
+    and change the ``__call__`` method to your own liking.
 
     Please see the following configuration flags before customizing this handler:
 

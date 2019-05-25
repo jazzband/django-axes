@@ -47,8 +47,7 @@ class AxesBackend(ModelBackend):
         # Raise an error that stops the authentication flows at django.contrib.auth.authenticate.
         # This error stops bubbling up at the authenticate call which catches backend PermissionDenied errors.
         # After this error is caught by authenticate it emits a signal indicating user login failed,
-        # which is processed by axes.signals.log_user_login_failed which logs the attempt and raises
-        # a second exception which bubbles up the middleware stack and produces a HTTP 403 Forbidden reply
-        # in the axes.middleware.AxesMiddleware.process_exception middleware exception handler.
+        # which is processed by axes.signals.log_user_login_failed which logs and flags the failed request.
+        # The axes.middleware.AxesMiddleware further processes the flagged request into a readable response.
 
         raise AxesBackendPermissionDenied('AxesBackend detected that the given user is locked out')
