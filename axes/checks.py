@@ -44,42 +44,42 @@ def axes_cache_check(app_configs, **kwargs):  # pylint: disable=unused-argument
         'django.core.cache.backends.filebased.FileBasedCache',
     ]
 
-    errors = []
+    warnings = []
 
     if axes_handler == 'axes.handlers.cache.AxesCacheHandler':
         if axes_cache_backend in axes_cache_backend_incompatible:
-            errors.append(Warning(
+            warnings.append(Warning(
                 msg=Messages.CACHE_INVALID,
                 hint=Hints.CACHE_INVALID,
                 id=Codes.CACHE_INVALID,
             ))
 
-    return errors
+    return warnings
 
 
 @register(Tags.security, Tags.compatibility)
 def axes_middleware_check(app_configs, **kwargs):  # pylint: disable=unused-argument
-    errors = []
+    warnings = []
 
     if 'axes.middleware.AxesMiddleware' not in settings.MIDDLEWARE:
-        errors.append(Warning(
+        warnings.append(Warning(
             msg=Messages.MIDDLEWARE_INVALID,
             hint=Hints.MIDDLEWARE_INVALID,
             id=Codes.MIDDLEWARE_INVALID,
         ))
 
-    return errors
+    return warnings
 
 
 @register(Tags.security, Tags.compatibility)
 def axes_backend_check(app_configs, **kwargs):  # pylint: disable=unused-argument
-    errors = []
+    warnings = []
 
     if 'axes.backends.AxesBackend' not in settings.AUTHENTICATION_BACKENDS:
-        errors.append(Warning(
+        warnings.append(Warning(
             msg=Messages.BACKEND_INVALID,
             hint=Hints.BACKEND_INVALID,
             id=Codes.BACKEND_INVALID,
         ))
 
-    return errors
+    return warnings
