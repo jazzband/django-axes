@@ -2,6 +2,16 @@
 Changes
 =======
 
+
+5.0.6 (WIP)
+------------------
+
+- Deprecate `AXES_DISABLE_SUCCESS_ACCESS_LOG` flag in favour of
+  `AXES_DISABLE_ACCESS_LOG` which has mostly the same functionality.
+  Update documentation to better reflect the behaviour of the flag.
+  [aleksihakli]
+
+
 5.0.5 (2019-05-19)
 ------------------
 

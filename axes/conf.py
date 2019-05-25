@@ -37,8 +37,6 @@ class AxesAppConf(AppConf):
 
     DISABLE_ACCESS_LOG = False
 
-    DISABLE_SUCCESS_ACCESS_LOG = False
-
     HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
 
     LOGGER = 'axes.watch_login'
