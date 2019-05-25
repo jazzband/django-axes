@@ -11,30 +11,32 @@ class CacheCheckTestCase(AxesTestCase):
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.db.DatabaseCache', 'LOCATION': 'axes_cache'}},
     )
     def test_cache_check(self):
-        errors = run_checks()
-        self.assertEqual([], errors)
+        warnings = run_checks()
+        self.assertEqual(warnings, [])
 
     @override_settings(
         AXES_HANDLER='axes.handlers.cache.AxesCacheHandler',
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}},
     )
-    def test_cache_check_errors(self):
-        errors = run_checks()
-        error = Warning(
+    def test_cache_check_warnings(self):
+        warnings = run_checks()
+        warning = Warning(
             msg=Messages.CACHE_INVALID,
             hint=Hints.CACHE_INVALID,
             id=Codes.CACHE_INVALID,
         )
 
-        self.assertEqual([error], errors)
+        self.assertEqual(warnings, [
+            warning,
+        ])
 
     @override_settings(
         AXES_HANDLER='axes.handlers.database.AxesDatabaseHandler',
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}},
     )
-    def test_cache_check_does_not_produce_check_errors_with_database_handler(self):
-        errors = run_checks()
-        self.assertEqual([], errors)
+    def test_cache_check_does_not_produce_check_warnings_with_database_handler(self):
+        warnings = run_checks()
+        self.assertEqual(warnings, [])
 
 
 class MiddlewareCheckTestCase(AxesTestCase):
@@ -43,15 +45,17 @@ class MiddlewareCheckTestCase(AxesTestCase):
             'remove': ['axes.middleware.AxesMiddleware']
         },
     )
-    def test_cache_check_errors(self):
-        errors = run_checks()
-        error = Warning(
+    def test_cache_check_warnings(self):
+        warnings = run_checks()
+        warning = Warning(
             msg=Messages.MIDDLEWARE_INVALID,
             hint=Hints.MIDDLEWARE_INVALID,
             id=Codes.MIDDLEWARE_INVALID,
         )
 
-        self.assertEqual([error], errors)
+        self.assertEqual(warnings, [
+            warning,
+        ])
 
 
 class BackendCheckTestCase(AxesTestCase):
@@ -60,12 +64,14 @@ class BackendCheckTestCase(AxesTestCase):
             'remove': ['axes.backends.AxesBackend']
         },
     )
-    def test_cache_check_errors(self):
-        errors = run_checks()
-        error = Warning(
+    def test_cache_check_warnings(self):
+        warnings = run_checks()
+        warning = Warning(
             msg=Messages.BACKEND_INVALID,
             hint=Hints.BACKEND_INVALID,
             id=Codes.BACKEND_INVALID,
         )
 
-        self.assertEqual([error], errors)
+        self.assertEqual(warnings, [
+            warning,
+        ])
