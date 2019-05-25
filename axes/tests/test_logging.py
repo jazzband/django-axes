@@ -74,7 +74,7 @@ class AccessLogTestCase(AxesTestCase):
             len(AccessAttempt.objects.latest('id').post_data), 1024
         )
 
-    @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_valid_logout_without_success_log(self):
         AccessLog.objects.all().delete()
 
@@ -84,7 +84,7 @@ class AccessLogTestCase(AxesTestCase):
         self.assertEqual(AccessLog.objects.all().count(), 0)
         self.assertContains(response, 'Logged out', html=True)
 
-    @override_settings(AXES_DISABLE_SUCCESS_ACCESS_LOG=True)
+    @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_valid_login_without_success_log(self):
         """
         Test that a valid login does not generate an AccessLog when DISABLE_SUCCESS_ACCESS_LOG is True.
@@ -104,7 +104,7 @@ class AccessLogTestCase(AxesTestCase):
         response = self.login(is_valid_username=True, is_valid_password=True)
         response = self.client.get(reverse('admin:logout'))
 
-        self.assertEqual(AccessLog.objects.first().logout_time, None)
+        self.assertEqual(AccessLog.objects.count(), 0)
         self.assertContains(response, 'Logged out', html=True)
 
     @override_settings(AXES_DISABLE_ACCESS_LOG=True)

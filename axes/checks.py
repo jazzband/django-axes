@@ -16,18 +16,23 @@ class Messages:
     BACKEND_INVALID = (
         "You do not have 'axes.backends.AxesBackend' in your settings.AUTHENTICATION_BACKENDS."
     )
+    SETTING_DEPRECATED = (
+        'You have a deprecated setting {deprecated_setting} configured in your project settings'
+    )
 
 
 class Hints:
     CACHE_INVALID = None
     MIDDLEWARE_INVALID = None
     BACKEND_INVALID = 'AxesModelBackend was renamed to AxesBackend in django-axes version 5.0.'
+    SETTING_DEPRECATED = None
 
 
 class Codes:
     CACHE_INVALID = 'axes.W001'
     MIDDLEWARE_INVALID = 'axes.W002'
     BACKEND_INVALID = 'axes.W003'
+    SETTING_DEPRECATED = 'axes.W004'
 
 
 @register(Tags.security, Tags.caches, Tags.compatibility)
@@ -81,5 +86,24 @@ def axes_backend_check(app_configs, **kwargs):  # pylint: disable=unused-argumen
             hint=Hints.BACKEND_INVALID,
             id=Codes.BACKEND_INVALID,
         ))
+
+    return warnings
+
+
+@register(Tags.compatibility)
+def axes_deprecation_check(app_configs, **kwargs):  # pylint: disable=unused-argument
+    warnings = []
+
+    deprecated_settings = [
+        'AXES_DISABLE_SUCCESS_ACCESS_LOG',
+    ]
+
+    for deprecated_setting in deprecated_settings:
+        if getattr(settings, deprecated_setting, None) is not None:
+            warnings.append(Warning(
+                msg=Messages.SETTING_DEPRECATED.format(deprecated_setting=deprecated_setting),
+                hint=None,
+                id=Codes.SETTING_DEPRECATED,
+            ))
 
     return warnings

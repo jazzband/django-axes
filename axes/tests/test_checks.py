@@ -75,3 +75,21 @@ class BackendCheckTestCase(AxesTestCase):
         self.assertEqual(warnings, [
             warning,
         ])
+
+
+class DeprecatedSettingsTestCase(AxesTestCase):
+    def setUp(self):
+        self.disable_success_access_log_warning = Warning(
+            msg=Messages.SETTING_DEPRECATED.format(deprecated_setting='AXES_DISABLE_SUCCESS_ACCESS_LOG'),
+            hint=Hints.SETTING_DEPRECATED,
+            id=Codes.SETTING_DEPRECATED,
+        )
+
+    @override_settings(
+        AXES_DISABLE_SUCCESS_ACCESS_LOG=True,
+    )
+    def test_deprecated_success_access_log_flag(self):
+        warnings = run_checks()
+        self.assertEqual(warnings, [
+            self.disable_success_access_log_warning,
+        ])

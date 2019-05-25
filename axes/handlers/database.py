@@ -144,7 +144,7 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
 
         log.info('AXES: Successful login by %s.', client_str)
 
-        if not settings.AXES_DISABLE_SUCCESS_ACCESS_LOG:
+        if not settings.AXES_DISABLE_ACCESS_LOG:
             # 2. database query: Insert new access logs with login time
             AccessLog.objects.create(
                 username=username,
