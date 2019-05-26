@@ -38,17 +38,17 @@ A normal login flow for Django runs as follows:
 
 .. code-block:: text
 
-    1. Login view is called by, for example,
+    -  Login view is called by, for example,
        a user sending form data with browser.
 
-    2. django.contrib.auth.authenticate is called by
+    -  django.contrib.auth.authenticate is called by
        the view code to check the authentication request
        for credentials and return a user object matching them.
 
-    3. AUTHENTICATION_BACKENDS are iterated over
+    -  AUTHENTICATION_BACKENDS are iterated over
        and their authenticate methods called one-by-one.
 
-    4. An authentication backend either returns
+    -  An authentication backend either returns
        a user object which results in that user
        being logged in or returns None.
        If a PermissionDenied error is raised
@@ -78,14 +78,14 @@ Axes implements the lockout flow as follows:
 
 .. code-block:: text
 
-    1. Login view is called.
+    -  Login view is called.
 
-    2. django.contrib.auth.authenticate is called.
+    -  django.contrib.auth.authenticate is called.
 
-    3. AUTHENTICATION_BACKENDS are iterated over
+    -  AUTHENTICATION_BACKENDS are iterated over
        where axes.backends.AxesBackend is the first.
 
-    4. AxesBackend checks authentication request
+    -  AxesBackend checks authentication request
        for lockout rules and either aborts the
        authentication flow or lets the authentication
        process proceed to the next configured
@@ -93,23 +93,23 @@ Axes implements the lockout flow as follows:
 
     [Axes handler runs at this this stage if appropriate]
 
-    5. If the user authentication request fails due to
+    -  If the user authentication request fails due to
        any reason, e.g. a lockout or wrong credentials,
        Axes receives authentication failure information
        via the axes.signals.handle_user_login_failed signal.
 
-    6. The selected Axes handler is run to check
+    -  The selected Axes handler is run to check
        the user login failure statistics and rules.
 
     [Axes default handler implements these steps]
 
-    7. Axes logs the failure and increments the failure
+    -  Axes logs the failure and increments the failure
        counters which keep track of failure statistics.
        Axes then updates the request object with a logout
        status flag that can be processed by
        view or middleware code as needed.
 
-    8. AxesMiddleware processes the lockout request and response
+    -  AxesMiddleware processes the lockout request and response
        and returns a readable lockout message to the user.
 
 This plugin assumes that the login views either call
@@ -119,3 +119,8 @@ attempts or login failures the same way Django does.
 
 The login flows can be customized and the Axes
 authentication backend or middleware can be easily swapped.
+
+.. image:: images/flow.png
+   :alt: Django Axes augmented authentication flow
+         with custom authentication backend,
+         signal handlers, and middleware
