@@ -57,8 +57,8 @@ A normal login flow for Django runs as follows:
        is aborted and signal handlers triggered.
 
 
-Django authentication flow with Axes
-------------------------------------
+Django Axes authentication flow
+-------------------------------
 
 Axes monitors logins with the ``user_login_failed`` signal handler
 and after login attempts exceed the given maximum, starts blocking them.
