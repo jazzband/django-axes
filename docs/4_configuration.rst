@@ -51,7 +51,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
   context variables.
   Default: ``None``
 * ``AXES_LOCKOUT_URL``: If set, specifies a URL to redirect to on lockout. If both
-``AXES_LOCKOUT_TEMPLATE`` and ``AXES_LOCKOUT_URL`` are set, the template will be used.
+  ``AXES_LOCKOUT_TEMPLATE`` and ``AXES_LOCKOUT_URL`` are set, the template will be used.
   Default: ``None``
 * ``AXES_VERBOSE``: If ``True``, you'll see slightly more logging for Axes.
   Default: ``True``
