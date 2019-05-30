@@ -210,11 +210,25 @@ validator classes to function correctly.
             The ``request`` argument is not a Django ``HttpRequest`` object.
             """
 
-            setattr(request, 'GET', getattr(request, 'GET', QueryDict()))
-            setattr(request, 'POST', getattr(request, 'POST', QueryDict()))
-            setattr(request, 'META', getattr(request, 'META', dict()))
+            _request = HttpRequest()
 
-            u = authenticate(request=request, username=username, password=password)
+            _request.decoded_body = request.decoded_body
+            _request.headers = request.headers
+            _request.http_method = request.http_method
+            _request.uri = request.uri
+            _request._params = request._params
+
+            _request.method = _request.http_method
+            _request.META = _request.headers
+
+            _body = QueryDict(str(request.body), mutable=True)
+            if _request.method == 'GET':
+                _request.GET = _body
+            elif _request.method == 'POST':
+                _request.POST = _body
+
+            u = authenticate(request=_request, username=username, password=password)
+
             if u is not None and u.is_active:
                 request.user = u
                 return True
