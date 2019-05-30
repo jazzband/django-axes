@@ -70,7 +70,7 @@ You also need to decorate ``dispatch()`` and ``form_invalid()`` methods of the A
         """
 
         def user_credentials(self):
-            credentials = super(AllauthCompatLoginForm, self).user_credentials()
+            credentials = super().user_credentials()
             credentials['login'] = credentials.get('email') or credentials.get('username')
             return credentials
 
@@ -90,7 +90,7 @@ You also need to decorate ``dispatch()`` and ``form_invalid()`` methods of the A
 
     urlpatterns = [
         # Override allauth default login view with a patched view
-        url(r'^accounts/login/$', LoginView.as_view(form_class=AllauthCompatLoginForm), name='account_login'),
+        url(r'^accounts/login/$', LoginView.as_view(form_class=AxesLoginForm), name='account_login'),
         url(r'^accounts/', include('allauth.urls')),
     ]
 
@@ -120,7 +120,7 @@ by a customized DRF authentication class::
         def authenticate(self, request):
             # NOTE: Request is added as an instance attribute in here
             self._current_request = request
-            return super(AxesBasicAuthentication, self).authenticate(request)
+            return super().authenticate(request)
 
         def authenticate_credentials(self, userid, password, request=None):
             credentials = {
