@@ -99,11 +99,14 @@ def axes_deprecation_check(app_configs, **kwargs):  # pylint: disable=unused-arg
     ]
 
     for deprecated_setting in deprecated_settings:
-        if getattr(settings, deprecated_setting, None) is not None:
+        try:
+            getattr(settings, deprecated_setting)
             warnings.append(Warning(
                 msg=Messages.SETTING_DEPRECATED.format(deprecated_setting=deprecated_setting),
                 hint=None,
                 id=Codes.SETTING_DEPRECATED,
             ))
+        except AttributeError:
+            pass
 
     return warnings
