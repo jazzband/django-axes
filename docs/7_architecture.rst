@@ -73,5 +73,5 @@ to log in users or otherwise take care of notifying Axes of authentication
 attempts and failures the same way Django does via authentication signals.
 
 The login flows can be customized and the Axes
-authentication backend, middleware, and handlers
+authentication backend, middleware, and signal receivers
 can easily be swapped to alternative implementations.

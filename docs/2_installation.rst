@@ -85,6 +85,7 @@ Axes has the following warnings codes built in:
 - ``axes.W001`` for invalid ``CACHES`` configuration.
 - ``axes.W002`` for invalid ``MIDDLEWARE`` configuration.
 - ``axes.W003`` for invalid ``AUTHENTICATION_BACKENDS`` configuration.
+- ``axes.W004`` for deprecated use of ``AXES_*`` setting flags.
 
 
 .. note::
@@ -96,10 +97,10 @@ Axes has the following warnings codes built in:
 Disabling Axes components in tests
 ----------------------------------
 
-If you get errors when running tests or other configurations, try setting the ``AXES_ENABLED``
-flag to ``False`` in your project or test settings configuration file::
+If you get errors when running tests, try setting the
+``AXES_ENABLED`` flag to ``False`` in your test settings::
 
     AXES_ENABLED = False
 
-This disables the Axes middleware, authentication backend and signal handlers
-which might produce errors with exotic test configurations.
+This disables the Axes middleware, authentication backend and signal receivers,
+which might fix errors with incompatible test configurations.
