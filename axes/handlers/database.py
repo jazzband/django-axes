@@ -17,6 +17,7 @@ from axes.helpers import (
     get_client_str,
     get_client_username,
     get_credentials,
+    get_failure_limit,
     get_query_str,
 )
 
@@ -82,7 +83,7 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
                 'AXES: Repeated login failure by %s. Count = %d of %d. Updating existing record in the database.',
                 client_str,
                 failures_since_start,
-                settings.AXES_FAILURE_LIMIT,
+                get_failure_limit(request, credentials),
             )
 
             separator = '\n---------\n'
@@ -118,7 +119,7 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
                 attempt_time=request.axes_attempt_time,
             )
 
-        if failures_since_start >= settings.AXES_FAILURE_LIMIT:
+        if failures_since_start >= get_failure_limit(request, credentials):
             log.warning('AXES: Locking out %s after repeated login failures.', client_str)
 
             request.axes_locked_out = True

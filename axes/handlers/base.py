@@ -1,5 +1,6 @@
 from axes.conf import settings
 from axes.helpers import (
+    get_failure_limit,
     is_client_ip_address_blacklisted,
     is_client_ip_address_whitelisted,
     is_client_method_whitelisted,
@@ -98,7 +99,7 @@ class AxesHandler:  # pylint: disable=unused-argument
         """
 
         if settings.AXES_LOCK_OUT_AT_FAILURE:
-            return self.get_failures(request, credentials) >= settings.AXES_FAILURE_LIMIT
+            return self.get_failures(request, credentials) >= get_failure_limit(request, credentials)
 
         return False
 

@@ -10,6 +10,7 @@ from axes.helpers import (
     get_client_str,
     get_client_username,
     get_credentials,
+    get_failure_limit,
 )
 
 log = getLogger(settings.AXES_LOGGER)
@@ -59,7 +60,7 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
                 'AXES: Repeated login failure by %s. Count = %d of %d. Updating existing record in the cache.',
                 client_str,
                 failures_since_start,
-                settings.AXES_FAILURE_LIMIT,
+                get_failure_limit(request, credentials),
             )
         else:
             log.warning(

@@ -18,6 +18,7 @@ from axes.helpers import (
     get_client_user_agent,
     get_cool_off,
     get_credentials,
+    get_failure_limit,
 )
 from axes.models import AccessAttempt
 
@@ -144,7 +145,7 @@ class AxesTestCase(TestCase):
         self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True)
 
     def almost_lockout(self):
-        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(1, get_failure_limit(None, None)):
             response = self.login()
             self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
 
