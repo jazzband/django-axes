@@ -23,6 +23,10 @@ from axes.helpers import (
 from axes.models import AccessAttempt
 
 
+def custom_failure_limit(request, credentials):
+    return 3
+
+
 class AxesTestCase(TestCase):
     """
     Test case using custom settings for testing.

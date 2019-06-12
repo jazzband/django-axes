@@ -255,6 +255,8 @@ def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
 def get_failure_limit(request, credentials) -> int:
     if callable(settings.AXES_FAILURE_LIMIT):
         return settings.AXES_FAILURE_LIMIT(request, credentials)
+    if isinstance(settings.AXES_FAILURE_LIMIT, str):
+        return import_string(settings.AXES_FAILURE_LIMIT)(request, credentials)
     if isinstance(settings.AXES_FAILURE_LIMIT, int):
         return settings.AXES_FAILURE_LIMIT
     raise TypeError('settings.AXES_FAILURE_LIMIT needs to be a callable or an integer')
