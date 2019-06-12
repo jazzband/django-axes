@@ -111,6 +111,15 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_handler_without_reset(self):
         self.check_handler()
 
+    @override_settings(AXES_FAILURE_LIMIT=lambda *args: 3)
+    def test_handler_callable_failure_limit(self):
+        self.check_handler()
+
+    @override_settings(AXES_FAILURE_LIMIT='3')
+    def test_handler_invalid_failure_limit(self):
+        with self.assertRaises(TypeError):
+            self.check_handler()
+
     @patch('axes.handlers.database.log')
     def test_empty_request(self, log):
         self.check_empty_request(log, 'AxesDatabaseHandler')

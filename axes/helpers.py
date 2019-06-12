@@ -252,6 +252,14 @@ def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
     return query_str[:max_length]
 
 
+def get_failure_limit(request, credentials) -> int:
+    if callable(settings.AXES_FAILURE_LIMIT):
+        return settings.AXES_FAILURE_LIMIT(request, credentials)
+    if isinstance(settings.AXES_FAILURE_LIMIT, int):
+        return settings.AXES_FAILURE_LIMIT
+    raise TypeError('settings.AXES_FAILURE_LIMIT needs to be a callable or an integer')
+
+
 def get_lockout_message() -> str:
     if settings.AXES_COOLOFF_TIME:
         return settings.AXES_COOLOFF_MESSAGE
@@ -261,7 +269,7 @@ def get_lockout_message() -> str:
 def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
     status = 403
     context = {
-        'failure_limit': settings.AXES_FAILURE_LIMIT,
+        'failure_limit': get_failure_limit(request, credentials),
         'username': get_client_username(request, credentials) or ''
     }
 
