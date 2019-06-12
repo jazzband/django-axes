@@ -115,7 +115,11 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_handler_callable_failure_limit(self):
         self.check_handler()
 
-    @override_settings(AXES_FAILURE_LIMIT='3')
+    @override_settings(AXES_FAILURE_LIMIT='axes.tests.base.custom_failure_limit')
+    def test_handler_str_failure_limit(self):
+        self.check_handler()
+
+    @override_settings(AXES_FAILURE_LIMIT=None)
     def test_handler_invalid_failure_limit(self):
         with self.assertRaises(TypeError):
             self.check_handler()
