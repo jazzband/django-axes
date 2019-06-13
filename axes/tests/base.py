@@ -154,7 +154,10 @@ class AxesTestCase(TestCase):
 
     def check_lockout(self):
         response = self.lockout()
-        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+        if settings.AXES_LOCK_OUT_AT_FAILURE == True:
+            self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+        else:
+            self.assertNotContains(response, self.LOCKED_MESSAGE, status_code=self.STATUS_SUCCESS)
 
     def cool_off(self):
         sleep(get_cool_off().total_seconds())
