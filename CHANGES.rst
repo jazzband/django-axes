@@ -3,6 +3,17 @@ Changes
 =======
 
 
+5.0.7 (2019-06-14)
+------------------
+
+- Fix lockout message showing when lockout is disabled
+  with the ``AXES_LOCK_OUT_AT_FAILURE`` setting.
+  [mogzol]
+
+- Add support for callable ``AXES_FAILURE_LIMIT`` setting.
+  [bbayles]
+
+
 5.0.6 (2019-05-25)
 ------------------
 
