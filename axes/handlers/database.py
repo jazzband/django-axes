@@ -119,7 +119,7 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
                 attempt_time=request.axes_attempt_time,
             )
 
-        if failures_since_start >= get_failure_limit(request, credentials):
+        if settings.AXES_LOCK_OUT_AT_FAILURE and failures_since_start >= get_failure_limit(request, credentials):
             log.warning('AXES: Locking out %s after repeated login failures.', client_str)
 
             request.axes_locked_out = True

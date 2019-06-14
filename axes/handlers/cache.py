@@ -71,7 +71,7 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
         cache_key = get_client_cache_key(request, credentials)
         self.cache.set(cache_key, failures_since_start, self.cache_timeout)
 
-        if failures_since_start >= settings.AXES_FAILURE_LIMIT:
+        if settings.AXES_LOCK_OUT_AT_FAILURE and failures_since_start >= get_failure_limit(request, credentials):
             log.warning('AXES: Locking out %s after repeated login failures.', client_str)
 
             request.axes_locked_out = True

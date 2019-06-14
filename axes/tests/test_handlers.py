@@ -124,6 +124,10 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         with self.assertRaises(TypeError):
             self.check_handler()
 
+    @override_settings(AXES_LOCK_OUT_AT_FAILURE=False)
+    def test_handler_without_lockout(self):
+        self.check_handler()
+
     @patch('axes.handlers.database.log')
     def test_empty_request(self, log):
         self.check_empty_request(log, 'AxesDatabaseHandler')
@@ -149,6 +153,10 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
 
     @override_settings(AXES_RESET_ON_SUCCESS=False)
     def test_handler_without_reset(self):
+        self.check_handler()
+
+    @override_settings(AXES_LOCK_OUT_AT_FAILURE=False)
+    def test_handler_without_lockout(self):
         self.check_handler()
 
     @patch('axes.handlers.cache.log')
