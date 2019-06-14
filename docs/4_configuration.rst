@@ -16,8 +16,12 @@ The following ``settings.py`` options are available for customizing Axes behavio
 
 * ``AXES_ENABLED``: Enable or disable Axes plugin functionality,
   for example in test runner setup. Default: ``True``
-* ``AXES_FAILURE_LIMIT``: The number of login attempts allowed before a
-  record is created for the failed logins.
+* ``AXES_FAILURE_LIMIT``: The integer number of login attempts allowed before a
+  record is created for the failed logins. This can also be a callable
+  or a dotted path to callable that returns an integer and all of the following are valid:
+  ``AXES_FAILURE_LIMIT = 42``,
+  ``AXES_FAILURE_LIMIT = lambda *args: 42``, and
+  ``AXES_FAILURE_LIMIT = 'project.app.get_login_failure_limit'``.
   Default: ``3``
 * ``AXES_LOCK_OUT_AT_FAILURE``: After the number of allowed login attempts
   are exceeded, should we lock out this IP (and optional user agent)?
