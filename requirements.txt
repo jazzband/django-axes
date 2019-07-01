@@ -1,6 +1,6 @@
 -e .
 coverage==4.5.3
-mypy==0.701
+mypy==0.711
 prospector==1.1.6.2
 pytest==4.6.2
 pytest-cov==2.7.1
