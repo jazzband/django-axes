@@ -1,3 +1,7 @@
+import re
+
+from django.urls import reverse
+
 from axes.conf import settings
 from axes.helpers import (
     get_failure_limit,
@@ -33,6 +37,9 @@ class AxesHandler:  # pylint: disable=unused-argument
         Please refer to the ``axes.handlers.database.AxesDatabaseHandler`` for the default implementation
         and inspiration on some common checks and access restrictions before writing your own implementation.
         """
+
+        if self.is_admin_site(request):
+            return True
 
         if self.is_blacklisted(request, credentials):
             return False
@@ -112,3 +119,15 @@ class AxesHandler:  # pylint: disable=unused-argument
         """
 
         raise NotImplementedError('The Axes handler class needs a method definition for get_failures')
+
+    def is_admin_site(self, request) -> bool:
+        """
+        Checks if the request is for admin site.
+        """
+        if (
+            settings.AXES_ONLY_ADMIN_SITE and hasattr(request, 'path') and
+            not re.match('^%s' % reverse('admin:index'), request.path)
+        ):
+            return True
+
+        return False
