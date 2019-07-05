@@ -20,6 +20,9 @@ class AxesAppConf(AppConf):
     # lock out with username and never the IP or user agent
     ONLY_USER_FAILURES = False
 
+    # lock out just for admin site
+    ONLY_ADMIN_SITE = False
+
     # lock out with the user agent, has no effect when ONLY_USER_FAILURES is set
     USE_USER_AGENT = False
 

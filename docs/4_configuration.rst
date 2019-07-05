@@ -38,6 +38,8 @@ The following ``settings.py`` options are available for customizing Axes behavio
   and never lock based on IP if attempts exceed the limit.
   Otherwise utilize the existing IP and user locking logic.
   Default: ``False``
+* ``AXES_ONLY_ADMIN_SITE`` : If ``True``, lock is only enable for admin site,
+  Default: ``False``
 * ``AXES_USE_USER_AGENT``: If ``True``, lock out and log based on the IP address
   and the user agent.  This means requests from different user agents but from
   the same IP are treated differently. This settings has no effect if the

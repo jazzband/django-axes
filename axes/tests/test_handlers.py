@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from django.test import override_settings
+from django.urls import reverse
 from django.utils.timezone import timedelta
 
 from axes.conf import settings
@@ -33,6 +34,12 @@ class AxesHandlerTestCase(AxesTestCase):
 
     @override_settings(AXES_LOCK_OUT_AT_FAILURE=False)
     def test_is_allowed_no_lock_out(self):
+        self.assertTrue(AxesProxyHandler.is_allowed(self.request))
+
+    @override_settings(AXES_ONLY_ADMIN_SITE=True)
+    def test_only_admin_site(self):
+        request = MagicMock()
+        request.path = '/test/'
         self.assertTrue(AxesProxyHandler.is_allowed(self.request))
 
 
@@ -95,6 +102,20 @@ class AxesHandlerBaseTestCase(AxesTestCase):
     def check_empty_request(self, log, handler):
         AxesProxyHandler.user_login_failed(sender=None, credentials={}, request=None)
         log.error.assert_called_with(f'AXES: {handler}.user_login_failed does not function without a request.')
+
+    def test_is_admin_site(self):
+        request = MagicMock()
+        tests = (  # (AXES_ONLY_ADMIN_SITE, URL, Expected)
+            (True, '/test/', True),
+            (True, reverse('admin:index'), False),
+            (False, '/test/', False),
+            (False, reverse('admin:index'), False),
+        )
+
+        for setting_value, url, expected in tests:
+            with override_settings(AXES_ONLY_ADMIN_SITE=setting_value):
+                request.path = url
+                self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
 
 
 @override_settings(
