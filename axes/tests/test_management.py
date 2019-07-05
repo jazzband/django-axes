@@ -1,9 +1,34 @@
 from io import StringIO
+from unittest.mock import patch, Mock
 
 from django.core.management import call_command
+from django.utils import timezone
 
-from axes.models import AccessAttempt
+from axes.models import AccessAttempt, AccessLog
 from axes.tests.base import AxesTestCase
+
+class DeleteAccessLogsManagementCommandTestCase(AxesTestCase):
+    def setUp(self):
+        yesterday = timezone.now() - timezone.timedelta(days=1)
+        with patch('django.utils.timezone.now', Mock(return_value=yesterday)):
+            AccessLog.objects.create()
+
+        ten_days_ago = timezone.now() - timezone.timedelta(days=10)
+        with patch('django.utils.timezone.now', Mock(return_value=ten_days_ago)):
+            AccessLog.objects.create()
+
+    def test_axes_delete_access_logs(self):
+        expected = '1 logs will be deleted.\n'
+
+        out = StringIO()
+        call_command('axes_delete_access_logs', 5, stdout=out)
+
+        self.assertEqual(expected, out.getvalue())
+
+        out = StringIO()
+        call_command('axes_delete_access_logs', 15, stdout=out)
+
+        self.assertEqual(expected, out.getvalue())
 
 
 class ManagementCommandTestCase(AxesTestCase):
