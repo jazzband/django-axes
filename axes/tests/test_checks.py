@@ -1,6 +1,7 @@
 from django.core.checks import run_checks, Warning  # pylint: disable=redefined-builtin
 from django.test import override_settings, modify_settings
 
+from axes.backends import AxesBackend
 from axes.checks import Messages, Hints, Codes
 from axes.tests.base import AxesTestCase
 
@@ -58,13 +59,17 @@ class MiddlewareCheckTestCase(AxesTestCase):
         ])
 
 
+class MyBackend(AxesBackend):
+    pass
+
+
 class BackendCheckTestCase(AxesTestCase):
     @modify_settings(
         AUTHENTICATION_BACKENDS={
             'remove': ['axes.backends.AxesBackend']
         },
     )
-    def test_cache_check_warnings(self):
+    def test_backend_missing(self):
         warnings = run_checks()
         warning = Warning(
             msg=Messages.BACKEND_INVALID,
@@ -75,6 +80,13 @@ class BackendCheckTestCase(AxesTestCase):
         self.assertEqual(warnings, [
             warning,
         ])
+
+    @override_settings(
+        AUTHENTICATION_BACKENDS=[__name__ + "." + MyBackend.__name__]
+    )
+    def test_custom_backend(self):
+        warnings = run_checks()
+        self.assertEqual(warnings, [])
 
 
 class DeprecatedSettingsTestCase(AxesTestCase):
