@@ -2,6 +2,11 @@
 Changes
 =======
 
+Pending
+-------
+
+- Stop axes.W003 check from being triggered for subclasses of ``AxesBackend``.
+  [adamchainz]
 
 5.0.7 (2019-06-14)
 ------------------

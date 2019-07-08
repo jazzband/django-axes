@@ -1,5 +1,7 @@
 from django.core.checks import Tags, Warning, register  # pylint: disable=redefined-builtin
+from django.utils.module_loading import import_string
 
+from axes.backends import AxesBackend
 from axes.conf import settings
 
 
@@ -14,7 +16,7 @@ class Messages:
         "You do not have 'axes.middleware.AxesMiddleware' in your settings.MIDDLEWARE."
     )
     BACKEND_INVALID = (
-        "You do not have 'axes.backends.AxesBackend' in your settings.AUTHENTICATION_BACKENDS."
+        "You do not have 'axes.backends.AxesBackend' or a subclass in your settings.AUTHENTICATION_BACKENDS."
     )
     SETTING_DEPRECATED = (
         'You have a deprecated setting {deprecated_setting} configured in your project settings'
@@ -80,7 +82,13 @@ def axes_middleware_check(app_configs, **kwargs):  # pylint: disable=unused-argu
 def axes_backend_check(app_configs, **kwargs):  # pylint: disable=unused-argument
     warnings = []
 
-    if 'axes.backends.AxesBackend' not in settings.AUTHENTICATION_BACKENDS:
+    found = False
+    for name in settings.AUTHENTICATION_BACKENDS:
+        klass = import_string(name)
+        if issubclass(klass, AxesBackend):
+            found = True
+
+    if not found:
         warnings.append(Warning(
             msg=Messages.BACKEND_INVALID,
             hint=Hints.BACKEND_INVALID,
