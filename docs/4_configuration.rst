@@ -30,15 +30,15 @@ The following ``settings.py`` options are available for customizing Axes behavio
   old failed login attempts will be cleared. Can be set to a Python
   timedelta object or an integer. If an integer, will be interpreted as a number of hours.
   Default: ``None``
-* ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True``, prevent login
-  from IP under a particular username if the attempt limit has been exceeded,
-  otherwise lock out based on IP.
+* ``AXES_ONLY_ADMIN_SITE`` : If ``True``, lock is only enable for admin site,
   Default: ``False``
 * ``AXES_ONLY_USER_FAILURES`` : If ``True``, only lock based on username,
   and never lock based on IP if attempts exceed the limit.
   Otherwise utilize the existing IP and user locking logic.
   Default: ``False``
-* ``AXES_ONLY_ADMIN_SITE`` : If ``True``, lock is only enable for admin site,
+* ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True``, prevent login
+  from IP under a particular username if the attempt limit has been exceeded,
+  otherwise lock out based on IP.
   Default: ``False``
 * ``AXES_USE_USER_AGENT``: If ``True``, lock out and log based on the IP address
   and the user agent.  This means requests from different user agents but from
