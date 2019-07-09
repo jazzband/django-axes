@@ -59,7 +59,7 @@ class MiddlewareCheckTestCase(AxesTestCase):
         ])
 
 
-class MyBackend(AxesBackend):
+class AxesSpecializedBackend(AxesBackend):
     pass
 
 
@@ -82,11 +82,25 @@ class BackendCheckTestCase(AxesTestCase):
         ])
 
     @override_settings(
-        AUTHENTICATION_BACKENDS=[__name__ + "." + MyBackend.__name__]
+        AUTHENTICATION_BACKENDS=['axes.tests.test_checks.AxesSpecializedBackend']
     )
-    def test_custom_backend(self):
+    def test_specialized_backend(self):
         warnings = run_checks()
         self.assertEqual(warnings, [])
+
+    @override_settings(
+        AUTHENTICATION_BACKENDS=['axes.tests.test_checks.AxesNotDefinedBackend']
+    )
+    def test_import_error(self):
+        with self.assertRaises(ImportError):
+            run_checks()
+
+    @override_settings(
+        AUTHENTICATION_BACKENDS=['module.not_defined']
+    )
+    def test_module_not_found_error(self):
+        with self.assertRaises(ModuleNotFoundError):
+            run_checks()
 
 
 class DeprecatedSettingsTestCase(AxesTestCase):

@@ -84,9 +84,16 @@ def axes_backend_check(app_configs, **kwargs):  # pylint: disable=unused-argumen
 
     found = False
     for name in settings.AUTHENTICATION_BACKENDS:
-        klass = import_string(name)
-        if issubclass(klass, AxesBackend):
+        try:
+            backend = import_string(name)
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError('Can not find module path defined in settings.AUTHENTICATION_BACKENDS') from e
+        except ImportError as e:
+            raise ImportError('Can not import backend class defined in settings.AUTHENTICATION_BACKENDS') from e
+
+        if issubclass(backend, AxesBackend):
             found = True
+            break
 
     if not found:
         warnings.append(Warning(
