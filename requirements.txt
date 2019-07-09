@@ -1,9 +1,9 @@
 -e .
 coverage==4.5.3
-mypy==0.701
+mypy==0.711
 prospector==1.1.6.2
-pytest==4.6.2
+pytest==5.0.0
 pytest-cov==2.7.1
-pytest-django==3.5.0
+pytest-django==3.5.1
 sphinx_rtd_theme==0.4.3
-tox==3.12.1
+tox==3.13.1
