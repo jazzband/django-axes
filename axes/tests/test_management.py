@@ -7,28 +7,43 @@ from django.utils import timezone
 from axes.models import AccessAttempt, AccessLog
 from axes.tests.base import AxesTestCase
 
-class DeleteAccessLogsManagementCommandTestCase(AxesTestCase):
+
+class ResetAccessLogsManagementCommandTestCase(AxesTestCase):
     def setUp(self):
-        yesterday = timezone.now() - timezone.timedelta(days=1)
-        with patch('django.utils.timezone.now', Mock(return_value=yesterday)):
+        self.msg_not_found = 'No logs found.\n'
+        self.msg_num_found = '{} logs removed.\n'
+
+        days_3 = timezone.now() - timezone.timedelta(days=3)
+        with patch('django.utils.timezone.now', Mock(return_value=days_3)):
             AccessLog.objects.create()
 
-        ten_days_ago = timezone.now() - timezone.timedelta(days=10)
-        with patch('django.utils.timezone.now', Mock(return_value=ten_days_ago)):
+        days_13 = timezone.now() - timezone.timedelta(days=9)
+        with patch('django.utils.timezone.now', Mock(return_value=days_13)):
             AccessLog.objects.create()
 
-    def test_axes_delete_access_logs(self):
-        expected = '1 logs will be deleted.\n'
+        days_30 = timezone.now() - timezone.timedelta(days=27)
+        with patch('django.utils.timezone.now', Mock(return_value=days_30)):
+            AccessLog.objects.create()
 
+    def test_axes_delete_access_logs_default(self):
         out = StringIO()
-        call_command('axes_delete_access_logs', 5, stdout=out)
+        call_command('axes_reset_logs', stdout=out)
+        self.assertEqual(self.msg_not_found, out.getvalue())
 
-        self.assertEqual(expected, out.getvalue())
-
+    def test_axes_delete_access_logs_older_than_2_days(self):
         out = StringIO()
-        call_command('axes_delete_access_logs', 15, stdout=out)
+        call_command('axes_reset_logs', age=2, stdout=out)
+        self.assertEqual(self.msg_num_found.format(3), out.getvalue())
 
-        self.assertEqual(expected, out.getvalue())
+    def test_axes_delete_access_logs_older_than_4_days(self):
+        out = StringIO()
+        call_command('axes_reset_logs', age=4, stdout=out)
+        self.assertEqual(self.msg_num_found.format(2), out.getvalue())
+
+    def test_axes_delete_access_logs_older_than_16_days(self):
+        out = StringIO()
+        call_command('axes_reset_logs', age=16, stdout=out)
+        self.assertEqual(self.msg_num_found.format(1), out.getvalue())
 
 
 class ManagementCommandTestCase(AxesTestCase):
