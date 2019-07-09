@@ -2,11 +2,17 @@
 Changes
 =======
 
-Pending
--------
 
-- Stop axes.W003 check from being triggered for subclasses of ``AxesBackend``.
+5.0.8 (2019-07-09)
+------------------
+
+- Add ``AXES_ONLY_ADMIN_SITE`` flag for only running Axes on admin site.
+  [hramezani]
+- Add ``axes_reset_logs`` command for removing old AccessLog records.
+  [tlebrize]
+- Allow ``AxesBackend`` subclasses to pass the ``axes.W003`` system check.
   [adamchainz]
+
 
 5.0.7 (2019-06-14)
 ------------------
