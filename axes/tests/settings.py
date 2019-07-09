@@ -1,6 +1,3 @@
-import os.path
-import tempfile
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',

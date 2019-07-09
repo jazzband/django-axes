@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from django.contrib.auth import authenticate
-from django.http import HttpRequest
 from django.test import override_settings
 from django.urls import reverse
 

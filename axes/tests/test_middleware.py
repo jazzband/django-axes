@@ -1,5 +1,3 @@
-from unittest.mock import patch, MagicMock
-
 from django.http import HttpResponse, HttpRequest
 
 from axes.middleware import AxesMiddleware
