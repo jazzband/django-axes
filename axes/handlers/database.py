@@ -2,6 +2,7 @@ from logging import getLogger
 
 from django.db.models import Max, Value
 from django.db.models.functions import Concat
+from django.utils import timezone
 
 from axes.attempts import (
     clean_expired_user_attempts,
@@ -29,6 +30,30 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
     """
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
     """
+
+    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
+        attempts = AccessAttempt.objects.all()
+
+        if ip_address:
+            attempts = attempts.filter(ip_address=ip_address)
+        if username:
+            attempts = attempts.filter(username=username)
+
+        count, _ = attempts.delete()
+        log.info('AXES: Reset %d access attempts from database.', count)
+
+        return count
+
+    def reset_logs(self, *, age_days: int = None) -> int:
+        if age_days is None:
+            count, _ = AccessLog.objects.all().delete()
+            log.info('AXES: Reset all %d access logs from database.', count)
+        else:
+            limit = timezone.now() - timezone.timedelta(days=age_days)
+            count, _ = AccessLog.objects.filter(attempt_time__lte=limit).delete()
+            log.info('AXES: Reset %d access logs older than %d days from database.', count, age_days)
+
+        return count
 
     def get_failures(self, request, credentials: dict = None) -> int:
         attempts = get_user_attempts(request, credentials)

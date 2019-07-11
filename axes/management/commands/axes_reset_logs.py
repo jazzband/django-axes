@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
-from axes.models import AccessLog
+from axes.handlers.proxy import AxesProxyHandler
 
 
 class Command(BaseCommand):
@@ -16,9 +15,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        limit = timezone.now().date() - timezone.timedelta(days=options['age'])
-        count, _ = AccessLog.objects.filter(attempt_time__lte=limit).delete()
-
+        count = AxesProxyHandler.reset_logs(age_days=options['age'])
         if count:
             self.stdout.write(f'{count} logs removed.')
         else:

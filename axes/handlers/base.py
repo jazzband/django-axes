@@ -23,6 +23,24 @@ class AxesHandler:  # pylint: disable=unused-argument
     .. note:: This is a virtual class and **can not be used without specialization**.
     """
 
+    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
+        """
+        Resets access attempts that match the given IP address or username.
+
+        :raises NotImplementedError: if the handler does not support resetting attempts.
+        """
+
+        raise NotImplementedError('Reset for access attempts is not supported on this backend')
+
+    def reset_logs(self, *, age_days: int = None) -> int:
+        """
+        Resets access logs that are older than given number of days.
+
+        :raises NotImplementedError: if the handler does not support resetting logs.
+        """
+
+        raise NotImplementedError('Reset for access logs is not supported on this backend')
+
     def is_allowed(self, request, credentials: dict = None) -> bool:
         """
         Checks if the user is allowed to access or use given functionality such as a login view or authentication.

@@ -7,7 +7,7 @@ and offers a backwards compatible import path.
 
 from logging import getLogger
 
-from axes.models import AccessAttempt
+from axes.handlers.proxy import AxesProxyHandler
 
 log = getLogger(__name__)
 
@@ -19,14 +19,4 @@ def reset(ip: str = None, username: str = None) -> int:
     This utility method is meant to be used from the CLI or via Python API.
     """
 
-    attempts = AccessAttempt.objects.all()
-
-    if ip:
-        attempts = attempts.filter(ip_address=ip)
-    if username:
-        attempts = attempts.filter(username=username)
-
-    count, _ = attempts.delete()
-    log.info('AXES: Reset %s access attempts from database.', count)
-
-    return count
+    return AxesProxyHandler.reset_attempts(ip_address=ip, username=username)

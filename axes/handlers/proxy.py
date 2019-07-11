@@ -42,6 +42,14 @@ class AxesProxyHandler(AxesHandler):
             cls.implementation = import_string(settings.AXES_HANDLER)()
         return cls.implementation
 
+    @classmethod
+    def reset_attempts(cls, *, ip_address: str = None, username: str = None) -> int:
+        return cls.get_implementation().reset_attempts(ip_address=ip_address, username=username)
+
+    @classmethod
+    def reset_logs(cls, *, age_days: int = None) -> int:
+        return cls.get_implementation().reset_logs(age_days=age_days)
+
     @staticmethod
     def update_request(request):
         """

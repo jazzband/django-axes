@@ -2,16 +2,26 @@ from unittest.mock import MagicMock, patch
 
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.timezone import timedelta
 
 from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
-from axes.tests.base import AxesTestCase
 from axes.helpers import get_client_str
+from axes.models import AccessAttempt, AccessLog
+from axes.tests.base import AxesTestCase
 
 
 @override_settings(AXES_HANDLER='axes.handlers.base.AxesHandler')
 class AxesHandlerTestCase(AxesTestCase):
+    def test_base_handler_reset_attempts_raises(self):
+        with self.assertRaises(NotImplementedError):
+            AxesProxyHandler.reset_attempts()
+
+    def test_base_handler_reset_logs_raises(self):
+        with self.assertRaises(NotImplementedError):
+            AxesProxyHandler.reset_logs()
+
     def test_base_handler_raises_on_undefined_is_allowed_to_authenticate(self):
         with self.assertRaises(NotImplementedError):
             AxesProxyHandler.is_allowed(self.request, {})
@@ -124,6 +134,27 @@ class AxesHandlerBaseTestCase(AxesTestCase):
     AXES_RESET_ON_SUCCESS=True,
 )
 class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
+    def test_handler_reset_attempts(self):
+        self.create_attempt()
+        self.assertEqual(1, AxesProxyHandler.reset_attempts())
+        self.assertFalse(AccessAttempt.objects.count())
+
+    def test_handler_reset_logs(self):
+        self.create_log()
+        self.assertEqual(1, AxesProxyHandler.reset_logs())
+        self.assertFalse(AccessLog.objects.count())
+
+    def test_handler_reset_logs_older_than_42_days(self):
+        self.create_log()
+
+        then = timezone.now() - timezone.timedelta(days=90)
+        with patch('django.utils.timezone.now', return_value=then):
+            self.create_log()
+
+        self.assertEqual(AccessLog.objects.count(), 2)
+        self.assertEqual(1, AxesProxyHandler.reset_logs(age_days=42))
+        self.assertEqual(AccessLog.objects.count(), 1)
+
     @override_settings(AXES_RESET_ON_SUCCESS=True)
     def test_handler(self):
         self.check_handler()

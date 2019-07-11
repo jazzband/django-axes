@@ -20,7 +20,7 @@ from axes.helpers import (
     get_credentials,
     get_failure_limit,
 )
-from axes.models import AccessAttempt
+from axes.models import AccessAttempt, AccessLog
 
 
 def custom_failure_limit(request, credentials):
@@ -91,14 +91,18 @@ class AxesTestCase(TestCase):
             'user_agent': self.user_agent,
             'ip_address': self.ip_address,
             'username': self.username,
-            'failures_since_start': 1,
         }
 
         defaults.update(kwargs)
         return defaults
 
     def create_attempt(self, **kwargs):
-        return AccessAttempt.objects.create(**self.get_kwargs_with_defaults(**kwargs))
+        kwargs = self.get_kwargs_with_defaults(**kwargs)
+        kwargs.setdefault('failures_since_start', 1)
+        return AccessAttempt.objects.create(**kwargs)
+
+    def create_log(self, **kwargs):
+        return AccessLog.objects.create(**self.get_kwargs_with_defaults(**kwargs))
 
     def reset(self, ip=None, username=None):
         return reset(ip, username)
