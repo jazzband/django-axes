@@ -3,6 +3,17 @@ Changes
 =======
 
 
+5.0.9 (2019-07-11)
+------------------
+
+- Add better handling for attempt and log resets by moving them
+  into handlers which allows customization and more configurability.
+  Unimplemented handlers raise ``NotImplementedError`` by default.
+  [aleksihakli]
+- Add Python 3.8 dev version and PyPy to the Travis test matrix.
+  [aleksihakli]
+
+
 5.0.8 (2019-07-09)
 ------------------
 
