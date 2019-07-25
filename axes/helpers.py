@@ -1,7 +1,7 @@
 from datetime import timedelta
 from hashlib import md5
 from logging import getLogger
-from typing import Any, Callable, Optional, Type, Union
+from typing import Callable, Optional, Type, Union
 
 from django.core.cache import caches, BaseCache
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, QueryDict
@@ -11,6 +11,7 @@ from django.utils.module_loading import import_string
 import ipware.ip2
 
 from axes.conf import settings
+from axes.models import AccessBase
 
 log = getLogger(__name__)
 
@@ -359,7 +360,7 @@ def is_client_method_whitelisted(request) -> bool:
     return False
 
 
-def get_client_cache_key(request_or_attempt: Union[HttpRequest, Any], credentials: dict = None) -> str:
+def get_client_cache_key(request_or_attempt: Union[HttpRequest, AccessBase], credentials: dict = None) -> str:
     """
     Build cache key name from request or AccessAttempt object.
 
@@ -368,14 +369,14 @@ def get_client_cache_key(request_or_attempt: Union[HttpRequest, Any], credential
     :return cache_key: Hash key that is usable for Django cache backends
     """
 
-    if isinstance(request_or_attempt, HttpRequest):
-        username = get_client_username(request_or_attempt, credentials)
-        ip_address = get_client_ip_address(request_or_attempt)
-        user_agent = get_client_user_agent(request_or_attempt)
-    else:
+    if isinstance(request_or_attempt, AccessBase):
         username = request_or_attempt.username
         ip_address = request_or_attempt.ip_address
         user_agent = request_or_attempt.user_agent
+    else:
+        username = get_client_username(request_or_attempt, credentials)
+        ip_address = get_client_ip_address(request_or_attempt)
+        user_agent = get_client_user_agent(request_or_attempt)
 
     filter_kwargs = get_client_parameters(username, ip_address, user_agent)
 
