@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.0.10 (2019-07-25)
+------------------
+
+- Refactor type checks for ``axes.helpers.get_client_cache_key``
+  for framework compatibility, fixes #471.
+  [aleksihakli]
+
+
 5.0.9 (2019-07-11)
 ------------------
 
