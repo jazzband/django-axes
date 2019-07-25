@@ -3,8 +3,15 @@ Changes
 =======
 
 
+5.0.11 (2019-07-25)
+-------------------
+
+- Fix typo in rST formatting that prevented 5.0.10 release to PyPI.
+  [aleksihakli]
+
+
 5.0.10 (2019-07-25)
-------------------
+-------------------
 
 - Refactor type checks for ``axes.helpers.get_client_cache_key``
   for framework compatibility, fixes #471.
