@@ -1,5 +1,5 @@
 -e .
-coverage==4.5.3
+coverage==4.5.4
 mypy==0.711
 prospector==1.1.6.2
 pytest==5.0.0
