@@ -397,6 +397,16 @@ def is_already_locked(request):
     return False
 
 
+def is_authenticated(request):
+    if not hasattr(request, 'user'):
+        return False
+
+    if callable(request.user.is_authenticated):
+            return request.user.is_authenticated()
+
+    return request.user.is_authenticated
+
+
 def check_request(request, login_unsuccessful):
     ip_address = get_ip(request)
     username = request.POST.get(USERNAME_FORM_FIELD, None)
@@ -453,7 +463,7 @@ def check_request(request, login_unsuccessful):
     if failures >= FAILURE_LIMIT and LOCK_OUT_AT_FAILURE and user_lockable:
         # We log them out in case they actually managed to enter the correct
         # password
-        if hasattr(request, 'user') and request.user.is_authenticated():
+        if is_authenticated(request):
             logout(request)
         log.warn('AXES: locked out %s after repeated login attempts.' %
                  (ip_address,))
