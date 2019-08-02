@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.6.2 (2019-08-02)
+------------------
+
+- Django 2.2 compatibility fixes
+  [simanto604newscred]
+
 1.6.1 (2016-05-13)
 ------------------
 
