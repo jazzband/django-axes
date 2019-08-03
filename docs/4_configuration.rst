@@ -27,8 +27,10 @@ The following ``settings.py`` options are available for customizing Axes behavio
   are exceeded, should we lock out this IP (and optional user agent)?
   Default: ``True``
 * ``AXES_COOLOFF_TIME``: If set, defines a period of inactivity after which
-  old failed login attempts will be cleared. Can be set to a Python
-  timedelta object or an integer. If an integer, will be interpreted as a number of hours.
+  old failed login attempts will be cleared.
+  Can be set to a Python timedelta object, an integer, a callable,
+  or a string path to a callable which takes no arguments.
+  If an integer, will be interpreted as a number of hours.
   Default: ``None``
 * ``AXES_ONLY_ADMIN_SITE`` : If ``True``, lock is only enable for admin site,
   Default: ``False``
@@ -63,7 +65,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``True``
 * ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your users usernames.
   Default: ``username``
-* ``AXES_USERNAME_CALLABLE``: A callable or a string path to function that takes
+* ``AXES_USERNAME_CALLABLE``: A callable or a string path to callable that takes
   two arguments for user lookups: ``def get_username(request: HttpRequest, credentials: dict) -> str: ...``.
   This can be any callable such as ``AXES_USERNAME_CALLABLE = lambda request, credentials: 'username'``
   or a full Python module path to callable such as ``AXES_USERNAME_CALLABLE = 'example.get_username``.
