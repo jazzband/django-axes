@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.0.12 (2019-08-05)
+-------------------
+
+- Support callables for ``AXES_COOLOFF_TIME`` setting.
+  [DariaPlotnikova]
+
+
 5.0.11 (2019-07-25)
 -------------------
 
