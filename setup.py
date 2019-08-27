@@ -43,6 +43,7 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
+        'Environment :: Plugins',
         'Framework :: Django',
         'Framework :: Django :: 1.11',
         'Framework :: Django :: 2.1',
