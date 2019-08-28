@@ -2,11 +2,8 @@
 
 from setuptools import setup, find_packages
 
-from axes import get_version
-
 setup(
     name='django-axes',
-    version=get_version(),
     description='Keep track of failed login attempts in Django-powered sites.',
     long_description='\n'.join([
         open('README.rst', encoding='utf-8').read(),
@@ -32,6 +29,8 @@ setup(
     },
     license='MIT',
     package_dir={'axes': 'axes'},
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     python_requires='~=3.6',
     install_requires=[
         'django>=1.11',

@@ -1,8 +1,8 @@
 from logging import getLogger
+from pkg_resources import get_distribution
 
 from django import apps
 
-from axes import get_version
 from axes.conf import settings
 
 log = getLogger(settings.AXES_LOGGER)
@@ -32,7 +32,7 @@ class AppConfig(apps.AppConfig):
         cls.logging_initialized = True
 
         log.info('AXES: BEGIN LOG')
-        log.info('AXES: Using django-axes %s', get_version())
+        log.info('AXES: Using django-axes version %s', get_distribution('django-axes').version)
 
         if settings.AXES_ONLY_USER_FAILURES:
             log.info('AXES: blocking by username only.')
