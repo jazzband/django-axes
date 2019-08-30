@@ -3,6 +3,15 @@ Changes
 =======
 
 
+5.0.13 (2019-08-30)
+-------------------
+
+- Python 3.8 and PyPy support.
+  [aleksihakli]
+- Migrate to ``setuptools_scm`` and automatic versioning.
+  [aleksihakli]
+
+
 5.0.12 (2019-08-05)
 -------------------
 
