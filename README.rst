@@ -1,5 +1,5 @@
 
-Django Axes
+django-axes
 ===========
 
 .. image:: https://jazzband.co/static/img/badge.svg
