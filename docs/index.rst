@@ -1,6 +1,6 @@
 .. _index:
 
-Django Axes Documentation
+django-axes documentation
 =========================
 
 Contents

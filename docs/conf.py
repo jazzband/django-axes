@@ -17,7 +17,7 @@ django.setup()
 
 # -- Extra custom configuration  ------------------------------------------
 
-title = 'Django Axes Documentation'
+title = 'django-axes documentation'
 description = 'Keep track of failed login attempts in Django-powered sites.',
 
 # -- General configuration ------------------------------------------------
@@ -39,7 +39,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Django Axes'
+project = 'django-axes'
 copyright = '2016, Jazzband'
 author = 'Jazzband'
 
