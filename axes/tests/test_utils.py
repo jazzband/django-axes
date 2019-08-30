@@ -5,7 +5,6 @@ from unittest.mock import patch
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse, HttpRequest
 from django.test import override_settings, RequestFactory
 
-from axes import get_version
 from axes.apps import AppConfig
 from axes.models import AccessAttempt
 from axes.tests.base import AxesTestCase
@@ -24,12 +23,6 @@ from axes.helpers import (
     is_client_method_whitelisted,
     toggleable,
 )
-
-
-class VersionTestCase(AxesTestCase):
-    @patch('axes.__version__', 'test')
-    def test_get_version(self):
-        self.assertEqual(get_version(), 'test')
 
 
 @override_settings(AXES_ENABLED=False)
