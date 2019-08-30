@@ -26,10 +26,6 @@ Django Axes
    :target: https://codecov.io/gh/jazzband/django-axes
    :alt: Coverage
 
-.. image:: https://pyup.io/repos/github/jazzband/django-axes/shield.svg
-   :target: https://pyup.io/repos/github/jazzband/django-axes/
-   :alt: Updates
-
 
 Axes is a very simple way for you to keep track of failed
 login attempts for your login and administration views.
