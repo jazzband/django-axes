@@ -4,4 +4,4 @@ ignore-paths:
 
 pep8:
   options:
-    max-line-length: 119
+    max-line-length: 142

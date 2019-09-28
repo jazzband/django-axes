@@ -27,10 +27,10 @@ class AxesAppConf(AppConf):
     USE_USER_AGENT = False
 
     # use a specific username field to retrieve from login POST data
-    USERNAME_FORM_FIELD = 'username'
+    USERNAME_FORM_FIELD = "username"
 
     # use a specific password field to retrieve from login POST data
-    PASSWORD_FORM_FIELD = 'password'  # noqa
+    PASSWORD_FORM_FIELD = "password"  # noqa
 
     # use a provided callable to transform the POSTed username into the one used in credentials
     USERNAME_CALLABLE = None
@@ -40,9 +40,9 @@ class AxesAppConf(AppConf):
 
     DISABLE_ACCESS_LOG = False
 
-    HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
+    HANDLER = "axes.handlers.database.AxesDatabaseHandler"
 
-    LOGGER = 'axes.watch_login'
+    LOGGER = "axes.watch_login"
 
     LOCKOUT_TEMPLATE = None
 
@@ -64,13 +64,17 @@ class AxesAppConf(AppConf):
     IP_BLACKLIST = None
 
     # message to show when locked out and have cooloff enabled
-    COOLOFF_MESSAGE = _('Account locked: too many login attempts. Please try again later')
+    COOLOFF_MESSAGE = _(
+        "Account locked: too many login attempts. Please try again later"
+    )
 
     # message to show when locked out and have cooloff disabled
-    PERMALOCK_MESSAGE = _('Account locked: too many login attempts. Contact an admin to unlock your account.')
+    PERMALOCK_MESSAGE = _(
+        "Account locked: too many login attempts. Contact an admin to unlock your account."
+    )
 
     # if your deployment is using reverse proxies, set this value to 'left-most' or 'right-most' per your configuration
-    PROXY_ORDER = 'left-most'
+    PROXY_ORDER = "left-most"
 
     # if your deployment is using reverse proxies, set this value to the number of proxies in front of Django
     PROXY_COUNT = None
@@ -82,9 +86,7 @@ class AxesAppConf(AppConf):
     # if your deployment is using reverse proxies, ensure that the header attributes are securely set by the proxy
     # ensure that the client can not spoof the headers by setting them and sending them through the proxy
     META_PRECEDENCE_ORDER = getattr(
-        settings, 'AXES_META_PRECEDENCE_ORDER', getattr(
-            settings, 'IPWARE_META_PRECEDENCE_ORDER', (
-                'REMOTE_ADDR',
-            )
-        )
+        settings,
+        "AXES_META_PRECEDENCE_ORDER",
+        getattr(settings, "IPWARE_META_PRECEDENCE_ORDER", ("REMOTE_ADDR",)),
     )

@@ -30,7 +30,9 @@ class AxesHandler:  # pylint: disable=unused-argument
         :raises NotImplementedError: if the handler does not support resetting attempts.
         """
 
-        raise NotImplementedError('Reset for access attempts is not supported on this backend')
+        raise NotImplementedError(
+            "Reset for access attempts is not supported on this backend"
+        )
 
     def reset_logs(self, *, age_days: int = None) -> int:
         """
@@ -39,7 +41,9 @@ class AxesHandler:  # pylint: disable=unused-argument
         :raises NotImplementedError: if the handler does not support resetting logs.
         """
 
-        raise NotImplementedError('Reset for access logs is not supported on this backend')
+        raise NotImplementedError(
+            "Reset for access logs is not supported on this backend"
+        )
 
     def is_allowed(self, request, credentials: dict = None) -> bool:
         """
@@ -70,7 +74,7 @@ class AxesHandler:  # pylint: disable=unused-argument
 
         return True
 
-    def user_login_failed(self, sender, credentials: dict, request = None, **kwargs):
+    def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
         """
         Handles the Django ``django.contrib.auth.signals.user_login_failed`` authentication signal.
         """
@@ -95,7 +99,9 @@ class AxesHandler:  # pylint: disable=unused-argument
         Handles the ``axes.models.AccessAttempt`` object post delete signal.
         """
 
-    def is_blacklisted(self, request, credentials: dict = None) -> bool:  # pylint: disable=unused-argument
+    def is_blacklisted(
+        self, request, credentials: dict = None
+    ) -> bool:  # pylint: disable=unused-argument
         """
         Checks if the request or given credentials are blacklisted from access.
         """
@@ -105,7 +111,9 @@ class AxesHandler:  # pylint: disable=unused-argument
 
         return False
 
-    def is_whitelisted(self, request, credentials: dict = None) -> bool:  # pylint: disable=unused-argument
+    def is_whitelisted(
+        self, request, credentials: dict = None
+    ) -> bool:  # pylint: disable=unused-argument
         """
         Checks if the request or given credentials are whitelisted for access.
         """
@@ -124,7 +132,9 @@ class AxesHandler:  # pylint: disable=unused-argument
         """
 
         if settings.AXES_LOCK_OUT_AT_FAILURE:
-            return self.get_failures(request, credentials) >= get_failure_limit(request, credentials)
+            return self.get_failures(request, credentials) >= get_failure_limit(
+                request, credentials
+            )
 
         return False
 
@@ -136,15 +146,18 @@ class AxesHandler:  # pylint: disable=unused-argument
         if the ``settings.AXES_LOCK_OUT_AT_FAILURE`` flag is set to ``True``.
         """
 
-        raise NotImplementedError('The Axes handler class needs a method definition for get_failures')
+        raise NotImplementedError(
+            "The Axes handler class needs a method definition for get_failures"
+        )
 
     def is_admin_site(self, request) -> bool:
         """
         Checks if the request is for admin site.
         """
         if (
-            settings.AXES_ONLY_ADMIN_SITE and hasattr(request, 'path') and
-            not re.match('^%s' % reverse('admin:index'), request.path)
+            settings.AXES_ONLY_ADMIN_SITE
+            and hasattr(request, "path")
+            and not re.match("^%s" % reverse("admin:index"), request.path)
         ):
             return True
 

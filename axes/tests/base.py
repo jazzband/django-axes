@@ -32,18 +32,18 @@ class AxesTestCase(TestCase):
     Test case using custom settings for testing.
     """
 
-    VALID_USERNAME = 'axes-valid-username'
-    VALID_PASSWORD = 'axes-valid-password'
-    VALID_EMAIL = 'axes-valid-email@example.com'
-    VALID_USER_AGENT = 'axes-user-agent'
-    VALID_IP_ADDRESS = '127.0.0.1'
+    VALID_USERNAME = "axes-valid-username"
+    VALID_PASSWORD = "axes-valid-password"
+    VALID_EMAIL = "axes-valid-email@example.com"
+    VALID_USER_AGENT = "axes-user-agent"
+    VALID_IP_ADDRESS = "127.0.0.1"
 
-    INVALID_USERNAME = 'axes-invalid-username'
-    INVALID_PASSWORD = 'axes-invalid-password'
-    INVALID_EMAIL = 'axes-invalid-email@example.com'
+    INVALID_USERNAME = "axes-invalid-username"
+    INVALID_PASSWORD = "axes-invalid-password"
+    INVALID_EMAIL = "axes-invalid-email@example.com"
 
-    LOCKED_MESSAGE = 'Account locked: too many login attempts.'
-    LOGOUT_MESSAGE = 'Logged out'
+    LOCKED_MESSAGE = "Account locked: too many login attempts."
+    LOGOUT_MESSAGE = "Logged out"
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
 
     STATUS_SUCCESS = 200
@@ -61,19 +61,17 @@ class AxesTestCase(TestCase):
 
         self.ip_address = self.VALID_IP_ADDRESS
         self.user_agent = self.VALID_USER_AGENT
-        self.path_info = reverse('admin:login')
+        self.path_info = reverse("admin:login")
 
         self.user = get_user_model().objects.create_superuser(
-            username=self.username,
-            password=self.password,
-            email=self.email,
+            username=self.username, password=self.password, email=self.email
         )
 
         self.request = HttpRequest()
-        self.request.method = 'POST'
-        self.request.META['REMOTE_ADDR'] = self.ip_address
-        self.request.META['HTTP_USER_AGENT'] = self.user_agent
-        self.request.META['PATH_INFO'] = self.path_info
+        self.request.method = "POST"
+        self.request.META["REMOTE_ADDR"] = self.ip_address
+        self.request.META["HTTP_USER_AGENT"] = self.user_agent
+        self.request.META["PATH_INFO"] = self.path_info
 
         self.request.axes_attempt_time = now()
         self.request.axes_ip_address = get_client_ip_address(self.request)
@@ -88,9 +86,9 @@ class AxesTestCase(TestCase):
 
     def get_kwargs_with_defaults(self, **kwargs):
         defaults = {
-            'user_agent': self.user_agent,
-            'ip_address': self.ip_address,
-            'username': self.username,
+            "user_agent": self.user_agent,
+            "ip_address": self.ip_address,
+            "username": self.username,
         }
 
         defaults.update(kwargs)
@@ -98,7 +96,7 @@ class AxesTestCase(TestCase):
 
     def create_attempt(self, **kwargs):
         kwargs = self.get_kwargs_with_defaults(**kwargs)
-        kwargs.setdefault('failures_since_start', 1)
+        kwargs.setdefault("failures_since_start", 1)
         return AccessAttempt.objects.create(**kwargs)
 
     def create_log(self, **kwargs):
@@ -118,24 +116,17 @@ class AxesTestCase(TestCase):
         if is_valid_username:
             username = self.VALID_USERNAME
         else:
-            username = ''.join(
-                choice(ascii_letters + digits)
-                for _ in range(10)
-            )
+            username = "".join(choice(ascii_letters + digits) for _ in range(10))
 
         if is_valid_password:
             password = self.VALID_PASSWORD
         else:
             password = self.INVALID_PASSWORD
 
-        post_data = {
-            'username': username,
-            'password': password,
-            **kwargs
-        }
+        post_data = {"username": username, "password": password, **kwargs}
 
         return self.client.post(
-            reverse('admin:login'),
+            reverse("admin:login"),
             post_data,
             REMOTE_ADDR=self.ip_address,
             HTTP_USER_AGENT=self.user_agent,
@@ -143,14 +134,16 @@ class AxesTestCase(TestCase):
 
     def logout(self):
         return self.client.post(
-            reverse('admin:logout'),
+            reverse("admin:logout"),
             REMOTE_ADDR=self.ip_address,
             HTTP_USER_AGENT=self.user_agent,
         )
 
     def check_login(self):
         response = self.login(is_valid_username=True, is_valid_password=True)
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True)
+        self.assertNotContains(
+            response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True
+        )
 
     def almost_lockout(self):
         for _ in range(1, get_failure_limit(None, None)):
@@ -166,14 +159,18 @@ class AxesTestCase(TestCase):
         if settings.AXES_LOCK_OUT_AT_FAILURE == True:
             self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
         else:
-            self.assertNotContains(response, self.LOCKED_MESSAGE, status_code=self.STATUS_SUCCESS)
+            self.assertNotContains(
+                response, self.LOCKED_MESSAGE, status_code=self.STATUS_SUCCESS
+            )
 
     def cool_off(self):
         sleep(get_cool_off().total_seconds())
 
     def check_logout(self):
         response = self.logout()
-        self.assertContains(response, self.LOGOUT_MESSAGE, status_code=self.STATUS_SUCCESS)
+        self.assertContains(
+            response, self.LOGOUT_MESSAGE, status_code=self.STATUS_SUCCESS
+        )
 
     def check_handler(self):
         """
@@ -186,4 +183,3 @@ class AxesTestCase(TestCase):
         self.cool_off()
         self.check_login()
         self.check_logout()
-

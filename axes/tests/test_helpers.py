@@ -24,6 +24,6 @@ class AxesHelpersTestCase(AxesTestCase):
     def test_get_cool_off_callable(self):
         self.assertEqual(get_cool_off(), timedelta(seconds=30))
 
-    @override_settings(AXES_COOLOFF_TIME='axes.tests.test_helpers.get_cool_off_str')
+    @override_settings(AXES_COOLOFF_TIME="axes.tests.test_helpers.get_cool_off_str")
     def test_get_cool_off_str(self):
         self.assertEqual(get_cool_off(), timedelta(seconds=30))

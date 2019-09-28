@@ -29,7 +29,7 @@ class AxesMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        if getattr(request, 'axes_locked_out', None):
+        if getattr(request, "axes_locked_out", None):
             response = get_lockout_response(request)  # type: ignore
 
         return response

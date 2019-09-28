@@ -44,7 +44,9 @@ class AxesProxyHandler(AxesHandler):
 
     @classmethod
     def reset_attempts(cls, *, ip_address: str = None, username: str = None) -> int:
-        return cls.get_implementation().reset_attempts(ip_address=ip_address, username=username)
+        return cls.get_implementation().reset_attempts(
+            ip_address=ip_address, username=username
+        )
 
     @classmethod
     def reset_logs(cls, *, age_days: int = None) -> int:
@@ -57,7 +59,9 @@ class AxesProxyHandler(AxesHandler):
         """
 
         if request is None:
-            log.error('AXES: AxesProxyHandler.update_request can not set request attributes to a None request')
+            log.error(
+                "AXES: AxesProxyHandler.update_request can not set request attributes to a None request"
+            )
             return
 
         request.axes_locked_out = False
@@ -81,7 +85,9 @@ class AxesProxyHandler(AxesHandler):
     @toggleable
     def user_login_failed(cls, sender, credentials: dict, request=None, **kwargs):
         cls.update_request(request)
-        return cls.get_implementation().user_login_failed(sender, credentials, request, **kwargs)
+        return cls.get_implementation().user_login_failed(
+            sender, credentials, request, **kwargs
+        )
 
     @classmethod
     @toggleable

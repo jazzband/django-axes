@@ -30,11 +30,7 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
         return self.cache.get(cache_key, default=0)
 
     def user_login_failed(
-            self,
-            sender,
-            credentials: dict,
-            request = None,
-            **kwargs
+        self, sender, credentials: dict, request=None, **kwargs
     ):  # pylint: disable=too-many-locals
         """
         When user login fails, save attempt record in cache and lock user out if necessary.
@@ -43,64 +39,92 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
         """
 
         if request is None:
-            log.error('AXES: AxesCacheHandler.user_login_failed does not function without a request.')
+            log.error(
+                "AXES: AxesCacheHandler.user_login_failed does not function without a request."
+            )
             return
 
         username = get_client_username(request, credentials)
-        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
+        client_str = get_client_str(
+            username,
+            request.axes_ip_address,
+            request.axes_user_agent,
+            request.axes_path_info,
+        )
 
         if self.is_whitelisted(request, credentials):
-            log.info('AXES: Login failed from whitelisted client %s.', client_str)
+            log.info("AXES: Login failed from whitelisted client %s.", client_str)
             return
 
         failures_since_start = 1 + self.get_failures(request, credentials)
 
         if failures_since_start > 1:
             log.warning(
-                'AXES: Repeated login failure by %s. Count = %d of %d. Updating existing record in the cache.',
+                "AXES: Repeated login failure by %s. Count = %d of %d. Updating existing record in the cache.",
                 client_str,
                 failures_since_start,
                 get_failure_limit(request, credentials),
             )
         else:
             log.warning(
-                'AXES: New login failure by %s. Creating new record in the cache.',
+                "AXES: New login failure by %s. Creating new record in the cache.",
                 client_str,
             )
 
         cache_key = get_client_cache_key(request, credentials)
         self.cache.set(cache_key, failures_since_start, self.cache_timeout)
 
-        if settings.AXES_LOCK_OUT_AT_FAILURE and failures_since_start >= get_failure_limit(request, credentials):
-            log.warning('AXES: Locking out %s after repeated login failures.', client_str)
+        if (
+            settings.AXES_LOCK_OUT_AT_FAILURE
+            and failures_since_start >= get_failure_limit(request, credentials)
+        ):
+            log.warning(
+                "AXES: Locking out %s after repeated login failures.", client_str
+            )
 
             request.axes_locked_out = True
             user_locked_out.send(
-                'axes',
+                "axes",
                 request=request,
                 username=username,
                 ip_address=request.axes_ip_address,
             )
 
-    def user_logged_in(self, sender, request, user, **kwargs):  # pylint: disable=unused-argument
+    def user_logged_in(
+        self, sender, request, user, **kwargs
+    ):  # pylint: disable=unused-argument
         """
         When user logs in, update the AccessLog related to the user.
         """
 
         username = user.get_username()
         credentials = get_credentials(username)
-        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
+        client_str = get_client_str(
+            username,
+            request.axes_ip_address,
+            request.axes_user_agent,
+            request.axes_path_info,
+        )
 
-        log.info('AXES: Successful login by %s.', client_str)
+        log.info("AXES: Successful login by %s.", client_str)
 
         if settings.AXES_RESET_ON_SUCCESS:
             cache_key = get_client_cache_key(request, credentials)
             failures_since_start = self.cache.get(cache_key, default=0)
             self.cache.delete(cache_key)
-            log.info('AXES: Deleted %d failed login attempts by %s from cache.', failures_since_start, client_str)
+            log.info(
+                "AXES: Deleted %d failed login attempts by %s from cache.",
+                failures_since_start,
+                client_str,
+            )
 
     def user_logged_out(self, sender, request, user, **kwargs):
         username = user.get_username() if user else None
-        client_str = get_client_str(username, request.axes_ip_address, request.axes_user_agent, request.axes_path_info)
+        client_str = get_client_str(
+            username,
+            request.axes_ip_address,
+            request.axes_user_agent,
+            request.axes_path_info,
+        )
 
-        log.info('AXES: Successful logout by %s.', client_str)
+        log.info("AXES: Successful logout by %s.", client_str)

@@ -8,8 +8,8 @@ from axes.models import AccessAttempt, AccessLog
 from axes.tests.base import AxesTestCase
 
 
-@patch('axes.apps.AppConfig.logging_initialized', False)
-@patch('axes.apps.log')
+@patch("axes.apps.AppConfig.logging_initialized", False)
+@patch("axes.apps.log")
 class AppsTestCase(AxesTestCase):
     def test_axes_config_log_re_entrant(self, log):
         """
@@ -22,7 +22,7 @@ class AppsTestCase(AxesTestCase):
         AppConfig.initialize()
         self.assertTrue(
             calls == log.info.call_count and calls > 0,
-            'AxesConfig.initialize needs to be re-entrant',
+            "AxesConfig.initialize needs to be re-entrant",
         )
 
     @override_settings(AXES_VERBOSE=False)
@@ -33,17 +33,17 @@ class AppsTestCase(AxesTestCase):
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_axes_config_log_user_only(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with('AXES: blocking by username only.')
+        log.info.assert_called_with("AXES: blocking by username only.")
 
     @override_settings(AXES_ONLY_USER_FAILURES=False)
     def test_axes_config_log_ip_only(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with('AXES: blocking by IP only.')
+        log.info.assert_called_with("AXES: blocking by IP only.")
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_axes_config_log_user_ip(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with('AXES: blocking by combination of username and IP.')
+        log.info.assert_called_with("AXES: blocking by combination of username and IP.")
 
 
 class AccessLogTestCase(AxesTestCase):
@@ -53,12 +53,12 @@ class AccessLogTestCase(AxesTestCase):
         """
 
         self.login(is_valid_username=True, is_valid_password=True)
-        self.assertIsNone(AccessLog.objects.latest('id').logout_time)
+        self.assertIsNone(AccessLog.objects.latest("id").logout_time)
 
-        response = self.client.get(reverse('admin:logout'))
-        self.assertContains(response, 'Logged out')
+        response = self.client.get(reverse("admin:logout"))
+        self.assertContains(response, "Logged out")
 
-        self.assertIsNotNone(AccessLog.objects.latest('id').logout_time)
+        self.assertIsNotNone(AccessLog.objects.latest("id").logout_time)
 
     def test_log_data_truncated(self):
         """
@@ -66,21 +66,19 @@ class AccessLogTestCase(AxesTestCase):
         """
 
         # An impossibly large post dict
-        extra_data = {'a' * x: x for x in range(1024)}
+        extra_data = {"a" * x: x for x in range(1024)}
         self.login(**extra_data)
-        self.assertEqual(
-            len(AccessAttempt.objects.latest('id').post_data), 1024
-        )
+        self.assertEqual(len(AccessAttempt.objects.latest("id").post_data), 1024)
 
     @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_valid_logout_without_success_log(self):
         AccessLog.objects.all().delete()
 
         response = self.login(is_valid_username=True, is_valid_password=True)
-        response = self.client.get(reverse('admin:logout'))
+        response = self.client.get(reverse("admin:logout"))
 
         self.assertEqual(AccessLog.objects.all().count(), 0)
-        self.assertContains(response, 'Logged out', html=True)
+        self.assertContains(response, "Logged out", html=True)
 
     @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_valid_login_without_success_log(self):
@@ -100,10 +98,10 @@ class AccessLogTestCase(AxesTestCase):
         AccessLog.objects.all().delete()
 
         response = self.login(is_valid_username=True, is_valid_password=True)
-        response = self.client.get(reverse('admin:logout'))
+        response = self.client.get(reverse("admin:logout"))
 
         self.assertEqual(AccessLog.objects.count(), 0)
-        self.assertContains(response, 'Logged out', html=True)
+        self.assertContains(response, "Logged out", html=True)
 
     @override_settings(AXES_DISABLE_ACCESS_LOG=True)
     def test_non_valid_login_without_log(self):

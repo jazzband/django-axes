@@ -16,7 +16,7 @@ class GetCoolOffThresholdTestCase(AxesTestCase):
     def test_get_cool_off_threshold(self):
         timestamp = now()
 
-        with patch('axes.attempts.now', return_value=timestamp):
+        with patch("axes.attempts.now", return_value=timestamp):
             attempt_time = timestamp
             threshold_now = get_cool_off_threshold(attempt_time)
 
@@ -51,24 +51,28 @@ class ResetTestCase(AxesTestCase):
 class UserWhitelistTestCase(AxesTestCase):
     def setUp(self):
         self.user_model = get_user_model()
-        self.user = self.user_model.objects.create(username='jane.doe')
+        self.user = self.user_model.objects.create(username="jane.doe")
         self.request = HttpRequest()
 
     def test_is_client_username_whitelisted(self):
-        with patch.object(self.user_model, 'nolockout', True, create=True):
-            self.assertTrue(is_user_attempt_whitelisted(
-                self.request,
-                {self.user_model.USERNAME_FIELD: self.user.username},
-            ))
+        with patch.object(self.user_model, "nolockout", True, create=True):
+            self.assertTrue(
+                is_user_attempt_whitelisted(
+                    self.request, {self.user_model.USERNAME_FIELD: self.user.username}
+                )
+            )
 
     def test_is_client_username_whitelisted_not(self):
-        self.assertFalse(is_user_attempt_whitelisted(
-            self.request,
-            {self.user_model.USERNAME_FIELD: self.user.username},
-        ))
+        self.assertFalse(
+            is_user_attempt_whitelisted(
+                self.request, {self.user_model.USERNAME_FIELD: self.user.username}
+            )
+        )
 
     def test_is_client_username_whitelisted_does_not_exist(self):
-        self.assertFalse(is_user_attempt_whitelisted(
-            self.request,
-            {self.user_model.USERNAME_FIELD: 'not.' + self.user.username},
-        ))
+        self.assertFalse(
+            is_user_attempt_whitelisted(
+                self.request,
+                {self.user_model.USERNAME_FIELD: "not." + self.user.username},
+            )
+        )
