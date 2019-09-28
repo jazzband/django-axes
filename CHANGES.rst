@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.0.14 (2019-09-28)
+-------------------
+
+- Docs, CI pipeline, and code formatting improvements
+  [aleksihakli]
+
+
 5.0.13 (2019-08-30)
 -------------------
 
