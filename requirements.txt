@@ -4,7 +4,7 @@ coverage==4.5.4
 mypy==0.730; python_version < '3.8' and python_implementation != 'PyPy'
 prospector==1.1.6.2         ; python_version < '3.8' and python_implementation != 'PyPy'
 pytest==5.2.1
-pytest-cov==2.7.1
+pytest-cov==2.8.1
 pytest-django==3.5.1
 sphinx_rtd_theme==0.4.3
 tox==3.14.0
