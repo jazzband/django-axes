@@ -1,10 +1,10 @@
+from django.conf import settings
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from axes.models import AccessAttempt, AccessLog
 
 
-@admin.register(AccessAttempt)
 class AccessAttemptAdmin(admin.ModelAdmin):
     list_display = (
         "attempt_time",
@@ -43,7 +43,6 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         return False
 
 
-@admin.register(AccessLog)
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (
         "attempt_time",
@@ -77,3 +76,8 @@ class AccessLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+if settings.AXES_ENABLE_ADMIN:
+    admin.site.register(AccessAttempt, AccessAttemptAdmin)
+    admin.site.register(AccessLog, AccessLogAdmin)

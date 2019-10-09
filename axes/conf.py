@@ -23,6 +23,9 @@ class AxesAppConf(AppConf):
     # lock out just for admin site
     ONLY_ADMIN_SITE = False
 
+    # show Axes logs in admin
+    ENABLE_ADMIN = True
+
     # lock out with the user agent, has no effect when ONLY_USER_FAILURES is set
     USE_USER_AGENT = False
 

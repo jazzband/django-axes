@@ -38,6 +38,9 @@ The following ``settings.py`` options are available for customizing Axes behavio
   and never lock based on IP if attempts exceed the limit.
   Otherwise utilize the existing IP and user locking logic.
   Default: ``False``
+* ``AXES_ENABLE_ADMIN``: If ``True``, admin views for access attempts and
+  logins are shown in Django admin interface.
+  Default: ``True``
 * ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True``, prevent login
   from IP under a particular username if the attempt limit has been exceeded,
   otherwise lock out based on IP.
