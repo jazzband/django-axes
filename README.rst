@@ -84,5 +84,5 @@ by type so that they can be merged faster into upstream and released quicker:
 
 * features,
 * bugfixes,
-* code style improvements, and
+* code style improvements, and 
 * documentation improvements.
