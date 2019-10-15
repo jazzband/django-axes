@@ -1,6 +1,7 @@
 from datetime import timedelta
 from hashlib import md5
 from logging import getLogger
+from string import Template
 from typing import Callable, Optional, Type, Union
 
 from django.core.cache import caches, BaseCache
@@ -231,9 +232,11 @@ def get_client_str(
     client_dict["path_info"] = path_info
 
     # Template the internal dictionary representation into a readable and concatenated {key: "value"} format
-    template = ", ".join(f'{key}: "{value}"' for key, value in client_dict.items())
-    template = "{" + template + "}"
-    return template
+    template = Template('$key: "$value"')
+    items = [{"key": k, "value": v} for k, v in client_dict.items()]
+    client_str = ", ".join(template.substitute(item) for item in items)
+    client_str = "{" + client_str + "}"
+    return client_str
 
 
 def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
@@ -249,7 +252,9 @@ def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
     query_dict.pop("password", None)
     query_dict.pop(settings.AXES_PASSWORD_FORM_FIELD, None)
 
-    query_str = "\n".join(f"{key}={value}" for key, value in query_dict.items())
+    template = Template("$key=$value")
+    items = [{"key": k, "value": v} for k, v in query_dict.items()]
+    query_str = "\n".join(template.substitute(item) for item in items)
 
     return query_str[:max_length]
 
