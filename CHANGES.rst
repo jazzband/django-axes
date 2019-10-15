@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.0.17 (2019-10-15)
+-------------------
+
+- Safer string formatting for user input.
+  [aleksihakli]
+
+
 5.0.16 (2019-10-15)
 -------------------
 
