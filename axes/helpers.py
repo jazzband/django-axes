@@ -230,15 +230,10 @@ def get_client_str(
         path_info = path_info[0]
     client_dict["path_info"] = path_info
 
-    # Template the internal dictionary representation into a readable and concatenated key: "value" format
+    # Template the internal dictionary representation into a readable and concatenated {key: "value"} format
     template = ", ".join(f'{key}: "{value}"' for key, value in client_dict.items())
-
-    # Wrap the internal dict into a single {key: "value"} bracing in the output
-    # which requires double braces when done with the Python string templating system
-    # i.e. {{key: "value"}} becomes {key: "value"} when run through a .format() call
-    template = "{{" + template + "}}"
-
-    return template.format(client_dict)
+    template = "{" + template + "}"
+    return template
 
 
 def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:

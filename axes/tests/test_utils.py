@@ -98,6 +98,20 @@ class ClientStringTestCase(AxesTestCase):
         self.assertEqual(expected, actual)
 
     @override_settings(AXES_VERBOSE=True)
+    def test_imbalanced_quotes(self):
+        username = "butterfly.. },,,"
+        ip_address = "127.0.0.1"
+        user_agent = "Googlebot/2.1 (+http://www.googlebot.com/bot.html)"
+        path_info = "/admin/"
+
+        expected = self.get_expected_client_str(
+            username, ip_address, user_agent, path_info
+        )
+        actual = get_client_str(username, ip_address, user_agent, path_info)
+
+        self.assertEqual(expected, actual)
+
+    @override_settings(AXES_VERBOSE=True)
     def test_verbose_ip_only_client_details_tuple(self):
         username = "test@example.com"
         ip_address = "127.0.0.1"
