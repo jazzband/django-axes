@@ -288,7 +288,8 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
             {
                 "cooloff_time": get_cool_off_iso8601(
                     cool_off
-                )  # differing old name is kept for backwards compatibility
+                ),  # differing old name is kept for backwards compatibility
+                "cooloff_timedelta": cool_off,
             }
         )
 
