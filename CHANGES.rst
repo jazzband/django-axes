@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.0.18 (2019-10-17)
+-------------------
+
+- Add ``cooloff_timedelta`` context variable to lockout responses.
+  [jstockwin]
+
+
 5.0.17 (2019-10-15)
 -------------------
 
