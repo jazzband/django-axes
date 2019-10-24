@@ -143,7 +143,9 @@ def get_client_username(request, credentials: dict = None) -> str:
     log.debug(
         "Using parameter request.POST to get username with key settings.AXES_USERNAME_FORM_FIELD"
     )
-    return request.POST.get(settings.AXES_USERNAME_FORM_FIELD, None)
+
+    request_data = request.data if settings.AXES_REST_FRAMEWORK_ACTIVE else request.POST
+    return request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
 def get_client_ip_address(request) -> str:

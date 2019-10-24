@@ -93,3 +93,6 @@ class AxesAppConf(AppConf):
         "AXES_META_PRECEDENCE_ORDER",
         getattr(settings, "IPWARE_META_PRECEDENCE_ORDER", ("REMOTE_ADDR",)),
     )
+
+    # set to `True` if using with Django REST Framework
+    REST_FRAMEWORK_ACTIVE = False
