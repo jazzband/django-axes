@@ -400,6 +400,21 @@ class UsernameTestCase(AxesTestCase):
 
         self.assertEqual(expected, actual)
 
+    @override_settings(AXES_REST_FRAMEWORK_ACTIVE=True)
+    def test_default_get_client_username_drf(self):
+        class DRFRequest:
+            def __init__(self):
+                self.data = {}
+
+        expected = "test-username"
+
+        request = DRFRequest()
+        request.data["username"] = expected
+
+        actual = get_client_username(request)
+
+        self.assertEqual(expected, actual)
+
     @override_settings(AXES_USERNAME_FORM_FIELD="username")
     def test_default_get_client_username_credentials(self):
         expected = "test-username"
