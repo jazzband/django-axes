@@ -86,3 +86,10 @@ by type so that they can be merged faster into upstream and released quicker:
 * bugfixes,
 * code style improvements, and
 * documentation improvements.
+
+All contributions are required to pass the quality gates configured
+with the CI. This includes running tests and linters successfully
+on the currently officially supported Python and Django versions.
+
+The test automation is run automatically by Travis CI, but you can
+run it locally with the ``tox`` command before pushing commits.
