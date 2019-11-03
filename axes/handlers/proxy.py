@@ -63,13 +63,14 @@ class AxesProxyHandler(AxesHandler):
                 "AXES: AxesProxyHandler.update_request can not set request attributes to a None request"
             )
             return
-
-        request.axes_locked_out = False
-        request.axes_attempt_time = now()
-        request.axes_ip_address = get_client_ip_address(request)
-        request.axes_user_agent = get_client_user_agent(request)
-        request.axes_path_info = get_client_path_info(request)
-        request.axes_http_accept = get_client_http_accept(request)
+        if not hasattr(request, "axes_updated"):
+            request.axes_locked_out = False
+            request.axes_attempt_time = now()
+            request.axes_ip_address = get_client_ip_address(request)
+            request.axes_user_agent = get_client_user_agent(request)
+            request.axes_path_info = get_client_path_info(request)
+            request.axes_http_accept = get_client_http_accept(request)
+            request.axes_updated = True
 
     @classmethod
     def is_locked(cls, request, credentials: dict = None) -> bool:
