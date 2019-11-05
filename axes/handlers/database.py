@@ -137,6 +137,7 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
                 path_info=request.axes_path_info,
                 failures_since_start=failures_since_start,
                 attempt_time=request.axes_attempt_time,
+                username=username,
             )
         else:
             # Record failed attempt with all the relevant information.
