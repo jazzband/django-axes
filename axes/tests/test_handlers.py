@@ -199,6 +199,32 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         self.assertFalse(AxesProxyHandler().is_locked(self.request, self.credentials))
         self.assertEqual(1, is_whitelisted.call_count)
 
+    def test_user_login_failed_multiple_username(self):
+        tests = [  # (settings, Second login attempt failures_since_start)
+            ({}, 2),
+            ({"AXES_ONLY_USER_FAILURES": True}, 1),
+            ({"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True}, 1),
+            ({"AXES_USE_USER_AGENT": True}, 2),
+        ]
+        for setting_dict, failures_since_start in tests:
+            with self.settings(**setting_dict):
+                with self.subTest(
+                    settings=setting_dict, failures_since_start=failures_since_start
+                ):
+                    self.login(username="admin")
+                    attempts = AccessAttempt.objects.filter(username="admin")
+                    self.assertEqual(1, attempts.count())
+                    self.assertEqual(1, attempts.first().failures_since_start)
+
+                    self.login(username="other_admin")
+                    attempts = AccessAttempt.objects.filter(username="other_admin")
+                    self.assertEqual(1, attempts.count())
+                    self.assertEqual(
+                        failures_since_start, attempts.first().failures_since_start
+                    )
+
+            AccessAttempt.objects.all().delete()
+
 
 @override_settings(
     AXES_HANDLER="axes.handlers.cache.AxesCacheHandler",
