@@ -31,6 +31,12 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
     """
 
+    def _get_user_attempts(self, request, credentials: dict = None):
+        if not hasattr(request, "axes_user_attempts"):
+            request.axes_user_attempts = get_user_attempts(request, credentials)
+
+        return request.axes_user_attempts
+
     def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
         attempts = AccessAttempt.objects.all()
 
@@ -60,7 +66,7 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
         return count
 
     def get_failures(self, request, credentials: dict = None) -> int:
-        attempts = get_user_attempts(request, credentials)
+        attempts = self._get_user_attempts(request, credentials)
         return (
             attempts.aggregate(Max("failures_since_start"))["failures_since_start__max"]
             or 0
@@ -123,7 +129,7 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
 
             separator = "\n---------\n"
 
-            attempts = get_user_attempts(request, credentials)
+            attempts = self._get_user_attempts(request, credentials)
             attempts.update(
                 get_data=Concat("get_data", Value(separator + get_data)),
                 post_data=Concat("post_data", Value(separator + post_data)),
