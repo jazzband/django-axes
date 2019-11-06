@@ -206,7 +206,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
             (2, 1, {"AXES_ONLY_USER_FAILURES": True}),
             (2, 1, {"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True}),
         )
-        
+
         for total_attempts_count, failures_since_start, overrides in configurations:
             with self.settings(**overrides):
                 with self.subTest(
@@ -222,11 +222,10 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
                     self.login(username="other_admin")
                     attempt = AccessAttempt.objects.get(username="other_admin")
                     self.assertEqual(failures_since_start, attempt.failures_since_start)
-                    
+
                     # check the number of distinct attempts
                     self.assertEqual(
-                        total_attempts_count, 
-                        AccessAttempt.objects.count(),
+                        total_attempts_count, AccessAttempt.objects.count()
                     )
 
             AccessAttempt.objects.all().delete()
