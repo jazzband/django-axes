@@ -200,27 +200,32 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         self.assertEqual(1, is_whitelisted.call_count)
 
     def test_user_login_failed_multiple_username(self):
-        tests = [  # (settings, Second login attempt failures_since_start)
-            ({}, 2),
-            ({"AXES_ONLY_USER_FAILURES": True}, 1),
-            ({"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True}, 1),
-            ({"AXES_USE_USER_AGENT": True}, 2),
-        ]
-        for setting_dict, failures_since_start in tests:
-            with self.settings(**setting_dict):
+        configurations = (
+            (1, 2, {}),
+            (1, 2, {"AXES_USE_USER_AGENT": True}),
+            (2, 1, {"AXES_ONLY_USER_FAILURES": True}),
+            (2, 1, {"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True}),
+        )
+
+        for total_attempts_count, failures_since_start, overrides in configurations:
+            with self.settings(**overrides):
                 with self.subTest(
-                    settings=setting_dict, failures_since_start=failures_since_start
+                    total_attempts_count=total_attempts_count,
+                    failures_since_start=failures_since_start,
+                    settings=overrides,
                 ):
                     self.login(username="admin")
-                    attempts = AccessAttempt.objects.filter(username="admin")
-                    self.assertEqual(1, attempts.count())
-                    self.assertEqual(1, attempts.first().failures_since_start)
+                    attempt = AccessAttempt.objects.get(username="admin")
+                    self.assertEqual(1, attempt.failures_since_start)
 
+                    # check the number of failures associated to the attempt
                     self.login(username="other_admin")
-                    attempts = AccessAttempt.objects.filter(username="other_admin")
-                    self.assertEqual(1, attempts.count())
+                    attempt = AccessAttempt.objects.get(username="other_admin")
+                    self.assertEqual(failures_since_start, attempt.failures_since_start)
+
+                    # check the number of distinct attempts
                     self.assertEqual(
-                        failures_since_start, attempts.first().failures_since_start
+                        total_attempts_count, AccessAttempt.objects.count()
                     )
 
             AccessAttempt.objects.all().delete()
