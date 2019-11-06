@@ -3,6 +3,15 @@ Changes
 =======
 
 
+5.0.19 (2019-11-06)
+-------------------
+
+- Optimize access attempt fetching in database handler.
+  [hramezani]
+- Optimize request data fetching in proxy handler.
+  [hramezani]
+
+
 5.0.18 (2019-10-17)
 -------------------
 
