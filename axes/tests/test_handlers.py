@@ -207,12 +207,12 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
             (2, 1, {"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True}),
         )
         
-        for total_attempts_count, failures_since_start, settings_ in tests:
-            with self.settings(**settings_):
+        for total_attempts_count, failures_since_start, overrides in configurations:
+            with self.settings(**overrides):
                 with self.subTest(
                     total_attempts_count=total_attempts_count,
                     failures_since_start=failures_since_start,
-                    settings=settings_,
+                    settings=overrides,
                 ):
                     self.login(username="admin")
                     attempt = AccessAttempt.objects.get(username="admin")
