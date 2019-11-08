@@ -4,7 +4,7 @@ cache: pip
 python:
   - 3.6
   - 3.7
-  - 3.8-dev
+  - 3.8
   - pypy3
 env:
   - DJANGO=1.11
@@ -17,7 +17,7 @@ matrix:
       env: DJANGO=master
     - python: 3.7
       env: DJANGO=master
-    - python: 3.8-dev
+    - python: 3.8
       env: DJANGO=master
     - python: pypy3
       env: DJANGO=master
