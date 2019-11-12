@@ -6,12 +6,8 @@ class AxesBackendPermissionDenied(PermissionDenied):
     Raised by authentication backend on locked out requests to stop the Django authentication flow.
     """
 
-    pass
-
 
 class AxesBackendRequestParameterRequired(ValueError):
     """
     Raised by authentication backend on invalid or missing request parameter value.
     """
-
-    pass

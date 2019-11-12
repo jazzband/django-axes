@@ -351,7 +351,7 @@ class LoginTestCase(AxesTestCase):
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_without_cache(
-        self
+        self,
     ):
         # User with empty username is locked out from IP 1.
         self._lockout_user_from_ip(username="", ip_addr=self.IP_1)
@@ -481,7 +481,7 @@ class LoginTestCase(AxesTestCase):
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_using_cache(
-        self
+        self,
     ):
         # User with empty username is locked out from IP 1.
         self._lockout_user_from_ip(username="", ip_addr=self.IP_1)
