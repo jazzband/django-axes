@@ -203,35 +203,43 @@ validator classes to function correctly.
 
     from oauth2_provider.oauth2_validators import OAuth2Validator
 
+    from axes.helpers import get_client_ip_address, get_client_user_agent
+
+
     class AxesOAuth2Validator(OAuth2Validator):
         def validate_user(self, username, password, client, request, *args, **kwargs):
             """
+            Check username and password correspond to a valid and active User
+
             Set defaults for necessary request object attributes for Axes compatibility.
             The ``request`` argument is not a Django ``HttpRequest`` object.
             """
 
-            _request = HttpRequest()
+            _request = request
+            if request and not isinstance(request, HttpRequest):
+                request = HttpRequest()
 
-            _request.decoded_body = request.decoded_body
-            _request.headers = request.headers
-            _request.http_method = request.http_method
-            _request.uri = request.uri
-            _request._params = request._params
+                request.uri = _request.uri
+                request.method = request.http_method = _request.http_method
+                request.META = request.headers = _request.headers
+                request._params = _request._params
+                request.decoded_body = _request.decoded_body
 
-            _request.method = _request.http_method
-            _request.META = _request.headers
+                request.axes_ip_address = get_client_ip_address(request)
+                request.axes_user_agent = get_client_user_agent(request)
 
-            _body = QueryDict(str(request.body), mutable=True)
-            if _request.method == 'GET':
-                _request.GET = _body
-            elif _request.method == 'POST':
-                _request.POST = _body
+                body = QueryDict(str(_request.body), mutable=True)
+                if request.method == 'GET':
+                    request.GET = body
+                elif request.method == 'POST':
+                    request.POST = body
 
-            u = authenticate(request=_request, username=username, password=password)
-
-            if u is not None and u.is_active:
-                request.user = u
+            user = authenticate(request=request, username=username, password=password)
+            if user is not None and user.is_active and hasattr(user, 'profile'):
+                request = _request
+                request.user = user
                 return True
+
             return False
 
 
