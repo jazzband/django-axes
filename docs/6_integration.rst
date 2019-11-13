@@ -235,7 +235,7 @@ validator classes to function correctly.
                     request.POST = body
 
             user = authenticate(request=request, username=username, password=password)
-            if user is not None and user.is_active and hasattr(user, 'profile'):
+            if user is not None and user.is_active:
                 request = _request
                 request.user = user
                 return True
