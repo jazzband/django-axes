@@ -120,12 +120,17 @@ following settings to suit your set up to correctly resolve client IP addresses:
   Default: ``IPWARE_META_PRECEDENCE_ORDER`` setting if set, else ``('REMOTE_ADDR', )``
 
 .. note::
-   For Heroku, you'll want to also get IPs through the `HTTP_X_FORWARDED_FOR` header, like so::
+   For reverse proxies or e.g. Heroku, you might also want to fetch IP addresses from a HTTP header such as ``X-Forwarded-For``. To configure this, you can fetch IPs through the ``HTTP_X_FORWARDED_FOR`` key from the ``request.META`` property which contains all the HTTP headers in Django:
    
-   AXES_META_PRECEDENCE_ORDER = [
-      'HTTP_X_FORWARDED_FOR',  # for Heroku
-      'REMOTE_ADDR',
-   ]
+   .. code-block:: python
+   
+      # refer to the Django request and response objects documentation
+      AXES_META_PRECEDENCE_ORDER = [
+         'HTTP_X_FORWARDED_FOR',
+         'REMOTE_ADDR',
+      ]
+   
+   Please note that proxies have different behaviours with the HTTP headers. Make sure that your proxy either strips the incoming value or otherwise makes sure of the validity of the header that is used because **any header values used in application configuration must be secure and trusted**. Otherwise the client can spoof IP addresses by just setting the header in their request and circumvent the IP address monitoring. Normal proxy server behaviours include overriding and appending the header value depending on the platform. Different platforms and gateway services utilize different headers, please refer to your deployment target documentation for up-to-date information on correct configuration.
 
 
 Configuring handlers
