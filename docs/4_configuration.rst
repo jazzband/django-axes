@@ -119,6 +119,14 @@ following settings to suit your set up to correctly resolve client IP addresses:
   to check to get the client IP address. Check the Django documentation for header naming conventions.
   Default: ``IPWARE_META_PRECEDENCE_ORDER`` setting if set, else ``('REMOTE_ADDR', )``
 
+.. note::
+   For Heroku, you'll want to also get IPs through the `HTTP_X_FORWARDED_FOR` header, like so::
+   
+   AXES_META_PRECEDENCE_ORDER = [
+      'HTTP_X_FORWARDED_FOR',  # for Heroku
+      'REMOTE_ADDR',
+   ]
+
 
 Configuring handlers
 --------------------
