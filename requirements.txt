@@ -1,7 +1,7 @@
 -e .
 black==19.10b0
 coverage==4.5.4
-mypy==0.740; python_version < '3.8' and python_implementation != 'PyPy'
+mypy==0.750; python_version < '3.8' and python_implementation != 'PyPy'
 prospector==1.1.7 ; python_version < '3.8' and python_implementation != 'PyPy'
 pytest==5.3.1
 pytest-cov==2.8.1
