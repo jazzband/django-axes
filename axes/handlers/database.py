@@ -29,6 +29,9 @@ log = getLogger(settings.AXES_LOGGER)
 class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
     """
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
+
+    .. note:: The get_user_attempts function is called several time during the authentication and lockout
+              process, caching its output can be dangerous.
     """
 
     def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
