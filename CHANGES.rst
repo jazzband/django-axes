@@ -3,6 +3,19 @@ Changes
 =======
 
 
+5.0.20 (2019-12-01)
+-------------------
+
+- Fix django-allauth compatibility issue.
+  [hramezani]
+- Improve tests for login attempt monitoring.
+  [hramezani]
+- Add reverse proxy documentation.
+  [ckcollab]
+- Update OAuth documentation examples.
+  [aleksihakli]
+
+
 5.0.19 (2019-11-06)
 -------------------
 
