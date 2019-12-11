@@ -68,7 +68,7 @@ as locked by setting a special attribute into the request.
 The ``AxesMiddleware`` then processes the request, returning
 a lockout response to the user, if the flag has been set.
 
-Axes assumes that the login views either call the ``authenticate`` method
+Axes assumes that the login views either call the ``login`` method
 to log in users or otherwise take care of notifying Axes of authentication
 attempts and failures the same way Django does via authentication signals.
 
