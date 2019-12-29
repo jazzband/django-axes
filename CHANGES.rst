@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.1.0 (2019-12-29)
+------------------
+
+- Add pluggable user account whitelisting and the
+  ``AXES_WHITELIST_CALLABLE`` configuration flag.
+  [aleksihakli]
+
+
 5.0.20 (2019-12-01)
 -------------------
 
