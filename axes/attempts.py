@@ -1,6 +1,5 @@
 from logging import getLogger
 
-from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from django.utils.timezone import datetime, now
 
@@ -91,32 +90,3 @@ def reset_user_attempts(request, credentials: dict = None) -> int:
     log.info("AXES: Reset %s access attempts from database.", count)
 
     return count
-
-
-def is_user_attempt_whitelisted(request, credentials: dict = None) -> bool:
-    """
-    Check if the given request or credentials refer to a whitelisted username.
-
-    A whitelisted user has the magic ``nolockout`` property set.
-
-    If the property is unknown or False or the user can not be found,
-    this implementation fails gracefully and returns False.
-    
-    This is a legacy method forom an older release
-    that should be converted to a configurable callable
-    for determining whitelisting criteria per developer specification.
-    """
-
-    username_field = getattr(get_user_model(), "USERNAME_FIELD", "username")
-    username_value = get_client_username(request, credentials)
-    kwargs = {username_field: username_value}
-
-    user_model = get_user_model()
-
-    try:
-        user = user_model.objects.get(**kwargs)
-        return user.nolockout
-    except (user_model.DoesNotExist, AttributeError):
-        pass
-
-    return False

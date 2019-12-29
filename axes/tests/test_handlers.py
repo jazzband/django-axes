@@ -194,11 +194,6 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_whitelist(self, log):
         self.check_whitelist(log)
 
-    @patch("axes.handlers.database.is_user_attempt_whitelisted", return_value=True)
-    def test_user_whitelisted(self, is_whitelisted):
-        self.assertFalse(AxesProxyHandler().is_locked(self.request, self.credentials))
-        self.assertEqual(1, is_whitelisted.call_count)
-
     def test_user_login_failed_multiple_username(self):
         configurations = (
             (1, 2, {}, ["admin", "admin1"]),

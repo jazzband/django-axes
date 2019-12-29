@@ -8,6 +8,7 @@ from axes.helpers import (
     is_client_ip_address_blacklisted,
     is_client_ip_address_whitelisted,
     is_client_method_whitelisted,
+    is_user_attempt_whitelisted,
 )
 
 
@@ -117,6 +118,9 @@ class AxesHandler:  # pylint: disable=unused-argument
         """
         Checks if the request or given credentials are whitelisted for access.
         """
+
+        if is_user_attempt_whitelisted(request, credentials):
+            return True
 
         if is_client_ip_address_whitelisted(request):
             return True
