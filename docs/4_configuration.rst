@@ -76,6 +76,11 @@ The following ``settings.py`` options are available for customizing Axes behavio
   ``credentials`` are the ones that were passed to Django ``authenticate()`` in the login flow.
   If no function is supplied, Axes fetches the username from the ``credentials`` or ``request.POST``
   dictionaries based on ``AXES_USERNAME_FORM_FIELD``.
+ * ``AXES_WHITELIST_CALLABLE``: A callable or a string path to callable that takes
+  two arguments for whitelisting determination and returns True,
+  if user should be whitelisted:
+  ``def is_whilisted(request: HttpRequest, credentials: dict) -> bool: ...``.
+  This can be any callable similarly to ``AXES_USERNAME_CALLABLE``
   Default: ``None``
 * ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your users password.
   Default: ``password``
@@ -121,15 +126,15 @@ following settings to suit your set up to correctly resolve client IP addresses:
 
 .. note::
    For reverse proxies or e.g. Heroku, you might also want to fetch IP addresses from a HTTP header such as ``X-Forwarded-For``. To configure this, you can fetch IPs through the ``HTTP_X_FORWARDED_FOR`` key from the ``request.META`` property which contains all the HTTP headers in Django:
-   
+
    .. code-block:: python
-   
+
       # refer to the Django request and response objects documentation
       AXES_META_PRECEDENCE_ORDER = [
          'HTTP_X_FORWARDED_FOR',
          'REMOTE_ADDR',
       ]
-   
+
    Please note that proxies have different behaviours with the HTTP headers. Make sure that your proxy either strips the incoming value or otherwise makes sure of the validity of the header that is used because **any header values used in application configuration must be secure and trusted**. Otherwise the client can spoof IP addresses by just setting the header in their request and circumvent the IP address monitoring. Normal proxy server behaviours include overriding and appending the header value depending on the platform. Different platforms and gateway services utilize different headers, please refer to your deployment target documentation for up-to-date information on correct configuration.
 
 
@@ -227,4 +232,3 @@ with third party applications and plugins such as
 - Django REST Framework
 - Django Allauth
 - Django Simple Captcha
-

@@ -208,13 +208,43 @@ def get_client_parameters(username: str, ip_address: str, user_agent: str) -> di
     return filter_kwargs
 
 
+def get_client_cache_key(
+    request_or_attempt: Union[HttpRequest, AccessBase], credentials: dict = None
+) -> str:
+    """
+    Build cache key name from request or AccessAttempt object.
+
+    :param request_or_attempt: HttpRequest or AccessAttempt object
+    :param credentials: credentials containing user information
+    :return cache_key: Hash key that is usable for Django cache backends
+    """
+
+    if isinstance(request_or_attempt, AccessBase):
+        username = request_or_attempt.username
+        ip_address = request_or_attempt.ip_address
+        user_agent = request_or_attempt.user_agent
+    else:
+        username = get_client_username(request_or_attempt, credentials)
+        ip_address = get_client_ip_address(request_or_attempt)
+        user_agent = get_client_user_agent(request_or_attempt)
+
+    filter_kwargs = get_client_parameters(username, ip_address, user_agent)
+
+    cache_key_components = "".join(value for value in filter_kwargs.values() if value)
+    cache_key_digest = md5(cache_key_components.encode()).hexdigest()
+    cache_key = f"axes-{cache_key_digest}"
+
+    return cache_key
+
+
 def get_client_str(
     username: str, ip_address: str, user_agent: str, path_info: str
 ) -> str:
     """
     Get a readable string that can be used in e.g. logging to distinguish client requests.
 
-    Example log format would be ``{username: "example", ip_address: "127.0.0.1", path_info: "/example/"}``
+    Example log format would be
+    ``{username: "example", ip_address: "127.0.0.1", path_info: "/example/"}``
     """
 
     client_dict = dict()
@@ -366,33 +396,42 @@ def is_client_method_whitelisted(request) -> bool:
     return False
 
 
-def get_client_cache_key(
-    request_or_attempt: Union[HttpRequest, AccessBase], credentials: dict = None
-) -> str:
+def is_user_attempt_whitelisted(request, credentials: dict = None) -> bool:
     """
-    Build cache key name from request or AccessAttempt object.
+    Check if the given request or credentials refer to a whitelisted username.
 
-    :param request_or_attempt: HttpRequest or AccessAttempt object
-    :param credentials: credentials containing user information
-    :return cache_key: Hash key that is usable for Django cache backends
+    This method invokes the ``settings.AXES_WHITELIST`` callable
+    with ``request`` and ``credentials`` arguments.
+
+    This function could use the following implementation for checking
+    the lockout flags from a specific property in the user object:
+
+    .. code-block: python
+
+       username_value = get_client_username(request, credentials)
+       username_field = getattr(
+           get_user_model(),
+           "USERNAME_FIELD",
+           "username"
+       )
+       kwargs = {username_field: username_value}
+
+       user_model = get_user_model()
+       user = user_model.objects.get(**kwargs)
+       return user.nolockout
     """
 
-    if isinstance(request_or_attempt, AccessBase):
-        username = request_or_attempt.username
-        ip_address = request_or_attempt.ip_address
-        user_agent = request_or_attempt.user_agent
-    else:
-        username = get_client_username(request_or_attempt, credentials)
-        ip_address = get_client_ip_address(request_or_attempt)
-        user_agent = get_client_user_agent(request_or_attempt)
+    whitelist_callable = settings.AXES_WHITELIST_CALLABLE
+    if whitelist_callable is None:
+        return False
+    if callable(whitelist_callable):
+        return whitelist_callable(request, credentials)
+    if isinstance(whitelist_callable, str):
+        return import_string(whitelist_callable)(request, credentials)
 
-    filter_kwargs = get_client_parameters(username, ip_address, user_agent)
-
-    cache_key_components = "".join(value for value in filter_kwargs.values() if value)
-    cache_key_digest = md5(cache_key_components.encode()).hexdigest()
-    cache_key = f"axes-{cache_key_digest}"
-
-    return cache_key
+    raise TypeError(
+        "settings.AXES_WHITELIST_CALLABLE needs to be a string, callable, or None."
+    )
 
 
 def toggleable(func) -> Callable:

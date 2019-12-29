@@ -38,6 +38,9 @@ class AxesAppConf(AppConf):
     # use a provided callable to transform the POSTed username into the one used in credentials
     USERNAME_CALLABLE = None
 
+    # determine if given user should be always allowed to attempt authentication
+    WHITELIST_CALLABLE = None
+
     # reset the number of failed attempts after one successful attempt
     RESET_ON_SUCCESS = False
 

@@ -7,7 +7,6 @@ from django.utils import timezone
 from axes.attempts import (
     clean_expired_user_attempts,
     get_user_attempts,
-    is_user_attempt_whitelisted,
     reset_user_attempts,
 )
 from axes.conf import settings
@@ -68,12 +67,6 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
             attempts.aggregate(Max("failures_since_start"))["failures_since_start__max"]
             or 0
         )
-
-    def is_locked(self, request, credentials: dict = None):
-        if is_user_attempt_whitelisted(request, credentials):
-            return False
-
-        return super().is_locked(request, credentials)
 
     def user_login_failed(
         self, sender, credentials: dict, request=None, **kwargs
