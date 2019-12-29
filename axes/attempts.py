@@ -100,7 +100,11 @@ def is_user_attempt_whitelisted(request, credentials: dict = None) -> bool:
     A whitelisted user has the magic ``nolockout`` property set.
 
     If the property is unknown or False or the user can not be found,
-    this implementation fails gracefully and returns True.
+    this implementation fails gracefully and returns False.
+    
+    This is a legacy method forom an older release
+    that should be converted to a configurable callable
+    for determining whitelisting criteria per developer specification.
     """
 
     username_field = getattr(get_user_model(), "USERNAME_FIELD", "username")
