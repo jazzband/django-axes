@@ -76,7 +76,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
   ``credentials`` are the ones that were passed to Django ``authenticate()`` in the login flow.
   If no function is supplied, Axes fetches the username from the ``credentials`` or ``request.POST``
   dictionaries based on ``AXES_USERNAME_FORM_FIELD``.
- * ``AXES_WHITELIST_CALLABLE``: A callable or a string path to callable that takes
+* ``AXES_WHITELIST_CALLABLE``: A callable or a string path to callable that takes
   two arguments for whitelisting determination and returns True,
   if user should be whitelisted:
   ``def is_whilisted(request: HttpRequest, credentials: dict) -> bool: ...``.
