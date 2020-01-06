@@ -52,7 +52,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``False``
 * ``AXES_LOGGER``: If set, specifies a logging mechanism for Axes to use.
   Default: ``'axes.watch_login'``
-* ``AXES_HANDLER``: The path to to handler class to use.
+* ``AXES_HANDLER``: The path to the handler class to use.
   If set, overrides the default signal handler backend.
   Default: ``'axes.handlers.database.DatabaseHandler'``
 * ``AXES_CACHE``: The name of the cache for Axes to use.
@@ -183,8 +183,8 @@ predictably if the cache in use is not the same for all the Django processes.
 
 Axes needs to cache access attempts application-wide, and e.g. the
 in-memory cache only caches access attempts per Django process, so for example
-resets made in the command line might not remove lock-outs that are in a sepate
-processes in-memory cache such as the web server serving your login or admin page.
+resets made in the command line might not remove lock-outs that are in a separate
+process's in-memory cache such as the web server serving your login or admin page.
 
 To circumvent this problem, please use somethings else than
 ``django.core.cache.backends.dummy.DummyCache``,
