@@ -308,6 +308,15 @@ def get_lockout_message() -> str:
 
 
 def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
+    if settings.AXES_LOCKOUT_CALLABLE:
+        if callable(settings.AXES_LOCKOUT_CALLABLE):
+            return settings.AXES_LOCKOUT_CALLABLE(request, credentials)
+        if isinstance(settings.AXES_LOCKOUT_CALLABLE, str):
+            return import_string(settings.AXES_LOCKOUT_CALLABLE)(request, credentials)
+        raise TypeError(
+            "settings.AXES_LOCKOUT_CALLABLE needs to be a string, callable, or None."
+        )
+
     status = 403
     context = {
         "failure_limit": get_failure_limit(request, credentials),

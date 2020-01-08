@@ -41,6 +41,9 @@ class AxesAppConf(AppConf):
     # determine if given user should be always allowed to attempt authentication
     WHITELIST_CALLABLE = None
 
+    # return custom lockout response if configured
+    LOCKOUT_CALLABLE = None
+
     # reset the number of failed attempts after one successful attempt
     RESET_ON_SUCCESS = False
 

@@ -80,7 +80,14 @@ The following ``settings.py`` options are available for customizing Axes behavio
   two arguments for whitelisting determination and returns True,
   if user should be whitelisted:
   ``def is_whilisted(request: HttpRequest, credentials: dict) -> bool: ...``.
-  This can be any callable similarly to ``AXES_USERNAME_CALLABLE``
+  This can be any callable similarly to ``AXES_USERNAME_CALLABLE``.
+  Default: ``None``
+* ``AXES_LOCKOUT_CALLABLE``: A callable or a string path to callable that takes
+  two arguments returns a response. For example:
+  ``def generate_lockout_response(request: HttpRequest, credentials: dict) -> HttpResponse: ...``.
+  This can be any callable similarly to ``AXES_USERNAME_CALLABLE``.
+  If not callable is defined, then the default implementation in ``axes.helpers.get_lockout_response``
+  is used for determining the correct lockout response that is sent to the requesting client.
   Default: ``None``
 * ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your users password.
   Default: ``password``
