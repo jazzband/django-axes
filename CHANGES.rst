@@ -3,6 +3,16 @@ Changes
 =======
 
 
+5.2.1 (2020-01-08)
+------------------
+
+- Add django-reversion compatibility notes.
+  [mark-mishyn]
+- Add pluggable lockout responses and the
+  ``AXES_LOCKOUT_CALLABLE`` configuration flag.
+  [aleksihakli]
+
+
 5.2.0 (2020-01-01)
 ------------------
 
