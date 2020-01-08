@@ -275,3 +275,18 @@ class AxesDummyHandlerTestCase(AxesHandlerBaseTestCase):
             self.login()
 
         self.check_login()
+
+
+@override_settings(AXES_HANDLER="axes.handlers.test.AxesTestHandler")
+class AxesTestHandlerTestCase(AxesHandlerBaseTestCase):
+    def test_handler_reset_attempts(self):
+        self.assertEqual(0, AxesProxyHandler.reset_attempts())
+
+    def test_handler_reset_logs(self):
+        self.assertEqual(0, AxesProxyHandler.reset_logs())
+
+    def test_handler_is_allowed(self):
+        self.assertEqual(True, AxesProxyHandler.is_allowed(self.request, {}))
+
+    def test_handler_get_failures(self):
+        self.assertEqual(0, AxesProxyHandler.get_failures(self.request, {}))

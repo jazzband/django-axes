@@ -83,6 +83,11 @@ class AxesProxyHandler(AxesHandler):
         return cls.get_implementation().is_allowed(request, credentials)
 
     @classmethod
+    def get_failures(cls, request, credentials: dict = None) -> int:
+        cls.update_request(request)
+        return cls.get_implementation().get_failures(request, credentials)
+
+    @classmethod
     @toggleable
     def user_login_failed(cls, sender, credentials: dict, request=None, **kwargs):
         cls.update_request(request)
