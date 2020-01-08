@@ -51,6 +51,20 @@ class AxesHandlerTestCase(AxesTestCase):
         request.path = "/test/"
         self.assertTrue(AxesProxyHandler.is_allowed(self.request))
 
+    def test_is_admin_site(self):
+        request = MagicMock()
+        tests = (  # (AXES_ONLY_ADMIN_SITE, URL, Expected)
+            (True, "/test/", True),
+            (True, reverse("admin:index"), False),
+            (False, "/test/", False),
+            (False, reverse("admin:index"), False),
+        )
+
+        for setting_value, url, expected in tests:
+            with override_settings(AXES_ONLY_ADMIN_SITE=setting_value):
+                request.path = url
+                self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
+
 
 class AxesProxyHandlerTestCase(AxesTestCase):
     def setUp(self):
@@ -118,20 +132,6 @@ class AxesHandlerBaseTestCase(AxesTestCase):
         log.error.assert_called_with(
             f"AXES: {handler}.user_login_failed does not function without a request."
         )
-
-    def test_is_admin_site(self):
-        request = MagicMock()
-        tests = (  # (AXES_ONLY_ADMIN_SITE, URL, Expected)
-            (True, "/test/", True),
-            (True, reverse("admin:index"), False),
-            (False, "/test/", False),
-            (False, reverse("admin:index"), False),
-        )
-
-        for setting_value, url, expected in tests:
-            with override_settings(AXES_ONLY_ADMIN_SITE=setting_value):
-                request.path = url
-                self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
 
 
 @override_settings(
