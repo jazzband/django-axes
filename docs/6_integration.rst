@@ -20,6 +20,7 @@ Django REST Framework     |lt| 3.7.0                     |check|
 Django Allauth                                           |check|
 Django Simple Captcha                                    |check|
 Django OAuth Toolkit                                     |check|
+Django Reversion                                         |check|
 =======================   =============   ============   ============   ==============
 
 .. |check|  unicode:: U+2713
@@ -249,3 +250,25 @@ validator classes to function correctly.
         'OAUTH2_VALIDATOR_CLASS': 'example.validators.AxesOAuth2Validator',
         'SCOPES': {'read': 'Read scope', 'write': 'Write scope'},
     }
+
+
+Integration with Django Reversion
+---------------------------------
+
+Django Reversion is not designed to work with Axes,
+but some users have reported that they have configured
+a workaround with a monkeypatch function that functions correctly.
+
+``example/monkeypatch.py``::
+
+    from django.urls import resolve
+
+    from reversion import views
+
+    def _request_creates_revision(request):
+        if resolve(request.path_info).url_name.endswith("login"):
+            return False
+
+        return request.method not in ["OPTIONS", "GET", "HEAD"]
+
+    views._request_creates_revision = _request_creates_revision
