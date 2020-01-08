@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.2.2 (2020-01-08)
+------------------
+
+- Add missing proxy implementation for
+  ``axes.handlers.proxy.AxesProxyHandler.get_failures``.
+  [aleksihakli]
+
+
 5.2.1 (2020-01-08)
 ------------------
 
