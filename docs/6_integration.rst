@@ -266,7 +266,8 @@ a workaround with a monkeypatch function that functions correctly.
     from reversion import views
 
     def _request_creates_revision(request):
-        if resolve(request.path_info).url_name.endswith("login"):
+        view_name = resolve(request.path_info).url_name
+        if view_name and view_name.endswith('login'):
             return False
 
         return request.method not in ["OPTIONS", "GET", "HEAD"]
