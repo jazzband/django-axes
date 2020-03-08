@@ -32,7 +32,7 @@ jobs:
         skip_existing: true
         on:
           tags: true
-          repo: jazzband/sorl-thumbnail
+          repo: jazzband/django-axes
           python: 3.6
 install: pip install tox-travis codecov
 script: tox
