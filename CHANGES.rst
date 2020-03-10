@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.3.0 (2020-03-10)
+------------------
+
+- Improve Django REST Framework compatibility.
+  [I0x4dI]
+
+
 5.2.2 (2020-01-08)
 ------------------
 
