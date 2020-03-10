@@ -144,7 +144,7 @@ def get_client_username(request, credentials: dict = None) -> str:
         "Using parameter request.POST to get username with key settings.AXES_USERNAME_FORM_FIELD"
     )
 
-    request_data = request.data if settings.AXES_REST_FRAMEWORK_ACTIVE else request.POST
+    request_data = getattr(request, 'data', request.POST)
     return request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
