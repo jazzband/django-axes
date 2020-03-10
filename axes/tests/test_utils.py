@@ -58,7 +58,7 @@ class CacheTestCase(AxesTestCase):
 class TimestampTestCase(AxesTestCase):
     def test_iso8601(self):
         """
-        Test get_cool_off_iso8601 correctly translates datetime.timdelta to ISO 8601 formatted duration.
+        Test get_cool_off_iso8601 correctly translates datetime.timedelta to ISO 8601 formatted duration.
         """
 
         expected = {
