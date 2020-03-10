@@ -400,7 +400,6 @@ class UsernameTestCase(AxesTestCase):
 
         self.assertEqual(expected, actual)
 
-    @override_settings(AXES_REST_FRAMEWORK_ACTIVE=True)
     def test_default_get_client_username_drf(self):
         class DRFRequest:
             def __init__(self):
