@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.3.1 (2020-03-23)
+------------------
+
+- Fix null byte ValueError bug in ORM.
+  [ddimmich]
+
+
 5.3.0 (2020-03-10)
 ------------------
 
