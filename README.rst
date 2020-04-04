@@ -28,7 +28,7 @@ django-axes
 
 
 Axes is a very simple way for you to keep track of failed
-login attempts for your login and administration views.
+authentication attempts for your login views.
 
 The name is sort of a geeky pun, since it can be interpreted as:
 
@@ -36,7 +36,7 @@ The name is sort of a geeky pun, since it can be interpreted as:
 * ``axes``, as in tools you can use to hack (generally on wood).
 
 In this case, however, the hacking part of it can be taken a bit further:
-**Axes is intended to help you stop people from brute forcing Django views**.
+**Axes is intended to help you stop people from brute forcing your Django site**.
 
 
 Functionality
