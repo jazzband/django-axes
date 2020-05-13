@@ -7,7 +7,7 @@ from appconf import AppConf
 class AxesAppConf(AppConf):
 
     class Meta:
-        prefix = 'axes'
+        prefix = "axes"
 
     # disable plugin when set to False
     ENABLED = True
