@@ -5,7 +5,6 @@ from appconf import AppConf
 
 
 class AxesAppConf(AppConf):
-
     class Meta:
         prefix = "axes"
 
