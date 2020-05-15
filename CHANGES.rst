@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.3.2 (2020-05-15)
+------------------
+
+- Fix AppConf settings prefix for Fargate.
+  [marksweb]
+
+
 5.3.1 (2020-03-23)
 ------------------
 
