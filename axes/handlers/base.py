@@ -1,6 +1,7 @@
 import re
 
 from django.urls import reverse
+from django.urls.exceptions import NoReverseMatch
 
 from axes.conf import settings
 from axes.helpers import (
@@ -158,11 +159,11 @@ class AxesHandler:  # pylint: disable=unused-argument
         """
         Checks if the request is for admin site.
         """
-        if (
-            settings.AXES_ONLY_ADMIN_SITE
-            and hasattr(request, "path")
-            and not re.match("^%s" % reverse("admin:index"), request.path)
-        ):
-            return True
+        if settings.AXES_ONLY_ADMIN_SITE and hasattr(request, "path"):
+            try:
+                admin_url = reverse("admin:index")
+            except NoReverseMatch:
+                return True
+            return not re.match("^%s" % admin_url, request.path)
 
         return False
