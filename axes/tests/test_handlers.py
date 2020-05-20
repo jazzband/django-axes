@@ -65,6 +65,13 @@ class AxesHandlerTestCase(AxesTestCase):
                 request.path = url
                 self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
 
+    @override_settings(ROOT_URLCONF="axes.tests.urls_empty")
+    @override_settings(AXES_ONLY_ADMIN_SITE=True)
+    def test_is_admin_site_no_admin_site(self):
+        request = MagicMock()
+        request.path = "/admin/"
+        self.assertTrue(AxesProxyHandler().is_admin_site(self.request))
+
 
 class AxesProxyHandlerTestCase(AxesTestCase):
     def setUp(self):
