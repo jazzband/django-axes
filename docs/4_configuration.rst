@@ -32,7 +32,9 @@ The following ``settings.py`` options are available for customizing Axes behavio
   or a string path to a callable which takes no arguments.
   If an integer, will be interpreted as a number of hours.
   Default: ``None``
-* ``AXES_ONLY_ADMIN_SITE`` : If ``True``, lock is only enable for admin site,
+* ``AXES_ONLY_ADMIN_SITE``: If ``True``, lock is only enabled for admin site.
+  Admin site is determined by checking request path against the path of ``"admin:index"`` view.
+  If admin urls are not registered in current urlconf, all requests will not be locked.
   Default: ``False``
 * ``AXES_ONLY_USER_FAILURES`` : If ``True``, only lock based on username,
   and never lock based on IP if attempts exceed the limit.
