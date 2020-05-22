@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.3.3 (2020-05-22)
+------------------
+
+- Fix ``AXES_ONLY_ADMIN_SITE`` functionality when
+  no default admin site is defined in the URL configuration.
+  [igor-shevchenko]
+
+
 5.3.2 (2020-05-15)
 ------------------
 
