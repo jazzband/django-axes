@@ -87,7 +87,7 @@ management commands with the Django ``manage.py`` or ``django-admin`` command he
   will reset all lockouts and access records.
 - ``python manage.py axes_reset_ip [ip ...]``
   will clear lockouts and records for the given IP addresses.
-- ``python manage.py axes_reset_username [username ...]``
+- ``python manage.py axes_reset_user [username ...]``
   will clear lockouts and records for the given usernames.
 - ``python manage.py axes_reset_logs (age)``
   will reset (i.e. delete) AccessLog records that are older
