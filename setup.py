@@ -36,7 +36,7 @@ setup(
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
     python_requires="~=3.6",
-    install_requires=["django>=1.11", "django-appconf>=1.0.3", "django-ipware>=2.0.2"],
+    install_requires=["django>=2.0", "django-appconf>=1.0.3", "django-ipware>=2.0.2"],
     include_package_data=True,
     packages=find_packages(),
     classifiers=[
@@ -44,7 +44,6 @@ setup(
         "Environment :: Web Environment",
         "Environment :: Plugins",
         "Framework :: Django",
-        "Framework :: Django :: 1.11",
         "Framework :: Django :: 2.2",
         "Framework :: Django :: 3.0",
         "Intended Audience :: Developers",

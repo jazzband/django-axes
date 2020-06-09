@@ -7,7 +7,6 @@ python:
   - 3.8
   - pypy3
 env:
-  - DJANGO=1.11
   - DJANGO=2.2
   - DJANGO=3.0
   - DJANGO=master
