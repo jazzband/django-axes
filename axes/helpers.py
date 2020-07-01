@@ -15,7 +15,7 @@ from django.http import (
 from django.shortcuts import render
 from django.utils.module_loading import import_string
 
-import ipware.ip2
+import ipware.ip
 
 from axes.conf import settings
 from axes.models import AccessBase
@@ -156,7 +156,7 @@ def get_client_ip_address(request) -> str:
     and parameters can be configured in the Axes package.
     """
 
-    client_ip_address, _ = ipware.ip2.get_client_ip(
+    client_ip_address, _ = ipware.ip.get_client_ip(
         request,
         proxy_order=settings.AXES_PROXY_ORDER,
         proxy_count=settings.AXES_PROXY_COUNT,
