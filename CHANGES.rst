@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.3.5 (2020-07-02)
+------------------
+
+- Restrict ipware version for version compatibility.
+  [aleksihakli]
+
+
 5.3.4 (2020-06-09)
 ------------------
 
