@@ -6,12 +6,7 @@ from typing import Callable, Optional, Type, Union
 from urllib.parse import urlencode
 
 from django.core.cache import caches, BaseCache
-from django.http import (
-    HttpRequest,
-    HttpResponse,
-    JsonResponse,
-    QueryDict,
-)
+from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import render, redirect
 from django.utils.module_loading import import_string
 
