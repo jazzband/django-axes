@@ -3,16 +3,16 @@ from hashlib import md5
 from logging import getLogger
 from string import Template
 from typing import Callable, Optional, Type, Union
+from urllib.parse import urlencode
 
 from django.core.cache import caches, BaseCache
 from django.http import (
     HttpRequest,
     HttpResponse,
-    HttpResponseRedirect,
     JsonResponse,
     QueryDict,
 )
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils.module_loading import import_string
 
 import ipware.ip
@@ -341,7 +341,10 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
         return render(request, settings.AXES_LOCKOUT_TEMPLATE, context, status=status)
 
     if settings.AXES_LOCKOUT_URL:
-        return HttpResponseRedirect(f"{settings.AXES_LOCKOUT_URL}?username={context['username']}")
+        lockout_url = settings.AXES_LOCKOUT_URL
+        query_string = urlencode({"username": context["username"]})
+        url = "{}?{}".format(lockout_url, query_string)
+        return redirect(url)
 
     return HttpResponse(get_lockout_message(), status=status)
 
