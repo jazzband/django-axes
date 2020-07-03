@@ -3,6 +3,17 @@ Changes
 =======
 
 
+5.4.0 (2020-07-03)
+------------------
+
+- Propagate username to lockout view in URL parameters.
+  [PetrDlouhy]
+- Update CAPTCHA examples.
+  [PetrDlouhy]
+- Upgrade django-ipware to version 3.
+  [hramezani,mnislam01]
+
+
 5.3.5 (2020-07-02)
 ------------------
 
