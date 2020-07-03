@@ -341,7 +341,7 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
         return render(request, settings.AXES_LOCKOUT_TEMPLATE, context, status=status)
 
     if settings.AXES_LOCKOUT_URL:
-        return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
+        return HttpResponseRedirect(f"{settings.AXES_LOCKOUT_URL}?username={context['username']}")
 
     return HttpResponse(get_lockout_message(), status=status)
 
