@@ -161,8 +161,7 @@ Axes supports Captcha with the Django Simple Captcha package in the following ma
 
 ``example/views.py``::
 
-    from axes.utils import reset
-    from axes.helpers import get_client_ip_address
+    from axes.utils import reset_request
     from django.http.response import HttpResponseRedirect
     from django.shortcuts import render
     from django.urls import reverse_lazy
@@ -174,8 +173,7 @@ Axes supports Captcha with the Django Simple Captcha package in the following ma
         if request.POST:
             form = AxesCaptchaForm(request.POST)
             if form.is_valid():
-                ip = get_client_ip_address(request)
-                reset(ip=ip)
+                reset_request(request)
                 return HttpResponseRedirect(reverse_lazy('auth_login'))
         else:
             form = AxesCaptchaForm()
