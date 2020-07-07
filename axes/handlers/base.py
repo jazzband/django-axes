@@ -146,7 +146,13 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return False
 
-    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
+    def reset_attempts(
+        self,
+        *,
+        ip_address: str = None,
+        username: str = None,
+        ip_or_username: bool = False,
+    ) -> int:
         """
         Resets access attempts that match the given IP address or username.
 

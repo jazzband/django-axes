@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from django.db.models import Max, Value
+from django.db.models import Sum, Value, Q
 from django.db.models.functions import Concat
 from django.utils import timezone
 
@@ -33,13 +33,22 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
               process, caching its output can be dangerous.
     """
 
-    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
+    def reset_attempts(
+        self,
+        *,
+        ip_address: str = None,
+        username: str = None,
+        ip_or_username: bool = False,
+    ) -> int:
         attempts = AccessAttempt.objects.all()
 
-        if ip_address:
-            attempts = attempts.filter(ip_address=ip_address)
-        if username:
-            attempts = attempts.filter(username=username)
+        if ip_or_username:
+            attempts = attempts.filter(Q(ip_address=ip_address) | Q(username=username))
+        else:
+            if ip_address:
+                attempts = attempts.filter(ip_address=ip_address)
+            if username:
+                attempts = attempts.filter(username=username)
 
         count, _ = attempts.delete()
         log.info("AXES: Reset %d access attempts from database.", count)
@@ -62,11 +71,17 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         return count
 
     def get_failures(self, request, credentials: dict = None) -> int:
-        attempts = get_user_attempts(request, credentials)
-        return (
-            attempts.aggregate(Max("failures_since_start"))["failures_since_start__max"]
-            or 0
+        attempts_list = get_user_attempts(request, credentials)
+        attempt_count = max(
+            (
+                attempts.aggregate(Sum("failures_since_start"))[
+                    "failures_since_start__sum"
+                ]
+                or 0
+            )
+            for attempts in attempts_list
         )
+        return attempt_count
 
     def user_login_failed(
         self, sender, credentials: dict, request=None, **kwargs
@@ -106,7 +121,12 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         failures_since_start = 1 + self.get_failures(request, credentials)
 
         # 3. database query: Insert or update access records with the new failure data
-        if failures_since_start > 1:
+        try:
+            attempt = AccessAttempt.objects.get(
+                username=username,
+                ip_address=request.axes_ip_address,
+                user_agent=request.axes_user_agent,
+            )
             # Update failed attempt information but do not touch the username, IP address, or user agent fields,
             # because attackers can request the site with multiple different configurations
             # in order to bypass the defense mechanisms that are used by the site.
@@ -114,23 +134,20 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             log.warning(
                 "AXES: Repeated login failure by %s. Count = %d of %d. Updating existing record in the database.",
                 client_str,
-                failures_since_start,
+                attempt.failures_since_start,
                 get_failure_limit(request, credentials),
             )
 
             separator = "\n---------\n"
 
-            attempts = get_user_attempts(request, credentials)
-            attempts.update(
-                get_data=Concat("get_data", Value(separator + get_data)),
-                post_data=Concat("post_data", Value(separator + post_data)),
-                http_accept=request.axes_http_accept,
-                path_info=request.axes_path_info,
-                failures_since_start=failures_since_start,
-                attempt_time=request.axes_attempt_time,
-                username=username,
-            )
-        else:
+            attempt.get_data = Concat("get_data", Value(separator + get_data))
+            attempt.post_data = Concat("post_data", Value(separator + post_data))
+            attempt.http_accept = request.axes_http_accept
+            attempt.path_info = request.axes_path_info
+            attempt.failures_since_start += 1
+            attempt.attempt_time = request.axes_attempt_time
+            attempt.save()
+        except AccessAttempt.DoesNotExist:
             # Record failed attempt with all the relevant information.
             # Filtering based on username, IP address and user agent handled elsewhere,
             # and this handler just records the available information for further use.
@@ -148,7 +165,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 post_data=post_data,
                 http_accept=request.axes_http_accept,
                 path_info=request.axes_path_info,
-                failures_since_start=failures_since_start,
+                failures_since_start=1,
                 attempt_time=request.axes_attempt_time,
             )
 

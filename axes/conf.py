@@ -20,6 +20,9 @@ class AxesAppConf(AppConf):
     # lock out with the combination of username and IP address
     LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
 
+    # lock out with the username or IP address
+    LOCK_OUT_BY_USER_OR_IP = False
+
     # lock out with username and never the IP or user agent
     ONLY_USER_FAILURES = False
 

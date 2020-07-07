@@ -191,8 +191,8 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
 
     def test_user_login_failed_multiple_username(self):
         configurations = (
-            (1, 2, {}, ["admin", "admin1"]),
-            (1, 2, {"AXES_USE_USER_AGENT": True}, ["admin", "admin1"]),
+            (2, 1, {}, ["admin", "admin1"]),
+            (2, 1, {"AXES_USE_USER_AGENT": True}, ["admin", "admin1"]),
             (2, 1, {"AXES_ONLY_USER_FAILURES": True}, ["admin", "admin1"]),
             (
                 2,
@@ -206,6 +206,8 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
                 {"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True},
                 ["admin", "admin"],
             ),
+            (1, 2, {"AXES_LOCK_OUT_BY_USER_OR_IP": True}, ["admin", "admin"]),
+            (2, 1, {"AXES_LOCK_OUT_BY_USER_OR_IP": True}, ["admin", "admin1"]),
         )
 
         for (

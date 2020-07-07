@@ -41,6 +41,8 @@ class AppConfig(apps.AppConfig):
             log.info("AXES: blocking by username only.")
         elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
             log.info("AXES: blocking by combination of username and IP.")
+        elif settings.AXES_LOCK_OUT_BY_USER_OR_IP:
+            log.info("AXES: blocking by username or IP.")
         else:
             log.info("AXES: blocking by IP only.")
 

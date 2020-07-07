@@ -45,6 +45,11 @@ class AppsTestCase(AxesTestCase):
         AppConfig.initialize()
         log.info.assert_called_with("AXES: blocking by combination of username and IP.")
 
+    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
+    def test_axes_config_log_user_or_ip(self, log):
+        AppConfig.initialize()
+        log.info.assert_called_with("AXES: blocking by username or IP.")
+
 
 class AccessLogTestCase(AxesTestCase):
     def test_access_log_on_logout(self):
