@@ -26,8 +26,11 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
         self.cache_timeout = get_cache_timeout()
 
     def get_failures(self, request, credentials: dict = None) -> int:
-        cache_key = get_client_cache_key(request, credentials)
-        return self.cache.get(cache_key, default=0)
+        cache_keys = get_client_cache_key(request, credentials)
+        failure_count = max(
+            self.cache.get(cache_key, default=0) for cache_key in cache_keys
+        )
+        return failure_count
 
     def user_login_failed(
         self, sender, credentials: dict, request=None, **kwargs
@@ -71,8 +74,10 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
                 client_str,
             )
 
-        cache_key = get_client_cache_key(request, credentials)
-        self.cache.set(cache_key, failures_since_start, self.cache_timeout)
+        cache_keys = get_client_cache_key(request, credentials)
+        for cache_key in cache_keys:
+            failures = self.cache.get(cache_key, default=0)
+            self.cache.set(cache_key, failures + 1, self.cache_timeout)
 
         if (
             settings.AXES_LOCK_OUT_AT_FAILURE
@@ -109,14 +114,15 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
         log.info("AXES: Successful login by %s.", client_str)
 
         if settings.AXES_RESET_ON_SUCCESS:
-            cache_key = get_client_cache_key(request, credentials)
-            failures_since_start = self.cache.get(cache_key, default=0)
-            self.cache.delete(cache_key)
-            log.info(
-                "AXES: Deleted %d failed login attempts by %s from cache.",
-                failures_since_start,
-                client_str,
-            )
+            cache_keys = get_client_cache_key(request, credentials)
+            for cache_key in cache_keys:
+                failures_since_start = self.cache.get(cache_key, default=0)
+                self.cache.delete(cache_key)
+                log.info(
+                    "AXES: Deleted %d failed login attempts by %s from cache.",
+                    failures_since_start,
+                    client_str,
+                )
 
     def user_logged_out(self, sender, request, user, **kwargs):
         username = user.get_username() if user else None

@@ -6,7 +6,13 @@ class AxesTestHandler(AxesHandler):  # pylint: disable=unused-argument
     Signal handler implementation that does nothing, ideal for a test suite.
     """
 
-    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
+    def reset_attempts(
+        self,
+        *,
+        ip_address: str = None,
+        username: str = None,
+        ip_or_username: bool = False,
+    ) -> int:
         return 0
 
     def reset_logs(self, *, age_days: int = None) -> int:

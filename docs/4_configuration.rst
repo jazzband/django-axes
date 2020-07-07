@@ -47,6 +47,9 @@ The following ``settings.py`` options are available for customizing Axes behavio
   from IP under a particular username if the attempt limit has been exceeded,
   otherwise lock out based on IP.
   Default: ``False``
+* ``AXES_LOCK_OUT_BY_USER_OR_IP``: If ``True``, prevent login
+  from if the attempt limit has been exceeded for IP or username.
+  Default: ``False``
 * ``AXES_USE_USER_AGENT``: If ``True``, lock out and log based on the IP address
   and the user agent.  This means requests from different user agents but from
   the same IP are treated differently. This settings has no effect if the

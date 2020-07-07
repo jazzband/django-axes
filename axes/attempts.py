@@ -33,11 +33,14 @@ def filter_user_attempts(request, credentials: dict = None) -> QuerySet:
 
     username = get_client_username(request, credentials)
 
-    filter_kwargs = get_client_parameters(
+    filter_kwargs_list = get_client_parameters(
         username, request.axes_ip_address, request.axes_user_agent
     )
-
-    return AccessAttempt.objects.filter(**filter_kwargs)
+    attempts_list = [
+        AccessAttempt.objects.filter(**filter_kwargs)
+        for filter_kwargs in filter_kwargs_list
+    ]
+    return attempts_list
 
 
 def get_user_attempts(request, credentials: dict = None) -> QuerySet:
@@ -45,17 +48,17 @@ def get_user_attempts(request, credentials: dict = None) -> QuerySet:
     Get valid user attempts that match the given request and credentials.
     """
 
-    attempts = filter_user_attempts(request, credentials)
+    attempts_list = filter_user_attempts(request, credentials)
 
     if settings.AXES_COOLOFF_TIME is None:
         log.debug(
             "AXES: Getting all access attempts from database because no AXES_COOLOFF_TIME is configured"
         )
-        return attempts
+        return attempts_list
 
     threshold = get_cool_off_threshold(request.axes_attempt_time)
     log.debug("AXES: Getting access attempts that are newer than %s", threshold)
-    return attempts.filter(attempt_time__gte=threshold)
+    return [attempts.filter(attempt_time__gte=threshold) for attempts in attempts_list]
 
 
 def clean_expired_user_attempts(attempt_time: datetime = None) -> int:
@@ -84,9 +87,12 @@ def reset_user_attempts(request, credentials: dict = None) -> int:
     Reset all user attempts that match the given request and credentials.
     """
 
-    attempts = filter_user_attempts(request, credentials)
+    attempts_list = filter_user_attempts(request, credentials)
 
-    count, _ = attempts.delete()
+    count = 0
+    for attempts in attempts_list:
+        _count, _ = attempts.delete()
+        count += _count
     log.info("AXES: Reset %s access attempts from database.", count)
 
     return count

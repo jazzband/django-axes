@@ -43,9 +43,15 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
         return cls.implementation
 
     @classmethod
-    def reset_attempts(cls, *, ip_address: str = None, username: str = None) -> int:
+    def reset_attempts(
+        cls,
+        *,
+        ip_address: str = None,
+        username: str = None,
+        ip_or_username: bool = False,
+    ) -> int:
         return cls.get_implementation().reset_attempts(
-            ip_address=ip_address, username=username
+            ip_address=ip_address, username=username, ip_or_username=ip_or_username
         )
 
     @classmethod

@@ -226,10 +226,8 @@ class ClientParametersTestCase(AxesTestCase):
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_get_filter_kwargs_user(self):
         self.assertEqual(
-            dict(
-                get_client_parameters(self.username, self.ip_address, self.user_agent)
-            ),
-            {"username": self.username},
+            get_client_parameters(self.username, self.ip_address, self.user_agent),
+            [{"username": self.username}],
         )
 
     @override_settings(
@@ -239,10 +237,8 @@ class ClientParametersTestCase(AxesTestCase):
     )
     def test_get_filter_kwargs_ip(self):
         self.assertEqual(
-            dict(
-                get_client_parameters(self.username, self.ip_address, self.user_agent)
-            ),
-            {"ip_address": self.ip_address},
+            get_client_parameters(self.username, self.ip_address, self.user_agent),
+            [{"ip_address": self.ip_address}],
         )
 
     @override_settings(
@@ -252,10 +248,20 @@ class ClientParametersTestCase(AxesTestCase):
     )
     def test_get_filter_kwargs_user_and_ip(self):
         self.assertEqual(
-            dict(
-                get_client_parameters(self.username, self.ip_address, self.user_agent)
-            ),
-            {"username": self.username, "ip_address": self.ip_address},
+            get_client_parameters(self.username, self.ip_address, self.user_agent),
+            [{"username": self.username, "ip_address": self.ip_address}],
+        )
+
+    @override_settings(
+        AXES_ONLY_USER_FAILURES=False,
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=False,
+        AXES_LOCK_OUT_BY_USER_OR_IP=True,
+        AXES_USE_USER_AGENT=False,
+    )
+    def test_get_filter_kwargs_user_or_ip(self):
+        self.assertEqual(
+            get_client_parameters(self.username, self.ip_address, self.user_agent),
+            [{"username": self.username}, {"ip_address": self.ip_address}],
         )
 
     @override_settings(
@@ -265,10 +271,8 @@ class ClientParametersTestCase(AxesTestCase):
     )
     def test_get_filter_kwargs_ip_and_agent(self):
         self.assertEqual(
-            dict(
-                get_client_parameters(self.username, self.ip_address, self.user_agent)
-            ),
-            {"ip_address": self.ip_address, "user_agent": self.user_agent},
+            get_client_parameters(self.username, self.ip_address, self.user_agent),
+            [{"ip_address": self.ip_address}, {"user_agent": self.user_agent}],
         )
 
     @override_settings(
@@ -278,14 +282,11 @@ class ClientParametersTestCase(AxesTestCase):
     )
     def test_get_filter_kwargs_user_ip_agent(self):
         self.assertEqual(
-            dict(
-                get_client_parameters(self.username, self.ip_address, self.user_agent)
-            ),
-            {
-                "username": self.username,
-                "ip_address": self.ip_address,
-                "user_agent": self.user_agent,
-            },
+            get_client_parameters(self.username, self.ip_address, self.user_agent),
+            [
+                {"username": self.username, "ip_address": self.ip_address},
+                {"user_agent": self.user_agent},
+            ],
         )
 
 
@@ -304,7 +305,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             "/admin/login/", data={"username": self.username, "password": "test"}
         )
 
-        self.assertEqual(cache_hash_key, get_client_cache_key(request))
+        self.assertEqual([cache_hash_key], get_client_cache_key(request))
 
         # Getting cache key from AccessAttempt Object
         attempt = AccessAttempt(
@@ -318,7 +319,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             failures_since_start=0,
         )
 
-        self.assertEqual(cache_hash_key, get_client_cache_key(attempt))
+        self.assertEqual([cache_hash_key], get_client_cache_key(attempt))
 
     def test_get_cache_key_empty_ip_address(self):
         """
@@ -338,7 +339,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             REMOTE_ADDR=empty_ip_address,
         )
 
-        self.assertEqual(cache_hash_key, get_client_cache_key(request))
+        self.assertEqual([cache_hash_key], get_client_cache_key(request))
 
         # Getting cache key from AccessAttempt Object
         attempt = AccessAttempt(
@@ -352,7 +353,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             failures_since_start=0,
         )
 
-        self.assertEqual(cache_hash_key, get_client_cache_key(attempt))
+        self.assertEqual([cache_hash_key], get_client_cache_key(attempt))
 
     def test_get_cache_key_credentials(self):
         """
@@ -372,7 +373,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
         # Difference between the upper test: new call signature with credentials
         credentials = {"username": self.username}
 
-        self.assertEqual(cache_hash_key, get_client_cache_key(request, credentials))
+        self.assertEqual([cache_hash_key], get_client_cache_key(request, credentials))
 
         # Getting cache key from AccessAttempt Object
         attempt = AccessAttempt(
@@ -385,7 +386,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             path_info=request.META.get("PATH_INFO", "<unknown>"),
             failures_since_start=0,
         )
-        self.assertEqual(cache_hash_key, get_client_cache_key(attempt))
+        self.assertEqual([cache_hash_key], get_client_cache_key(attempt))
 
 
 class UsernameTestCase(AxesTestCase):
