@@ -203,6 +203,13 @@ def get_client_parameters(username: str, ip_address: str, user_agent: str) -> di
     return filter_kwargs
 
 
+def make_cache_key(filter_kwargs):
+    cache_key_components = "".join(value for value in filter_kwargs.values() if value)
+    cache_key_digest = md5(cache_key_components.encode()).hexdigest()
+    cache_key = f"axes-{cache_key_digest}"
+    return cache_key
+
+
 def get_client_cache_key(
     request_or_attempt: Union[HttpRequest, AccessBase], credentials: dict = None
 ) -> str:
@@ -225,11 +232,7 @@ def get_client_cache_key(
 
     filter_kwargs = get_client_parameters(username, ip_address, user_agent)
 
-    cache_key_components = "".join(value for value in filter_kwargs.values() if value)
-    cache_key_digest = md5(cache_key_components.encode()).hexdigest()
-    cache_key = f"axes-{cache_key_digest}"
-
-    return cache_key
+    return make_cache_key(filter_kwargs)
 
 
 def get_client_str(
