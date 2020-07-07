@@ -131,7 +131,7 @@ class AxesHandlerBaseTestCase(AxesTestCase):
 
 @override_settings(
     AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler",
-    AXES_COOLOFF_TIME=timedelta(seconds=1),
+    AXES_COOLOFF_TIME=timedelta(seconds=2),
     AXES_RESET_ON_SUCCESS=True,
 )
 class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
