@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import re
 
 from django.urls import reverse
@@ -13,7 +14,7 @@ from axes.helpers import (
 )
 
 
-class AxesHandler:  # pylint: disable=unused-argument
+class AxesHandler(ABC):  # pylint: disable=unused-argument
     """
     Handler API definition for implementations that are used by the ``AxesProxyHandler``.
 
@@ -25,27 +26,20 @@ class AxesHandler:  # pylint: disable=unused-argument
     .. note:: This is a virtual class and **can not be used without specialization**.
     """
 
+    @abstractmethod
     def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
         """
         Resets access attempts that match the given IP address or username.
-
-        :raises NotImplementedError: if the handler does not support resetting attempts.
         """
+        pass
 
-        raise NotImplementedError(
-            "Reset for access attempts is not supported on this backend"
-        )
-
+    @abstractmethod
     def reset_logs(self, *, age_days: int = None) -> int:
         """
         Resets access logs that are older than given number of days.
-
-        :raises NotImplementedError: if the handler does not support resetting logs.
         """
+        pass
 
-        raise NotImplementedError(
-            "Reset for access logs is not supported on this backend"
-        )
 
     def is_allowed(self, request, credentials: dict = None) -> bool:
         """
@@ -76,30 +70,40 @@ class AxesHandler:  # pylint: disable=unused-argument
 
         return True
 
+    @abstractmethod
     def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
         """
         Handles the Django ``django.contrib.auth.signals.user_login_failed`` authentication signal.
         """
+        pass
 
+    @abstractmethod
     def user_logged_in(self, sender, request, user, **kwargs):
         """
         Handles the Django ``django.contrib.auth.signals.user_logged_in`` authentication signal.
         """
+        pass
 
+    @abstractmethod
     def user_logged_out(self, sender, request, user, **kwargs):
         """
         Handles the Django ``django.contrib.auth.signals.user_logged_out`` authentication signal.
         """
+        pass
 
+    @abstractmethod
     def post_save_access_attempt(self, instance, **kwargs):
         """
         Handles the ``axes.models.AccessAttempt`` object post save signal.
         """
+        pass
 
+    @abstractmethod
     def post_delete_access_attempt(self, instance, **kwargs):
         """
         Handles the ``axes.models.AccessAttempt`` object post delete signal.
         """
+        pass
 
     def is_blacklisted(
         self, request, credentials: dict = None
@@ -143,6 +147,7 @@ class AxesHandler:  # pylint: disable=unused-argument
 
         return False
 
+    @abstractmethod
     def get_failures(self, request, credentials: dict = None) -> int:
         """
         Checks the number of failures associated to the given request and credentials.
@@ -150,10 +155,7 @@ class AxesHandler:  # pylint: disable=unused-argument
         This is a virtual method that needs an implementation in the handler subclass
         if the ``settings.AXES_LOCK_OUT_AT_FAILURE`` flag is set to ``True``.
         """
-
-        raise NotImplementedError(
-            "The Axes handler class needs a method definition for get_failures"
-        )
+        pass
 
     def is_admin_site(self, request) -> bool:
         """
