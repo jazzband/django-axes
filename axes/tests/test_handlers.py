@@ -129,6 +129,77 @@ class AxesHandlerBaseTestCase(AxesTestCase):
         )
 
 
+@override_settings(AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler")
+class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
+    """ Resetting attempts is currently implemented only for database handler """
+
+    USERNAME_1 = "foo_username"
+    USERNAME_2 = "bar_username"
+    IP_1 = "127.1.0.1"
+    IP_2 = "127.1.0.2"
+
+    def setUp(self):
+        super().setUp()
+        self.create_attempt()
+        self.create_attempt(username=self.USERNAME_1, ip_address=self.IP_1)
+        self.create_attempt(username=self.USERNAME_1, ip_address=self.IP_2)
+        self.create_attempt(username=self.USERNAME_2, ip_address=self.IP_1)
+        self.create_attempt(username=self.USERNAME_2, ip_address=self.IP_2)
+
+    def test_handler_reset_attempts(self):
+        self.assertEqual(5, AxesProxyHandler.reset_attempts())
+        self.assertFalse(AccessAttempt.objects.count())
+
+    def test_handler_reset_attempts_username(self):
+        self.assertEqual(2, AxesProxyHandler.reset_attempts(username=self.USERNAME_1))
+        self.assertEqual(AccessAttempt.objects.count(), 3)
+        self.assertEqual(
+            AccessAttempt.objects.filter(ip_address=self.USERNAME_1).count(), 0
+        )
+
+    def test_handler_reset_attempts_ip(self):
+        self.assertEqual(2, AxesProxyHandler.reset_attempts(ip_address=self.IP_1))
+        self.assertEqual(AccessAttempt.objects.count(), 3)
+        self.assertEqual(AccessAttempt.objects.filter(ip_address=self.IP_1).count(), 0)
+
+    def test_handler_reset_attempts_ip_and_username(self):
+        self.assertEqual(
+            1,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_1, username=self.USERNAME_1
+            ),
+        )
+        self.assertEqual(AccessAttempt.objects.count(), 4)
+        self.assertEqual(AccessAttempt.objects.filter(ip_address=self.IP_1).count(), 1)
+
+        self.create_attempt(username=self.USERNAME_1, ip_address=self.IP_1)
+        self.assertEqual(
+            1,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_1, username=self.USERNAME_2
+            ),
+        )
+        self.assertEqual(
+            1,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_2, username=self.USERNAME_1
+            ),
+        )
+
+    def test_handler_reset_attempts_ip_or_username(self):
+        self.assertEqual(
+            3,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_1, username=self.USERNAME_1, ip_or_username=True
+            ),
+        )
+        self.assertEqual(AccessAttempt.objects.count(), 2)
+        self.assertEqual(AccessAttempt.objects.filter(ip_address=self.IP_1).count(), 0)
+        self.assertEqual(
+            AccessAttempt.objects.filter(ip_address=self.USERNAME_1).count(), 0
+        )
+
+
 @override_settings(
     AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler",
     AXES_COOLOFF_TIME=timedelta(seconds=2),
