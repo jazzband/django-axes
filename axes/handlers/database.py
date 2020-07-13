@@ -235,3 +235,26 @@ class AxesDatabaseHandler(AxesHandler):  # pylint: disable=too-many-locals
             AccessLog.objects.filter(
                 username=username, logout_time__isnull=True
             ).update(logout_time=request.axes_attempt_time)
+
+    def post_save_access_attempt(self, instance, **kwargs):
+        """
+        Handles the ``axes.models.AccessAttempt`` object post save signal.
+
+        :raises NotImplementedError: if the handler does not support post save signal.
+        """
+
+        raise NotImplementedError(
+            "Post save signal callback is not supported on AxesDatabaseHandler"
+        )
+
+
+    def post_delete_access_attempt(self, instance, **kwargs):
+        """
+        Handles the ``axes.models.AccessAttempt`` object post delete signal.
+
+        :raises NotImplementedError: if the handler does not support post delete signal.
+        """
+
+        raise NotImplementedError(
+            "Post delete signal callback is not supported on AxesDatabaseHandler"
+        )
