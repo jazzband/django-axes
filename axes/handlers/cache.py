@@ -25,27 +25,6 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
         self.cache = get_cache()
         self.cache_timeout = get_cache_timeout()
 
-    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
-        """
-        Resets access attempts that match the given IP address or username.
-
-        :raises NotImplementedError: if the handler does not support resetting attempts.
-        """
-
-        raise NotImplementedError(
-            "Reset for access attempts is not supported on this backend"
-        )
-
-    def reset_logs(self, *, age_days: int = None) -> int:
-        """
-        Resets access logs that are older than given number of days.
-
-        :raises NotImplementedError: if the handler does not support resetting logs.
-        """
-
-        raise NotImplementedError(
-            "Reset for access logs is not supported on this backend"
-        )
 
     def get_failures(self, request, credentials: dict = None) -> int:
         cache_key = get_client_cache_key(request, credentials)
@@ -150,27 +129,3 @@ class AxesCacheHandler(AxesHandler):  # pylint: disable=too-many-locals
         )
 
         log.info("AXES: Successful logout by %s.", client_str)
-
-
-    def post_save_access_attempt(self, instance, **kwargs):
-        """
-        Handles the ``axes.models.AccessAttempt`` object post save signal.
-
-        :raises NotImplementedError: if the handler does not support post save signal.
-        """
-
-        raise NotImplementedError(
-            "Post save signal callback is not supported on this backend"
-        )
-
-
-    def post_delete_access_attempt(self, instance, **kwargs):
-        """
-        Handles the ``axes.models.AccessAttempt`` object post delete signal.
-
-        :raises NotImplementedError: if the handler does not support post delete signal.
-        """
-
-        raise NotImplementedError(
-            "Post delete signal callback is not supported on this backend"
-        )
