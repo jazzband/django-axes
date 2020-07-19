@@ -4,7 +4,7 @@ from django.utils.module_loading import import_string
 from django.utils.timezone import now
 
 from axes.conf import settings
-from axes.handlers.base import AxesHandler
+from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
 from axes.helpers import (
     get_client_ip_address,
     get_client_user_agent,
@@ -16,7 +16,7 @@ from axes.helpers import (
 log = getLogger(settings.AXES_LOGGER)
 
 
-class AxesProxyHandler(AxesHandler):
+class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
     """
     Proxy interface for configurable Axes signal handler class.
 
@@ -28,10 +28,10 @@ class AxesProxyHandler(AxesHandler):
     Refer to axes.handlers.proxy.AxesProxyHandler for default implementation.
     """
 
-    implementation = None  # type: AxesHandler
+    implementation = None  # type: AxesBaseHandler
 
     @classmethod
-    def get_implementation(cls, force: bool = False) -> AxesHandler:
+    def get_implementation(cls, force: bool = False) -> AxesBaseHandler:
         """
         Fetch and initialize configured handler implementation and memoize it to avoid reinitialization.
 
