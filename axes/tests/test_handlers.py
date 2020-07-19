@@ -14,17 +14,6 @@ from axes.tests.base import AxesTestCase
 
 @override_settings(AXES_HANDLER="axes.handlers.base.AxesHandler")
 class AxesHandlerTestCase(AxesTestCase):
-    def test_base_handler_reset_attempts_raises(self):
-        with self.assertRaises(NotImplementedError):
-            AxesProxyHandler.reset_attempts()
-
-    def test_base_handler_reset_logs_raises(self):
-        with self.assertRaises(NotImplementedError):
-            AxesProxyHandler.reset_logs()
-
-    def test_base_handler_raises_on_undefined_is_allowed_to_authenticate(self):
-        with self.assertRaises(NotImplementedError):
-            AxesProxyHandler.is_allowed(self.request, {})
 
     @override_settings(AXES_IP_BLACKLIST=["127.0.0.1"])
     def test_is_allowed_with_blacklisted_ip_address(self):
@@ -282,6 +271,12 @@ class AxesDummyHandlerTestCase(AxesHandlerBaseTestCase):
             self.login()
 
         self.check_login()
+
+    def test_handler_is_allowed(self):
+        self.assertEqual(True, AxesProxyHandler.is_allowed(self.request, {}))
+
+    def test_handler_get_failures(self):
+        self.assertEqual(0, AxesProxyHandler.get_failures(self.request, {}))
 
 
 @override_settings(AXES_HANDLER="axes.handlers.test.AxesTestHandler")

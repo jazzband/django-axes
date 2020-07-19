@@ -24,21 +24,21 @@ class AbstractAxesHandler(ABC):
         """
         Handles the Django ``django.contrib.auth.signals.user_login_failed`` authentication signal.
         """
-        pass
+        raise NotImplementedError("user_login_failed should be implemented")
 
     @abstractmethod
     def user_logged_in(self, sender, request, user, **kwargs):
         """
         Handles the Django ``django.contrib.auth.signals.user_logged_in`` authentication signal.
         """
-        pass
+        raise NotImplementedError("user_logged_in should be implemented")
 
     @abstractmethod
     def user_logged_out(self, sender, request, user, **kwargs):
         """
         Handles the Django ``django.contrib.auth.signals.user_logged_out`` authentication signal.
         """
-        pass
+        raise NotImplementedError("user_logged_out should be implemented")
 
     @abstractmethod
     def get_failures(self, request, credentials: dict = None) -> int:
@@ -48,46 +48,21 @@ class AbstractAxesHandler(ABC):
         This is a virtual method that needs an implementation in the handler subclass
         if the ``settings.AXES_LOCK_OUT_AT_FAILURE`` flag is set to ``True``.
         """
-        pass
+        raise NotImplementedError("get_failures should be implemented")
 
 
-
-class AxesHandler(AbstractAxesHandler):  # pylint: disable=unused-argument
+class AxesBaseHandler:
     """
     Handler API definition for implementations that are used by the ``AxesProxyHandler``.
 
     If you wish to specialize your own handler class, override the necessary methods
     and configure the class for use by setting ``settings.AXES_HANDLER = 'module.path.to.YourClass'``.
+    Make sure you are compliant with AbstractAxesHandler.
 
     The default implementation that is actually used by Axes is ``axes.handlers.database.AxesDatabaseHandler``.
 
     .. note:: This is a virtual class and **can not be used without specialization**.
     """
-
-
-    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
-        """
-        Resets access attempts that match the given IP address or username.
-
-        :raises NotImplementedError: if the handler does not support resetting attempts.
-        """
-
-        raise NotImplementedError(
-            "Reset for access attempts is not supported on this backend"
-        )
-
-
-    def reset_logs(self, *, age_days: int = None) -> int:
-        """
-        Resets access logs that are older than given number of days.
-
-        :raises NotImplementedError: if the handler does not support resetting logs.
-        """
-
-        raise NotImplementedError(
-            "Reset for access logs is not supported on this backend"
-        )
-
 
     def is_allowed(self, request, credentials: dict = None) -> bool:
         """
@@ -118,9 +93,7 @@ class AxesHandler(AbstractAxesHandler):  # pylint: disable=unused-argument
 
         return True
 
-    def is_blacklisted(
-        self, request, credentials: dict = None
-    ) -> bool:  # pylint: disable=unused-argument
+    def is_blacklisted(self, request, credentials: dict = None) -> bool:  # pylint: disable=unused-argument
         """
         Checks if the request or given credentials are blacklisted from access.
         """
@@ -130,9 +103,7 @@ class AxesHandler(AbstractAxesHandler):  # pylint: disable=unused-argument
 
         return False
 
-    def is_whitelisted(
-        self, request, credentials: dict = None
-    ) -> bool:  # pylint: disable=unused-argument
+    def is_whitelisted(self, request, credentials: dict = None) -> bool:  # pylint: disable=unused-argument
         """
         Checks if the request or given credentials are whitelisted for access.
         """
@@ -174,49 +145,16 @@ class AxesHandler(AbstractAxesHandler):  # pylint: disable=unused-argument
         return False
 
 
+class AxesHandler(AbstractAxesHandler, AxesBaseHandler): # pylint: disable=unused-argument
+
     def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
-        """
-        Handles the Django ``django.contrib.auth.signals.user_login_failed`` authentication signal.
-
-        :raises NotImplementedError: if the handler does not support user_login_failed callback.
-        """
-
-        raise NotImplementedError(
-            "user_login_failed callback is not supported on this backend"
-        )
+        pass
 
     def user_logged_in(self, sender, request, user, **kwargs):
-        """
-        Handles the Django ``django.contrib.auth.signals.user_logged_in`` authentication signal.
-
-        :raises NotImplementedError: if the handler does not support user_logged_in callback.
-        """
-
-        raise NotImplementedError(
-            "user_logged_in callback is not supported on this backend"
-        )
+        pass
 
     def user_logged_out(self, sender, request, user, **kwargs):
-        """
-        Handles the Django ``django.contrib.auth.signals.user_logged_out`` authentication signal.
-
-        :raises NotImplementedError: if the handler does not support user_logged_out callback.
-        """
-
-        raise NotImplementedError(
-            "user_logged_out callback is not supported on this backend"
-        )
+        pass
 
     def get_failures(self, request, credentials: dict = None) -> int:
-        """
-        Checks the number of failures associated to the given request and credentials.
-
-        This is a virtual method that needs an implementation in the handler subclass
-        if the ``settings.AXES_LOCK_OUT_AT_FAILURE`` flag is set to ``True``.
-
-        :raises NotImplementedError: if the handler does not support get_failures implementation.
-        """
-
-        raise NotImplementedError(
-            "get_failures method is not supported on this backend"
-        )
+        return 0
