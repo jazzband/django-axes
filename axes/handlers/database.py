@@ -239,12 +239,15 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):  # pylint: disa
     def post_save_access_attempt(self, instance, **kwargs):
         """
         Handles the ``axes.models.AccessAttempt`` object post save signal.
+
+        When needed, all post_save actions for this backend should be located
+        here.
         """
-        pass
 
     def post_delete_access_attempt(self, instance, **kwargs):
         """
         Handles the ``axes.models.AccessAttempt`` object post delete signal.
 
+        When needed, all post_delete actions for this backend should be located
+        here.
         """
-        pass
