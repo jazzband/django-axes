@@ -57,7 +57,8 @@ class AxesBaseHandler:
 
     If you wish to specialize your own handler class, override the necessary methods
     and configure the class for use by setting ``settings.AXES_HANDLER = 'module.path.to.YourClass'``.
-    Make sure you are compliant with AbstractAxesHandler.
+    Make sure that new the handler is compliant with AbstractAxesHandler and make sure it extends from this mixin.
+    Refer to `AxesHandler` for an example.
 
     The default implementation that is actually used by Axes is ``axes.handlers.database.AxesDatabaseHandler``.
 
@@ -125,7 +126,8 @@ class AxesBaseHandler:
         """
 
         if settings.AXES_LOCK_OUT_AT_FAILURE:
-            return self.get_failures(request, credentials) >= get_failure_limit(
+            # get_failures will have to be implemented by each specialized handler
+            return self.get_failures(request, credentials) >= get_failure_limit(  # type: ignore
                 request, credentials
             )
 
@@ -144,9 +146,33 @@ class AxesBaseHandler:
 
         return False
 
+    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int: # pylint: disable=unused-argument
+        """
+        Resets access attempts that match the given IP address or username.
+
+        This method makes more sense for the DB backend, but as it is used by the ProxyHandler
+        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+
+        Please overwrite it on each specialized handler as needed.
+        """
+        return 0
+
+    def reset_logs(self, *, age_days: int = None) -> int: # pylint: disable=unused-argument
+        """
+        Resets access logs that are older than given number of days.
+
+        This method makes more sense for the DB backend, but as it is used by the ProxyHandler
+        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+
+        Please overwrite it on each specialized handler as needed.
+        """
+        return 0
+
 
 class AxesHandler(AbstractAxesHandler, AxesBaseHandler): # pylint: disable=unused-argument
-
+    """
+    Signal bare handler implementation without any storage backend.
+    """
     def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
         pass
 
