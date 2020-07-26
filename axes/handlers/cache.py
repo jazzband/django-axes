@@ -16,7 +16,7 @@ from axes.helpers import (
 log = getLogger(settings.AXES_LOGGER)
 
 
-class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):  # pylint: disable=too-many-locals
+class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
     """
     Signal handler implementation that records user login attempts to cache and locks users out if necessary.
     """
@@ -24,7 +24,6 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):  # pylint: disable
     def __init__(self):
         self.cache = get_cache()
         self.cache_timeout = get_cache_timeout()
-
 
     def get_failures(self, request, credentials: dict = None) -> int:
         cache_key = get_client_cache_key(request, credentials)

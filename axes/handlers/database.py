@@ -25,7 +25,7 @@ from axes.helpers import (
 log = getLogger(settings.AXES_LOGGER)
 
 
-class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):  # pylint: disable=too-many-locals
+class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
     """
     Signal handler implementation that records user login attempts to database and locks users out if necessary.
 
