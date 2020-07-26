@@ -14,7 +14,6 @@ from axes.tests.base import AxesTestCase
 
 @override_settings(AXES_HANDLER="axes.handlers.base.AxesHandler")
 class AxesHandlerTestCase(AxesTestCase):
-
     @override_settings(AXES_IP_BLACKLIST=["127.0.0.1"])
     def test_is_allowed_with_blacklisted_ip_address(self):
         self.assertFalse(AxesProxyHandler.is_allowed(self.request))

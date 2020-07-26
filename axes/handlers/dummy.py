@@ -1,7 +1,7 @@
 from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
 
 
-class AxesDummyHandler(AbstractAxesHandler, AxesBaseHandler):  # pylint: disable=unused-argument
+class AxesDummyHandler(AbstractAxesHandler, AxesBaseHandler):
     """
     Signal handler implementation that does nothing and can be used to disable signal processing.
     """

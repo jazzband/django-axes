@@ -51,7 +51,7 @@ class AbstractAxesHandler(ABC):
         raise NotImplementedError("get_failures should be implemented")
 
 
-class AxesBaseHandler:
+class AxesBaseHandler:  # pylint: disable=unused-argument
     """
     Handler API definition for implementations that are used by the ``AxesProxyHandler``.
 
@@ -94,7 +94,7 @@ class AxesBaseHandler:
 
         return True
 
-    def is_blacklisted(self, request, credentials: dict = None) -> bool:  # pylint: disable=unused-argument
+    def is_blacklisted(self, request, credentials: dict = None) -> bool:
         """
         Checks if the request or given credentials are blacklisted from access.
         """
@@ -104,7 +104,7 @@ class AxesBaseHandler:
 
         return False
 
-    def is_whitelisted(self, request, credentials: dict = None) -> bool:  # pylint: disable=unused-argument
+    def is_whitelisted(self, request, credentials: dict = None) -> bool:
         """
         Checks if the request or given credentials are whitelisted for access.
         """
@@ -127,9 +127,9 @@ class AxesBaseHandler:
 
         if settings.AXES_LOCK_OUT_AT_FAILURE:
             # get_failures will have to be implemented by each specialized handler
-            return self.get_failures(request, credentials) >= get_failure_limit(  # type: ignore
+            return self.get_failures(  # type: ignore
                 request, credentials
-            )
+            ) >= get_failure_limit(request, credentials)
 
         return False
 
@@ -146,7 +146,7 @@ class AxesBaseHandler:
 
         return False
 
-    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int: # pylint: disable=unused-argument
+    def reset_attempts(self, *, ip_address: str = None, username: str = None) -> int:
         """
         Resets access attempts that match the given IP address or username.
 
@@ -157,7 +157,7 @@ class AxesBaseHandler:
         """
         return 0
 
-    def reset_logs(self, *, age_days: int = None) -> int: # pylint: disable=unused-argument
+    def reset_logs(self, *, age_days: int = None) -> int:
         """
         Resets access logs that are older than given number of days.
 
@@ -169,10 +169,11 @@ class AxesBaseHandler:
         return 0
 
 
-class AxesHandler(AbstractAxesHandler, AxesBaseHandler): # pylint: disable=unused-argument
+class AxesHandler(AbstractAxesHandler, AxesBaseHandler):
     """
     Signal bare handler implementation without any storage backend.
     """
+
     def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
         pass
 
