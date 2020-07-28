@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.4.2 (2020-07-28)
+------------------
+
+- Add ABC or abstract base class implementation for handlers.
+  [jorlugaqui]
+
+
 5.4.1 (2020-07-03)
 ------------------
 
