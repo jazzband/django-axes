@@ -3,7 +3,7 @@ black==19.3b0
 coverage==5.2.1
 mypy==0.761; python_version < '3.8' and python_implementation != 'PyPy'
 prospector==1.2.0; python_version < '3.8' and python_implementation != 'PyPy'
-pytest==6.0.0
+pytest==6.0.1
 pytest-cov==2.10.0
 pytest-django==3.9.0
 sphinx_rtd_theme==0.5.0
