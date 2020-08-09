@@ -6,6 +6,7 @@ and offers a backwards compatible import path.
 """
 
 from logging import getLogger
+from typing import Optional
 
 from django.http import HttpRequest
 
@@ -35,8 +36,7 @@ def reset_request(request: HttpRequest) -> int:
     This utility method is meant to be used from the CLI or via Python API.
     """
 
-    ip = None
-    ip = get_client_ip_address(request)
+    ip: Optional[str] = get_client_ip_address(request)
     username = request.GET.get("username", None)
 
     ip_or_username = settings.AXES_LOCK_OUT_BY_USER_OR_IP
@@ -49,9 +49,8 @@ def reset_request(request: HttpRequest) -> int:
         username = None
 
     if not ip and not username:
-        return (
-            0
-        )  # We don't want to reset everything, if there is some wrong request parameter
+        return 0
+        # We don't want to reset everything, if there is some wrong request parameter
 
     # if settings.AXES_USE_USER_AGENT:
     # TODO: reset based on user_agent?

@@ -262,8 +262,8 @@ def get_client_str(
         # Other modes initialize the attributes that are used for the actual lockouts
         client_list = get_client_parameters(username, ip_address, user_agent)
         client_dict = {}
-        for d in client_list:
-            client_dict.update(d)
+        for client in client_list:
+            client_dict.update(client)
 
     # Path info is always included as last component in the client string for traceability purposes
     if path_info and isinstance(path_info, (tuple, list)):
