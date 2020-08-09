@@ -1,3 +1,4 @@
+from typing import List
 from logging import getLogger
 
 from django.db.models import QuerySet
@@ -26,9 +27,9 @@ def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:
     return attempt_time - cool_off
 
 
-def filter_user_attempts(request, credentials: dict = None) -> QuerySet:
+def filter_user_attempts(request, credentials: dict = None) -> List[QuerySet]:
     """
-    Return a queryset of AccessAttempts that match the given request and credentials.
+    Return a list querysets of AccessAttempts that match the given request and credentials.
     """
 
     username = get_client_username(request, credentials)
@@ -43,9 +44,9 @@ def filter_user_attempts(request, credentials: dict = None) -> QuerySet:
     return attempts_list
 
 
-def get_user_attempts(request, credentials: dict = None) -> QuerySet:
+def get_user_attempts(request, credentials: dict = None) -> List[QuerySet]:
     """
-    Get valid user attempts that match the given request and credentials.
+    Get list of querysets with valid user attempts that match the given request and credentials.
     """
 
     attempts_list = filter_user_attempts(request, credentials)
