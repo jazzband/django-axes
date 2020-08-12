@@ -17,7 +17,7 @@ from axes.handlers.proxy import AxesProxyHandler
 log = getLogger(settings.AXES_LOGGER)
 
 
-user_locked_out = Signal(providing_args=["request", "username", "ip_address"])
+user_locked_out = Signal()
 
 
 @receiver(user_login_failed)
