@@ -104,3 +104,18 @@ If you get errors when running tests, try setting the
 
 This disables the Axes middleware, authentication backend and signal receivers,
 which might fix errors with incompatible test configurations.
+
+
+Ensuring atomic requests are disabled
+-------------------------------------
+
+If new attempts or log objects are not being correctly written to the Axes tables, 
+ensure that Django's ``ATOMIC_REQUESTS`` setting is set to ``False``::
+
+    ATOMIC_REQUESTS = False
+
+With ``ATOMIC_REQUESTS`` set to ``True`` Django will create a transaction when 
+a user tries to login. If a user is locked out Axes will raise an exception 
+which will cause Django to rollback any database changes. This means that the 
+attempt and access objects that Axes created will be deleted, even though the 
+Axes log output will indicate otherwise.
