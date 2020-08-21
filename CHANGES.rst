@@ -3,6 +3,17 @@ Changes
 =======
 
 
+5.5.0 (2020-08-21)
+------------------
+
+- Add support for locking requests based on
+  username OR IP address with inclusive or
+  using the ``LOCK_OUT_BY_USER_OR_IP`` flag.
+  [PetrDlouhy]
+- Deprecate Signal ``providing_args`` for Django 3.1 support.
+  [coredumperror]
+
+
 5.4.3 (2020-08-06)
 ------------------
 
