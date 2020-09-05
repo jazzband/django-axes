@@ -106,16 +106,33 @@ This disables the Axes middleware, authentication backend and signal receivers,
 which might fix errors with incompatible test configurations.
 
 
-Ensuring atomic requests are disabled
--------------------------------------
+Disabling atomic requests
+-------------------------
+
+Django offers atomic database transactions that are tied to HTTP requests
+and toggled on and off with the ``ATOMIC_REQUESTS`` configuration.
+
+When ``ATOMIC_REQUESTS`` is set to ``True`` Django will always either perform
+all database read and write operations in one successful atomic transaction
+or in a case of failure roll them back, leaving no trace of the failed
+request in the database.
+
+However, sometimes Axes or another plugin can misbehave or not act correctly with
+other code, preventing the login mechanisms from working due to e.g. exception
+being thrown in some part of the code, preventing access attempts being logged
+to database with Axes or causing similar problems.
 
 If new attempts or log objects are not being correctly written to the Axes tables, 
-ensure that Django's ``ATOMIC_REQUESTS`` setting is set to ``False``::
+it is possible to configure Django ``ATOMIC_REQUESTS`` setting to to ``False``::
 
     ATOMIC_REQUESTS = False
 
-With ``ATOMIC_REQUESTS`` set to ``True`` Django will create a transaction when 
-a user tries to login. If a user is locked out Axes will raise an exception 
-which will cause Django to rollback any database changes. This means that the 
-attempt and access objects that Axes created will be deleted, even though the 
-Axes log output will indicate otherwise.
+Please note that atomic requests are usually desirable when writing e.g. RESTful APIs,
+but sometimes it can be problematic and warrant a disable.
+
+Before disabling atomic requests or configuring them please read the relevant
+Django documentation and make sure you know what you are configuring
+rather than just toggling the flag on and off for testing.
+
+Also note that the cache backend can provide correct functionality with
+Memcached or Redis caches even with exceptions being thrown in the stack.
