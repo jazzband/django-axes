@@ -91,8 +91,8 @@ You also need to decorate ``dispatch()`` and ``form_invalid()`` methods of the A
 
     urlpatterns = [
         # Override allauth default login view with a patched view
-        url(r'^accounts/login/$', LoginView.as_view(form_class=AxesLoginForm), name='account_login'),
-        url(r'^accounts/', include('allauth.urls')),
+        path('accounts/login/', LoginView.as_view(form_class=AxesLoginForm), name='account_login'),
+        path('accounts/', include('allauth.urls')),
     ]
 
 
