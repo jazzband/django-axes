@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.5.1 (2020-09-10)
+------------------
+
+- Update deprecated uses of Django modules and members.
+  [smithdc1]
+
+
 5.5.0 (2020-08-21)
 ------------------
 
