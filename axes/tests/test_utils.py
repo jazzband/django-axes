@@ -591,7 +591,7 @@ class LockoutResponseTestCase(AxesTestCase):
         self.assertEqual(type(response), HttpResponseRedirect)
 
     def test_get_lockout_response_lockout_json(self):
-        self.request.is_ajax = lambda: True
+        self.request.META['x-requested-with'] = 'XMLHttpRequest'
         response = get_lockout_response(request=self.request)
         self.assertEqual(type(response), JsonResponse)
 
