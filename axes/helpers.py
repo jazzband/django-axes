@@ -341,7 +341,7 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
             }
         )
 
-    if request.META.get('x-requested-with') == 'XMLHttpRequest':
+    if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
         return JsonResponse(context, status=status)
 
     if settings.AXES_LOCKOUT_TEMPLATE:
