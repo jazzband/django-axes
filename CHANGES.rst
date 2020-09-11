@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.5.2 (2020-09-11)
+------------------
+
+- Update deprecating use of the ``request.is_ajax`` method.
+  [smithdc1]
+
+
 5.5.1 (2020-09-10)
 ------------------
 
