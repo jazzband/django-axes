@@ -16,7 +16,7 @@ jobs:
   allow_failures:
     - env: DJANGO=master
   include:
-    - python: 3.6
+    - python: 3.8
       env: TOXENV=qa
     - stage: deploy
       env:
