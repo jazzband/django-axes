@@ -3,6 +3,15 @@ Changes
 =======
 
 
+5.6.0 (2020-09-12)
+------------------
+
+- Add proper development ``subTest`` support via ``pytest-subtests`` package.
+  [smithdc1]
+- Deprecate ``django-appconf`` and use plain settings for Axes.
+  [aleksihakli]
+
+
 5.5.2 (2020-09-11)
 ------------------
 
