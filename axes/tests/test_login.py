@@ -490,7 +490,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True, AXES_FAILURE_LIMIT=2
     )
     def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_using_cache_multiple_attempts(
-        self
+        self,
     ):
         # User 1 is locked out from IP 1.
         response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_1)
@@ -558,7 +558,7 @@ class DatabaseLoginTestCase(AxesTestCase):
 
     @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True, AXES_FAILURE_LIMIT=3)
     def test_lockout_by_user_or_ip_allows_when_diff_user_same_ip_using_cache_multiple_attempts(
-        self
+        self,
     ):
         # User 1 is locked out from IP 1.
         response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_1)
@@ -588,7 +588,7 @@ class DatabaseLoginTestCase(AxesTestCase):
 
     @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True, AXES_FAILURE_LIMIT=3)
     def test_lockout_by_user_or_ip_allows_when_diff_user_same_ip_using_cache_multiple_failed_attempts(
-        self
+        self,
     ):
         """ Test, if the failed attempts make also impact on the attempt count """
         # User 1 is locked out from IP 1.
