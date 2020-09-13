@@ -27,23 +27,21 @@ django-axes
    :alt: Coverage
 
 
-Axes is a very simple way for you to keep track of failed
-authentication attempts for your login views.
+Axes is a Django plugin for keeping track of suspicious
+login attempts for your Django based website
+and implementing simple brute-force attack blocking.
 
 The name is sort of a geeky pun, since it can be interpreted as:
 
 * ``access``, as in monitoring access attempts, or
 * ``axes``, as in tools you can use to hack (generally on wood).
 
-In this case, however, the hacking part of it can be taken a bit further:
-**Axes is intended to help you stop people from brute forcing your Django site**.
-
 
 Functionality
 -------------
 
 Axes records login attempts to your Django powered site and prevents attackers
-from brute forcing the site when they exceed the configured attempt limit.
+from attempting further logins to your site when they exceed the configured attempt limit.
 
 Axes can track the attempts and persist them in the database indefinitely,
 or alternatively use a fast and DDoS resistant cache implementation.
@@ -74,22 +72,27 @@ https://github.com/jazzband/django-axes/issues
 Contributions
 -------------
 
-This is a `Jazzband <https://jazzband.co>`_ project.
-By contributing you agree to abide by the
-`Contributor Code of Conduct <https://jazzband.co/about/conduct>`_
-and follow the `guidelines <https://jazzband.co/about/guidelines>`_.
+All contributions are welcome!
 
 It is best to separate proposed changes and PRs into small, distinct patches
-by type so that they can be merged faster into upstream and released quicker:
+by type so that they can be merged faster into upstream and released quicker.
 
-* features,
+One way to organize contributions would be to separate PRs for e.g.
+
 * bugfixes,
-* code style improvements, and
-* documentation improvements.
+* new features,
+* code and design improvements,
+* documentation improvements, or
+* tooling and CI improvements.
 
-All contributions are required to pass the quality gates configured
+Merging contributions requires passing the checks configured
 with the CI. This includes running tests and linters successfully
 on the currently officially supported Python and Django versions.
 
 The test automation is run automatically by Travis CI, but you can
 run it locally with the ``tox`` command before pushing commits.
+
+Please note that this is a `Jazzband <https://jazzband.co>`_ project.
+By contributing you agree to abide by the
+`Contributor Code of Conduct <https://jazzband.co/about/conduct>`_
+and follow the `guidelines <https://jazzband.co/about/guidelines>`_.
