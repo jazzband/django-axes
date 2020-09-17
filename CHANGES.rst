@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.6.1 (2020-09-17)
+------------------
+
+- Improve test dependency management and upgrade black code formatter.
+  [smithdc1]
+
+
 5.6.0 (2020-09-12)
 ------------------
 
