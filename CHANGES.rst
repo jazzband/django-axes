@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.6.2 (2020-09-20)
+------------------
+
+- Fix regression in `axes_reset_user` management command.
+  [aleksihakli]
+
+
 5.6.1 (2020-09-17)
 ------------------
 
