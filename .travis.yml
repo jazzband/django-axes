@@ -11,6 +11,9 @@ env:
   - DJANGO=3.0
   - DJANGO=3.1
   - DJANGO=master
+arch:
+  - amd64
+  - ppc64le
 jobs:
   fast_finish: true
   allow_failures:
@@ -34,6 +37,10 @@ jobs:
           tags: true
           repo: jazzband/django-axes
           python: 3.6
+  exclude:
+    - arch: ppc64le
+      python: pypy3
+
 install: pip install tox-travis codecov
 script: tox
 after_success:
