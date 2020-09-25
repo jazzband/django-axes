@@ -3,9 +3,9 @@ from pkg_resources import get_distribution
 
 from django import apps
 
-from axes.conf import settings
+from axes.conf import axes_settings
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(axes_settings.AXES_LOGGER)
 
 
 class AppConfig(apps.AppConfig):
@@ -21,10 +21,10 @@ class AppConfig(apps.AppConfig):
         It displays version information exactly once at application startup.
         """
 
-        if not settings.AXES_ENABLED:
+        if not axes_settings.AXES_ENABLED:
             return
 
-        if not settings.AXES_VERBOSE:
+        if not axes_settings.AXES_VERBOSE:
             return
 
         if cls.logging_initialized:
@@ -37,11 +37,11 @@ class AppConfig(apps.AppConfig):
             get_distribution("django-axes").version,
         )
 
-        if settings.AXES_ONLY_USER_FAILURES:
+        if axes_settings.AXES_ONLY_USER_FAILURES:
             log.info("AXES: blocking by username only.")
-        elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+        elif axes_settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
             log.info("AXES: blocking by combination of username and IP.")
-        elif settings.AXES_LOCK_OUT_BY_USER_OR_IP:
+        elif axes_settings.AXES_LOCK_OUT_BY_USER_OR_IP:
             log.info("AXES: blocking by username or IP.")
         else:
             log.info("AXES: blocking by IP only.")

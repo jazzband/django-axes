@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import timedelta
 
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_str
 from axes.models import AccessAttempt, AccessLog
@@ -339,7 +339,7 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
 @override_settings(AXES_HANDLER="axes.handlers.dummy.AxesDummyHandler")
 class AxesDummyHandlerTestCase(AxesHandlerBaseTestCase):
     def test_handler(self):
-        for _ in range(settings.AXES_FAILURE_LIMIT):
+        for _ in range(axes_settings.AXES_FAILURE_LIMIT):
             self.login()
 
         self.check_login()

@@ -11,7 +11,7 @@ from django.test import override_settings, TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model, login, logout
 
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.models import AccessAttempt
 from axes.helpers import get_cache, make_cache_key_list
 from axes.tests.base import AxesTestCase
@@ -19,7 +19,7 @@ from axes.tests.base import AxesTestCase
 
 class DjangoLoginTestCase(TestCase):
     def setUp(self):
-        engine = import_module(settings.SESSION_ENGINE)
+        engine = import_module(axes_settings.SESSION_ENGINE)
 
         self.request = HttpRequest()
         self.request.session = engine.SessionStore()
@@ -104,7 +104,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         )
 
     def _lockout_user_from_ip(self, username, ip_addr):
-        for _ in range(settings.AXES_FAILURE_LIMIT):
+        for _ in range(axes_settings.AXES_FAILURE_LIMIT):
             response = self._login(
                 username=username, password=self.WRONG_PASSWORD, ip_addr=ip_addr
             )
@@ -153,7 +153,7 @@ class DatabaseLoginTestCase(AxesTestCase):
 
         self.lockout()
 
-        for _ in range(settings.AXES_FAILURE_LIMIT):
+        for _ in range(axes_settings.AXES_FAILURE_LIMIT):
             response = self.login()
             self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
 
@@ -188,7 +188,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         """
 
         # test until one try before the limit
-        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(1, axes_settings.AXES_FAILURE_LIMIT):
             response = self.login(is_valid_username=True, is_valid_password=False)
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
@@ -205,7 +205,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         """
 
         # test until one try before the limit
-        for _ in range(1, settings.AXES_FAILURE_LIMIT):
+        for _ in range(1, axes_settings.AXES_FAILURE_LIMIT):
             response = self._login(self.username, self.WRONG_PASSWORD)
 
             # Check if we are in the same login page
@@ -228,7 +228,7 @@ class DatabaseLoginTestCase(AxesTestCase):
 
         # now create failure_limit + 1 failed logins and then we should still
         # be able to login with valid_username
-        for _ in range(settings.AXES_FAILURE_LIMIT):
+        for _ in range(axes_settings.AXES_FAILURE_LIMIT):
             response = self._login(self.username, self.password)
 
         # Check if we can still log in with valid user

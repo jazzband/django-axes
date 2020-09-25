@@ -3,7 +3,7 @@ from logging import getLogger
 from django.utils.module_loading import import_string
 from django.utils.timezone import now
 
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler, AxesHandler
 from axes.helpers import (
     get_client_ip_address,
@@ -13,7 +13,7 @@ from axes.helpers import (
     toggleable,
 )
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(axes_settings.AXES_LOGGER)
 
 
 class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
@@ -21,7 +21,7 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
     Proxy interface for configurable Axes signal handler class.
 
     If you wish to implement a custom version of this handler,
-    you can override the settings.AXES_HANDLER configuration string
+    you can override the axes_settings.AXES_HANDLER configuration string
     with a class that implements a compatible interface and methods.
 
     Defaults to using axes.handlers.proxy.AxesProxyHandler if not overridden.
@@ -39,7 +39,7 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
         """
 
         if force or not cls.implementation:
-            cls.implementation = import_string(settings.AXES_HANDLER)()
+            cls.implementation = import_string(axes_settings.AXES_HANDLER)()
         return cls.implementation
 
     @classmethod

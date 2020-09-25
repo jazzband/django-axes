@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from axes.utils import reset
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.helpers import (
     get_cache,
     get_client_http_accept,
@@ -156,7 +156,7 @@ class AxesTestCase(TestCase):
 
     def check_lockout(self):
         response = self.lockout()
-        if settings.AXES_LOCK_OUT_AT_FAILURE == True:
+        if axes_settings.AXES_LOCK_OUT_AT_FAILURE == True:
             self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
         else:
             self.assertNotContains(

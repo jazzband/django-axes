@@ -4,7 +4,7 @@ import re
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.helpers import (
     get_failure_limit,
     is_client_ip_address_blacklisted,
@@ -46,7 +46,7 @@ class AbstractAxesHandler(ABC):
         Checks the number of failures associated to the given request and credentials.
 
         This is a virtual method that needs an implementation in the handler subclass
-        if the ``settings.AXES_LOCK_OUT_AT_FAILURE`` flag is set to ``True``.
+        if the ``axes_settings.AXES_LOCK_OUT_AT_FAILURE`` flag is set to ``True``.
         """
         raise NotImplementedError("get_failures should be implemented")
 
@@ -56,7 +56,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
     Handler API definition for implementations that are used by the ``AxesProxyHandler``.
 
     If you wish to specialize your own handler class, override the necessary methods
-    and configure the class for use by setting ``settings.AXES_HANDLER = 'module.path.to.YourClass'``.
+    and configure the class for use by setting ``axes_settings.AXES_HANDLER = 'module.path.to.YourClass'``.
     Make sure that new the handler is compliant with AbstractAxesHandler and make sure it extends from this mixin.
     Refer to `AxesHandler` for an example.
 
@@ -125,7 +125,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         Checks if the request or given credentials are locked.
         """
 
-        if settings.AXES_LOCK_OUT_AT_FAILURE:
+        if axes_settings.AXES_LOCK_OUT_AT_FAILURE:
             # get_failures will have to be implemented by each specialized handler
             return self.get_failures(  # type: ignore
                 request, credentials
@@ -137,7 +137,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         """
         Checks if the request is for admin site.
         """
-        if settings.AXES_ONLY_ADMIN_SITE and hasattr(request, "path"):
+        if axes_settings.AXES_ONLY_ADMIN_SITE and hasattr(request, "path"):
             try:
                 admin_url = reverse("admin:index")
             except NoReverseMatch:

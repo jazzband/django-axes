@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
 from axes.signals import user_locked_out
 from axes.helpers import (
@@ -13,7 +13,7 @@ from axes.helpers import (
     get_failure_limit,
 )
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(axes_settings.AXES_LOGGER)
 
 
 class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
@@ -80,7 +80,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             self.cache.set(cache_key, failures + 1, self.cache_timeout)
 
         if (
-            settings.AXES_LOCK_OUT_AT_FAILURE
+            axes_settings.AXES_LOCK_OUT_AT_FAILURE
             and failures_since_start >= get_failure_limit(request, credentials)
         ):
             log.warning(
@@ -113,7 +113,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
 
         log.info("AXES: Successful login by %s.", client_str)
 
-        if settings.AXES_RESET_ON_SUCCESS:
+        if axes_settings.AXES_RESET_ON_SUCCESS:
             cache_keys = get_client_cache_key(request, credentials)
             for cache_key in cache_keys:
                 failures_since_start = self.cache.get(cache_key, default=0)

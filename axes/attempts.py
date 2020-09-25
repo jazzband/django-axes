@@ -4,11 +4,11 @@ from logging import getLogger
 from django.db.models import QuerySet
 from django.utils.timezone import datetime, now
 
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.models import AccessAttempt
 from axes.helpers import get_client_username, get_client_parameters, get_cool_off
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(axes_settings.AXES_LOGGER)
 
 
 def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:
@@ -19,7 +19,7 @@ def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:
     cool_off = get_cool_off()
     if cool_off is None:
         raise TypeError(
-            "Cool off threshold can not be calculated with settings.AXES_COOLOFF_TIME set to None"
+            "Cool off threshold can not be calculated with axes_settings.AXES_COOLOFF_TIME set to None"
         )
 
     if attempt_time is None:
@@ -51,7 +51,7 @@ def get_user_attempts(request, credentials: dict = None) -> List[QuerySet]:
 
     attempts_list = filter_user_attempts(request, credentials)
 
-    if settings.AXES_COOLOFF_TIME is None:
+    if axes_settings.AXES_COOLOFF_TIME is None:
         log.debug(
             "AXES: Getting all access attempts from database because no AXES_COOLOFF_TIME is configured"
         )
@@ -67,7 +67,7 @@ def clean_expired_user_attempts(attempt_time: datetime = None) -> int:
     Clean expired user attempts from the database.
     """
 
-    if settings.AXES_COOLOFF_TIME is None:
+    if axes_settings.AXES_COOLOFF_TIME is None:
         log.debug(
             "AXES: Skipping clean for expired access attempts because no AXES_COOLOFF_TIME is configured"
         )

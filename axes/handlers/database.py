@@ -9,7 +9,7 @@ from axes.attempts import (
     get_user_attempts,
     reset_user_attempts,
 )
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out
@@ -22,7 +22,7 @@ from axes.helpers import (
 )
 
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(axes_settings.AXES_LOGGER)
 
 
 class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
@@ -170,7 +170,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             )
 
         if (
-            settings.AXES_LOCK_OUT_AT_FAILURE
+            axes_settings.AXES_LOCK_OUT_AT_FAILURE
             and failures_since_start >= get_failure_limit(request, credentials)
         ):
             log.warning(
@@ -207,7 +207,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         log.info("AXES: Successful login by %s.", client_str)
 
-        if not settings.AXES_DISABLE_ACCESS_LOG:
+        if not axes_settings.AXES_DISABLE_ACCESS_LOG:
             # 2. database query: Insert new access logs with login time
             AccessLog.objects.create(
                 username=username,
@@ -218,7 +218,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 attempt_time=request.axes_attempt_time,
             )
 
-        if settings.AXES_RESET_ON_SUCCESS:
+        if axes_settings.AXES_RESET_ON_SUCCESS:
             # 3. database query: Reset failed attempts for the logging in user
             count = reset_user_attempts(request, credentials)
             log.info(
@@ -247,7 +247,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         log.info("AXES: Successful logout by %s.", client_str)
 
-        if username and not settings.AXES_DISABLE_ACCESS_LOG:
+        if username and not axes_settings.AXES_DISABLE_ACCESS_LOG:
             # 2. database query: Update existing attempt logs with logout time
             AccessLog.objects.filter(
                 username=username, logout_time__isnull=True

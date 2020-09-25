@@ -10,7 +10,7 @@ from typing import Optional
 
 from django.http import HttpRequest
 
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_ip_address
 
@@ -39,12 +39,12 @@ def reset_request(request: HttpRequest) -> int:
     ip: Optional[str] = get_client_ip_address(request)
     username = request.GET.get("username", None)
 
-    ip_or_username = settings.AXES_LOCK_OUT_BY_USER_OR_IP
-    if settings.AXES_ONLY_USER_FAILURES:
+    ip_or_username = axes_settings.AXES_LOCK_OUT_BY_USER_OR_IP
+    if axes_settings.AXES_ONLY_USER_FAILURES:
         ip = None
     elif not (
-        settings.AXES_LOCK_OUT_BY_USER_OR_IP
-        or settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP
+        axes_settings.AXES_LOCK_OUT_BY_USER_OR_IP
+        or axes_settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP
     ):
         username = None
 
@@ -52,6 +52,6 @@ def reset_request(request: HttpRequest) -> int:
         return 0
         # We don't want to reset everything, if there is some wrong request parameter
 
-    # if settings.AXES_USE_USER_AGENT:
+    # if axes_settings.AXES_USE_USER_AGENT:
     # TODO: reset based on user_agent?
     return reset(ip, username, ip_or_username)

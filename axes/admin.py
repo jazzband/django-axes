@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from axes.conf import settings
+from axes.conf import axes_settings
 from axes.models import AccessAttempt, AccessLog
 
 
@@ -78,6 +78,6 @@ class AccessLogAdmin(admin.ModelAdmin):
         return False
 
 
-if settings.AXES_ENABLE_ADMIN:
+if axes_settings.AXES_ENABLE_ADMIN:
     admin.site.register(AccessAttempt, AccessAttemptAdmin)
     admin.site.register(AccessLog, AccessLogAdmin)
