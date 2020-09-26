@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.7.0 (2020-09-26)
+------------------
+
+- Deprecate ``AXES_LOGGER`` Axes setting and move to ``__name__``
+  based logging and fully qualified Python module name log identifiers.
+  [aleksihakli]
+
+
 5.6.2 (2020-09-20)
 ------------------
 
