@@ -13,7 +13,7 @@ from axes.helpers import (
     toggleable,
 )
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(__name__)
 
 
 class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):

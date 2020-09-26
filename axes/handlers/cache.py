@@ -13,7 +13,7 @@ from axes.helpers import (
     get_failure_limit,
 )
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(__name__)
 
 
 class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):

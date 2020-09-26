@@ -5,12 +5,12 @@ from django import apps
 
 from axes.conf import settings
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(__name__)
 
 
 class AppConfig(apps.AppConfig):
     name = "axes"
-    logging_initialized = False
+    initialized = False
 
     @classmethod
     def initialize(cls):
@@ -21,15 +21,15 @@ class AppConfig(apps.AppConfig):
         It displays version information exactly once at application startup.
         """
 
+        if cls.initialized:
+            return
+        cls.initialized = True
+
         if not settings.AXES_ENABLED:
             return
 
         if not settings.AXES_VERBOSE:
             return
-
-        if cls.logging_initialized:
-            return
-        cls.logging_initialized = True
 
         log.info("AXES: BEGIN LOG")
         log.info(
@@ -46,7 +46,7 @@ class AppConfig(apps.AppConfig):
         else:
             log.info("AXES: blocking by IP only.")
 
+        from axes import checks, signals  # noqa
+
     def ready(self):
         self.initialize()
-
-        from axes import checks, signals  # noqa

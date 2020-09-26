@@ -22,7 +22,7 @@ from axes.helpers import (
 )
 
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(__name__)
 
 
 class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):

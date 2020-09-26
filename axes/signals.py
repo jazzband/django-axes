@@ -10,11 +10,10 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.dispatch import Signal
 
-from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.handlers.proxy import AxesProxyHandler
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(__name__)
 
 
 # This signal provides the following arguments to any listeners:
