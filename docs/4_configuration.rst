@@ -55,8 +55,6 @@ The following ``settings.py`` options are available for customizing Axes behavio
   the same IP are treated differently. This settings has no effect if the
   ``AXES_ONLY_USER_FAILURES`` setting is active.
   Default: ``False``
-* ``AXES_LOGGER``: If set, specifies a logging mechanism for Axes to use.
-  Default: ``'axes.watch_login'``
 * ``AXES_HANDLER``: The path to the handler class to use.
   If set, overrides the default signal handler backend.
   Default: ``'axes.handlers.database.DatabaseHandler'``

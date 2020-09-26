@@ -8,7 +8,7 @@ from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.helpers import get_client_username, get_client_parameters, get_cool_off
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(__name__)
 
 
 def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:

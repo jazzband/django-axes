@@ -8,7 +8,7 @@ from axes.models import AccessAttempt, AccessLog
 from axes.tests.base import AxesTestCase
 
 
-@patch("axes.apps.AppConfig.logging_initialized", False)
+@patch("axes.apps.AppConfig.initialized", False)
 @patch("axes.apps.log")
 class AppsTestCase(AxesTestCase):
     def test_axes_config_log_re_entrant(self, log):

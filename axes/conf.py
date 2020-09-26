@@ -61,8 +61,6 @@ settings.AXES_HANDLER = getattr(
     settings, "AXES_HANDLER", "axes.handlers.database.AxesDatabaseHandler"
 )
 
-settings.AXES_LOGGER = getattr(settings, "AXES_LOGGER", "axes.watch_login")
-
 settings.AXES_LOCKOUT_TEMPLATE = getattr(settings, "AXES_LOCKOUT_TEMPLATE", None)
 
 settings.AXES_LOCKOUT_URL = getattr(settings, "AXES_LOCKOUT_URL", None)
