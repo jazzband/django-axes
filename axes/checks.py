@@ -121,7 +121,10 @@ def axes_backend_check(app_configs, **kwargs):  # pylint: disable=unused-argumen
 def axes_deprecation_check(app_configs, **kwargs):  # pylint: disable=unused-argument
     warnings = []
 
-    deprecated_settings = ["AXES_DISABLE_SUCCESS_ACCESS_LOG"]
+    deprecated_settings = [
+        "AXES_DISABLE_SUCCESS_ACCESS_LOG",
+        "AXES_LOGGER",
+    ]
 
     for deprecated_setting in deprecated_settings:
         try:
