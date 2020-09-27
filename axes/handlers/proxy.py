@@ -119,5 +119,6 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
         return cls.get_implementation().post_save_access_attempt(instance, **kwargs)
 
     @classmethod
+    @toggleable
     def post_delete_access_attempt(cls, instance, **kwargs):
         return cls.get_implementation().post_delete_access_attempt(instance, **kwargs)
