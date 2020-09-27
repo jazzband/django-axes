@@ -3,6 +3,19 @@ Changes
 =======
 
 
+5.7.1 (2020-09-27)
+------------------
+
+- Adjust settings import and handling chain
+  for cleaner module import and invocation order.
+  [aleksihakli]
+- Adjust the use of ``AXES_ENABLED`` flag so that
+  imports are always done the same way and initial log
+  is written regardless of the setting and it only affects
+  code that is decorated or wrapped with ``toggleable``.
+  [alekshakli]
+
+
 5.7.0 (2020-09-26)
 ------------------
 
@@ -14,7 +27,7 @@ Changes
 5.6.2 (2020-09-20)
 ------------------
 
-- Fix regression in `axes_reset_user` management command.
+- Fix regression in ``axes_reset_user`` management command.
   [aleksihakli]
 
 
