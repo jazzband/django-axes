@@ -22,7 +22,7 @@ class AppConfig(apps.AppConfig):
         if cls.initialized:
             return
         cls.initialized = True
-        
+
         # Only import settings, checks, and signals one time after Django has been initialized
         from axes.conf import settings  # noqa
         from axes import checks, signals  # noqa
