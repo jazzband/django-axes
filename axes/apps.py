@@ -3,8 +3,6 @@ from pkg_resources import get_distribution
 
 from django import apps
 
-from axes.conf import settings
-
 log = getLogger(__name__)
 
 
@@ -24,7 +22,12 @@ class AppConfig(apps.AppConfig):
         if cls.initialized:
             return
         cls.initialized = True
+        
+        # Only import settings, checks, and signals one time after Django has been initialized
+        from axes.conf import settings
+        from axes import checks, signals  # noqa
 
+        # Skip startup log messages if Axes is not enabled or not set to verbose
         if not settings.AXES_ENABLED:
             return
 
@@ -45,8 +48,6 @@ class AppConfig(apps.AppConfig):
             log.info("AXES: blocking by username or IP.")
         else:
             log.info("AXES: blocking by IP only.")
-
-        from axes import checks, signals  # noqa
 
     def ready(self):
         self.initialize()
