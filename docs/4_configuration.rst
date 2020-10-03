@@ -61,7 +61,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
 * ``AXES_CACHE``: The name of the cache for Axes to use.
   Default: ``'default'``
 * ``AXES_LOCKOUT_TEMPLATE``: If set, specifies a template to render when a
-  user is locked out. Template receives ``cooloff_time`` and ``failure_limit`` as
+  user is locked out. Template receives ``cooloff_timedelta``, ``cooloff_time`` and ``failure_limit`` as
   context variables.
   Default: ``None``
 * ``AXES_LOCKOUT_URL``: If set, specifies a URL to redirect to on lockout. If both
