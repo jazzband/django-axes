@@ -10,14 +10,17 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.dispatch import Signal
 
-from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.handlers.proxy import AxesProxyHandler
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(__name__)
 
 
-user_locked_out = Signal(providing_args=["request", "username", "ip_address"])
+# This signal provides the following arguments to any listeners:
+# request - The current Request object.
+# username - The username of the User who has been locked out.
+# ip_address - The IP of the user who has been locked out.
+user_locked_out = Signal()
 
 
 @receiver(user_login_failed)

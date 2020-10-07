@@ -3,19 +3,14 @@ from hashlib import md5
 from logging import getLogger
 from string import Template
 from typing import Callable, Optional, Type, Union
+from urllib.parse import urlencode
 
 from django.core.cache import caches, BaseCache
-from django.http import (
-    HttpRequest,
-    HttpResponse,
-    HttpResponseRedirect,
-    JsonResponse,
-    QueryDict,
-)
-from django.shortcuts import render
+from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
+from django.shortcuts import render, redirect
 from django.utils.module_loading import import_string
 
-import ipware.ip2
+import ipware.ip
 
 from axes.conf import settings
 from axes.models import AccessBase
@@ -156,7 +151,7 @@ def get_client_ip_address(request) -> str:
     and parameters can be configured in the Axes package.
     """
 
-    client_ip_address, _ = ipware.ip2.get_client_ip(
+    client_ip_address, _ = ipware.ip.get_client_ip(
         request,
         proxy_order=settings.AXES_PROXY_ORDER,
         proxy_count=settings.AXES_PROXY_COUNT,
@@ -179,33 +174,46 @@ def get_client_http_accept(request) -> str:
     return request.META.get("HTTP_ACCEPT", "<unknown>")[:1025]
 
 
-def get_client_parameters(username: str, ip_address: str, user_agent: str) -> dict:
+def get_client_parameters(username: str, ip_address: str, user_agent: str) -> list:
     """
     Get query parameters for filtering AccessAttempt queryset.
 
     This method returns a dict that guarantees iteration order for keys and values,
     and can so be used in e.g. the generation of hash keys or other deterministic functions.
-    """
 
-    filter_kwargs = dict()
+    Returns list of dict, every item of list are separate parameters
+    """
 
     if settings.AXES_ONLY_USER_FAILURES:
         # 1. Only individual usernames can be tracked with parametrization
-        filter_kwargs["username"] = username
+        filter_query = [{"username": username}]
     else:
-        if settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
+        if settings.AXES_LOCK_OUT_BY_USER_OR_IP:
+            # One of `username` or `IP address` is used
+            filter_query = [{"username": username}, {"ip_address": ip_address}]
+        elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
             # 2. A combination of username and IP address can be used as well
-            filter_kwargs["username"] = username
-            filter_kwargs["ip_address"] = ip_address
+            filter_query = [{"username": username, "ip_address": ip_address}]
         else:
             # 3. Default case is to track the IP address only, which is the most secure option
-            filter_kwargs["ip_address"] = ip_address
+            filter_query = [{"ip_address": ip_address}]
 
         if settings.AXES_USE_USER_AGENT:
             # 4. The HTTP User-Agent can be used to track e.g. one browser
-            filter_kwargs["user_agent"] = user_agent
+            filter_query.append({"user_agent": user_agent})
 
-    return filter_kwargs
+    return filter_query
+
+
+def make_cache_key_list(filter_kwargs_list):
+    cache_keys = []
+    for filter_kwargs in filter_kwargs_list:
+        cache_key_components = "".join(
+            value for value in filter_kwargs.values() if value
+        )
+        cache_key_digest = md5(cache_key_components.encode()).hexdigest()
+        cache_keys.append(f"axes-{cache_key_digest}")
+    return cache_keys
 
 
 def get_client_cache_key(
@@ -228,13 +236,9 @@ def get_client_cache_key(
         ip_address = get_client_ip_address(request_or_attempt)
         user_agent = get_client_user_agent(request_or_attempt)
 
-    filter_kwargs = get_client_parameters(username, ip_address, user_agent)
+    filter_kwargs_list = get_client_parameters(username, ip_address, user_agent)
 
-    cache_key_components = "".join(value for value in filter_kwargs.values() if value)
-    cache_key_digest = md5(cache_key_components.encode()).hexdigest()
-    cache_key = f"axes-{cache_key_digest}"
-
-    return cache_key
+    return make_cache_key_list(filter_kwargs_list)
 
 
 def get_client_str(
@@ -256,7 +260,10 @@ def get_client_str(
         client_dict["user_agent"] = user_agent
     else:
         # Other modes initialize the attributes that are used for the actual lockouts
-        client_dict = get_client_parameters(username, ip_address, user_agent)
+        client_list = get_client_parameters(username, ip_address, user_agent)
+        client_dict = {}
+        for client in client_list:
+            client_dict.update(client)
 
     # Path info is always included as last component in the client string for traceability purposes
     if path_info and isinstance(path_info, (tuple, list)):
@@ -334,14 +341,17 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
             }
         )
 
-    if request.is_ajax():
+    if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
         return JsonResponse(context, status=status)
 
     if settings.AXES_LOCKOUT_TEMPLATE:
         return render(request, settings.AXES_LOCKOUT_TEMPLATE, context, status=status)
 
     if settings.AXES_LOCKOUT_URL:
-        return HttpResponseRedirect(settings.AXES_LOCKOUT_URL)
+        lockout_url = settings.AXES_LOCKOUT_URL
+        query_string = urlencode({"username": context["username"]})
+        url = "{}?{}".format(lockout_url, query_string)
+        return redirect(url)
 
     return HttpResponse(get_lockout_message(), status=status)
 

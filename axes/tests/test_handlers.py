@@ -14,18 +14,6 @@ from axes.tests.base import AxesTestCase
 
 @override_settings(AXES_HANDLER="axes.handlers.base.AxesHandler")
 class AxesHandlerTestCase(AxesTestCase):
-    def test_base_handler_reset_attempts_raises(self):
-        with self.assertRaises(NotImplementedError):
-            AxesProxyHandler.reset_attempts()
-
-    def test_base_handler_reset_logs_raises(self):
-        with self.assertRaises(NotImplementedError):
-            AxesProxyHandler.reset_logs()
-
-    def test_base_handler_raises_on_undefined_is_allowed_to_authenticate(self):
-        with self.assertRaises(NotImplementedError):
-            AxesProxyHandler.is_allowed(self.request, {})
-
     @override_settings(AXES_IP_BLACKLIST=["127.0.0.1"])
     def test_is_allowed_with_blacklisted_ip_address(self):
         self.assertFalse(AxesProxyHandler.is_allowed(self.request))
@@ -64,6 +52,13 @@ class AxesHandlerTestCase(AxesTestCase):
             with override_settings(AXES_ONLY_ADMIN_SITE=setting_value):
                 request.path = url
                 self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
+
+    @override_settings(ROOT_URLCONF="axes.tests.urls_empty")
+    @override_settings(AXES_ONLY_ADMIN_SITE=True)
+    def test_is_admin_site_no_admin_site(self):
+        request = MagicMock()
+        request.path = "/admin/"
+        self.assertTrue(AxesProxyHandler().is_admin_site(self.request))
 
 
 class AxesProxyHandlerTestCase(AxesTestCase):
@@ -134,9 +129,80 @@ class AxesHandlerBaseTestCase(AxesTestCase):
         )
 
 
+@override_settings(AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler")
+class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
+    """ Resetting attempts is currently implemented only for database handler """
+
+    USERNAME_1 = "foo_username"
+    USERNAME_2 = "bar_username"
+    IP_1 = "127.1.0.1"
+    IP_2 = "127.1.0.2"
+
+    def setUp(self):
+        super().setUp()
+        self.create_attempt()
+        self.create_attempt(username=self.USERNAME_1, ip_address=self.IP_1)
+        self.create_attempt(username=self.USERNAME_1, ip_address=self.IP_2)
+        self.create_attempt(username=self.USERNAME_2, ip_address=self.IP_1)
+        self.create_attempt(username=self.USERNAME_2, ip_address=self.IP_2)
+
+    def test_handler_reset_attempts(self):
+        self.assertEqual(5, AxesProxyHandler.reset_attempts())
+        self.assertFalse(AccessAttempt.objects.count())
+
+    def test_handler_reset_attempts_username(self):
+        self.assertEqual(2, AxesProxyHandler.reset_attempts(username=self.USERNAME_1))
+        self.assertEqual(AccessAttempt.objects.count(), 3)
+        self.assertEqual(
+            AccessAttempt.objects.filter(ip_address=self.USERNAME_1).count(), 0
+        )
+
+    def test_handler_reset_attempts_ip(self):
+        self.assertEqual(2, AxesProxyHandler.reset_attempts(ip_address=self.IP_1))
+        self.assertEqual(AccessAttempt.objects.count(), 3)
+        self.assertEqual(AccessAttempt.objects.filter(ip_address=self.IP_1).count(), 0)
+
+    def test_handler_reset_attempts_ip_and_username(self):
+        self.assertEqual(
+            1,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_1, username=self.USERNAME_1
+            ),
+        )
+        self.assertEqual(AccessAttempt.objects.count(), 4)
+        self.assertEqual(AccessAttempt.objects.filter(ip_address=self.IP_1).count(), 1)
+
+        self.create_attempt(username=self.USERNAME_1, ip_address=self.IP_1)
+        self.assertEqual(
+            1,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_1, username=self.USERNAME_2
+            ),
+        )
+        self.assertEqual(
+            1,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_2, username=self.USERNAME_1
+            ),
+        )
+
+    def test_handler_reset_attempts_ip_or_username(self):
+        self.assertEqual(
+            3,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_1, username=self.USERNAME_1, ip_or_username=True
+            ),
+        )
+        self.assertEqual(AccessAttempt.objects.count(), 2)
+        self.assertEqual(AccessAttempt.objects.filter(ip_address=self.IP_1).count(), 0)
+        self.assertEqual(
+            AccessAttempt.objects.filter(ip_address=self.USERNAME_1).count(), 0
+        )
+
+
 @override_settings(
     AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler",
-    AXES_COOLOFF_TIME=timedelta(seconds=1),
+    AXES_COOLOFF_TIME=timedelta(seconds=2),
     AXES_RESET_ON_SUCCESS=True,
 )
 class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
@@ -196,8 +262,8 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
 
     def test_user_login_failed_multiple_username(self):
         configurations = (
-            (1, 2, {}, ["admin", "admin1"]),
-            (1, 2, {"AXES_USE_USER_AGENT": True}, ["admin", "admin1"]),
+            (2, 1, {}, ["admin", "admin1"]),
+            (2, 1, {"AXES_USE_USER_AGENT": True}, ["admin", "admin1"]),
             (2, 1, {"AXES_ONLY_USER_FAILURES": True}, ["admin", "admin1"]),
             (
                 2,
@@ -211,6 +277,8 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
                 {"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True},
                 ["admin", "admin"],
             ),
+            (1, 2, {"AXES_LOCK_OUT_BY_USER_OR_IP": True}, ["admin", "admin"]),
+            (2, 1, {"AXES_LOCK_OUT_BY_USER_OR_IP": True}, ["admin", "admin1"]),
         )
 
         for (
@@ -275,6 +343,12 @@ class AxesDummyHandlerTestCase(AxesHandlerBaseTestCase):
             self.login()
 
         self.check_login()
+
+    def test_handler_is_allowed(self):
+        self.assertEqual(True, AxesProxyHandler.is_allowed(self.request, {}))
+
+    def test_handler_get_failures(self):
+        self.assertEqual(0, AxesProxyHandler.get_failures(self.request, {}))
 
 
 @override_settings(AXES_HANDLER="axes.handlers.test.AxesTestHandler")

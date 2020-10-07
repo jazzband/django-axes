@@ -3,6 +3,136 @@ Changes
 =======
 
 
+5.7.1 (2020-09-27)
+------------------
+
+- Adjust settings import and handling chain
+  for cleaner module import and invocation order.
+  [aleksihakli]
+- Adjust the use of ``AXES_ENABLED`` flag so that
+  imports are always done the same way and initial log
+  is written regardless of the setting and it only affects
+  code that is decorated or wrapped with ``toggleable``.
+  [alekshakli]
+
+
+5.7.0 (2020-09-26)
+------------------
+
+- Deprecate ``AXES_LOGGER`` Axes setting and move to ``__name__``
+  based logging and fully qualified Python module name log identifiers.
+  [aleksihakli]
+
+
+5.6.2 (2020-09-20)
+------------------
+
+- Fix regression in ``axes_reset_user`` management command.
+  [aleksihakli]
+
+
+5.6.1 (2020-09-17)
+------------------
+
+- Improve test dependency management and upgrade black code formatter.
+  [smithdc1]
+
+
+5.6.0 (2020-09-12)
+------------------
+
+- Add proper development ``subTest`` support via ``pytest-subtests`` package.
+  [smithdc1]
+- Deprecate ``django-appconf`` and use plain settings for Axes.
+  [aleksihakli]
+
+
+5.5.2 (2020-09-11)
+------------------
+
+- Update deprecating use of the ``request.is_ajax`` method.
+  [smithdc1]
+
+
+5.5.1 (2020-09-10)
+------------------
+
+- Update deprecated uses of Django modules and members.
+  [smithdc1]
+
+
+5.5.0 (2020-08-21)
+------------------
+
+- Add support for locking requests based on
+  username OR IP address with inclusive or
+  using the ``LOCK_OUT_BY_USER_OR_IP`` flag.
+  [PetrDlouhy]
+- Deprecate Signal ``providing_args`` for Django 3.1 support.
+  [coredumperror]
+
+
+5.4.3 (2020-08-06)
+------------------
+
+- Add Django 3.1 support.
+  [hramezani]
+
+
+5.4.2 (2020-07-28)
+------------------
+
+- Add ABC or abstract base class implementation for handlers.
+  [jorlugaqui]
+
+
+5.4.1 (2020-07-03)
+------------------
+
+- Fix code styling for linters.
+  [aleksihakli]
+
+
+5.4.0 (2020-07-03)
+------------------
+
+- Propagate username to lockout view in URL parameters.
+  [PetrDlouhy]
+- Update CAPTCHA examples.
+  [PetrDlouhy]
+- Upgrade django-ipware to version 3.
+  [hramezani,mnislam01]
+
+
+5.3.5 (2020-07-02)
+------------------
+
+- Restrict ipware version for version compatibility.
+  [aleksihakli]
+
+
+5.3.4 (2020-06-09)
+------------------
+
+- Deprecate Django 1.11 LTS support.
+  [aleksihakli]
+
+
+5.3.3 (2020-05-22)
+------------------
+
+- Fix ``AXES_ONLY_ADMIN_SITE`` functionality when
+  no default admin site is defined in the URL configuration.
+  [igor-shevchenko]
+
+
+5.3.2 (2020-05-15)
+------------------
+
+- Fix AppConf settings prefix for Fargate.
+  [marksweb]
+
+
 5.3.1 (2020-03-23)
 ------------------
 

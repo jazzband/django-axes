@@ -4,7 +4,7 @@ from django.utils.module_loading import import_string
 from django.utils.timezone import now
 
 from axes.conf import settings
-from axes.handlers.base import AxesHandler
+from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler, AxesHandler
 from axes.helpers import (
     get_client_ip_address,
     get_client_user_agent,
@@ -13,10 +13,10 @@ from axes.helpers import (
     toggleable,
 )
 
-log = getLogger(settings.AXES_LOGGER)
+log = getLogger(__name__)
 
 
-class AxesProxyHandler(AxesHandler):
+class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
     """
     Proxy interface for configurable Axes signal handler class.
 
@@ -43,9 +43,15 @@ class AxesProxyHandler(AxesHandler):
         return cls.implementation
 
     @classmethod
-    def reset_attempts(cls, *, ip_address: str = None, username: str = None) -> int:
+    def reset_attempts(
+        cls,
+        *,
+        ip_address: str = None,
+        username: str = None,
+        ip_or_username: bool = False,
+    ) -> int:
         return cls.get_implementation().reset_attempts(
-            ip_address=ip_address, username=username
+            ip_address=ip_address, username=username, ip_or_username=ip_or_username
         )
 
     @classmethod
@@ -113,5 +119,6 @@ class AxesProxyHandler(AxesHandler):
         return cls.get_implementation().post_save_access_attempt(instance, **kwargs)
 
     @classmethod
+    @toggleable
     def post_delete_access_attempt(cls, instance, **kwargs):
         return cls.get_implementation().post_delete_access_attempt(instance, **kwargs)

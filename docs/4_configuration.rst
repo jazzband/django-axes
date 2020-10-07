@@ -32,7 +32,9 @@ The following ``settings.py`` options are available for customizing Axes behavio
   or a string path to a callable which takes no arguments.
   If an integer, will be interpreted as a number of hours.
   Default: ``None``
-* ``AXES_ONLY_ADMIN_SITE`` : If ``True``, lock is only enable for admin site,
+* ``AXES_ONLY_ADMIN_SITE``: If ``True``, lock is only enabled for admin site.
+  Admin site is determined by checking request path against the path of ``"admin:index"`` view.
+  If admin urls are not registered in current urlconf, all requests will not be locked.
   Default: ``False``
 * ``AXES_ONLY_USER_FAILURES`` : If ``True``, only lock based on username,
   and never lock based on IP if attempts exceed the limit.
@@ -45,20 +47,21 @@ The following ``settings.py`` options are available for customizing Axes behavio
   from IP under a particular username if the attempt limit has been exceeded,
   otherwise lock out based on IP.
   Default: ``False``
+* ``AXES_LOCK_OUT_BY_USER_OR_IP``: If ``True``, prevent login
+  from if the attempt limit has been exceeded for IP or username.
+  Default: ``False``
 * ``AXES_USE_USER_AGENT``: If ``True``, lock out and log based on the IP address
   and the user agent.  This means requests from different user agents but from
   the same IP are treated differently. This settings has no effect if the
   ``AXES_ONLY_USER_FAILURES`` setting is active.
   Default: ``False``
-* ``AXES_LOGGER``: If set, specifies a logging mechanism for Axes to use.
-  Default: ``'axes.watch_login'``
 * ``AXES_HANDLER``: The path to the handler class to use.
   If set, overrides the default signal handler backend.
   Default: ``'axes.handlers.database.DatabaseHandler'``
 * ``AXES_CACHE``: The name of the cache for Axes to use.
   Default: ``'default'``
 * ``AXES_LOCKOUT_TEMPLATE``: If set, specifies a template to render when a
-  user is locked out. Template receives ``cooloff_time`` and ``failure_limit`` as
+  user is locked out. Template receives ``cooloff_timedelta``, ``cooloff_time``, ``username`` and ``failure_limit`` as
   context variables.
   Default: ``None``
 * ``AXES_LOCKOUT_URL``: If set, specifies a URL to redirect to on lockout. If both
