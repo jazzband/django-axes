@@ -17,6 +17,10 @@ class AxesMiddleware:
     Middleware that calculates necessary HTTP request attributes for attempt monitoring
     and maps lockout signals into readable HTTP 403 Forbidden responses.
 
+    If a project uses `django rest framework`` then the middleware updates the
+    request and checks whether the limit has been exceeded. It's needed only
+    for integration with DRF because it uses its own request object.
+
     This middleware recognizes a logout monitoring flag in the request and
     and uses the ``axes.helpers.get_lockout_response`` handler for returning
     customizable and context aware lockout message to the end user if necessary.
