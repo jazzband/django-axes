@@ -2,4 +2,4 @@
 -r requirements-qa.txt
 -r requirements-test.txt
 sphinx_rtd_theme==0.5.0
-tox==3.20.0
+tox==3.20.1
