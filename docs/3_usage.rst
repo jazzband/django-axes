@@ -3,7 +3,7 @@
 Usage
 =====
 
-Once Axes is is installed and configured, you can login and logout
+Once Axes is installed and configured, you can login and logout
 of your application via the ``django.contrib.auth`` views.
 The attempts will be logged and visible in the Access Attempts section in admin.
 
