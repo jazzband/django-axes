@@ -73,9 +73,7 @@ class MiddlewareTestCase(AxesTestCase):
         self.assertFalse(hasattr(self.request, "axes_updated"))
 
     @mock.patch("axes.middleware.get_failure_limit", return_value=5)
-    @mock.patch(
-        "axes.middleware.AxesProxyHandler.get_failures", return_value=5
-    )
+    @mock.patch("axes.middleware.AxesProxyHandler.get_failures", return_value=5)
     @mock.patch("django.conf.settings.INSTALLED_APPS", ["rest_framework"])
     @override_settings(AXES_LOCK_OUT_AT_FAILURE=True)
     def test_lockout_response_with_drf_integration(
@@ -90,9 +88,7 @@ class MiddlewareTestCase(AxesTestCase):
         self.assertEqual(response.status_code, self.STATUS_LOCKOUT)
 
     @mock.patch("axes.middleware.get_failure_limit", return_value=5)
-    @mock.patch(
-        "axes.middleware.AxesProxyHandler.get_failures", return_value=3
-    )
+    @mock.patch("axes.middleware.AxesProxyHandler.get_failures", return_value=3)
     @mock.patch("django.conf.settings.INSTALLED_APPS", ["rest_framework"])
     @override_settings(AXES_LOCK_OUT_AT_FAILURE=True)
     def test_success_response_with_drf_integration(
