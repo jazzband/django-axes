@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.8.0 (2020-10-16)
+------------------
+
+- Improve Django REST Framework (DRF) integration.
+  [Anatoly]
+
+
 5.7.1 (2020-09-27)
 ------------------
 
