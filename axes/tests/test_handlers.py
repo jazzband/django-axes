@@ -260,6 +260,25 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_whitelist(self, log):
         self.check_whitelist(log)
 
+    @patch("axes.handlers.database.log")
+    def test_user_login_failed_only_user_failures_with_none_username(self, log):
+        with self.settings(**{"AXES_ONLY_USER_FAILURES": True}):
+            credentials = {"username": None, "password": "test"}
+            sender = MagicMock()
+            AxesProxyHandler.user_login_failed(sender, credentials, self.request)
+            attempt = AccessAttempt.objects.all()
+            self.assertEqual(0, AccessAttempt.objects.count())
+        log.warning.assert_called_with(
+            "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
+        )
+
+    def test_user_login_failed_with_none_username(self):
+        credentials = {"username": None, "password": "test"}
+        sender = MagicMock()
+        AxesProxyHandler.user_login_failed(sender, credentials, self.request)
+        attempt = AccessAttempt.objects.all()
+        self.assertEqual(1, AccessAttempt.objects.filter(username__isnull=True).count())
+
     def test_user_login_failed_multiple_username(self):
         configurations = (
             (2, 1, {}, ["admin", "admin1"]),
