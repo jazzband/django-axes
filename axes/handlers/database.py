@@ -152,23 +152,26 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             # Filtering based on username, IP address and user agent handled elsewhere,
             # and this handler just records the available information for further use.
 
-            log.warning(
-                "AXES: New login failure by %s. Creating new record in the database.",
-                client_str,
-            )
-
-            AccessAttempt.objects.create(
-                username=username,
-                ip_address=request.axes_ip_address,
-                user_agent=request.axes_user_agent,
-                get_data=get_data,
-                post_data=post_data,
-                http_accept=request.axes_http_accept,
-                path_info=request.axes_path_info,
-                failures_since_start=1,
-                attempt_time=request.axes_attempt_time,
-            )
-
+            if not (settings.AXES_ONLY_USER_FAILURES and username is None):
+                log.warning(
+                    "AXES: New login failure by %s. Creating new record in the database.",
+                    client_str,
+                )
+                AccessAttempt.objects.create(
+                    username=username,
+                    ip_address=request.axes_ip_address,
+                    user_agent=request.axes_user_agent,
+                    get_data=get_data,
+                    post_data=post_data,
+                    http_accept=request.axes_http_accept,
+                    path_info=request.axes_path_info,
+                    failures_since_start=1,
+                    attempt_time=request.axes_attempt_time,
+                )
+            else:
+                log.warning(
+                    "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
+                )
         if (
             settings.AXES_LOCK_OUT_AT_FAILURE
             and failures_since_start >= get_failure_limit(request, credentials)
