@@ -3,6 +3,17 @@ Changes
 =======
 
 
+5.9.0 (2020-11-05)
+------------------
+
+- Add Python 3.9 support.
+  [hramezani]
+- Prevent ``AccessAttempt`` creation with database handler 
+  when username is not set
+  and ``AXES_ONLY_USER_FAILURES`` setting is not set.
+  
+  
+
 5.8.0 (2020-10-16)
 ------------------
 
