@@ -11,8 +11,8 @@ Changes
 - Prevent ``AccessAttempt`` creation with database handler 
   when username is not set
   and ``AXES_ONLY_USER_FAILURES`` setting is not set.
-  
-  
+  [hramezani]
+
 
 5.8.0 (2020-10-16)
 ------------------
