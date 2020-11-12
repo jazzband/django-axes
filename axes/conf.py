@@ -115,3 +115,6 @@ settings.AXES_META_PRECEDENCE_ORDER = getattr(
     "AXES_META_PRECEDENCE_ORDER",
     getattr(settings, "IPWARE_META_PRECEDENCE_ORDER", ("REMOTE_ADDR",)),
 )
+
+# set CORS allowed origins when calling authentication over ajax
+settings.AXES_ALLOWED_CORS_ORIGINS = getattr(settings, "AXES_ALLOWED_CORS_ORIGINS", "*")
