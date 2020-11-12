@@ -342,7 +342,13 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
         )
 
     if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
-        return JsonResponse(context, status=status)
+            json_response = JsonResponse(context, status=status)
+            json_response["Access-Control-Allow-Origin"] = settings.ALLOWED_CORS_ORIGINS
+            json_response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+            json_response[
+                "Access-Control-Allow-Headers"
+            ] = "Origin, Content-Type, Accept, Authorization, x-requested-with"
+        return json_response
 
     if settings.AXES_LOCKOUT_TEMPLATE:
         return render(request, settings.AXES_LOCKOUT_TEMPLATE, context, status=status)
