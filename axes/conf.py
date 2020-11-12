@@ -120,3 +120,6 @@ settings.AXES_META_PRECEDENCE_ORDER = getattr(
 settings.AXES_REST_FRAMEWORK_ACTIVE = getattr(
     settings, "AXES_REST_FRAMEWORK_ACTIVE", False
 )
+
+# set CORS allowed origins when calling authentication over ajax
+settings.AXES_ALLOWED_CORS_ORIGINS = getattr(settings, "AXES_ALLOWED_CORS_ORIGINS", "*")
