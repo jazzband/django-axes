@@ -2,6 +2,7 @@ dist: xenial
 language: python
 cache: pip
 python:
+  - 3.5
   - 3.6
   - 3.7
   - 3.8
@@ -16,6 +17,13 @@ jobs:
   fast_finish: true
   allow_failures:
     - env: DJANGO=master
+  exclude:
+    - python: 3.5
+      env: DJANGO=3.0
+    - python: 3.5
+      env: DJANGO=3.1
+    - python: 3.5
+      env: DJANGO=master
   include:
     - python: 3.8
       env: TOXENV=qa
