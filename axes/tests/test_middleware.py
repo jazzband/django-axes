@@ -31,6 +31,15 @@ class MiddlewareTestCase(AxesTestCase):
         response = AxesMiddleware(get_response)(self.request)
         self.assertEqual(response.status_code, self.STATUS_LOCKOUT)
 
+    @override_settings(AXES_ENABLED=False)
+    def test_respects_enabled_switch(self):
+        def get_response(request):
+            request.axes_locked_out = True
+            return HttpResponse()
+
+        response = AxesMiddleware(get_response)(self.request)
+        self.assertEqual(response.status_code, self.STATUS_SUCCESS)
+
     @mock.patch("django.conf.settings.INSTALLED_APPS", ["rest_framework"])
     def test_response_contains_required_attrs_with_drf_integration(self):
         def get_response(request):
