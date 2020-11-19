@@ -47,7 +47,9 @@ class AxesMiddleware:
                 AxesProxyHandler.update_request(request)
                 username = get_client_username(request)
                 credentials = get_credentials(username)
-                failures_since_start = AxesProxyHandler.get_failures(request, credentials)
+                failures_since_start = AxesProxyHandler.get_failures(
+                    request, credentials
+                )
                 if (
                     settings.AXES_LOCK_OUT_AT_FAILURE
                     and failures_since_start >= get_failure_limit(request, credentials)
