@@ -32,7 +32,7 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     """ Create an AccessAttempt record if the login wasn't successful
     """
     ip_address = get_ip(request)
-    username = credentials['username']
+    username = credentials.get('username', None)
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
     path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
     http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
