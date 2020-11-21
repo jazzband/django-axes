@@ -26,6 +26,9 @@ log = logging.getLogger(settings.AXES_LOGGER)
 
 user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 
+def request_meta_get(request, key, default_value=None):
+    return getattr(request, 'META', {}).get(key, default_value)
+
 
 @receiver(user_login_failed)
 def log_user_login_failed(sender, credentials, request, **kwargs):
@@ -124,9 +127,9 @@ def log_user_logged_in(sender, request, user, **kwargs):
     """
     username = user.get_username()
     ip_address = get_ip(request)
-    user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-    http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
+    user_agent = request_meta_get(request, 'HTTP_USER_AGENT', '<unknown>')[:255]
+    path_info = request_meta_get(request, 'PATH_INFO', '<unknown>')[:255]
+    http_accept = request_meta_get(request, 'HTTP_ACCEPT', '<unknown>')[:1025]
     log.info('AXES: Successful login by {0}.'.format(
         get_client_str(username, ip_address, user_agent, path_info)
     ))

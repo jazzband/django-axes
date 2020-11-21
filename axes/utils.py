@@ -52,6 +52,7 @@ def is_ipv6(ip):
 def get_ip(request):
     """Parse IP address from REMOTE_ADDR or
     AXES_REVERSE_PROXY_HEADER if AXES_BEHIND_REVERSE_PROXY is set."""
+    request_meta = getattr(request, "META", {})
     if settings.AXES_BEHIND_REVERSE_PROXY:
         # For requests originating from behind a reverse proxy,
         # resolve the IP address from the given AXES_REVERSE_PROXY_HEADER.
@@ -63,7 +64,7 @@ def get_ip(request):
         # The REVERSE_PROXY_HEADER HTTP header is a list
         # of potentionally unsecure IPs, for example:
         #   X-Forwarded-For: 1.1.1.1, 11.11.11.11:8080, 111.111.111.111
-        ip_str = request.META.get(settings.AXES_REVERSE_PROXY_HEADER, '')
+        ip_str = request_meta.get(settings.AXES_REVERSE_PROXY_HEADER, '')
 
         # We need to know the number of proxies present in the request chain
         # in order to securely calculate the one IP that is the real client IP.
@@ -115,7 +116,7 @@ def get_ip(request):
 
         return ip
 
-    return request.META.get('REMOTE_ADDR', '')
+    return request_meta.get('REMOTE_ADDR', '')
 
 
 def reset(ip=None, username=None):
