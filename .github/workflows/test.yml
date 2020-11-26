@@ -10,7 +10,6 @@ jobs:
       max-parallel: 5
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9', 'pypy3']
-        target: ['2.2', '3.0', '3.1', 'master', 'qa']
 
     steps:
     - uses: actions/checkout@v2
@@ -42,9 +41,6 @@ jobs:
     - name: Tox tests
       run: |
         tox -v
-      env:
-        TARGET: '${{ matrix.target }}'
-
 
     - name: Upload coverage
       uses: codecov/codecov-action@v1
