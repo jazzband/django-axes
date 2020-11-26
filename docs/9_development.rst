@@ -37,7 +37,7 @@ Before committing, you can run all the above tests against all supported Python 
 
     $ tox
 
-Tox runs the same test set that is run by Travis, and your code should be good to go if it passes.
+Tox runs the same test set that is run by GitHub Actions, and your code should be good to go if it passes.
 
 If you wish to limit the testing to specific environment(s), you can parametrize the tox run::
 
