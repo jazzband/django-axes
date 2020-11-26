@@ -10,7 +10,7 @@ jobs:
       max-parallel: 5
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9', 'pypy3']
-        django-version: ['2.2', '3.0', '3.1', 'master', 'none']
+        target: ['2.2', '3.0', '3.1', 'master', 'qa']
 
     steps:
     - uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
       run: |
         tox -v
       env:
-        DJANGO: '${{ matrix.django-version }}'
+        TARGET: '${{ matrix.target }}'
 
 
     - name: Upload coverage
