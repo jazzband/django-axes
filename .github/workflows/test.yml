@@ -29,9 +29,9 @@ jobs:
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
         key:
-          ${{ matrix.django-version }}-${{ matrix.python-version }}-v1-${{ hashFiles('**/setup.py') }}
+          ${{ matrix.python-version }}-v1-${{ hashFiles('**/setup.py') }}
         restore-keys: |
-          ${{ matrix.django-version }}-${{ matrix.python-version }}-v1-
+          ${{ matrix.python-version }}-v1-
 
     - name: Install dependencies
       run: |
