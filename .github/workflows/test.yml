@@ -43,7 +43,7 @@ jobs:
       run: |
         tox -v
       env:
-        DJANGO: '${{ matrix.django_version }}'
+        DJANGO: '${{ matrix.django-version }}'
 
 
     - name: Upload coverage
