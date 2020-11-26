@@ -18,9 +18,9 @@ django-axes
    :target: https://django-axes.readthedocs.io/
    :alt: Documentation
 
-.. image:: https://secure.travis-ci.org/jazzband/django-axes.svg?branch=master
-   :target: http://travis-ci.org/jazzband/django-axes
-   :alt: Build Status
+.. image:: https://github.com/jazzband/django-axes/workflows/Test/badge.svg
+   :target: https://github.com/jazzband/django-axes/actions
+   :alt: GitHub Actions
 
 .. image:: https://codecov.io/gh/jazzband/django-axes/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/jazzband/django-axes
@@ -89,7 +89,7 @@ Merging contributions requires passing the checks configured
 with the CI. This includes running tests and linters successfully
 on the currently officially supported Python and Django versions.
 
-The test automation is run automatically by Travis CI, but you can
+The test automation is run automatically with GitHub Actions, but you can
 run it locally with the ``tox`` command before pushing commits.
 
 Please note that this is a `Jazzband <https://jazzband.co>`_ project.

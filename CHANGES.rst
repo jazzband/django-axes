@@ -2,6 +2,12 @@
 Changes
 =======
 
+Unreleased
+----------
+
+- Move tests to GitHub Actions
+  [jezdez]
+
 
 5.9.0 (2020-11-05)
 ------------------
