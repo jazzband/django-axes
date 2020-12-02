@@ -2,11 +2,14 @@
 Changes
 =======
 
-Unreleased
-----------
+
+5.9.1 (2020-12-02)
+------------------
 
 - Move tests to GitHub Actions
   [jezdez]
+- Fix running Axes code in middleware when ``AXES_ENABLED`` is ``False``.
+  [ashokdelphia]
 
 
 5.9.0 (2020-11-05)
