@@ -3,4 +3,4 @@ coverage==5.3
 pytest==6.1.2
 pytest-cov==2.10.1
 pytest-django==4.1.0
-pytest-subtests==0.3.2
+pytest-subtests==0.4.0
