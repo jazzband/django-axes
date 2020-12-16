@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.10.0 (2020-12-16)
+-------------------
+
+- Deprecate stock DRF support, require users to set it up per project.
+  Check the documentation for more information.
+  [aleksihakli]
+
+
 5.9.1 (2020-12-02)
 ------------------
 
@@ -17,9 +25,8 @@ Changes
 
 - Add Python 3.9 support.
   [hramezani]
-- Prevent ``AccessAttempt`` creation with database handler 
-  when username is not set
-  and ``AXES_ONLY_USER_FAILURES`` setting is not set.
+- Prevent ``AccessAttempt`` creation with database handler when
+  username is not set and ``AXES_ONLY_USER_FAILURES`` setting is not set.
   [hramezani]
 
 

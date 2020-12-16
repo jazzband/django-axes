@@ -115,8 +115,3 @@ settings.AXES_META_PRECEDENCE_ORDER = getattr(
     "AXES_META_PRECEDENCE_ORDER",
     getattr(settings, "IPWARE_META_PRECEDENCE_ORDER", ("REMOTE_ADDR",)),
 )
-
-# set to `True` if using with Django REST Framework
-settings.AXES_REST_FRAMEWORK_ACTIVE = getattr(
-    settings, "AXES_REST_FRAMEWORK_ACTIVE", False
-)

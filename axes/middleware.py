@@ -43,20 +43,6 @@ class AxesMiddleware:
         response = self.get_response(request)
 
         if settings.AXES_ENABLED:
-            if "rest_framework" in settings.INSTALLED_APPS:
-                AxesProxyHandler.update_request(request)
-                username = get_client_username(request)
-                credentials = get_credentials(username)
-                failures_since_start = AxesProxyHandler.get_failures(
-                    request, credentials
-                )
-                if (
-                    settings.AXES_LOCK_OUT_AT_FAILURE
-                    and failures_since_start >= get_failure_limit(request, credentials)
-                ):
-
-                    request.axes_locked_out = True
-
             if getattr(request, "axes_locked_out", None):
                 response = get_lockout_response(request)  # type: ignore
 
