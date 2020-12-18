@@ -3,7 +3,7 @@ Changes
 =======
 
 
-5.10.0 (2020-12-16)
+5.10.0 (2020-12-18)
 -------------------
 
 - Deprecate stock DRF support, require users to set it up per project.
