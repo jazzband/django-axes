@@ -53,6 +53,8 @@ def get_ip(request):
     """Parse IP address from REMOTE_ADDR or
     AXES_REVERSE_PROXY_HEADER if AXES_BEHIND_REVERSE_PROXY is set."""
     request_meta = getattr(request, "META", {})
+    if not request_meta:
+        request_meta = getattr(request, "headers", {})
     if settings.AXES_BEHIND_REVERSE_PROXY:
         # For requests originating from behind a reverse proxy,
         # resolve the IP address from the given AXES_REVERSE_PROXY_HEADER.

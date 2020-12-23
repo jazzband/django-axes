@@ -27,7 +27,11 @@ log = logging.getLogger(settings.AXES_LOGGER)
 user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 
 def request_meta_get(request, key, default_value=None):
-    return getattr(request, 'META', {}).get(key, default_value)
+    meta = getattr(request, 'META', {})
+    if not meta:
+        # oauth2_provider package stores META in headers
+        meta = getattr(request, 'headers', {})
+    return meta.get(key, default_value)
 
 
 @receiver(user_login_failed)
