@@ -57,6 +57,7 @@ def get_ip(request):
         return ''
     request_meta = getattr(request, "META", {})
     if not request_meta:
+        # oauthlib uses custom request object with Django's `META` in `headers`
         request_meta = getattr(request, "headers", {})
     if settings.AXES_BEHIND_REVERSE_PROXY:
         # For requests originating from behind a reverse proxy,

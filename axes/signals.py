@@ -29,7 +29,7 @@ user_locked_out = Signal(providing_args=['request', 'username', 'ip_address'])
 def request_meta_get(request, key, default_value=None):
     meta = getattr(request, 'META', {})
     if not meta:
-        # oauth2_provider package stores META in headers
+        # oauthlib uses custom request object with Django's `META` in `headers` attribute
         meta = getattr(request, 'headers', {})
     return meta.get(key, default_value)
 
@@ -45,9 +45,9 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
         return
     ip_address = get_ip(request)
     username = credentials.get('username', None)
-    user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    path_info = request.META.get('PATH_INFO', '<unknown>')[:255]
-    http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:1025]
+    user_agent = request_meta_get(request, 'HTTP_USER_AGENT', '<unknown>')[:255]
+    path_info = request_meta_get(request, 'PATH_INFO', '<unknown>')[:255]
+    http_accept = request_meta_get(request, 'HTTP_ACCEPT', '<unknown>')[:1025]
 
     if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
         return
