@@ -38,6 +38,11 @@ def request_meta_get(request, key, default_value=None):
 def log_user_login_failed(sender, credentials, request, **kwargs):
     """ Create an AccessAttempt record if the login wasn't successful
     """
+    # django-oauth-toolkit 1.1.3 calls authenticate without a request object
+    # (oauth2_provider/oauth2_validators.py#L605). Without request info, not
+    # much we can do here to track this.
+    if request is None:
+        return
     ip_address = get_ip(request)
     username = credentials.get('username', None)
     user_agent = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
@@ -129,6 +134,10 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
 def log_user_logged_in(sender, request, user, **kwargs):
     """ When a user logs in, update the access log
     """
+    # django-oauth-toolkit 1.1.3 calls authenticate without a request object
+    # See oauth2_provider/oauth2_validators.py#L605
+    if request is None:
+        return
     username = user.get_username()
     ip_address = get_ip(request)
     user_agent = request_meta_get(request, 'HTTP_USER_AGENT', '<unknown>')[:255]

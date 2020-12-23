@@ -52,6 +52,9 @@ def is_ipv6(ip):
 def get_ip(request):
     """Parse IP address from REMOTE_ADDR or
     AXES_REVERSE_PROXY_HEADER if AXES_BEHIND_REVERSE_PROXY is set."""
+    # django-oauth-toolkit 1.1.3 calls authenticate without a request object, let's not crash
+    if request is None:
+        return ''
     request_meta = getattr(request, "META", {})
     if not request_meta:
         request_meta = getattr(request, "headers", {})
