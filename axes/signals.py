@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.dispatch import Signal
+from django.http import HttpRequest
 from django.utils import timezone
 
 from axes.conf import settings
@@ -50,6 +51,10 @@ def log_user_login_failed(sender, credentials, request, **kwargs):
     http_accept = request_meta_get(request, 'HTTP_ACCEPT', '<unknown>')[:1025]
 
     if settings.AXES_NEVER_LOCKOUT_WHITELIST and ip_in_whitelist(ip_address):
+        return
+
+    if not isinstance(request, HttpRequest):
+        log.warning("AXES: request is not a real HttpRequest. Skipping...")
         return
 
     failures = 0
@@ -138,6 +143,8 @@ def log_user_logged_in(sender, request, user, **kwargs):
     # See oauth2_provider/oauth2_validators.py#L605
     if request is None:
         return
+    if not isinstance(request, HttpRequest):
+        log.warning("AXES: request is not a real HttpRequest")
     username = user.get_username()
     ip_address = get_ip(request)
     user_agent = request_meta_get(request, 'HTTP_USER_AGENT', '<unknown>')[:255]
