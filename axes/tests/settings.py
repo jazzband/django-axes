@@ -72,3 +72,5 @@ USE_TZ = False
 LOGIN_REDIRECT_URL = "/admin/"
 
 AXES_FAILURE_LIMIT = 10
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
