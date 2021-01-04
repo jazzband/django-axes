@@ -3,6 +3,17 @@ Changes
 =======
 
 
+5.10.1 (2021-01-04)
+-------------------
+
+- Add ``DEFAULT_AUTO_FIELD`` to test settings.
+  [hramezani]
+- Fix documentation language.
+  [danielquinn] 
+- Fix Python package version specifiers and remove redundant imports.
+  [aleksihakli]
+
+
 5.10.0 (2020-12-18)
 -------------------
 
