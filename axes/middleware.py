@@ -2,14 +2,7 @@ from typing import Callable
 
 from django.conf import settings
 
-from axes.helpers import (
-    get_lockout_response,
-    get_failure_limit,
-    get_client_username,
-    get_credentials,
-)
-
-from axes.handlers.proxy import AxesProxyHandler
+from axes.helpers import get_lockout_response
 
 
 class AxesMiddleware:
