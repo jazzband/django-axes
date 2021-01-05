@@ -6,6 +6,8 @@ Changes
 WIP
 ---
 
+- Add lockout view CORS support with ``AXES_ALLOWED_CORS_ORIGINS`` configuration flag.
+  [vladox]
 - Add missing ``@wraps`` decorator to ``axes.decorators.axes_dispatch``.
   [aleksihakli]
 
