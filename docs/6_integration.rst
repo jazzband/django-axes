@@ -100,45 +100,44 @@ Integration with Django REST Framework
 --------------------------------------
 
 .. note::
-   Modern versions of Django REST Framework after 3.7.0 work normally with Axes
-   out-of-the-box and require no customization in DRF.
+   DRF versions prior to 3.7.0 will not function properly.
 
 
-Django REST Framework versions prior to 3.7.0
-require the request object to be passed for authentication
-by a customized DRF authentication class::
+Django Axes requires REST Framework to be connected
+via lockout signals for correct functionality.
 
-    from rest_framework.authentication import BasicAuthentication
+You can use the following snippet in your project signals such as ``example/signals.py``::
 
-    class AxesBasicAuthentication(BasicAuthentication):
-        """
-        Extended basic authentication backend class that supplies the
-        request object into the authentication call for Axes compatibility.
+    from django.dispatch import receiver
 
-        NOTE: This patch is only needed for DRF versions < 3.7.0.
-        """
+    from axes.signals import user_locked_out
+    from rest_framework.exceptions import PermissionDenied
 
-        def authenticate(self, request):
-            # NOTE: Request is added as an instance attribute in here
-            self._current_request = request
-            return super().authenticate(request)
+    @receiver(user_locked_out)
+    def raise_permission_denied(*args, **kwargs):
+        raise PermissionDenied("Too many failed login attempts")
 
-        def authenticate_credentials(self, userid, password, request=None):
-            credentials = {
-                get_user_model().USERNAME_FIELD: userid,
-                'password': password
-            }
+And then configure your application to load it in ``examples/apps.py``::
 
-            # NOTE: Request is added as an argument to the authenticate call here
-            user = authenticate(request=request or self._current_request, **credentials)
+    from django import apps
 
-            if user is None:
-                raise exceptions.AuthenticationFailed(_('Invalid username/password.'))
 
-            if not user.is_active:
-                raise exceptions.AuthenticationFailed(_('User inactive or deleted.'))
+    class AppConfig(apps.AppConfig):
+        name = "example"
 
-            return (user, None)
+        def ready(self):
+            from example import signals  # noqa
+
+Please check the Django signals documentation for more information:
+
+https://docs.djangoproject.com/en/3.1/topics/signals/
+
+When a user login fails a signal is emitted and PermissionDenied
+raises a HTTP 403 reply which interrupts the login process.
+
+This functionality was handled in the middleware for a time,
+but that resulted in extra database requests being made for
+each and every web request, and was migrated to signals.
 
 
 Integration with Django Simple Captcha

@@ -3,14 +3,41 @@ Changes
 =======
 
 
+5.10.1 (2021-01-04)
+-------------------
+
+- Add ``DEFAULT_AUTO_FIELD`` to test settings.
+  [hramezani]
+- Fix documentation language.
+  [danielquinn] 
+- Fix Python package version specifiers and remove redundant imports.
+  [aleksihakli]
+
+
+5.10.0 (2020-12-18)
+-------------------
+
+- Deprecate stock DRF support, require users to set it up per project.
+  Check the documentation for more information.
+  [aleksihakli]
+
+
+5.9.1 (2020-12-02)
+------------------
+
+- Move tests to GitHub Actions
+  [jezdez]
+- Fix running Axes code in middleware when ``AXES_ENABLED`` is ``False``.
+  [ashokdelphia]
+
+
 5.9.0 (2020-11-05)
 ------------------
 
 - Add Python 3.9 support.
   [hramezani]
-- Prevent ``AccessAttempt`` creation with database handler 
-  when username is not set
-  and ``AXES_ONLY_USER_FAILURES`` setting is not set.
+- Prevent ``AccessAttempt`` creation with database handler when
+  username is not set and ``AXES_ONLY_USER_FAILURES`` setting is not set.
   [hramezani]
 
 

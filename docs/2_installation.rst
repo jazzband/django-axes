@@ -73,7 +73,7 @@ Disabling Axes system checks
 ----------------------------
 
 If you are implementing custom authentication, request middleware, or signal handlers
-the Axes checks system might false positives in the Django checks framework.
+the Axes checks system might generate false positives in the Django checks framework.
 
 You can silence the unnecessary warnings by using the following Django settings::
 

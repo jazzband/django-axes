@@ -2,14 +2,7 @@ from typing import Callable
 
 from django.conf import settings
 
-from axes.helpers import (
-    get_lockout_response,
-    get_failure_limit,
-    get_client_username,
-    get_credentials,
-)
-
-from axes.handlers.proxy import AxesProxyHandler
+from axes.helpers import get_lockout_response
 
 
 class AxesMiddleware:
@@ -42,19 +35,8 @@ class AxesMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        if "rest_framework" in settings.INSTALLED_APPS:
-            AxesProxyHandler.update_request(request)
-            username = get_client_username(request)
-            credentials = get_credentials(username)
-            failures_since_start = AxesProxyHandler.get_failures(request, credentials)
-            if (
-                settings.AXES_LOCK_OUT_AT_FAILURE
-                and failures_since_start >= get_failure_limit(request, credentials)
-            ):
-
-                request.axes_locked_out = True
-
-        if getattr(request, "axes_locked_out", None):
-            response = get_lockout_response(request)  # type: ignore
+        if settings.AXES_ENABLED:
+            if getattr(request, "axes_locked_out", None):
+                response = get_lockout_response(request)  # type: ignore
 
         return response
