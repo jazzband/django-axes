@@ -3,6 +3,13 @@ Changes
 =======
 
 
+WIP
+---
+
+- Add missing ``@wraps`` decorator to ``axes.decorators.axes_dispatch``.
+  [aleksihakli]
+
+
 5.10.1 (2021-01-04)
 -------------------
 
