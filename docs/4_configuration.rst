@@ -109,6 +109,8 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``False``
 * ``AXES_RESET_ON_SUCCESS``: If ``True``, a successful login will reset the number of failed logins.
   Default: ``False``
+* ``AXES_ALLOWED_CORS_ORIGINS``: Configures lockout response CORS headers for XHR requests.
+  Default: ``*``
 
 The configuration option precedences for the access attempt monitoring are:
 
