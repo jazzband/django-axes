@@ -5,6 +5,7 @@ from axes.helpers import get_lockout_response
 
 
 def axes_dispatch(func):
+    @wraps(func)
     def inner(request, *args, **kwargs):
         if AxesProxyHandler.is_allowed(request):
             return func(request, *args, **kwargs)
