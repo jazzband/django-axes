@@ -3,8 +3,8 @@ Changes
 =======
 
 
-WIP
----
+5.11.0 (2021-01-05)
+-------------------
 
 - Add lockout view CORS support with ``AXES_ALLOWED_CORS_ORIGINS`` configuration flag.
   [vladox]
