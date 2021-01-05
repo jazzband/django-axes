@@ -9,14 +9,13 @@ such as Django Allauth, Django REST Framework, and other tools.
 
 In the following table
 **Compatible** means that a component should be fully compatible out-of-the-box,
-**Functional** means that a component should be functional after customization, and
+**Functional** means that a component should be functional after configuration, and
 **Incompatible** means that a component has been reported as non-functional with Axes.
 
 =======================   =============   ============   ============   ==============
 Project                   Version         Compatible     Functional     Incompatible
 =======================   =============   ============   ============   ==============
-Django REST Framework     |gte| 3.7.0     |check|
-Django REST Framework     |lt| 3.7.0                     |check|
+Django REST Framework                                    |check|
 Django Allauth                                           |check|
 Django Simple Captcha                                    |check|
 Django OAuth Toolkit                                     |check|
@@ -99,10 +98,6 @@ You also need to decorate ``dispatch()`` and ``form_invalid()`` methods of the A
 Integration with Django REST Framework
 --------------------------------------
 
-.. note::
-   DRF versions prior to 3.7.0 will not function properly.
-
-
 Django Axes requires REST Framework to be connected
 via lockout signals for correct functionality.
 
@@ -112,6 +107,7 @@ You can use the following snippet in your project signals such as ``example/sign
 
     from axes.signals import user_locked_out
     from rest_framework.exceptions import PermissionDenied
+
 
     @receiver(user_locked_out)
     def raise_permission_denied(*args, **kwargs):
