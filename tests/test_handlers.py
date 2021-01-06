@@ -10,7 +10,8 @@ from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_str
 from axes.models import AccessAttempt, AccessLog
-from axes.tests.base import AxesTestCase
+
+from tests.base import AxesTestCase
 
 
 @override_settings(AXES_HANDLER="axes.handlers.base.AxesHandler")
@@ -54,7 +55,7 @@ class AxesHandlerTestCase(AxesTestCase):
                 request.path = url
                 self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
 
-    @override_settings(ROOT_URLCONF="axes.tests.urls_empty")
+    @override_settings(ROOT_URLCONF="tests.urls_empty")
     @override_settings(AXES_ONLY_ADMIN_SITE=True)
     def test_is_admin_site_no_admin_site(self):
         request = MagicMock()
@@ -240,7 +241,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_handler_callable_failure_limit(self):
         self.check_handler()
 
-    @override_settings(AXES_FAILURE_LIMIT="axes.tests.base.custom_failure_limit")
+    @override_settings(AXES_FAILURE_LIMIT="tests.base.custom_failure_limit")
     def test_handler_str_failure_limit(self):
         self.check_handler()
 

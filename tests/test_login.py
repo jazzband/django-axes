@@ -14,7 +14,8 @@ from django.contrib.auth import get_user_model, login, logout
 from axes.conf import settings
 from axes.models import AccessAttempt
 from axes.helpers import get_cache, make_cache_key_list
-from axes.tests.base import AxesTestCase
+
+from tests.base import AxesTestCase
 
 
 class DjangoLoginTestCase(TestCase):

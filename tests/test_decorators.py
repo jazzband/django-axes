@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 from django.http import HttpResponse
 
 from axes.decorators import axes_dispatch, axes_form_invalid
-from axes.tests.base import AxesTestCase
+
+from tests.base import AxesTestCase
 
 
 class DecoratorTestCase(AxesTestCase):

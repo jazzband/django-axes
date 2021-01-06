@@ -3,7 +3,8 @@ from django.test import override_settings, modify_settings
 
 from axes.backends import AxesBackend
 from axes.checks import Messages, Hints, Codes
-from axes.tests.base import AxesTestCase
+
+from tests.base import AxesTestCase
 
 
 class CacheCheckTestCase(AxesTestCase):
@@ -75,14 +76,14 @@ class BackendCheckTestCase(AxesTestCase):
         self.assertEqual(warnings, [warning])
 
     @override_settings(
-        AUTHENTICATION_BACKENDS=["axes.tests.test_checks.AxesSpecializedBackend"]
+        AUTHENTICATION_BACKENDS=["tests.test_checks.AxesSpecializedBackend"]
     )
     def test_specialized_backend(self):
         warnings = run_checks()
         self.assertEqual(warnings, [])
 
     @override_settings(
-        AUTHENTICATION_BACKENDS=["axes.tests.test_checks.AxesNotDefinedBackend"]
+        AUTHENTICATION_BACKENDS=["tests.test_checks.AxesNotDefinedBackend"]
     )
     def test_import_error(self):
         with self.assertRaises(ImportError):

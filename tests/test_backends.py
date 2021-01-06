@@ -5,7 +5,8 @@ from axes.exceptions import (
     AxesBackendRequestParameterRequired,
     AxesBackendPermissionDenied,
 )
-from axes.tests.base import AxesTestCase
+
+from tests.base import AxesTestCase
 
 
 class BackendTestCase(AxesTestCase):
