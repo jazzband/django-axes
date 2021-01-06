@@ -26,7 +26,8 @@ Changes
 5.10.0 (2020-12-18)
 -------------------
 
-- Deprecate stock DRF support, require users to set it up per project.
+- Deprecate stock DRF support from 5.8.0,
+  require users to set it up per project.
   Check the documentation for more information.
   [aleksihakli]
 
