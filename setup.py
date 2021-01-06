@@ -38,7 +38,8 @@ setup(
     python_requires="~=3.6",
     install_requires=["django>=2.2", "django-ipware>=3,<4"],
     include_package_data=True,
-    packages=find_packages(),
+    packages=find_packages(exclude=["axes.tests"]),
+    exclude_package_data={"axes": ["tests/*"]},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
