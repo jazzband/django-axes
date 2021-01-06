@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.11.1 (2021-01-06)
+-------------------
+
+- Fix cache entry creations for None username.
+  [cabarnes]
+
+
 5.11.0 (2021-01-05)
 -------------------
 
