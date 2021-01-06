@@ -261,14 +261,14 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_whitelist(self, log):
         self.check_whitelist(log)
 
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     @patch("axes.handlers.database.log")
     def test_user_login_failed_only_user_failures_with_none_username(self, log):
-        with self.settings(**{"AXES_ONLY_USER_FAILURES": True}):
-            credentials = {"username": None, "password": "test"}
-            sender = MagicMock()
-            AxesProxyHandler.user_login_failed(sender, credentials, self.request)
-            attempt = AccessAttempt.objects.all()
-            self.assertEqual(0, AccessAttempt.objects.count())
+        credentials = {"username": None, "password": "test"}
+        sender = MagicMock()
+        AxesProxyHandler.user_login_failed(sender, credentials, self.request)
+        attempt = AccessAttempt.objects.all()
+        self.assertEqual(0, AccessAttempt.objects.count())
         log.warning.assert_called_with(
             "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
         )
@@ -355,15 +355,15 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
     def test_whitelist(self, log):
         self.check_whitelist(log)
 
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
     @patch.object(cache, "set")
     @patch("axes.handlers.cache.log")
     def test_user_login_failed_only_user_failures_with_none_username(
         self, log, cache_set
     ):
-        with self.settings(**{"AXES_ONLY_USER_FAILURES": True}):
-            credentials = {"username": None, "password": "test"}
-            sender = MagicMock()
-            AxesProxyHandler.user_login_failed(sender, credentials, self.request)
+        credentials = {"username": None, "password": "test"}
+        sender = MagicMock()
+        AxesProxyHandler.user_login_failed(sender, credentials, self.request)
         self.assertFalse(cache_set.called)
         log.warning.assert_called_with(
             "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
