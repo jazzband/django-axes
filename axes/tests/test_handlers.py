@@ -355,9 +355,11 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
     def test_whitelist(self, log):
         self.check_whitelist(log)
 
-    @patch.object(cache, 'set')
+    @patch.object(cache, "set")
     @patch("axes.handlers.cache.log")
-    def test_user_login_failed_only_user_failures_with_none_username(self, log, cache_set):
+    def test_user_login_failed_only_user_failures_with_none_username(
+        self, log, cache_set
+    ):
         with self.settings(**{"AXES_ONLY_USER_FAILURES": True}):
             credentials = {"username": None, "password": "test"}
             sender = MagicMock()
@@ -367,7 +369,7 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
             "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
         )
 
-    @patch.object(cache, 'set')
+    @patch.object(cache, "set")
     def test_user_login_failed_with_none_username(self, cache_set):
         credentials = {"username": None, "password": "test"}
         sender = MagicMock()
