@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+from django.core.cache import cache
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -353,6 +354,25 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
     @patch("axes.handlers.cache.log")
     def test_whitelist(self, log):
         self.check_whitelist(log)
+
+    @patch.object(cache, 'set')
+    @patch("axes.handlers.cache.log")
+    def test_user_login_failed_only_user_failures_with_none_username(self, log, cache_set):
+        with self.settings(**{"AXES_ONLY_USER_FAILURES": True}):
+            credentials = {"username": None, "password": "test"}
+            sender = MagicMock()
+            AxesProxyHandler.user_login_failed(sender, credentials, self.request)
+        self.assertFalse(cache_set.called)
+        log.warning.assert_called_with(
+            "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
+        )
+
+    @patch.object(cache, 'set')
+    def test_user_login_failed_with_none_username(self, cache_set):
+        credentials = {"username": None, "password": "test"}
+        sender = MagicMock()
+        AxesProxyHandler.user_login_failed(sender, credentials, self.request)
+        self.assertTrue(cache_set.called)
 
 
 @override_settings(AXES_HANDLER="axes.handlers.dummy.AxesDummyHandler")
