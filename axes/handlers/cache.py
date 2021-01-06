@@ -48,6 +48,12 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         username = get_client_username(request, credentials)
+        if settings.AXES_ONLY_USER_FAILURES and username is None:
+            log.warning(
+                "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
+            )
+            return
+
         client_str = get_client_str(
             username,
             request.axes_ip_address,
