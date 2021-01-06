@@ -1,11 +1,9 @@
-from unittest import mock
-
 from django.http import HttpResponse, HttpRequest
-from django.conf import settings
 from django.test import override_settings
 
 from axes.middleware import AxesMiddleware
-from axes.tests.base import AxesTestCase
+
+from tests.base import AxesTestCase
 
 
 class MiddlewareTestCase(AxesTestCase):

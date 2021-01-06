@@ -6,7 +6,8 @@ from django.test import override_settings
 
 import axes.admin
 from axes.models import AccessAttempt, AccessLog
-from axes.tests.base import AxesTestCase
+
+from tests.base import AxesTestCase
 
 
 class AxesEnableAdminFlag(AxesTestCase):

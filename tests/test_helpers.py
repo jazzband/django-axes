@@ -5,7 +5,8 @@ from django.http import HttpRequest, HttpResponse
 from django.test import override_settings
 
 from axes.helpers import get_cool_off, get_lockout_response, is_user_attempt_whitelisted
-from axes.tests.base import AxesTestCase
+
+from tests.base import AxesTestCase
 
 
 def mock_get_cool_off_str():
@@ -25,9 +26,7 @@ class AxesCoolOffTestCase(AxesTestCase):
     def test_get_cool_off_callable(self):
         self.assertEqual(get_cool_off(), timedelta(seconds=30))
 
-    @override_settings(
-        AXES_COOLOFF_TIME="axes.tests.test_helpers.mock_get_cool_off_str"
-    )
+    @override_settings(AXES_COOLOFF_TIME="tests.test_helpers.mock_get_cool_off_str")
     def test_get_cool_off_path(self):
         self.assertEqual(get_cool_off(), timedelta(seconds=30))
 
@@ -50,9 +49,7 @@ class AxesWhitelistTestCase(AxesTestCase):
     def test_is_whitelisted_override_callable(self):
         self.assertTrue(is_user_attempt_whitelisted(self.request, self.credentials))
 
-    @override_settings(
-        AXES_WHITELIST_CALLABLE="axes.tests.test_helpers.mock_is_whitelisted"
-    )
+    @override_settings(AXES_WHITELIST_CALLABLE="tests.test_helpers.mock_is_whitelisted")
     def test_is_whitelisted_override_path(self):
         self.assertTrue(is_user_attempt_whitelisted(self.request, self.credentials))
 
@@ -81,7 +78,7 @@ class AxesLockoutTestCase(AxesTestCase):
         self.assertEqual(400, response.status_code)
 
     @override_settings(
-        AXES_LOCKOUT_CALLABLE="axes.tests.test_helpers.mock_get_lockout_response"
+        AXES_LOCKOUT_CALLABLE="tests.test_helpers.mock_get_lockout_response"
     )
     def test_get_lockout_response_override_path(self):
         response = get_lockout_response(self.request, self.credentials)

@@ -12,7 +12,7 @@ from pkg_resources import get_distribution
 import django
 import sphinx_rtd_theme
 
-environ.setdefault("DJANGO_SETTINGS_MODULE", "axes.tests.settings")
+environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
 django.setup()
 
 # -- Extra custom configuration  ------------------------------------------

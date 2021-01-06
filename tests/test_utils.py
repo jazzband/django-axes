@@ -7,7 +7,6 @@ from django.test import override_settings, RequestFactory
 
 from axes.apps import AppConfig
 from axes.models import AccessAttempt
-from axes.tests.base import AxesTestCase
 from axes.helpers import (
     get_cache_timeout,
     get_client_str,
@@ -23,6 +22,8 @@ from axes.helpers import (
     is_client_method_whitelisted,
     toggleable,
 )
+
+from tests.base import AxesTestCase
 
 
 @override_settings(AXES_ENABLED=False)
@@ -488,7 +489,7 @@ class UsernameTestCase(AxesTestCase):
         with self.assertRaises(TypeError):
             get_client_username(HttpRequest(), {})
 
-    @override_settings(AXES_USERNAME_CALLABLE="axes.tests.test_utils.get_username")
+    @override_settings(AXES_USERNAME_CALLABLE="tests.test_utils.get_username")
     def test_get_client_username_str(self):
         self.assertEqual(get_client_username(HttpRequest(), {}), "username")
 
