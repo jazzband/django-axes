@@ -5,7 +5,6 @@ from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.state import ProjectState
 
 from axes.models import AccessAttempt, AccessLog
-
 from tests.base import AxesTestCase
 
 

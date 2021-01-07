@@ -7,7 +7,6 @@ from django.http import JsonResponse, HttpResponseRedirect, HttpResponse, HttpRe
 from django.test import override_settings, RequestFactory
 
 from axes.apps import AppConfig
-from axes.models import AccessAttempt
 from axes.helpers import (
     get_cache_timeout,
     get_client_str,
@@ -25,7 +24,7 @@ from axes.helpers import (
     is_user_attempt_whitelisted,
     toggleable,
 )
-
+from axes.models import AccessAttempt
 from tests.base import AxesTestCase
 
 

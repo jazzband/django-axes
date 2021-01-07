@@ -6,15 +6,14 @@ TODO: Clean up the tests in this module.
 
 from importlib import import_module
 
+from django.contrib.auth import get_user_model, login, logout
 from django.http import HttpRequest
 from django.test import override_settings, TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model, login, logout
 
 from axes.conf import settings
-from axes.models import AccessAttempt
 from axes.helpers import get_cache, make_cache_key_list
-
+from axes.models import AccessAttempt
 from tests.base import AxesTestCase
 
 

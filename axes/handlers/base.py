@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import re
+from abc import ABC, abstractmethod
 
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch

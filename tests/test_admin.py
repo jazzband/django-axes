@@ -6,7 +6,6 @@ from django.test import override_settings
 
 import axes.admin
 from axes.models import AccessAttempt, AccessLog
-
 from tests.base import AxesTestCase
 
 

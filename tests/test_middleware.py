@@ -2,7 +2,6 @@ from django.http import HttpResponse, HttpRequest
 from django.test import override_settings
 
 from axes.middleware import AxesMiddleware
-
 from tests.base import AxesTestCase
 
 

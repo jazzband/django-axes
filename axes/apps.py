@@ -1,7 +1,7 @@
 from logging import getLogger
-from pkg_resources import get_distribution
 
 from django import apps
+from pkg_resources import get_distribution
 
 log = getLogger(__name__)
 

@@ -7,7 +7,6 @@ from django.utils.timezone import now
 from axes.attempts import get_cool_off_threshold
 from axes.models import AccessAttempt
 from axes.utils import reset, reset_request
-
 from tests.base import AxesTestCase
 
 

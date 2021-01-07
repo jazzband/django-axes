@@ -7,10 +7,10 @@ More information on the configuration options is available at:
 """
 
 from os import environ
-from pkg_resources import get_distribution
 
 import django
 import sphinx_rtd_theme
+from pkg_resources import get_distribution
 
 environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
 django.setup()

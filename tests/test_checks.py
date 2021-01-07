@@ -3,7 +3,6 @@ from django.test import override_settings, modify_settings
 
 from axes.backends import AxesBackend
 from axes.checks import Messages, Hints, Codes
-
 from tests.base import AxesTestCase
 
 

@@ -2,7 +2,6 @@ from logging import getLogger
 
 from axes.conf import settings
 from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
-from axes.signals import user_locked_out
 from axes.helpers import (
     get_cache,
     get_cache_timeout,
@@ -12,6 +11,7 @@ from axes.helpers import (
     get_credentials,
     get_failure_limit,
 )
+from axes.signals import user_locked_out
 
 log = getLogger(__name__)
 

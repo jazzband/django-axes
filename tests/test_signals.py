@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 from axes.signals import user_locked_out
-
 from tests.base import AxesTestCase
 
 

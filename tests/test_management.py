@@ -5,7 +5,6 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from axes.models import AccessAttempt, AccessLog
-
 from tests.base import AxesTestCase
 
 
