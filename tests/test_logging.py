@@ -5,7 +5,6 @@ from django.urls import reverse
 
 from axes.apps import AppConfig
 from axes.models import AccessAttempt, AccessLog
-
 from tests.base import AxesTestCase
 
 

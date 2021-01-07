@@ -1,12 +1,12 @@
-from typing import List
 from logging import getLogger
+from typing import List
 
 from django.db.models import QuerySet
 from django.utils.timezone import datetime, now
 
 from axes.conf import settings
-from axes.models import AccessAttempt
 from axes.helpers import get_client_username, get_client_parameters, get_cool_off
+from axes.models import AccessAttempt
 
 log = getLogger(__name__)
 

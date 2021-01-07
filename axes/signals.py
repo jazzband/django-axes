@@ -7,11 +7,11 @@ from django.contrib.auth.signals import (
 )
 from django.core.signals import setting_changed
 from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from django.dispatch import Signal
+from django.dispatch import receiver
 
-from axes.models import AccessAttempt
 from axes.handlers.proxy import AxesProxyHandler
+from axes.models import AccessAttempt
 
 log = getLogger(__name__)
 

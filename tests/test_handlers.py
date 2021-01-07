@@ -10,7 +10,6 @@ from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_str
 from axes.models import AccessAttempt, AccessLog
-
 from tests.base import AxesTestCase
 
 

@@ -11,8 +11,6 @@ from axes.attempts import (
 )
 from axes.conf import settings
 from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
-from axes.models import AccessLog, AccessAttempt
-from axes.signals import user_locked_out
 from axes.helpers import (
     get_client_str,
     get_client_username,
@@ -20,7 +18,8 @@ from axes.helpers import (
     get_failure_limit,
     get_query_str,
 )
-
+from axes.models import AccessLog, AccessAttempt
+from axes.signals import user_locked_out
 
 log = getLogger(__name__)
 

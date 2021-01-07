@@ -8,7 +8,6 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils.timezone import now
 
-from axes.utils import reset
 from axes.conf import settings
 from axes.helpers import (
     get_cache,
@@ -21,6 +20,7 @@ from axes.helpers import (
     get_failure_limit,
 )
 from axes.models import AccessAttempt, AccessLog
+from axes.utils import reset
 
 
 def custom_failure_limit(request, credentials):
