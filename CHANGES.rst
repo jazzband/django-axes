@@ -3,6 +3,18 @@ Changes
 =======
 
 
+5.12.0 (2021-01-07)
+-------------------
+
+- Clean up test structure and migrate tests outside
+  the main package for a smaller wheel distributions.
+  [aleksihakli]
+- Move configuration to pyproject.toml for cleaner layout.
+  [aleksihakli]
+- Clean up test settings override configuration.
+  [hramezani]
+
+
 5.11.1 (2021-01-06)
 -------------------
 
