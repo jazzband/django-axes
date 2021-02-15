@@ -43,7 +43,7 @@ setenv =
     PYTHONDONTWRITEBYTECODE=1
 
 # Django development version is allowed to fail the test matrix
-[testenv:py{36,37,38,39,py3}-dj{dev}]
+[testenv:py{36,37,38,39,py3}-djdev]
 ignore_errors = true
 ignore_outcome = true
 
