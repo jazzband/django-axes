@@ -105,7 +105,13 @@ class AxesTestCase(TestCase):
     def reset(self, ip=None, username=None):
         return reset(ip, username)
 
-    def login(self, is_valid_username=False, is_valid_password=False, **kwargs):
+    def login(
+        self,
+        is_valid_username=False,
+        is_valid_password=False,
+        remote_addr=None,
+        **kwargs
+    ):
         """
         Login a user.
 
@@ -128,7 +134,7 @@ class AxesTestCase(TestCase):
         return self.client.post(
             reverse("admin:login"),
             post_data,
-            REMOTE_ADDR=self.ip_address,
+            REMOTE_ADDR=remote_addr or self.ip_address,
             HTTP_USER_AGENT=self.user_agent,
         )
 
