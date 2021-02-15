@@ -11,6 +11,7 @@ from axes.helpers import (
     get_credentials,
     get_failure_limit,
 )
+from axes.models import AccessBase
 from axes.signals import user_locked_out
 
 log = getLogger(__name__)
@@ -24,6 +25,35 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
     def __init__(self):
         self.cache = get_cache()
         self.cache_timeout = get_cache_timeout()
+
+    def reset_attempts(
+        self,
+        *,
+        ip_address: str = None,
+        username: str = None,
+        ip_or_username: bool = False,
+    ) -> int:
+        cache_keys: list = []
+        count = 0
+
+        if ip_address is None and username is None:
+            raise NotImplementedError("Cannot clear all entries from cache")
+        if ip_or_username:
+            raise NotImplementedError(
+                "Due to the cache key ip_or_username=True is not supported"
+            )
+
+        cache_keys.extend(
+            get_client_cache_key(AccessBase(username=username, ip_address=ip_address))
+        )
+
+        for cache_key in cache_keys:
+            deleted = self.cache.delete(cache_key)
+            count += int(deleted) if deleted is not None else 1
+
+        log.info("AXES: Reset %d access attempts from database.", count)
+
+        return count
 
     def get_failures(self, request, credentials: dict = None) -> int:
         cache_keys = get_client_cache_key(request, credentials)

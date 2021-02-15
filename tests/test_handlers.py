@@ -330,6 +330,98 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
             AccessAttempt.objects.all().delete()
 
 
+@override_settings(AXES_HANDLER="axes.handlers.cache.AxesCacheHandler")
+class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
+    """ Test reset attempts for the cache handler """
+
+    USERNAME_1 = "foo_username"
+    USERNAME_2 = "bar_username"
+    IP_1 = "127.1.0.1"
+    IP_2 = "127.1.0.2"
+
+    def set_up_login_attemtps(self):
+        """Set up the login attempts."""
+        self.login(username=self.USERNAME_1, remote_addr=self.IP_1)
+        self.login(username=self.USERNAME_1, remote_addr=self.IP_2)
+        self.login(username=self.USERNAME_2, remote_addr=self.IP_1)
+        self.login(username=self.USERNAME_2, remote_addr=self.IP_2)
+
+    def check_failures(self, failures, username=None, ip_address=None):
+        if ip_address is None and username is None:
+            raise NotImplementedError("Must supply ip_address or username")
+        try:
+            prev_ip = self.request.META["REMOTE_ADDR"]
+            credentials = {"username": username} if username else {}
+            if ip_address is not None:
+                self.request.META["REMOTE_ADDR"] = ip_address
+            self.assertEqual(
+                failures,
+                AxesProxyHandler.get_failures(self.request, credentials=credentials),
+            )
+        finally:
+            self.request.META["REMOTE_ADDR"] = prev_ip
+
+    def test_handler_reset_attempts(self):
+        with self.assertRaises(NotImplementedError):
+            AxesProxyHandler.reset_attempts()
+
+    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    def test_handler_reset_attempts_username(self):
+        self.set_up_login_attemtps()
+        self.assertEqual(
+            2,
+            AxesProxyHandler.get_failures(
+                self.request, credentials={"username": self.USERNAME_1}
+            ),
+        )
+        self.assertEqual(
+            2,
+            AxesProxyHandler.get_failures(
+                self.request, credentials={"username": self.USERNAME_2}
+            ),
+        )
+        self.assertEqual(1, AxesProxyHandler.reset_attempts(username=self.USERNAME_1))
+        self.assertEqual(
+            0,
+            AxesProxyHandler.get_failures(
+                self.request, credentials={"username": self.USERNAME_1}
+            ),
+        )
+        self.assertEqual(
+            2,
+            AxesProxyHandler.get_failures(
+                self.request, credentials={"username": self.USERNAME_2}
+            ),
+        )
+
+    def test_handler_reset_attempts_ip(self):
+        self.set_up_login_attemtps()
+        self.check_failures(2, ip_address=self.IP_1)
+        self.assertEqual(1, AxesProxyHandler.reset_attempts(ip_address=self.IP_1))
+        self.check_failures(0, ip_address=self.IP_1)
+        self.check_failures(2, ip_address=self.IP_2)
+
+    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    def test_handler_reset_attempts_ip_and_username(self):
+        self.set_up_login_attemtps()
+        self.check_failures(1, username=self.USERNAME_1, ip_address=self.IP_1)
+        self.check_failures(1, username=self.USERNAME_2, ip_address=self.IP_1)
+        self.check_failures(1, username=self.USERNAME_1, ip_address=self.IP_2)
+        self.assertEqual(
+            1,
+            AxesProxyHandler.reset_attempts(
+                ip_address=self.IP_1, username=self.USERNAME_1
+            ),
+        )
+        self.check_failures(0, username=self.USERNAME_1, ip_address=self.IP_1)
+        self.check_failures(1, username=self.USERNAME_2, ip_address=self.IP_1)
+        self.check_failures(1, username=self.USERNAME_1, ip_address=self.IP_2)
+
+    def test_handler_reset_attempts_ip_or_username(self):
+        with self.assertRaises(NotImplementedError):
+            AxesProxyHandler.reset_attempts()
+
+
 @override_settings(
     AXES_HANDLER="axes.handlers.cache.AxesCacheHandler",
     AXES_COOLOFF_TIME=timedelta(seconds=1),
