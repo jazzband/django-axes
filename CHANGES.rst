@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.13.0 (2021-02-15)
+-------------------
+
+- Add support for resetting attempts with cache backend.
+  [nattyg93]
+
+
 5.12.0 (2021-01-07)
 -------------------
 
