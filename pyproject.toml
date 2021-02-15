@@ -10,9 +10,9 @@ DJANGO_SETTINGS_MODULE = "tests.settings"
 legacy_tox_ini = """
 [tox]
 envlist =
-    py38-djqa
     py{36,37,38,39,py3}-dj{22,30,31}
-    py{38,39,py3}-dj{dev}
+    py{38,39}-dj{dev}
+    py38-djqa
 
 [gh-actions]
 python =
