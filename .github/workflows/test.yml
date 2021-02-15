@@ -10,11 +10,21 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9', 'pypy3']
-        django-version: ['2.2', '3.0', '3.1', 'dev']
+        django-version: ['2.2', '3.0', '3.1']
         # Tox configuration for QA environment
         include:
           - python-version: '3.8'
             django-version: 'qa'
+          # Django >= 3.2 only supports >= Python 3.8
+          - python-version: '3.8'
+            django-version: 'dev'
+            experimental: true
+          - python-version: '3.9'
+            django-version: 'dev'
+            experimental: true
+          - python-version: 'pypy3'
+            django-version: 'dev'
+            experimental: true
 
     steps:
     - uses: actions/checkout@v2

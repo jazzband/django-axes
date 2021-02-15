@@ -11,7 +11,8 @@ legacy_tox_ini = """
 [tox]
 envlist =
     py38-djqa
-    py{36,37,38,39,py3}-dj{22,30,31,dev}
+    py{36,37,38,39,py3}-dj{22,30,31}
+    py{38,39,py3}-dj{dev}
 
 [gh-actions]
 python =
@@ -43,7 +44,7 @@ setenv =
     PYTHONDONTWRITEBYTECODE=1
 
 # Django development version is allowed to fail the test matrix
-[testenv:py{36,37,38,39,py3}-djdev]
+[testenv:py{38,39,py3}-dj{dev}]
 ignore_errors = true
 ignore_outcome = true
 
