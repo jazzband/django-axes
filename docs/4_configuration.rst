@@ -57,7 +57,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``False``
 * ``AXES_HANDLER``: The path to the handler class to use.
   If set, overrides the default signal handler backend.
-  Default: ``'axes.handlers.database.DatabaseHandler'``
+  Default: ``'axes.handlers.database.AxesDatabaseHandler'``
 * ``AXES_CACHE``: The name of the cache for Axes to use.
   Default: ``'default'``
 * ``AXES_LOCKOUT_TEMPLATE``: If set, specifies a template to render when a
