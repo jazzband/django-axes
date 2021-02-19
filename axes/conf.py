@@ -67,7 +67,7 @@ settings.AXES_LOCKOUT_URL = getattr(settings, "AXES_LOCKOUT_URL", None)
 
 settings.AXES_COOLOFF_TIME = getattr(settings, "AXES_COOLOFF_TIME", None)
 
-settings.AXES_VERBOSE = getattr(settings, "AXES_VERBOSE", True)
+settings.AXES_VERBOSE = getattr(settings, "AXES_VERBOSE", settings.AXES_ENABLED)
 
 # whitelist and blacklist
 settings.AXES_NEVER_LOCKOUT_WHITELIST = getattr(
