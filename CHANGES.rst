@@ -6,6 +6,9 @@ Changes
 WIP (2021)
 ----------
 
+- Set `AXES_VERBOSE` to default to `AXES_ENABLED` settings flag,
+  disabling verbose startup logging when Axes itself is disabled.
+  [christianbundy]
 - Update documentation.
   [KStenK]
 
