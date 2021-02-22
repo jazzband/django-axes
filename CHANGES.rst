@@ -3,8 +3,8 @@ Changes
 =======
 
 
-WIP (2021)
-----------
+5.13.1 (2021-02-22)
+-------------------
 
 - Default ``AXES_VERBOSE`` to ``AXES_ENABLED`` configuration setting,
   disabling verbose startup logging when Axes itself is disabled.
