@@ -86,7 +86,7 @@ settings.AXES_IP_BLACKLIST = getattr(settings, "AXES_IP_BLACKLIST", None)
 settings.AXES_COOLOFF_MESSAGE = getattr(
     settings,
     "AXES_COOLOFF_MESSAGE",
-    _("Account locked: too many login attempts. Please try again later"),
+    _("Account locked: too many login attempts. Please try again later."),
 )
 
 # message to show when locked out and have cooloff disabled
