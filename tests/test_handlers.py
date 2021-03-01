@@ -1,4 +1,7 @@
+from platform import python_implementation
 from unittest.mock import MagicMock, patch
+
+from pytest import mark
 
 from django.core.cache import cache
 from django.test import override_settings
@@ -206,6 +209,7 @@ class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
     AXES_COOLOFF_TIME=timedelta(seconds=2),
     AXES_RESET_ON_SUCCESS=True,
 )
+@mark.xfail(python_implementation() == "PyPy", reason="PyPy implementation is flaky for this test", strict=False)
 class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_handler_reset_attempts(self):
         self.create_attempt()
