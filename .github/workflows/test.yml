@@ -17,13 +17,13 @@ jobs:
             django-version: 'qa'
           # Django >= 3.2 only supports >= Python 3.8
           - python-version: '3.8'
-            django-version: 'dev'
+            django-version: 'main'
             experimental: true
           - python-version: '3.9'
-            django-version: 'dev'
+            django-version: 'main'
             experimental: true
           - python-version: 'pypy3'
-            django-version: 'dev'
+            django-version: 'main'
             experimental: true
 
     steps:
