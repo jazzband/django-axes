@@ -11,7 +11,7 @@ from axes.helpers import (
     get_credentials,
     get_failure_limit,
 )
-from axes.models import AccessBase
+from axes.models import AccessAttempt
 from axes.signals import user_locked_out
 
 log = getLogger(__name__)
@@ -44,7 +44,9 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             )
 
         cache_keys.extend(
-            get_client_cache_key(AccessBase(username=username, ip_address=ip_address))
+            get_client_cache_key(
+                AccessAttempt(username=username, ip_address=ip_address)
+            )
         )
 
         for cache_key in cache_keys:
