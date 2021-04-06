@@ -1,6 +1,6 @@
 -e .
 coverage==5.5
-pytest==6.2.2
+pytest==6.2.3
 pytest-cov==2.11.1
 pytest-django==4.1.0
 pytest-subtests==0.4.0
