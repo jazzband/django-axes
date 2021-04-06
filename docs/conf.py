@@ -6,14 +6,15 @@ More information on the configuration options is available at:
     http://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-from os import environ
-
-import django
 import sphinx_rtd_theme
 from pkg_resources import get_distribution
 
-environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
+import django
+from django.conf import settings
+
+settings.configure(INSTALLED_APPS=["django", "django.contrib.auth", "axes"], DEBUG=True)
 django.setup()
+
 
 # -- Extra custom configuration  ------------------------------------------
 
