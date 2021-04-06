@@ -2,14 +2,15 @@
 Changes
 =======
 
-WIP
----
+
+5.14.0 (2021-04-06)
+-------------------
 
 - Improve message formatting for lockout message and translations.
   [ashokdelphia]
-- Remove support for Django 3.0
+- Remove support for Django 3.0.
   [hramezani]
-- Add support for Django 3.2
+- Add support for Django 3.2.
   [hramezani]
 
 
