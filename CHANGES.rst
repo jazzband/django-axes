@@ -7,6 +7,8 @@ WIP
 
 - Improve message formatting for lockout message and translations.
   [ashokdelphia]
+- Remove support for Django 3.0
+  [hramezani]
 - Add support for Django 3.2
   [hramezani]
 

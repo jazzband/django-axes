@@ -45,7 +45,6 @@ setup(
         "Environment :: Plugins",
         "Framework :: Django",
         "Framework :: Django :: 2.2",
-        "Framework :: Django :: 3.0",
         "Framework :: Django :: 3.1",
         "Framework :: Django :: 3.2",
         "Intended Audience :: Developers",
