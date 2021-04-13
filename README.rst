@@ -14,6 +14,14 @@ django-axes
    :target: https://pypi.org/project/django-axes/
    :alt: PyPI release
 
+.. image:: https://img.shields.io/pypi/pyversions/django-axes.svg
+   :target: https://pypi.org/project/django-axes/
+   :alt: Supported Python versions
+
+.. image:: https://img.shields.io/pypi/djversions/django-axes.svg
+   :target: https://pypi.org/project/django-axes/
+   :alt: Supported Django versions
+
 .. image:: https://img.shields.io/readthedocs/django-axes.svg
    :target: https://django-axes.readthedocs.io/
    :alt: Documentation
