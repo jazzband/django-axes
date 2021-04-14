@@ -118,3 +118,12 @@ settings.AXES_META_PRECEDENCE_ORDER = getattr(
 
 # set CORS allowed origins when calling authentication over ajax
 settings.AXES_ALLOWED_CORS_ORIGINS = getattr(settings, "AXES_ALLOWED_CORS_ORIGINS", "*")
+
+# set the list of sensitive parameters to cleanse from get/post data before logging
+settings.AXES_SENSITIVE_PARAMETERS = getattr(
+    settings,
+    "AXES_SENSITIVE_PARAMETERS",
+    [
+        "password",
+    ],
+)
