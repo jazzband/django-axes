@@ -23,6 +23,7 @@ from axes.helpers import (
     is_ip_address_in_whitelist,
     is_user_attempt_whitelisted,
     toggleable,
+    cleanse_params,
 )
 from axes.models import AccessAttempt
 from tests.base import AxesTestCase
@@ -602,6 +603,7 @@ class LockoutResponseTestCase(AxesTestCase):
         response = get_lockout_response(request=self.request)
         self.assertEqual(type(response), HttpResponse)
 
+
 def mock_get_cool_off_str():
     return timedelta(seconds=30)
 
@@ -681,3 +683,32 @@ class AxesLockoutTestCase(AxesTestCase):
     def test_get_lockout_response_override_invalid(self):
         with self.assertRaises(TypeError):
             get_lockout_response(self.request, self.credentials)
+
+
+class AxesCleanseParamsTestCase(AxesTestCase):
+    def setUp(self):
+        self.params = {
+            "username": "test_user",
+            "password": "test_password",
+            "other_sensitive_data": "sensitive",
+        }
+
+    def test_cleanse_params(self):
+        cleansed = cleanse_params(self.params)
+        self.assertEqual("test_user", cleansed["username"])
+        self.assertEqual("********************", cleansed["password"])
+        self.assertEqual("sensitive", cleansed["other_sensitive_data"])
+
+    @override_settings(AXES_SENSITIVE_PARAMETERS=["other_sensitive_data"])
+    def test_cleanse_params_override(self):
+        cleansed = cleanse_params(self.params)
+        self.assertEqual("test_user", cleansed["username"])
+        self.assertEqual("test_password", cleansed["password"])
+        self.assertEqual("********************", cleansed["other_sensitive_data"])
+
+    @override_settings(AXES_SENSITIVE_PARAMETERS=[])
+    def test_cleanse_params_override_empty(self):
+        cleansed = cleanse_params(self.params)
+        self.assertEqual("test_user", cleansed["username"])
+        self.assertEqual("test_password", cleansed["password"])
+        self.assertEqual("sensitive", cleansed["other_sensitive_data"])

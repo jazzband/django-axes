@@ -17,6 +17,7 @@ from axes.helpers import (
     get_credentials,
     get_failure_limit,
     get_query_str,
+    cleanse_params,
 )
 from axes.models import AccessLog, AccessAttempt
 from axes.signals import user_locked_out
@@ -109,8 +110,8 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         )
 
         # This replaces null byte chars that crash saving failures, meaning an attacker doesn't get locked out.
-        get_data = get_query_str(request.GET).replace("\0", "0x00")
-        post_data = get_query_str(request.POST).replace("\0", "0x00")
+        get_data = get_query_str(cleanse_params(request.GET)).replace("\0", "0x00")
+        post_data = get_query_str(cleanse_params(request.POST)).replace("\0", "0x00")
 
         if self.is_whitelisted(request, credentials):
             log.info("AXES: Login failed from whitelisted client %s.", client_str)

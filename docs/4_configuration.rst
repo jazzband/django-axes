@@ -111,6 +111,8 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``False``
 * ``AXES_ALLOWED_CORS_ORIGINS``: Configures lockout response CORS headers for XHR requests.
   Default: ``*``
+* ``AXES_SENSITIVE_PARAMS``: Configures POST and GET parameter values to mask in login attempt logging.
+  Default: ``['password',]``
 
 The configuration option precedences for the access attempt monitoring are:
 

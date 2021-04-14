@@ -476,3 +476,24 @@ def toggleable(func) -> Callable:
             return func(*args, **kwargs)
 
     return inner
+
+
+def cleanse_params(params: dict) -> dict:
+    """
+    Replace sensitive parameter values in a parameter dict with
+    a safe placeholder value.
+
+    Parameters to be cleansed are named in
+    ``settings.AXES_SENSITIVE_PARAMETERS``.  If this setting is
+    empty, no parameters will be replaced.
+
+    This is used to prevent passwords and similar values from
+    being logged in cleartext.
+    """
+    if settings.AXES_SENSITIVE_PARAMETERS:
+        cleansed = params.copy()
+        for param in settings.AXES_SENSITIVE_PARAMETERS:
+            if param in cleansed:
+                cleansed[param] = "********************"
+        return cleansed
+    return params
