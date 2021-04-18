@@ -16,3 +16,4 @@ docs/_build
 test.db
 .eggs
 pip-wheel-metadata
+.vscode/
