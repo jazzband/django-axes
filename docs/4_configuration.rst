@@ -94,6 +94,9 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``None``
 * ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your users password.
   Default: ``password``
+* ``AXES_SENSITIVE_PARAMETERS``: Configures POST and GET parameter values (in addition to the value of
+  ``AXES_PASSWORD_FORM_FIELD``) to mask in login attempt logging.
+  Default: ``[]``
 * ``AXES_NEVER_LOCKOUT_GET``: If ``True``, Axes will never lock out HTTP GET requests.
   Default: ``False``
 * ``AXES_NEVER_LOCKOUT_WHITELIST``: If ``True``, users can always login from whitelisted IP addresses.
@@ -111,8 +114,6 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``False``
 * ``AXES_ALLOWED_CORS_ORIGINS``: Configures lockout response CORS headers for XHR requests.
   Default: ``*``
-* ``AXES_SENSITIVE_PARAMS``: Configures POST and GET parameter values to mask in login attempt logging.
-  Default: ``['password',]``
 
 The configuration option precedences for the access attempt monitoring are:
 
