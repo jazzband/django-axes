@@ -23,7 +23,7 @@ from axes.helpers import (
     is_ip_address_in_whitelist,
     is_user_attempt_whitelisted,
     toggleable,
-    cleanse_params,
+    cleanse_parameters,
 )
 from axes.models import AccessAttempt
 from tests.base import AxesTestCase
@@ -687,28 +687,36 @@ class AxesLockoutTestCase(AxesTestCase):
 
 class AxesCleanseParamsTestCase(AxesTestCase):
     def setUp(self):
-        self.params = {
+        self.parameters = {
             "username": "test_user",
             "password": "test_password",
             "other_sensitive_data": "sensitive",
         }
 
-    def test_cleanse_params(self):
-        cleansed = cleanse_params(self.params)
+    def test_cleanse_parameters(self):
+        cleansed = cleanse_parameters(self.parameters)
         self.assertEqual("test_user", cleansed["username"])
         self.assertEqual("********************", cleansed["password"])
         self.assertEqual("sensitive", cleansed["other_sensitive_data"])
 
     @override_settings(AXES_SENSITIVE_PARAMETERS=["other_sensitive_data"])
-    def test_cleanse_params_override(self):
-        cleansed = cleanse_params(self.params)
+    def test_cleanse_parameters_override_sensitive(self):
+        cleansed = cleanse_parameters(self.parameters)
         self.assertEqual("test_user", cleansed["username"])
-        self.assertEqual("test_password", cleansed["password"])
+        self.assertEqual("********************", cleansed["password"])
         self.assertEqual("********************", cleansed["other_sensitive_data"])
 
-    @override_settings(AXES_SENSITIVE_PARAMETERS=[])
-    def test_cleanse_params_override_empty(self):
-        cleansed = cleanse_params(self.params)
+    @override_settings(AXES_SENSITIVE_PARAMETERS=["other_sensitive_data"])
+    @override_settings(AXES_PASSWORD_FORM_FIELD="username")
+    def test_cleanse_parameters_override_both(self):
+        cleansed = cleanse_parameters(self.parameters)
+        self.assertEqual("********************", cleansed["username"])
+        self.assertEqual("********************", cleansed["password"])
+        self.assertEqual("********************", cleansed["other_sensitive_data"])
+
+    @override_settings(AXES_PASSWORD_FORM_FIELD=None)
+    def test_cleanse_parameters_override_empty(self):
+        cleansed = cleanse_parameters(self.parameters)
         self.assertEqual("test_user", cleansed["username"])
-        self.assertEqual("test_password", cleansed["password"])
+        self.assertEqual("********************", cleansed["password"])
         self.assertEqual("sensitive", cleansed["other_sensitive_data"])

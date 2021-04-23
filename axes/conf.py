@@ -123,7 +123,5 @@ settings.AXES_ALLOWED_CORS_ORIGINS = getattr(settings, "AXES_ALLOWED_CORS_ORIGIN
 settings.AXES_SENSITIVE_PARAMETERS = getattr(
     settings,
     "AXES_SENSITIVE_PARAMETERS",
-    [
-        "password",
-    ],
+    [],
 )

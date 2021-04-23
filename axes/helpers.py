@@ -277,18 +277,42 @@ def get_client_str(
     return client_str
 
 
+def cleanse_parameters(params: dict) -> dict:
+    """
+    Replace sensitive parameter values in a parameter dict with
+    a safe placeholder value.
+
+    Parameters name ``'password'`` will always be cleansed.  Additionally,
+    parameters named in ``settings.AXES_SENSITIVE_PARAMETERS`` and
+    ``settings.AXES_PASSWORD_FORM_FIELD will be cleansed.
+
+    This is used to prevent passwords and similar values from
+    being logged in cleartext.
+    """
+    sensitive_parameters = ["password"] + settings.AXES_SENSITIVE_PARAMETERS
+    if settings.AXES_PASSWORD_FORM_FIELD:
+        sensitive_parameters.append(settings.AXES_PASSWORD_FORM_FIELD)
+
+    if sensitive_parameters:
+        cleansed = params.copy()
+        for param in sensitive_parameters:
+            if param in cleansed:
+                cleansed[param] = "********************"
+        return cleansed
+    return params
+
+
 def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
     """
     Turns a query dictionary into an easy-to-read list of key-value pairs.
 
-    If a field is called either ``'password'`` or ``settings.AXES_PASSWORD_FORM_FIELD`` it will be excluded.
+    If a field is called either ``'password'`` or ``settings.AXES_PASSWORD_FORM_FIELD`` or if the fieldname is included
+    in ``settings.AXES_SENSITIVE_PARAMETERS`` its value will be masked.
 
     The length of the output is limited to max_length to avoid a DoS attack via excessively large payloads.
     """
 
-    query_dict = query.copy()
-    query_dict.pop("password", None)
-    query_dict.pop(settings.AXES_PASSWORD_FORM_FIELD, None)
+    query_dict = cleanse_parameters(query.copy())
 
     template = Template("$key=$value")
     items = [{"key": k, "value": v} for k, v in query_dict.items()]
@@ -476,24 +500,3 @@ def toggleable(func) -> Callable:
             return func(*args, **kwargs)
 
     return inner
-
-
-def cleanse_params(params: dict) -> dict:
-    """
-    Replace sensitive parameter values in a parameter dict with
-    a safe placeholder value.
-
-    Parameters to be cleansed are named in
-    ``settings.AXES_SENSITIVE_PARAMETERS``.  If this setting is
-    empty, no parameters will be replaced.
-
-    This is used to prevent passwords and similar values from
-    being logged in cleartext.
-    """
-    if settings.AXES_SENSITIVE_PARAMETERS:
-        cleansed = params.copy()
-        for param in settings.AXES_SENSITIVE_PARAMETERS:
-            if param in cleansed:
-                cleansed[param] = "********************"
-        return cleansed
-    return params
