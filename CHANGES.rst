@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.15.0 (2021-05-03)
+-------------------
+
+- Add option to cleanse sensitive GET and POST params in database handler
+  with the ``AXES_SENSITIVE_PARAMETERS`` setting.
+  [mcoconnor]
+
+
 5.14.0 (2021-04-06)
 -------------------
 
