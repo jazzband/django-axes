@@ -254,9 +254,13 @@ def get_client_str(
         log.debug("Using settings.AXES_CLIENT_STR_CALLABLE to get client string.")
 
         if callable(settings.AXES_CLIENT_STR_CALLABLE):
-            return settings.AXES_CLIENT_STR_CALLABLE(username, ip_address, user_agent, path_info)
+            return settings.AXES_CLIENT_STR_CALLABLE(
+                username, ip_address, user_agent, path_info
+            )
         if isinstance(settings.AXES_CLIENT_STR_CALLABLE, str):
-            return import_string(settings.AXES_CLIENT_STR_CALLABLE)(username, ip_address, user_agent, path_info)
+            return import_string(settings.AXES_CLIENT_STR_CALLABLE)(
+                username, ip_address, user_agent, path_info
+            )
         raise TypeError(
             "settings.AXES_CLIENT_STR_CALLABLE needs to be a string, callable or None."
         )
