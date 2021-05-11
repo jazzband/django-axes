@@ -250,6 +250,17 @@ def get_client_str(
     ``{username: "example", ip_address: "127.0.0.1", path_info: "/example/"}``
     """
 
+    if settings.AXES_CLIENT_STR_CALLABLE:
+        log.debug("Using settings.AXES_CLIENT_STR_CALLABLE to get client string.")
+
+        if callable(settings.AXES_CLIENT_STR_CALLABLE):
+            return settings.AXES_CLIENT_STR_CALLABLE(username, ip_address, user_agent, path_info)
+        if isinstance(settings.AXES_CLIENT_STR_CALLABLE, str):
+            return import_string(settings.AXES_CLIENT_STR_CALLABLE)(username, ip_address, user_agent, path_info)
+        raise TypeError(
+            "settings.AXES_CLIENT_STR_CALLABLE needs to be a string, callable or None."
+        )
+
     client_dict = dict()
 
     if settings.AXES_VERBOSE:

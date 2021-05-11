@@ -225,6 +225,16 @@ class ClientStringTestCase(AxesTestCase):
 
         self.assertEqual(expected, actual)
 
+    @override_settings(AXES_CLIENT_STR_CALLABLE="tests.test_helpers.get_dummy_client_str")
+    def test_get_client_str_callable(self):
+        self.assertEqual(
+            get_client_str("username", "ip_address", "user_agent", "path_info"),
+            "client string"
+        )
+
+def get_dummy_client_str(username, ip_address, user_agent, path_info):
+    return "client string"
+
 
 class ClientParametersTestCase(AxesTestCase):
     @override_settings(AXES_ONLY_USER_FAILURES=True)

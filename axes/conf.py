@@ -125,3 +125,7 @@ settings.AXES_SENSITIVE_PARAMETERS = getattr(
     "AXES_SENSITIVE_PARAMETERS",
     [],
 )
+
+# set the callable for the readable string that can be used in
+# e.g. logging to distinguish client requests
+settings.AXES_CLIENT_STR_CALLABLE = getattr(settings, "AXES_CLIENT_STR_CALLABLE", None)
