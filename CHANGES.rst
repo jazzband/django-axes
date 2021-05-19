@@ -7,7 +7,7 @@ Changes
 -------------------
 
 - Add ``AXES_CLIENT_STR_CALLABLE`` setting.
- [smtydn]
+  [smtydn]
 
 
 5.15.0 (2021-05-03)
