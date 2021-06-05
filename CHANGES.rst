@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.17.0 (2021-06-05)
+-------------------
+
+- Fix ``default_app_config`` deprecation.
+  Django 3.2 automatically detects ``AppConfig`` and therefore this setting is no longer required.
+  [nikolaik]
+
+
 5.16.0 (2021-05-19)
 -------------------
 
