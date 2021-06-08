@@ -7,7 +7,7 @@ log = getLogger(__name__)
 
 
 class AppConfig(apps.AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
+    default_auto_field = "django.db.models.AutoField"
     name = "axes"
     initialized = False
 
