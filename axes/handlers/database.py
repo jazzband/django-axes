@@ -125,7 +125,14 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 username=username,
                 ip_address=request.axes_ip_address,
                 user_agent=request.axes_user_agent,
-                defaults={"failures_since_start": failures_since_start}
+                defaults={
+                    "get_data": Concat("get_data", Value(separator + get_data)),
+                    "post_data": Concat("post_data", Value(separator + post_data)),
+                    "http_accept": request.axes_http_accept,
+                    "path_info":  request.axes_path_info,
+                    "failures_since_start": failures_since_start,
+                    "attempt_time":  request.axes_attempt_time                    
+                }
             )
             # Update failed attempt information but do not touch the username, IP address, or user agent fields,
             # because attackers can request the site with multiple different configurations
@@ -133,14 +140,6 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
             separator = "\n---------\n"
 
-            attempt.get_data = Concat("get_data", Value(separator + get_data))
-            attempt.post_data = Concat("post_data", Value(separator + post_data))
-            attempt.http_accept = request.axes_http_accept
-            attempt.path_info = request.axes_path_info
-            if not created:
-                attempt.failures_since_start += 1
-            attempt.attempt_time = request.axes_attempt_time
-            attempt.save()
             # Record failed attempt with all the relevant information.
             # Filtering based on username, IP address and user agent handled elsewhere,
             # and this handler just records the available information for further use.
@@ -150,6 +149,14 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                     client_str,
                 )
             else:
+                attempt.get_data = Concat("get_data", Value(separator + get_data))
+                attempt.post_data = Concat("post_data", Value(separator + post_data))
+                attempt.http_accept = request.axes_http_accept
+                attempt.path_info = request.axes_path_info
+                attempt.failures_since_start += 1
+                attempt.attempt_time = request.axes_attempt_time
+                attempt.save()
+                
                 log.warning(
                     "AXES: Repeated login failure by %s. Count = %d of %d. Updating existing record in the database.",
                     client_str,
