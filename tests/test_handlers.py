@@ -209,7 +209,11 @@ class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
     AXES_COOLOFF_TIME=timedelta(seconds=2),
     AXES_RESET_ON_SUCCESS=True,
 )
-@mark.xfail(python_implementation() == "PyPy", reason="PyPy implementation is flaky for this test", strict=False)
+@mark.xfail(
+    python_implementation() == "PyPy",
+    reason="PyPy implementation is flaky for this test",
+    strict=False,
+)
 class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_handler_reset_attempts(self):
         self.create_attempt()
@@ -274,7 +278,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         attempt = AccessAttempt.objects.all()
         self.assertEqual(0, AccessAttempt.objects.count())
         log.warning.assert_called_with(
-            "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
+            "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
         )
 
     def test_user_login_failed_with_none_username(self):
@@ -462,7 +466,7 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
         AxesProxyHandler.user_login_failed(sender, credentials, self.request)
         self.assertFalse(cache_set.called)
         log.warning.assert_called_with(
-            "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
+            "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
         )
 
     @patch.object(cache, "set")
