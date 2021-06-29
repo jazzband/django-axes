@@ -7,8 +7,7 @@ Changes
 -------------------
 
 - Improve race condition handling in e.g. multi-process environments by using
-  [``get_or_create``](https://docs.djangoproject.com/en/dev/ref/models/querysets/#get-or-create)
-  method for access attempt fetching and updates.
+  ``get_or_create`` for access attempt fetching and updates.
   [uli-klank]
 
 
