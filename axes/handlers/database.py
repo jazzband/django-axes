@@ -117,6 +117,8 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         # 2. database query: Calculate the current maximum failure number from the existing attempts
+        failures_since_start = 1 + self.get_failures(request, credentials)
+
         if settings.AXES_ONLY_USER_FAILURES and username is None:
             log.warning(
                 "AXES: Username is None and AXES_ONLY_USER_FAILURES is enable, New record won't be created."
@@ -132,9 +134,9 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                     "get_data": get_data,
                     "post_data": post_data,
                     "http_accept": request.axes_http_accept,
-                    "path_info":  request.axes_path_info,
+                    "path_info": request.axes_path_info,
                     "failures_since_start": 1,
-                    "attempt_time":  request.axes_attempt_time
+                    "attempt_time": request.axes_attempt_time
                 }
             )
             # Update failed attempt information but do not touch the username, IP address, or user agent fields,
@@ -154,7 +156,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 log.warning(
                     "AXES: Repeated login failure by %s. Count = %d of %d. Updating existing record in the database.",
                     client_str,
-                    attempt.failures_since_start+1,
+                    attempt.failures_since_start + 1,
                     get_failure_limit(request, credentials),
                 )
                 attempt.get_data = Concat("get_data", Value(separator + get_data))
@@ -167,7 +169,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         if (
             settings.AXES_LOCK_OUT_AT_FAILURE
-            and attempt.failures_since_start >= get_failure_limit(request, credentials)
+            and failures_since_start >= get_failure_limit(request, credentials)
         ):
             log.warning(
                 "AXES: Locking out %s after repeated login failures.", client_str
