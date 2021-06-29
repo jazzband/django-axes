@@ -3,6 +3,15 @@ Changes
 =======
 
 
+5.20.0 (2021-06-29)
+-------------------
+
+- Improve race condition handling in e.g. multi-process environments by using
+  [``get_or_create``](https://docs.djangoproject.com/en/dev/ref/models/querysets/#get-or-create)
+  method for access attempt fetching and updates.
+  [uli-klank]
+
+
 5.19.0 (2021-06-16)
 -------------------
 
