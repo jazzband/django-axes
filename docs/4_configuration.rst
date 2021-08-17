@@ -114,6 +114,10 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``False``
 * ``AXES_ALLOWED_CORS_ORIGINS``: Configures lockout response CORS headers for XHR requests.
   Default: ``*``
+* ``AXES_HTTP_RESPONSE_CODE``: Sets the http response code returned when ``AXES_FAILURE_LIMIT`` is
+  reached.
+  For example: ``AXES_HTTP_RESPONSE_CODE = 429``
+  Default: ``403``
 
 The configuration option precedences for the access attempt monitoring are:
 
