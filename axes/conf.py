@@ -129,3 +129,6 @@ settings.AXES_SENSITIVE_PARAMETERS = getattr(
 # set the callable for the readable string that can be used in
 # e.g. logging to distinguish client requests
 settings.AXES_CLIENT_STR_CALLABLE = getattr(settings, "AXES_CLIENT_STR_CALLABLE", None)
+
+# set the HTTP response code given by too many requests
+settings.AXES_HTTP_RESPONSE_CODE = getattr(settings, "AXES_HTTP_RESPONSE_CODE", 403)
