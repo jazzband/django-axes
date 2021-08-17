@@ -362,7 +362,7 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
             "settings.AXES_LOCKOUT_CALLABLE needs to be a string, callable, or None."
         )
 
-    status = 403
+    status = settings.AXES_HTTP_RESPONSE_CODE
     context = {
         "failure_limit": get_failure_limit(request, credentials),
         "username": get_client_username(request, credentials) or "",
