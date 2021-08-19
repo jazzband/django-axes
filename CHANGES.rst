@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.21.0 (2021-08-19)
+-------------------
+
+- Add configurable lockout HTTP status code responses
+  with the new ``AXES_HTTP_RESPONSE_CODE`` setting.
+  [phil-bell]
+
+
 5.20.0 (2021-06-29)
 -------------------
 
