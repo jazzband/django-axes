@@ -152,8 +152,6 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             else:
                 separator = "\n---------\n"
 
-                failures_since_start_prev = attempt.failures_since_start
-
                 attempt.get_data = Concat("get_data", Value(separator + get_data))
                 attempt.post_data = Concat("post_data", Value(separator + post_data))
                 attempt.http_accept = request.axes_http_accept
@@ -163,11 +161,8 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 attempt.save()
 
                 log.warning(
-                    "AXES: Repeated login failure by %s. Count = %d of %d. Updated existing record in the database.",
+                    "AXES: Repeated login failure by %s. Updated existing record in the database.",
                     client_str,
-                    # can be different from the actual value in the DB
-                    failures_since_start_prev + 1,
-                    get_failure_limit(request, credentials),
                 )
 
         # 3. or 4. database query: Calculate the current maximum failure number from the existing attempts
