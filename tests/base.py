@@ -78,7 +78,7 @@ class AxesTestCase(TestCase):
         self.request.axes_user_agent = get_client_user_agent(self.request)
         self.request.axes_path_info = get_client_path_info(self.request)
         self.request.axes_http_accept = get_client_http_accept(self.request)
-        self.request.axes_failures_since_start = 0
+        self.request.axes_failures_since_start = None
 
         self.credentials = get_credentials(self.username)
 
