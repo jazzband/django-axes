@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from django.db.models import Sum, Value, Q
+from django.db.models import F, Sum, Value, Q
 from django.db.models.functions import Concat
 from django.utils import timezone
 
@@ -152,18 +152,21 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             else:
                 separator = "\n---------\n"
 
+                failures_since_start_prev = attempt.failures_since_start
+
                 attempt.get_data = Concat("get_data", Value(separator + get_data))
                 attempt.post_data = Concat("post_data", Value(separator + post_data))
                 attempt.http_accept = request.axes_http_accept
                 attempt.path_info = request.axes_path_info
-                attempt.failures_since_start += 1
+                attempt.failures_since_start = F("failures_since_start") + 1
                 attempt.attempt_time = request.axes_attempt_time
                 attempt.save()
 
                 log.warning(
                     "AXES: Repeated login failure by %s. Count = %d of %d. Updated existing record in the database.",
                     client_str,
-                    attempt.failures_since_start,
+                    # can be different from the actual value in the DB
+                    failures_since_start_prev + 1,
                     get_failure_limit(request, credentials),
                 )
 
