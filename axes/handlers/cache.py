@@ -98,6 +98,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         failures_since_start = 1 + self.get_failures(request, credentials)
+        request.axes_failures_since_start = failures_since_start
 
         if failures_since_start > 1:
             log.warning(

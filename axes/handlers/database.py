@@ -167,6 +167,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         # 3. or 4. database query: Calculate the current maximum failure number from the existing attempts
         failures_since_start = self.get_failures(request, credentials)
+        request.axes_failures_since_start = failures_since_start
 
         if (
             settings.AXES_LOCK_OUT_AT_FAILURE
