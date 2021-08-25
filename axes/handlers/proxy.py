@@ -76,6 +76,7 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_user_agent = get_client_user_agent(request)
             request.axes_path_info = get_client_path_info(request)
             request.axes_http_accept = get_client_http_accept(request)
+            request.axes_failures_since_start = 0
             request.axes_updated = True
 
     @classmethod
