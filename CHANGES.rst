@@ -3,6 +3,15 @@ Changes
 =======
 
 
+5.22.0 (2021-08-31)
+-------------------
+
+- Improve ``failures_since_start`` handling by moving the counter incrementation
+  from non-atomic Python code call to atomic database function.
+  [okapies]
+- Add publicly available ``request.axes_failures_since_start`` attribute.
+  [okapies]
+
 5.21.0 (2021-08-19)
 -------------------
 
