@@ -95,9 +95,11 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = self.get_expected_client_str(
-            username, ip_address, user_agent, path_info
+            username, ip_address, user_agent, path_info, self.request
         )
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -109,9 +111,11 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = self.get_expected_client_str(
-            username, ip_address, user_agent, path_info
+            username, ip_address, user_agent, path_info, self.request
         )
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -123,9 +127,11 @@ class ClientStringTestCase(AxesTestCase):
         path_info = ("admin", "login")
 
         expected = self.get_expected_client_str(
-            username, ip_address, user_agent, path_info[0]
+            username, ip_address, user_agent, path_info[0], self.request
         )
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -137,7 +143,9 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = '{ip_address: "127.0.0.1", path_info: "/admin/"}'
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -150,9 +158,11 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = self.get_expected_client_str(
-            username, ip_address, user_agent, path_info
+            username, ip_address, user_agent, path_info, self.request
         )
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -165,7 +175,9 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = '{username: "test@example.com", path_info: "/admin/"}'
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -178,9 +190,11 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = self.get_expected_client_str(
-            username, ip_address, user_agent, path_info
+            username, ip_address, user_agent, path_info, self.request
         )
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -193,7 +207,9 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = '{username: "test@example.com", ip_address: "127.0.0.1", path_info: "/admin/"}'
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -206,9 +222,11 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = self.get_expected_client_str(
-            username, ip_address, user_agent, path_info
+            username, ip_address, user_agent, path_info, self.request
         )
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
@@ -221,19 +239,44 @@ class ClientStringTestCase(AxesTestCase):
         path_info = "/admin/"
 
         expected = '{ip_address: "127.0.0.1", user_agent: "Googlebot/2.1 (+http://www.googlebot.com/bot.html)", path_info: "/admin/"}'
-        actual = get_client_str(username, ip_address, user_agent, path_info)
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
 
         self.assertEqual(expected, actual)
 
-    @override_settings(AXES_CLIENT_STR_CALLABLE="tests.test_helpers.get_dummy_client_str")
+    @override_settings(
+        AXES_CLIENT_STR_CALLABLE="tests.test_helpers.get_dummy_client_str"
+    )
     def test_get_client_str_callable(self):
         self.assertEqual(
-            get_client_str("username", "ip_address", "user_agent", "path_info"),
-            "client string"
+            get_client_str(
+                "username", "ip_address", "user_agent", "path_info", self.request
+            ),
+            "client string",
         )
+
+    @override_settings(
+        AXES_CLIENT_STR_CALLABLE="tests.test_helpers.get_dummy_client_str_using_request"
+    )
+    def test_get_client_str_callable(self):
+        self.request.user = self.user
+        self.assertEqual(
+            get_client_str(
+                "username", "ip_address", "user_agent", "path_info", self.request
+            ),
+            self.email,
+        )
+
 
 def get_dummy_client_str(username, ip_address, user_agent, path_info):
     return "client string"
+
+
+def get_dummy_client_str_using_request(
+    username, ip_address, user_agent, path_info, request
+):
+    return f"{request.user.email}"
 
 
 class ClientParametersTestCase(AxesTestCase):

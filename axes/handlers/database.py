@@ -106,6 +106,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_ip_address,
             request.axes_user_agent,
             request.axes_path_info,
+            request,
         )
 
         # This replaces null byte chars that crash saving failures.
@@ -202,6 +203,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_ip_address,
             request.axes_user_agent,
             request.axes_path_info,
+            request,
         )
 
         log.info("AXES: Successful login by %s.", client_str)
@@ -242,6 +244,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_ip_address,
             request.axes_user_agent,
             request.axes_path_info,
+            request,
         )
 
         log.info("AXES: Successful logout by %s.", client_str)

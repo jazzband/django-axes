@@ -241,7 +241,11 @@ def get_client_cache_key(
 
 
 def get_client_str(
-    username: str, ip_address: str, user_agent: str, path_info: str
+    username: str,
+    ip_address: str,
+    user_agent: str,
+    path_info: str,
+    request: HttpRequest,
 ) -> str:
     """
     Get a readable string that can be used in e.g. logging to distinguish client requests.
@@ -255,11 +259,11 @@ def get_client_str(
 
         if callable(settings.AXES_CLIENT_STR_CALLABLE):
             return settings.AXES_CLIENT_STR_CALLABLE(
-                username, ip_address, user_agent, path_info
+                username, ip_address, user_agent, path_info, request
             )
         if isinstance(settings.AXES_CLIENT_STR_CALLABLE, str):
             return import_string(settings.AXES_CLIENT_STR_CALLABLE)(
-                username, ip_address, user_agent, path_info
+                username, ip_address, user_agent, path_info, request
             )
         raise TypeError(
             "settings.AXES_CLIENT_STR_CALLABLE needs to be a string, callable or None."

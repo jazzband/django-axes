@@ -590,7 +590,7 @@ class DatabaseLoginTestCase(AxesTestCase):
     def test_lockout_by_user_or_ip_allows_when_diff_user_same_ip_using_cache_multiple_failed_attempts(
         self,
     ):
-        """ Test, if the failed attempts make also impact on the attempt count """
+        """Test, if the failed attempts make also impact on the attempt count"""
         # User 1 is locked out from IP 1.
         response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_1)
         self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
