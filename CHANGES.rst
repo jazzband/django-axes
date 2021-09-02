@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.23.0 (2021-09-02)
+-------------------
+
+- Pass ``request`` as argument to ``AXES_CLIENT_STR_CALLABLE``.
+  [sarahboyce]
+
+
 5.22.0 (2021-08-31)
 -------------------
 
