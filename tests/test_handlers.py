@@ -120,7 +120,11 @@ class AxesHandlerBaseTestCase(AxesTestCase):
                 sender=None, request=self.request, credentials=self.credentials
             )
             client_str = get_client_str(
-                self.username, self.ip_address, self.user_agent, self.path_info
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.path_info,
+                self.request,
             )
             log.info.assert_called_with(
                 "AXES: Login failed from whitelisted client %s.", client_str
@@ -135,7 +139,7 @@ class AxesHandlerBaseTestCase(AxesTestCase):
 
 @override_settings(AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler")
 class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
-    """ Resetting attempts is currently implemented only for database handler """
+    """Resetting attempts is currently implemented only for database handler"""
 
     USERNAME_1 = "foo_username"
     USERNAME_2 = "bar_username"
@@ -340,7 +344,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
 
 @override_settings(AXES_HANDLER="axes.handlers.cache.AxesCacheHandler")
 class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
-    """ Test reset attempts for the cache handler """
+    """Test reset attempts for the cache handler"""
 
     USERNAME_1 = "foo_username"
     USERNAME_2 = "bar_username"

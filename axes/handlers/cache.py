@@ -91,6 +91,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_ip_address,
             request.axes_user_agent,
             request.axes_path_info,
+            request,
         )
 
         if self.is_whitelisted(request, credentials):
@@ -148,6 +149,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_ip_address,
             request.axes_user_agent,
             request.axes_path_info,
+            request,
         )
 
         log.info("AXES: Successful login by %s.", client_str)
@@ -170,6 +172,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_ip_address,
             request.axes_user_agent,
             request.axes_path_info,
+            request,
         )
 
         log.info("AXES: Successful logout by %s.", client_str)
