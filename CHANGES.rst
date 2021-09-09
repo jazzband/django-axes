@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.24.0 (2021-09-09)
+-------------------
+
+- Use atomic transaction for updating AccessAttempts in database handler.
+  [okapies]
+
+
 5.23.0 (2021-09-02)
 -------------------
 
@@ -18,6 +25,7 @@ Changes
   [okapies]
 - Add publicly available ``request.axes_failures_since_start`` attribute.
   [okapies]
+
 
 5.21.0 (2021-08-19)
 -------------------
