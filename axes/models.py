@@ -34,6 +34,7 @@ class AccessAttempt(AccessBase):
     class Meta:
         verbose_name = _("access attempt")
         verbose_name_plural = _("access attempts")
+        unique_together = [["username", "ip_address", "user_agent"]]
 
 
 class AccessLog(AccessBase):
