@@ -3,6 +3,15 @@ Changes
 =======
 
 
+5.25.0 (2021-09-19)
+-------------------
+
+- Fix duplicated AccessAttempts
+  with updated database model ``unique_together`` constraints
+  and data and schema migration.
+  [PetrDlouhy]
+
+
 5.24.0 (2021-09-09)
 -------------------
 
