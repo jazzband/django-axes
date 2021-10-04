@@ -1,5 +1,5 @@
 -e .
-coverage==5.5
+coverage==6.0
 pytest==6.2.5
 pytest-cov==2.12.1
 pytest-django==4.4.0
