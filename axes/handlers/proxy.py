@@ -78,6 +78,7 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_http_accept = get_client_http_accept(request)
             request.axes_failures_since_start = None
             request.axes_updated = True
+            request.axes_credentials = None
 
     @classmethod
     def is_locked(cls, request, credentials: dict = None) -> bool:

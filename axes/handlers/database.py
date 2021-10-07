@@ -186,6 +186,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             )
 
             request.axes_locked_out = True
+            request.axes_credentials = credentials
             user_locked_out.send(
                 "axes",
                 request=request,
