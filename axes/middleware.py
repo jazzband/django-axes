@@ -37,7 +37,7 @@ class AxesMiddleware:
 
         if settings.AXES_ENABLED:
             if getattr(request, "axes_locked_out", None):
-                credentials = getattr(request, 'axes_credentials', None)
+                credentials = getattr(request, "axes_credentials", None)
                 response = get_lockout_response(request, credentials)  # type: ignore
 
         return response
