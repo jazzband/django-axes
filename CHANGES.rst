@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.26.0 (2021-10-11)
+-------------------
+
+- Fix ``AXES_USERNAME_CALLABLE`` not receiving ``credentials`` attribute
+  in Axes middleware lockout response when user is locked out.
+  [rootart]
+
+
 5.25.0 (2021-09-19)
 -------------------
 
