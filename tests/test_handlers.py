@@ -351,7 +351,7 @@ class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
     IP_1 = "127.1.0.1"
     IP_2 = "127.1.0.2"
 
-    def set_up_login_attemtps(self):
+    def set_up_login_attempts(self):
         """Set up the login attempts."""
         self.login(username=self.USERNAME_1, remote_addr=self.IP_1)
         self.login(username=self.USERNAME_1, remote_addr=self.IP_2)
@@ -379,7 +379,7 @@ class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_handler_reset_attempts_username(self):
-        self.set_up_login_attemtps()
+        self.set_up_login_attempts()
         self.assertEqual(
             2,
             AxesProxyHandler.get_failures(
@@ -407,7 +407,7 @@ class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
         )
 
     def test_handler_reset_attempts_ip(self):
-        self.set_up_login_attemtps()
+        self.set_up_login_attempts()
         self.check_failures(2, ip_address=self.IP_1)
         self.assertEqual(1, AxesProxyHandler.reset_attempts(ip_address=self.IP_1))
         self.check_failures(0, ip_address=self.IP_1)
@@ -415,7 +415,7 @@ class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_handler_reset_attempts_ip_and_username(self):
-        self.set_up_login_attemtps()
+        self.set_up_login_attempts()
         self.check_failures(1, username=self.USERNAME_1, ip_address=self.IP_1)
         self.check_failures(1, username=self.USERNAME_2, ip_address=self.IP_1)
         self.check_failures(1, username=self.USERNAME_1, ip_address=self.IP_2)
