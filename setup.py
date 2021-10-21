@@ -36,7 +36,7 @@ setup(
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
     python_requires="~=3.6",
-    install_requires=["django>=2.2", "django-ipware>=3,<5"],
+    install_requires=["django>=2.2", "django-ipware>=3,<5", "setuptools"],
     include_package_data=True,
     packages=find_packages(exclude=["tests"]),
     classifiers=[
