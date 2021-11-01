@@ -15,11 +15,16 @@ jobs:
         include:
           - python-version: '3.8'
             django-version: 'qa'
-          # Django > 3.2 only supports >= Python 3.8
+          # Django >= 3.2 only supports >= Python 3.8
+          - python-version: '3.10'
+            django-version: '3.2'
           - python-version: '3.8'
             django-version: 'main'
             experimental: true
           - python-version: '3.9'
+            django-version: 'main'
+            experimental: true
+          - python-version: '3.10'
             django-version: 'main'
             experimental: true
           - python-version: 'pypy3'
