@@ -3,6 +3,16 @@ Changes
 =======
 
 
+5.27.0 (2021-11-04)
+-------------------
+
+- Fix ``pkg_resources`` missing for package version resolution on runtime
+  due to ``setuptools`` not being a runtime dependency.
+  [asherf]
+- Add Python 3.10 and Django 3.2 support.
+  [hramezani]
+
+
 5.26.0 (2021-10-11)
 -------------------
 
