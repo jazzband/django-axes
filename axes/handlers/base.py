@@ -142,7 +142,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
                 admin_url = reverse("admin:index")
             except NoReverseMatch:
                 return True
-            return not re.match("^%s" % admin_url, request.path)
+            return not re.match(f"^{admin_url}", request.path)
 
         return False
 

@@ -64,9 +64,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
         )
         return failure_count
 
-    def user_login_failed(
-        self, sender, credentials: dict, request=None, **kwargs
-    ):  # pylint: disable=too-many-locals
+    def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
         """
         When user login fails, save attempt record in cache and lock user out if necessary.
 
@@ -136,9 +134,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
                 ip_address=request.axes_ip_address,
             )
 
-    def user_logged_in(
-        self, sender, request, user, **kwargs
-    ):  # pylint: disable=unused-argument
+    def user_logged_in(self, sender, request, user, **kwargs):
         """
         When user logs in, update the AccessLog related to the user.
         """
