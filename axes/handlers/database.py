@@ -83,9 +83,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         )
         return attempt_count
 
-    def user_login_failed(
-        self, sender, credentials: dict, request=None, **kwargs
-    ):  # pylint: disable=too-many-locals
+    def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
         """
         When user login fails, save AccessAttempt record in database, mark request with lockout attribute and emit lockout signal.
         """
@@ -194,9 +192,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 ip_address=request.axes_ip_address,
             )
 
-    def user_logged_in(
-        self, sender, request, user, **kwargs
-    ):  # pylint: disable=unused-argument
+    def user_logged_in(self, sender, request, user, **kwargs):
         """
         When user logs in, update the AccessLog related to the user.
         """
@@ -236,9 +232,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 client_str,
             )
 
-    def user_logged_out(
-        self, sender, request, user, **kwargs
-    ):  # pylint: disable=unused-argument
+    def user_logged_out(self, sender, request, user, **kwargs):
         """
         When user logs out, update the AccessLog related to the user.
         """

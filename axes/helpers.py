@@ -62,7 +62,7 @@ def get_cool_off() -> Optional[timedelta]:
     if isinstance(cool_off, str):
         return import_string(cool_off)()
     if callable(cool_off):
-        return cool_off()
+        return cool_off()  # pylint: disable=not-callable
 
     return cool_off
 
@@ -121,7 +121,9 @@ def get_client_username(request, credentials: dict = None) -> str:
         log.debug("Using settings.AXES_USERNAME_CALLABLE to get username")
 
         if callable(settings.AXES_USERNAME_CALLABLE):
-            return settings.AXES_USERNAME_CALLABLE(request, credentials)
+            return settings.AXES_USERNAME_CALLABLE(  # pylint: disable=not-callable
+                request, credentials
+            )
         if isinstance(settings.AXES_USERNAME_CALLABLE, str):
             return import_string(settings.AXES_USERNAME_CALLABLE)(request, credentials)
         raise TypeError(
@@ -258,7 +260,7 @@ def get_client_str(
         log.debug("Using settings.AXES_CLIENT_STR_CALLABLE to get client string.")
 
         if callable(settings.AXES_CLIENT_STR_CALLABLE):
-            return settings.AXES_CLIENT_STR_CALLABLE(
+            return settings.AXES_CLIENT_STR_CALLABLE(  # pylint: disable=not-callable
                 username, ip_address, user_agent, path_info, request
             )
         if isinstance(settings.AXES_CLIENT_STR_CALLABLE, str):
@@ -269,7 +271,7 @@ def get_client_str(
             "settings.AXES_CLIENT_STR_CALLABLE needs to be a string, callable or None."
         )
 
-    client_dict = dict()
+    client_dict = {}
 
     if settings.AXES_VERBOSE:
         # Verbose mode logs every attribute that is available
@@ -342,7 +344,9 @@ def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
 
 def get_failure_limit(request, credentials) -> int:
     if callable(settings.AXES_FAILURE_LIMIT):
-        return settings.AXES_FAILURE_LIMIT(request, credentials)
+        return settings.AXES_FAILURE_LIMIT(  # pylint: disable=not-callable
+            request, credentials
+        )
     if isinstance(settings.AXES_FAILURE_LIMIT, str):
         return import_string(settings.AXES_FAILURE_LIMIT)(request, credentials)
     if isinstance(settings.AXES_FAILURE_LIMIT, int):
@@ -359,7 +363,9 @@ def get_lockout_message() -> str:
 def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
     if settings.AXES_LOCKOUT_CALLABLE:
         if callable(settings.AXES_LOCKOUT_CALLABLE):
-            return settings.AXES_LOCKOUT_CALLABLE(request, credentials)
+            return settings.AXES_LOCKOUT_CALLABLE(  # pylint: disable=not-callable
+                request, credentials
+            )
         if isinstance(settings.AXES_LOCKOUT_CALLABLE, str):
             return import_string(settings.AXES_LOCKOUT_CALLABLE)(request, credentials)
         raise TypeError(
@@ -400,7 +406,7 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
     if settings.AXES_LOCKOUT_URL:
         lockout_url = settings.AXES_LOCKOUT_URL
         query_string = urlencode({"username": context["username"]})
-        url = "{}?{}".format(lockout_url, query_string)
+        url = f"{lockout_url}?{query_string}"
         return redirect(url)
 
     return HttpResponse(get_lockout_message(), status=status)
@@ -410,14 +416,18 @@ def is_ip_address_in_whitelist(ip_address: str) -> bool:
     if not settings.AXES_IP_WHITELIST:
         return False
 
-    return ip_address in settings.AXES_IP_WHITELIST
+    return (  # pylint: disable=unsupported-membership-test
+        ip_address in settings.AXES_IP_WHITELIST
+    )
 
 
 def is_ip_address_in_blacklist(ip_address: str) -> bool:
     if not settings.AXES_IP_BLACKLIST:
         return False
 
-    return ip_address in settings.AXES_IP_BLACKLIST
+    return (  # pylint: disable=unsupported-membership-test
+        ip_address in settings.AXES_IP_BLACKLIST
+    )
 
 
 def is_client_ip_address_whitelisted(request):
@@ -494,7 +504,7 @@ def is_user_attempt_whitelisted(request, credentials: dict = None) -> bool:
     if whitelist_callable is None:
         return False
     if callable(whitelist_callable):
-        return whitelist_callable(request, credentials)
+        return whitelist_callable(request, credentials)  # pylint: disable=not-callable
     if isinstance(whitelist_callable, str):
         return import_string(whitelist_callable)(request, credentials)
 
