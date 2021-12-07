@@ -82,7 +82,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
 * ``AXES_WHITELIST_CALLABLE``: A callable or a string path to callable that takes
   two arguments for whitelisting determination and returns True,
   if user should be whitelisted:
-  ``def is_whilisted(request: HttpRequest, credentials: dict) -> bool: ...``.
+  ``def is_whitelisted(request: HttpRequest, credentials: dict) -> bool: ...``.
   This can be any callable similarly to ``AXES_USERNAME_CALLABLE``.
   Default: ``None``
 * ``AXES_LOCKOUT_CALLABLE``: A callable or a string path to callable that takes
