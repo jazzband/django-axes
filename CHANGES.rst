@@ -2,6 +2,8 @@
 Changes
 =======
 
+- Drop Django < 3.2 support.
+  [hramezani]
 
 5.27.0 (2021-11-04)
 -------------------
