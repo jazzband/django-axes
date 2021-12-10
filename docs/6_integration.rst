@@ -126,7 +126,7 @@ And then configure your application to load it in ``examples/apps.py``::
 
 Please check the Django signals documentation for more information:
 
-https://docs.djangoproject.com/en/3.1/topics/signals/
+https://docs.djangoproject.com/en/3.2/topics/signals/
 
 When a user login fails a signal is emitted and PermissionDenied
 raises a HTTP 403 reply which interrupts the login process.
