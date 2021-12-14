@@ -2,10 +2,15 @@
 Changes
 =======
 
+
+5.28.0 (2021-12-14)
+-------------------
+
 - Drop Django < 3.2 support.
   [hramezani]
 - Add Django 4.0 to test matrix.
   [hramezani]
+
 
 5.27.0 (2021-11-04)
 -------------------
