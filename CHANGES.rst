@@ -3,7 +3,23 @@ Changes
 =======
 
 
+5.31.0 (2022-01-08)
+-------------------
+
+- Adjust version specifiers for newer Python and other package versions.
+  Set package minimum Python version to 3.7.
+  Relax ``django-ipware`` version requirements to allow newer versions.
+  [aleksihakli]
+
+
 5.30.0 (2022-01-08)
+-------------------
+
+- Fix package build error in 5.29.0 to allow publishing.
+  [aleksihakli]
+
+
+5.29.0 (2022-01-08)
 -------------------
 
 - Drop Python 3.6 support.
