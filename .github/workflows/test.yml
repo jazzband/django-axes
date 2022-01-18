@@ -33,9 +33,6 @@ jobs:
           # Exclude Django 4.0 for Python 3.7
           - python-version: '3.7'
             django-version: '4.0'
-          # Exclude Django 2.2 for Python 3.10
-          - python-version: '3.10'
-            django-version: '2.2'
 
     steps:
     - uses: actions/checkout@v2
