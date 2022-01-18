@@ -98,6 +98,11 @@ You also need to decorate ``dispatch()`` and ``form_invalid()`` methods of the A
 Integration with Django REST Framework
 --------------------------------------
 
+.. warning::
+   The following guide only covers authentication schemes that rely on
+   Django's ``authenticate()`` function. Other schemes (e.g.
+   ``TokenAuthentication``) are currently not supported.
+
 Django Axes requires REST Framework to be connected
 via lockout signals for correct functionality.
 
