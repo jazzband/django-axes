@@ -41,6 +41,6 @@ Tox runs the same test set that is run by GitHub Actions, and your code should b
 
 If you wish to limit the testing to specific environment(s), you can parametrize the tox run::
 
-    $ tox -e py39-django22
+    $ tox -e py39-django32
 
 After you have pushed your changes, open a pull request on GitHub for getting your code upstreamed.
