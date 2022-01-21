@@ -30,9 +30,11 @@ jobs:
             django-version: 'main'
             experimental: true
         exclude:
-          # Exclude Django 4.0 for Python 3.7
+          # Exclude Python 3.7 for Django 4.0 and Django main
           - python-version: '3.7'
             django-version: '4.0'
+          - python-version: '3.7'
+            django-version: 'main'
 
     steps:
     - uses: actions/checkout@v2
