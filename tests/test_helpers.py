@@ -259,7 +259,7 @@ class ClientStringTestCase(AxesTestCase):
     @override_settings(
         AXES_CLIENT_STR_CALLABLE="tests.test_helpers.get_dummy_client_str_using_request"
     )
-    def test_get_client_str_callable(self):
+    def test_get_client_str_callable_two(self):
         self.request.user = self.user
         self.assertEqual(
             get_client_str(
