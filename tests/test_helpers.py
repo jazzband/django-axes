@@ -248,7 +248,7 @@ class ClientStringTestCase(AxesTestCase):
     @override_settings(
         AXES_CLIENT_STR_CALLABLE="tests.test_helpers.get_dummy_client_str"
     )
-    def test_get_client_str_callable(self):
+    def test_get_client_str_callable_return_str(self):
         self.assertEqual(
             get_client_str(
                 "username", "ip_address", "user_agent", "path_info", self.request
@@ -259,7 +259,7 @@ class ClientStringTestCase(AxesTestCase):
     @override_settings(
         AXES_CLIENT_STR_CALLABLE="tests.test_helpers.get_dummy_client_str_using_request"
     )
-    def test_get_client_str_callable(self):
+    def test_get_client_str_callable_using_request(self):
         self.request.user = self.user
         self.assertEqual(
             get_client_str(
@@ -269,7 +269,7 @@ class ClientStringTestCase(AxesTestCase):
         )
 
 
-def get_dummy_client_str(username, ip_address, user_agent, path_info):
+def get_dummy_client_str(username, ip_address, user_agent, path_info, request):
     return "client string"
 
 
