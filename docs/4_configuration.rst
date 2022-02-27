@@ -150,8 +150,8 @@ following settings to suit your set up to correctly resolve client IP addresses:
 
       # refer to the Django request and response objects documentation
       AXES_META_PRECEDENCE_ORDER = [
-         'HTTP_X_FORWARDED_FOR',
-         'REMOTE_ADDR',
+          'HTTP_X_FORWARDED_FOR',
+          'REMOTE_ADDR',
       ]
 
    Please note that proxies have different behaviours with the HTTP headers. Make sure that your proxy either strips the incoming value or otherwise makes sure of the validity of the header that is used because **any header values used in application configuration must be secure and trusted**. Otherwise the client can spoof IP addresses by just setting the header in their request and circumvent the IP address monitoring. Normal proxy server behaviours include overriding and appending the header value depending on the platform. Different platforms and gateway services utilize different headers, please refer to your deployment target documentation for up-to-date information on correct configuration.
