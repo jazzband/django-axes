@@ -1,23 +1,18 @@
-import datetime
-import ipware.ip
-import ipware.ip2
-import sys
 from datetime import timedelta
-from django.core.cache import caches, BaseCache
-from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
-from django.shortcuts import render, redirect
-from django.utils.module_loading import import_string
 from hashlib import md5
 from logging import getLogger
-from pytz import utc
 from string import Template
 from typing import Callable, Optional, Type, Union
 from urllib.parse import urlencode
 
+import ipware.ip
+from django.core.cache import caches, BaseCache
+from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
+from django.shortcuts import render, redirect
+from django.utils.module_loading import import_string
+
 from axes.conf import settings
 from axes.models import AccessBase
-from axes.models import AccessLog, AccessAttempt
-from axes.request import AxesHttpRequest
 
 log = getLogger(__name__)
 
@@ -534,20 +529,3 @@ def toggleable(func) -> Callable:
             return func(*args, **kwargs)
 
     return inner
-
-
-def cleanup_old_logged_data(border_days: int, verbose_mode: bool) -> (AccessLog, AccessAttempt):
-    """
-    Find all logged entries from `AccessLog` and `AccessAttempt` which were created at least X days in the past
-    """
-    border = utc.localize(datetime.datetime.utcnow() - datetime.timedelta(days=border_days))
-
-    logs = AccessLog.objects.filter(attempt_time__lt=border)
-    attempts = AccessAttempt.objects.filter(attempt_time__lt=border)
-
-    if verbose_mode:
-        sys.stdout.write('AXES: Deleted %s log(s) and %s attempt(s) for border date %s.' %
-                         (logs.count(), attempts.count(), border.strftime('%Y-%m-%d')))
-
-    logs.delete()
-    attempts.delete()
