@@ -27,7 +27,7 @@ msgid "Meta Data"
 msgstr "Meta-Daten"
 
 #: axes/conf.py:58
-msgid "Account locked: too many login attempts. Please try again later"
+msgid "Account locked: too many login attempts. Please try again later."
 msgstr ""
 "Zugang gesperrt: zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen "
 "Sie es später erneut."

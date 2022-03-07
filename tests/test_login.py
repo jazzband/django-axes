@@ -6,14 +6,15 @@ TODO: Clean up the tests in this module.
 
 from importlib import import_module
 
+from django.contrib.auth import get_user_model, login, logout
 from django.http import HttpRequest
 from django.test import override_settings, TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model, login, logout
 
 from axes.conf import settings
-from axes.models import AccessLog, AccessAttempt
-from axes.tests.base import AxesTestCase
+from axes.helpers import get_cache, make_cache_key_list
+from axes.models import AccessAttempt
+from tests.base import AxesTestCase
 
 
 class DjangoLoginTestCase(TestCase):
@@ -23,13 +24,13 @@ class DjangoLoginTestCase(TestCase):
         self.request = HttpRequest()
         self.request.session = engine.SessionStore()
 
-        self.username = 'john.doe'
-        self.password = 'hunter2'
+        self.username = "john.doe"
+        self.password = "hunter2"
 
         self.user = get_user_model().objects.create(username=self.username)
         self.user.set_password(self.password)
         self.user.save()
-        self.user.backend = 'django.contrib.auth.backends.ModelBackend'
+        self.user.backend = "django.contrib.auth.backends.ModelBackend"
 
 
 class DjangoContribAuthLoginTestCase(DjangoLoginTestCase):
@@ -54,7 +55,7 @@ class DjangoTestClientLoginTestCase(DjangoLoginTestCase):
         self.client.force_login(self.user)
 
 
-class LoginTestCase(AxesTestCase):
+class DatabaseLoginTestCase(AxesTestCase):
     """
     Test for lockouts under different configurations and circumstances to prevent false positives and false negatives.
 
@@ -62,60 +63,55 @@ class LoginTestCase(AxesTestCase):
     Always allow attempted logins for a different user from a different IP.
     """
 
-    IP_1 = '10.1.1.1'
-    IP_2 = '10.2.2.2'
-    USER_1 = 'valid-user-1'
-    USER_2 = 'valid-user-2'
-    EMAIL_1 = 'valid-email-1@example.com'
-    EMAIL_2 = 'valid-email-2@example.com'
+    IP_1 = "10.1.1.1"
+    IP_2 = "10.2.2.2"
+    IP_3 = "10.2.2.3"
+    USER_1 = "valid-user-1"
+    USER_2 = "valid-user-2"
+    USER_3 = "valid-user-3"
+    EMAIL_1 = "valid-email-1@example.com"
+    EMAIL_2 = "valid-email-2@example.com"
 
     VALID_USERNAME = USER_1
     VALID_EMAIL = EMAIL_1
-    VALID_PASSWORD = 'valid-password'
+    VALID_PASSWORD = "valid-password"
 
     VALID_IP_ADDRESS = IP_1
 
-    WRONG_PASSWORD = 'wrong-password'
-    LOCKED_MESSAGE = 'Account locked: too many login attempts.'
+    WRONG_PASSWORD = "wrong-password"
+    LOCKED_MESSAGE = "Account locked: too many login attempts."
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
+    ATTEMPT_NOT_BLOCKED = 200
     ALLOWED = 302
     BLOCKED = 403
 
-    def _login(self, username, password, ip_addr='127.0.0.1', **kwargs):
+    def _login(self, username, password, ip_addr="127.0.0.1", **kwargs):
         """
         Login a user and get the response.
 
         IP address can be configured to test IP blocking functionality.
         """
 
-        post_data = {
-            'username': username,
-            'password': password,
-        }
+        post_data = {"username": username, "password": password}
 
         post_data.update(kwargs)
 
         return self.client.post(
-            reverse('admin:login'),
+            reverse("admin:login"),
             post_data,
             REMOTE_ADDR=ip_addr,
-            HTTP_USER_AGENT='test-browser'
+            HTTP_USER_AGENT="test-browser",
         )
 
     def _lockout_user_from_ip(self, username, ip_addr):
         for _ in range(settings.AXES_FAILURE_LIMIT):
             response = self._login(
-                username=username,
-                password=self.WRONG_PASSWORD,
-                ip_addr=ip_addr,
+                username=username, password=self.WRONG_PASSWORD, ip_addr=ip_addr
             )
         return response
 
     def _lockout_user1_from_ip1(self):
-        return self._lockout_user_from_ip(
-            username=self.USER_1,
-            ip_addr=self.IP_1,
-        )
+        return self._lockout_user_from_ip(username=self.USER_1, ip_addr=self.IP_1)
 
     def setUp(self):
         """
@@ -138,7 +134,9 @@ class LoginTestCase(AxesTestCase):
         """
 
         response = self._login(self.username, self.password)
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True)
+        self.assertNotContains(
+            response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True
+        )
 
     def test_lockout_limit_once(self):
         """
@@ -159,6 +157,9 @@ class LoginTestCase(AxesTestCase):
             response = self.login()
             self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
 
+    def attempt_count(self):
+        return AccessAttempt.objects.count()
+
     @override_settings(AXES_RESET_ON_SUCCESS=False)
     def test_reset_on_success_false(self):
         self.almost_lockout()
@@ -166,19 +167,19 @@ class LoginTestCase(AxesTestCase):
 
         response = self.login()
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
-        self.assertTrue(AccessAttempt.objects.count())
+        self.assertTrue(self.attempt_count())
 
     @override_settings(AXES_RESET_ON_SUCCESS=True)
     def test_reset_on_success_true(self):
         self.almost_lockout()
-        self.assertTrue(AccessAttempt.objects.count())
+        self.assertTrue(self.attempt_count())
 
         self.login(is_valid_username=True, is_valid_password=True)
-        self.assertFalse(AccessAttempt.objects.count())
+        self.assertFalse(self.attempt_count())
 
         response = self.lockout()
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
-        self.assertTrue(AccessAttempt.objects.count())
+        self.assertTrue(self.attempt_count())
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_lockout_by_combination_user_and_ip(self):
@@ -188,10 +189,7 @@ class LoginTestCase(AxesTestCase):
 
         # test until one try before the limit
         for _ in range(1, settings.AXES_FAILURE_LIMIT):
-            response = self.login(
-                is_valid_username=True,
-                is_valid_password=False,
-            )
+            response = self.login(is_valid_username=True, is_valid_password=False)
             # Check if we are in the same login page
             self.assertContains(response, self.LOGIN_FORM_KEY, html=True)
 
@@ -224,7 +222,9 @@ class LoginTestCase(AxesTestCase):
         response = self._login(self.username, self.password)
 
         # Check if we are still in the login page
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True)
+        self.assertNotContains(
+            response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True
+        )
 
         # now create failure_limit + 1 failed logins and then we should still
         # be able to login with valid_username
@@ -233,7 +233,9 @@ class LoginTestCase(AxesTestCase):
 
         # Check if we can still log in with valid user
         response = self._login(self.username, self.password)
-        self.assertNotContains(response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True)
+        self.assertNotContains(
+            response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True
+        )
 
     # Test for true and false positives when blocking by IP *OR* user (default)
     # Cache disabled. Default settings.
@@ -242,11 +244,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 is still blocked from IP 1.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     def test_lockout_by_ip_allows_when_same_user_diff_ip_without_cache(self):
@@ -254,11 +252,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 can still login from IP 2.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     def test_lockout_by_ip_blocks_when_diff_user_same_ip_without_cache(self):
@@ -266,11 +260,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 is also locked out from IP 1.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     def test_lockout_by_ip_allows_when_diff_user_diff_ip_without_cache(self):
@@ -278,11 +268,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 2.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     # Test for true and false positives when blocking by user only.
@@ -293,11 +279,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 is still blocked from IP 1.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
@@ -306,11 +288,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 is also locked out from IP 2.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
@@ -319,11 +297,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 1.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
@@ -332,20 +306,16 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 2.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_with_empty_username_allows_other_users_without_cache(self):
         # User with empty username is locked out from IP 1.
-        self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
+        self._lockout_user_from_ip(username="", ip_addr=self.IP_1)
 
         # Still possible to access the login page
-        response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
+        response = self.client.get(reverse("admin:login"), REMOTE_ADDR=self.IP_1)
         self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
 
     # Test for true and false positives when blocking by user and IP together.
@@ -356,11 +326,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 is still blocked from IP 1.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
@@ -369,11 +335,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 can still login from IP 2.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
@@ -382,11 +344,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 1.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
@@ -395,20 +353,18 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 2.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
-    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_without_cache(self):
+    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_without_cache(
+        self,
+    ):
         # User with empty username is locked out from IP 1.
-        self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
+        self._lockout_user_from_ip(username="", ip_addr=self.IP_1)
 
         # Still possible to access the login page
-        response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
+        response = self.client.get(reverse("admin:login"), REMOTE_ADDR=self.IP_1)
         self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
 
     # Test for true and false positives when blocking by IP *OR* user (default)
@@ -418,11 +374,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 is still blocked from IP 1.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     def test_lockout_by_ip_allows_when_same_user_diff_ip_using_cache(self):
@@ -430,11 +382,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 can still login from IP 2.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     def test_lockout_by_ip_blocks_when_diff_user_same_ip_using_cache(self):
@@ -442,11 +390,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 is also locked out from IP 1.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     def test_lockout_by_ip_allows_when_diff_user_diff_ip_using_cache(self):
@@ -454,20 +398,16 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 2.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_user_with_empty_username_allows_other_users_using_cache(self):
         # User with empty username is locked out from IP 1.
-        self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
+        self._lockout_user_from_ip(username="", ip_addr=self.IP_1)
 
         # Still possible to access the login page
-        response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
+        response = self.client.get(reverse("admin:login"), REMOTE_ADDR=self.IP_1)
         self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
 
     # Test for true and false positives when blocking by user only.
@@ -478,11 +418,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 is still blocked from IP 1.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
@@ -491,11 +427,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 is also locked out from IP 2.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
@@ -504,11 +436,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 1.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
@@ -517,11 +445,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 2.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     # Test for true and false positives when blocking by user and IP together.
@@ -532,11 +456,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 is still blocked from IP 1.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
@@ -545,11 +465,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 1 can still login from IP 2.
-        response = self._login(
-            self.USER_1,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
@@ -558,11 +474,7 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 1.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_1
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
@@ -571,18 +483,162 @@ class LoginTestCase(AxesTestCase):
         self._lockout_user1_from_ip1()
 
         # User 2 can still login from IP 2.
-        response = self._login(
-            self.USER_2,
-            self.VALID_PASSWORD,
-            ip_addr=self.IP_2
-        )
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @override_settings(
+        AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True, AXES_FAILURE_LIMIT=2
+    )
+    def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_using_cache_multiple_attempts(
+        self,
+    ):
+        # User 1 is locked out from IP 1.
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_1)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Second attempt from different IP
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_2)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Second attempt from same IP, different username
+        response = self._login(self.USER_2, self.WRONG_PASSWORD, self.IP_1)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # User 1 is blocked from IP 1
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, ip_addr=self.IP_1)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+
+        # User 1 is blocked from IP 2
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, ip_addr=self.IP_2)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+
+        # User 2 can still login from IP 2, only he has 1 attempt left
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
-    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_using_cache(self):
+    def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_using_cache(
+        self,
+    ):
         # User with empty username is locked out from IP 1.
-        self._lockout_user_from_ip(username='', ip_addr=self.IP_1)
+        self._lockout_user_from_ip(username="", ip_addr=self.IP_1)
 
         # Still possible to access the login page
-        response = self.client.get(reverse('admin:login'), REMOTE_ADDR=self.IP_1)
+        response = self.client.get(reverse("admin:login"), REMOTE_ADDR=self.IP_1)
         self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
+
+    # Test for true and false positives when blocking by user or IP together.
+    # With cache enabled. When AXES_LOCK_OUT_BY_USER_OR_IP = True
+    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
+    def test_lockout_by_user_or_ip_blocks_when_same_user_same_ip_using_cache(self):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is still blocked from IP 1.
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
+    def test_lockout_by_user_or_ip_allows_when_same_user_diff_ip_using_cache(self):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 1 is blocked out from IP 1
+        response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
+    def test_lockout_by_user_or_ip_allows_when_diff_user_same_ip_using_cache(self):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 1.
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True, AXES_FAILURE_LIMIT=3)
+    def test_lockout_by_user_or_ip_allows_when_diff_user_same_ip_using_cache_multiple_attempts(
+        self,
+    ):
+        # User 1 is locked out from IP 1.
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_1)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Second attempt from different IP
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_2)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # User 1 is blocked on all IPs, he reached 2 attempts
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, ip_addr=self.IP_2)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, ip_addr=self.IP_3)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+
+        # IP 1 has still one attempt left
+        response = self._login(self.USER_2, self.WRONG_PASSWORD, self.IP_1)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # But now IP 1 is blocked for all attempts
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, ip_addr=self.IP_1)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+        response = self._login(self.USER_2, self.WRONG_PASSWORD, ip_addr=self.IP_1)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+        response = self._login(self.USER_3, self.WRONG_PASSWORD, ip_addr=self.IP_1)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+
+    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True, AXES_FAILURE_LIMIT=3)
+    def test_lockout_by_user_or_ip_allows_when_diff_user_same_ip_using_cache_multiple_failed_attempts(
+        self,
+    ):
+        """Test, if the failed attempts make also impact on the attempt count"""
+        # User 1 is locked out from IP 1.
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_1)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Second attempt from different IP
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, self.IP_2)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Second attempt from same IP, different username
+        response = self._login(self.USER_2, self.WRONG_PASSWORD, self.IP_1)
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # User 1 is blocked from IP 2
+        response = self._login(self.USER_1, self.WRONG_PASSWORD, ip_addr=self.IP_2)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
+
+        # On IP 2 it is only 2. attempt, for user 2 it is also 2. attempt -> allow log in
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
+    def test_lockout_by_user_or_ip_allows_when_diff_user_diff_ip_using_cache(self):
+        # User 1 is locked out from IP 1.
+        self._lockout_user1_from_ip1()
+
+        # User 2 can still login from IP 2.
+        response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
+        self.assertEqual(response.status_code, self.ALLOWED)
+
+    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
+    def test_lockout_by_user_or_ip_with_empty_username_allows_other_users_using_cache(
+        self,
+    ):
+        # User with empty username is locked out from IP 1.
+        self._lockout_user_from_ip(username="", ip_addr=self.IP_1)
+
+        # Still possible to access the login page
+        response = self.client.get(reverse("admin:login"), REMOTE_ADDR=self.IP_1)
+        self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
+
+
+# Test the same logic with cache handler
+@override_settings(AXES_HANDLER="axes.handlers.cache.AxesCacheHandler")
+class CacheLoginTestCase(DatabaseLoginTestCase):
+    def attempt_count(self):
+        cache = get_cache()
+        keys = cache._cache
+        return len(keys)
+
+    def reset(self, **kwargs):
+        get_cache().delete(make_cache_key_list([kwargs])[0])

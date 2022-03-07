@@ -3,6 +3,568 @@ Changes
 =======
 
 
+5.31.0 (2022-01-08)
+-------------------
+
+- Adjust version specifiers for newer Python and other package versions.
+  Set package minimum Python version to 3.7.
+  Relax ``django-ipware`` version requirements to allow newer versions.
+  [aleksihakli]
+
+
+5.30.0 (2022-01-08)
+-------------------
+
+- Fix package build error in 5.29.0 to allow publishing.
+  [aleksihakli]
+
+
+5.29.0 (2022-01-08)
+-------------------
+
+- Drop Python 3.6 support.
+  [aleksihakli]
+
+
+5.28.0 (2021-12-14)
+-------------------
+
+- Drop Django < 3.2 support.
+  [hramezani]
+- Add Django 4.0 to test matrix.
+  [hramezani]
+
+
+5.27.0 (2021-11-04)
+-------------------
+
+- Fix ``pkg_resources`` missing for package version resolution on runtime
+  due to ``setuptools`` not being a runtime dependency.
+  [asherf]
+- Add Python 3.10 and Django 3.2 support.
+  [hramezani]
+
+
+5.26.0 (2021-10-11)
+-------------------
+
+- Fix ``AXES_USERNAME_CALLABLE`` not receiving ``credentials`` attribute
+  in Axes middleware lockout response when user is locked out.
+  [rootart]
+
+
+5.25.0 (2021-09-19)
+-------------------
+
+- Fix duplicated AccessAttempts
+  with updated database model ``unique_together`` constraints
+  and data and schema migration.
+  [PetrDlouhy]
+
+
+5.24.0 (2021-09-09)
+-------------------
+
+- Use atomic transaction for updating AccessAttempts in database handler.
+  [okapies]
+
+
+5.23.0 (2021-09-02)
+-------------------
+
+- Pass ``request`` as argument to ``AXES_CLIENT_STR_CALLABLE``.
+  [sarahboyce]
+
+
+5.22.0 (2021-08-31)
+-------------------
+
+- Improve ``failures_since_start`` handling by moving the counter incrementation
+  from non-atomic Python code call to atomic database function.
+  [okapies]
+- Add publicly available ``request.axes_failures_since_start`` attribute.
+  [okapies]
+
+
+5.21.0 (2021-08-19)
+-------------------
+
+- Add configurable lockout HTTP status code responses
+  with the new ``AXES_HTTP_RESPONSE_CODE`` setting.
+  [phil-bell]
+
+
+5.20.0 (2021-06-29)
+-------------------
+
+- Improve race condition handling in e.g. multi-process environments by using
+  ``get_or_create`` for access attempt fetching and updates.
+  [uli-klank]
+
+
+5.19.0 (2021-06-16)
+-------------------
+
+- Add Polish locale.
+  [Quadric]
+
+
+5.18.0 (2021-06-09)
+-------------------
+
+- Fix ``default_auto_field`` warning.
+  [zkanda]
+
+
+5.17.0 (2021-06-05)
+-------------------
+
+- Fix ``default_app_config`` deprecation.
+  Django 3.2 automatically detects ``AppConfig`` and therefore this setting is no longer required.
+  [nikolaik]
+
+
+5.16.0 (2021-05-19)
+-------------------
+
+- Add ``AXES_CLIENT_STR_CALLABLE`` setting.
+  [smtydn]
+
+
+5.15.0 (2021-05-03)
+-------------------
+
+- Add option to cleanse sensitive GET and POST params in database handler
+  with the ``AXES_SENSITIVE_PARAMETERS`` setting.
+  [mcoconnor]
+
+
+5.14.0 (2021-04-06)
+-------------------
+
+- Improve message formatting for lockout message and translations.
+  [ashokdelphia]
+- Remove support for Django 3.0.
+  [hramezani]
+- Add support for Django 3.2.
+  [hramezani]
+
+
+5.13.1 (2021-02-22)
+-------------------
+
+- Default ``AXES_VERBOSE`` to ``AXES_ENABLED`` configuration setting,
+  disabling verbose startup logging when Axes itself is disabled.
+  [christianbundy]
+- Update documentation.
+  [KStenK]
+
+
+5.13.0 (2021-02-15)
+-------------------
+
+- Add support for resetting attempts with cache backend.
+  [nattyg93]
+
+
+5.12.0 (2021-01-07)
+-------------------
+
+- Clean up test structure and migrate tests outside
+  the main package for a smaller wheel distributions.
+  [aleksihakli]
+- Move configuration to pyproject.toml for cleaner layout.
+  [aleksihakli]
+- Clean up test settings override configuration.
+  [hramezani]
+
+
+5.11.1 (2021-01-06)
+-------------------
+
+- Fix cache entry creations for None username.
+  [cabarnes]
+
+
+5.11.0 (2021-01-05)
+-------------------
+
+- Add lockout view CORS support with ``AXES_ALLOWED_CORS_ORIGINS`` configuration flag.
+  [vladox]
+- Add missing ``@wraps`` decorator to ``axes.decorators.axes_dispatch``.
+  [aleksihakli]
+
+
+5.10.1 (2021-01-04)
+-------------------
+
+- Add ``DEFAULT_AUTO_FIELD`` to test settings.
+  [hramezani]
+- Fix documentation language.
+  [danielquinn] 
+- Fix Python package version specifiers and remove redundant imports.
+  [aleksihakli]
+
+
+5.10.0 (2020-12-18)
+-------------------
+
+- Deprecate stock DRF support from 5.8.0,
+  require users to set it up per project.
+  Check the documentation for more information.
+  [aleksihakli]
+
+
+5.9.1 (2020-12-02)
+------------------
+
+- Move tests to GitHub Actions
+  [jezdez]
+- Fix running Axes code in middleware when ``AXES_ENABLED`` is ``False``.
+  [ashokdelphia]
+
+
+5.9.0 (2020-11-05)
+------------------
+
+- Add Python 3.9 support.
+  [hramezani]
+- Prevent ``AccessAttempt`` creation with database handler when
+  username is not set and ``AXES_ONLY_USER_FAILURES`` setting is not set.
+  [hramezani]
+
+
+5.8.0 (2020-10-16)
+------------------
+
+- Improve Django REST Framework (DRF) integration.
+  [Anatoly]
+
+
+5.7.1 (2020-09-27)
+------------------
+
+- Adjust settings import and handling chain
+  for cleaner module import and invocation order.
+  [aleksihakli]
+- Adjust the use of ``AXES_ENABLED`` flag so that
+  imports are always done the same way and initial log
+  is written regardless of the setting and it only affects
+  code that is decorated or wrapped with ``toggleable``.
+  [alekshakli]
+
+
+5.7.0 (2020-09-26)
+------------------
+
+- Deprecate ``AXES_LOGGER`` Axes setting and move to ``__name__``
+  based logging and fully qualified Python module name log identifiers.
+  [aleksihakli]
+
+
+5.6.2 (2020-09-20)
+------------------
+
+- Fix regression in ``axes_reset_user`` management command.
+  [aleksihakli]
+
+
+5.6.1 (2020-09-17)
+------------------
+
+- Improve test dependency management and upgrade black code formatter.
+  [smithdc1]
+
+
+5.6.0 (2020-09-12)
+------------------
+
+- Add proper development ``subTest`` support via ``pytest-subtests`` package.
+  [smithdc1]
+- Deprecate ``django-appconf`` and use plain settings for Axes.
+  [aleksihakli]
+
+
+5.5.2 (2020-09-11)
+------------------
+
+- Update deprecating use of the ``request.is_ajax`` method.
+  [smithdc1]
+
+
+5.5.1 (2020-09-10)
+------------------
+
+- Update deprecated uses of Django modules and members.
+  [smithdc1]
+
+
+5.5.0 (2020-08-21)
+------------------
+
+- Add support for locking requests based on
+  username OR IP address with inclusive or
+  using the ``LOCK_OUT_BY_USER_OR_IP`` flag.
+  [PetrDlouhy]
+- Deprecate Signal ``providing_args`` for Django 3.1 support.
+  [coredumperror]
+
+
+5.4.3 (2020-08-06)
+------------------
+
+- Add Django 3.1 support.
+  [hramezani]
+
+
+5.4.2 (2020-07-28)
+------------------
+
+- Add ABC or abstract base class implementation for handlers.
+  [jorlugaqui]
+
+
+5.4.1 (2020-07-03)
+------------------
+
+- Fix code styling for linters.
+  [aleksihakli]
+
+
+5.4.0 (2020-07-03)
+------------------
+
+- Propagate username to lockout view in URL parameters.
+  [PetrDlouhy]
+- Update CAPTCHA examples.
+  [PetrDlouhy]
+- Upgrade django-ipware to version 3.
+  [hramezani,mnislam01]
+
+
+5.3.5 (2020-07-02)
+------------------
+
+- Restrict ipware version for version compatibility.
+  [aleksihakli]
+
+
+5.3.4 (2020-06-09)
+------------------
+
+- Deprecate Django 1.11 LTS support.
+  [aleksihakli]
+
+
+5.3.3 (2020-05-22)
+------------------
+
+- Fix ``AXES_ONLY_ADMIN_SITE`` functionality when
+  no default admin site is defined in the URL configuration.
+  [igor-shevchenko]
+
+
+5.3.2 (2020-05-15)
+------------------
+
+- Fix AppConf settings prefix for Fargate.
+  [marksweb]
+
+
+5.3.1 (2020-03-23)
+------------------
+
+- Fix null byte ValueError bug in ORM.
+  [ddimmich]
+
+
+5.3.0 (2020-03-10)
+------------------
+
+- Improve Django REST Framework compatibility.
+  [I0x4dI]
+
+
+5.2.2 (2020-01-08)
+------------------
+
+- Add missing proxy implementation for
+  ``axes.handlers.proxy.AxesProxyHandler.get_failures``.
+  [aleksihakli]
+
+
+5.2.1 (2020-01-08)
+------------------
+
+- Add django-reversion compatibility notes.
+  [mark-mishyn]
+- Add pluggable lockout responses and the
+  ``AXES_LOCKOUT_CALLABLE`` configuration flag.
+  [aleksihakli]
+
+
+5.2.0 (2020-01-01)
+------------------
+
+- Add a test handler.
+  [aidanlister]
+
+
+5.1.0 (2019-12-29)
+------------------
+
+- Add pluggable user account whitelisting and the
+  ``AXES_WHITELIST_CALLABLE`` configuration flag.
+  [aleksihakli]
+
+
+5.0.20 (2019-12-01)
+-------------------
+
+- Fix django-allauth compatibility issue.
+  [hramezani]
+- Improve tests for login attempt monitoring.
+  [hramezani]
+- Add reverse proxy documentation.
+  [ckcollab]
+- Update OAuth documentation examples.
+  [aleksihakli]
+
+
+5.0.19 (2019-11-06)
+-------------------
+
+- Optimize access attempt fetching in database handler.
+  [hramezani]
+- Optimize request data fetching in proxy handler.
+  [hramezani]
+
+
+5.0.18 (2019-10-17)
+-------------------
+
+- Add ``cooloff_timedelta`` context variable to lockout responses.
+  [jstockwin]
+
+
+5.0.17 (2019-10-15)
+-------------------
+
+- Safer string formatting for user input.
+  [aleksihakli]
+
+
+5.0.16 (2019-10-15)
+-------------------
+
+- Fix string formatting bug in logging.
+  [zerolab]
+
+
+5.0.15 (2019-10-09)
+-------------------
+
+- Add ``AXES_ENABLE_ADMIN`` flag.
+  [flannelhead]
+
+
+5.0.14 (2019-09-28)
+-------------------
+
+- Docs, CI pipeline, and code formatting improvements
+  [aleksihakli]
+
+
+5.0.13 (2019-08-30)
+-------------------
+
+- Python 3.8 and PyPy support.
+  [aleksihakli]
+- Migrate to ``setuptools_scm`` and automatic versioning.
+  [aleksihakli]
+
+
+5.0.12 (2019-08-05)
+-------------------
+
+- Support callables for ``AXES_COOLOFF_TIME`` setting.
+  [DariaPlotnikova]
+
+
+5.0.11 (2019-07-25)
+-------------------
+
+- Fix typo in rST formatting that prevented 5.0.10 release to PyPI.
+  [aleksihakli]
+
+
+5.0.10 (2019-07-25)
+-------------------
+
+- Refactor type checks for ``axes.helpers.get_client_cache_key``
+  for framework compatibility, fixes #471.
+  [aleksihakli]
+
+
+5.0.9 (2019-07-11)
+------------------
+
+- Add better handling for attempt and log resets by moving them
+  into handlers which allows customization and more configurability.
+  Unimplemented handlers raise ``NotImplementedError`` by default.
+  [aleksihakli]
+- Add Python 3.8 dev version and PyPy to the Travis test matrix.
+  [aleksihakli]
+
+
+5.0.8 (2019-07-09)
+------------------
+
+- Add ``AXES_ONLY_ADMIN_SITE`` flag for only running Axes on admin site.
+  [hramezani]
+- Add ``axes_reset_logs`` command for removing old AccessLog records.
+  [tlebrize]
+- Allow ``AxesBackend`` subclasses to pass the ``axes.W003`` system check.
+  [adamchainz]
+
+
+5.0.7 (2019-06-14)
+------------------
+
+- Fix lockout message showing when lockout is disabled
+  with the ``AXES_LOCK_OUT_AT_FAILURE`` setting.
+  [mogzol]
+
+- Add support for callable ``AXES_FAILURE_LIMIT`` setting.
+  [bbayles]
+
+
+5.0.6 (2019-05-25)
+------------------
+
+- Deprecate ``AXES_DISABLE_SUCCESS_ACCESS_LOG`` flag in favour of
+  ``AXES_DISABLE_ACCESS_LOG`` which has mostly the same functionality.
+  Update documentation to better reflect the behaviour of the flag.
+  [aleksihakli]
+
+
+5.0.5 (2019-05-19)
+------------------
+
+- Change the lockout response calculation to request flagging
+  instead of exception throwing in the signal handler and middleware.
+  Move request attribute calculation from middleware to handler layer.
+  Deprecate ``axes.request.AxesHttpRequest`` object type definition.
+  [aleksihakli]
+
+- Deprecate the old version 4.x ``axes.backends.AxesModelBackend`` class.
+  [aleksihakli]
+
+- Improve documentation on attempt tracking, resets, Axes customization,
+  project and component compatibility and integrations, and other things.
+  [aleksihakli]
+
+
 5.0.4 (2019-05-09)
 ------------------
 
@@ -77,6 +639,11 @@ Changes
   From now on, the callable needs to accept two arguments,
   the HttpRequest and credentials that are supplied to the
   Django ``authenticate`` method in authentication backends.
+  [aleksihakli]
+
+- Move ``axes.attempts.is_already_locked`` function to ``axes.handlers.AxesProxyHandler.is_locked``.
+  Various other previously undocumented methods have been deprecated and moved inside the project.
+  The new documented public APIs can be considered as stable and can be safely utilized by other projects.
   [aleksihakli]
 
 - Improve documentation layouting and contents. Add public API reference section.

@@ -27,9 +27,9 @@ msgid "Meta Data"
 msgstr "Meta-Verisi"
 
 #: axes/conf.py:58
-msgid "Account locked: too many login attempts. Please try again later"
+msgid "Account locked: too many login attempts. Please try again later."
 msgstr ""
-"Hesap kilitlendi: cok fazla erişim denemesi. Lütfen daha sonra tekrar deneyiniz"
+"Hesap kilitlendi: cok fazla erişim denemesi. Lütfen daha sonra tekrar deneyiniz."
 
 #: axes/conf.py:61
 msgid ""
@@ -37,7 +37,7 @@ msgid ""
 "account."
 msgstr ""
 "Hesap kilitlendi: cok fazla erişim denemesi. Hesabını açtırmak için yöneticiyle iletişime"
-"geçin"
+"geçin."
 
 #: axes/models.py:9
 msgid "User Agent"

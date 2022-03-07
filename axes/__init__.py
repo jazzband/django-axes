@@ -1,7 +1,4 @@
-__version__ = '5.0.4'
-
-default_app_config = 'axes.apps.AppConfig'
+from pkg_resources import get_distribution
 
 
-def get_version():
-    return __version__
+__version__ = get_distribution("django-axes").version

@@ -1,12 +1,22 @@
-from django.http import HttpRequest
-
-from axes.handlers.base import AxesHandler
+from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
 
 
-class AxesDummyHandler(AxesHandler):  # pylint: disable=unused-argument
+class AxesDummyHandler(AbstractAxesHandler, AxesBaseHandler):
     """
     Signal handler implementation that does nothing and can be used to disable signal processing.
     """
 
-    def is_allowed(self, request: HttpRequest, credentials: dict = None) -> bool:
+    def is_allowed(self, request, credentials: dict = None) -> bool:
         return True
+
+    def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
+        pass
+
+    def user_logged_in(self, sender, request, user, **kwargs):
+        pass
+
+    def user_logged_out(self, sender, request, user, **kwargs):
+        pass
+
+    def get_failures(self, request, credentials: dict = None) -> int:
+        return 0

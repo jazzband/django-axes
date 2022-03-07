@@ -2,6 +2,7 @@
 *.pyc
 *.swp
 .coverage
+coverage.xml
 .DS_Store
 .idea
 .mypy_cache/
@@ -13,3 +14,6 @@ build/
 dist/
 docs/_build
 test.db
+.eggs
+pip-wheel-metadata
+.vscode/

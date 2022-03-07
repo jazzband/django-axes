@@ -1,0 +1,100 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-06-11 23:36+0200\n"
+"PO-Revision-Date: 2021-06-16 10:51+0300\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n"
+"%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n"
+"%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"X-Generator: Poedit 3.0\n"
+
+#: .\axes\admin.py:26
+msgid "Form Data"
+msgstr "Dane formularza"
+
+#: .\axes\admin.py:27 .\axes\admin.py:64
+msgid "Meta Data"
+msgstr "Metadane"
+
+#: .\axes\conf.py:89
+msgid "Account locked: too many login attempts. Please try again later."
+msgstr ""
+"Konto zablokowane: zbyt wiele prób logowania. Spróbuj ponownie później."
+
+#: .\axes\conf.py:97
+msgid ""
+"Account locked: too many login attempts. Contact an admin to unlock your "
+"account."
+msgstr ""
+"Konto zablokowane: zbyt wiele prób logowania. Skontaktuj się z "
+"administratorem, aby odblokować swoje konto."
+
+#: .\axes\models.py:6
+#, fuzzy
+msgid "User Agent"
+msgstr "User Agent"
+
+#: .\axes\models.py:8
+msgid "IP Address"
+msgstr "Adres IP"
+
+#: .\axes\models.py:10
+msgid "Username"
+msgstr "Nazwa Użytkownika"
+
+#: .\axes\models.py:12
+#, fuzzy
+msgid "HTTP Accept"
+msgstr "HTTP Accept"
+
+#: .\axes\models.py:14
+msgid "Path"
+msgstr "Ścieżka"
+
+#: .\axes\models.py:16
+msgid "Attempt Time"
+msgstr "Czas wystąpienia"
+
+#: .\axes\models.py:25
+msgid "GET Data"
+msgstr "Dane GET"
+
+#: .\axes\models.py:27
+msgid "POST Data"
+msgstr "Dane POST"
+
+#: .\axes\models.py:29
+msgid "Failed Logins"
+msgstr "Nieudane logowania"
+
+#: .\axes\models.py:35
+msgid "access attempt"
+msgstr "próba dostępu"
+
+#: .\axes\models.py:36
+msgid "access attempts"
+msgstr "próby dostępu"
+
+#: .\axes\models.py:40
+msgid "Logout Time"
+msgstr "Czas wylogowania"
+
+#: .\axes\models.py:46
+msgid "access log"
+msgstr "dziennik logowania"
+
+#: .\axes\models.py:47
+msgid "access logs"
+msgstr "dzienniki logowania"

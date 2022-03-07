@@ -1,89 +1,134 @@
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-from appconf import AppConf
 
+# disable plugin when set to False
+settings.AXES_ENABLED = getattr(settings, "AXES_ENABLED", True)
 
-class AxesAppConf(AppConf):
-    # disable plugin when set to False
-    ENABLED = True
+# see if the user has overridden the failure limit
+settings.AXES_FAILURE_LIMIT = getattr(settings, "AXES_FAILURE_LIMIT", 3)
 
-    # see if the user has overridden the failure limit
-    FAILURE_LIMIT = 3
+# see if the user has set axes to lock out logins after failure limit
+settings.AXES_LOCK_OUT_AT_FAILURE = getattr(settings, "AXES_LOCK_OUT_AT_FAILURE", True)
 
-    # see if the user has set axes to lock out logins after failure limit
-    LOCK_OUT_AT_FAILURE = True
+# lock out with the combination of username and IP address
+settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = getattr(
+    settings, "AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP", False
+)
 
-    # lock out with the combination of username and IP address
-    LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
+# lock out with the username or IP address
+settings.AXES_LOCK_OUT_BY_USER_OR_IP = getattr(
+    settings, "AXES_LOCK_OUT_BY_USER_OR_IP", False
+)
 
-    # lock out with username and never the IP or user agent
-    ONLY_USER_FAILURES = False
+# lock out with username and never the IP or user agent
+settings.AXES_ONLY_USER_FAILURES = getattr(settings, "AXES_ONLY_USER_FAILURES", False)
 
-    # lock out with the user agent, has no effect when ONLY_USER_FAILURES is set
-    USE_USER_AGENT = False
+# lock out just for admin site
+settings.AXES_ONLY_ADMIN_SITE = getattr(settings, "AXES_ONLY_ADMIN_SITE", False)
 
-    # use a specific username field to retrieve from login POST data
-    USERNAME_FORM_FIELD = 'username'
+# show Axes logs in admin
+settings.AXES_ENABLE_ADMIN = getattr(settings, "AXES_ENABLE_ADMIN", True)
 
-    # use a specific password field to retrieve from login POST data
-    PASSWORD_FORM_FIELD = 'password'  # noqa
+# lock out with the user agent, has no effect when ONLY_USER_FAILURES is set
+settings.AXES_USE_USER_AGENT = getattr(settings, "AXES_USE_USER_AGENT", False)
 
-    # use a provided callable to transform the POSTed username into the one used in credentials
-    USERNAME_CALLABLE = None
+# use a specific username field to retrieve from login POST data
+settings.AXES_USERNAME_FORM_FIELD = getattr(
+    settings, "AXES_USERNAME_FORM_FIELD", "username"
+)
 
-    # reset the number of failed attempts after one successful attempt
-    RESET_ON_SUCCESS = False
+# use a specific password field to retrieve from login POST data
+settings.AXES_PASSWORD_FORM_FIELD = getattr(
+    settings, "AXES_PASSWORD_FORM_FIELD", "password"
+)  # noqa
 
-    DISABLE_ACCESS_LOG = False
+# use a provided callable to transform the POSTed username into the one used in credentials
+settings.AXES_USERNAME_CALLABLE = getattr(settings, "AXES_USERNAME_CALLABLE", None)
 
-    DISABLE_SUCCESS_ACCESS_LOG = False
+# determine if given user should be always allowed to attempt authentication
+settings.AXES_WHITELIST_CALLABLE = getattr(settings, "AXES_WHITELIST_CALLABLE", None)
 
-    HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
+# return custom lockout response if configured
+settings.AXES_LOCKOUT_CALLABLE = getattr(settings, "AXES_LOCKOUT_CALLABLE", None)
 
-    LOGGER = 'axes.watch_login'
+# reset the number of failed attempts after one successful attempt
+settings.AXES_RESET_ON_SUCCESS = getattr(settings, "AXES_RESET_ON_SUCCESS", False)
 
-    LOCKOUT_TEMPLATE = None
+settings.AXES_DISABLE_ACCESS_LOG = getattr(settings, "AXES_DISABLE_ACCESS_LOG", False)
 
-    LOCKOUT_URL = None
+settings.AXES_HANDLER = getattr(
+    settings, "AXES_HANDLER", "axes.handlers.database.AxesDatabaseHandler"
+)
 
-    COOLOFF_TIME = None
+settings.AXES_LOCKOUT_TEMPLATE = getattr(settings, "AXES_LOCKOUT_TEMPLATE", None)
 
-    VERBOSE = True
+settings.AXES_LOCKOUT_URL = getattr(settings, "AXES_LOCKOUT_URL", None)
 
-    # whitelist and blacklist
-    NEVER_LOCKOUT_WHITELIST = False
+settings.AXES_COOLOFF_TIME = getattr(settings, "AXES_COOLOFF_TIME", None)
 
-    NEVER_LOCKOUT_GET = False
+settings.AXES_VERBOSE = getattr(settings, "AXES_VERBOSE", settings.AXES_ENABLED)
 
-    ONLY_WHITELIST = False
+# whitelist and blacklist
+settings.AXES_NEVER_LOCKOUT_WHITELIST = getattr(
+    settings, "AXES_NEVER_LOCKOUT_WHITELIST", False
+)
 
-    IP_WHITELIST = None
+settings.AXES_NEVER_LOCKOUT_GET = getattr(settings, "AXES_NEVER_LOCKOUT_GET", False)
 
-    IP_BLACKLIST = None
+settings.AXES_ONLY_WHITELIST = getattr(settings, "AXES_ONLY_WHITELIST", False)
 
-    # message to show when locked out and have cooloff enabled
-    COOLOFF_MESSAGE = _('Account locked: too many login attempts. Please try again later')
+settings.AXES_IP_WHITELIST = getattr(settings, "AXES_IP_WHITELIST", None)
 
-    # message to show when locked out and have cooloff disabled
-    PERMALOCK_MESSAGE = _('Account locked: too many login attempts. Contact an admin to unlock your account.')
+settings.AXES_IP_BLACKLIST = getattr(settings, "AXES_IP_BLACKLIST", None)
 
-    # if your deployment is using reverse proxies, set this value to 'left-most' or 'right-most' per your configuration
-    PROXY_ORDER = 'left-most'
+# message to show when locked out and have cooloff enabled
+settings.AXES_COOLOFF_MESSAGE = getattr(
+    settings,
+    "AXES_COOLOFF_MESSAGE",
+    _("Account locked: too many login attempts. Please try again later."),
+)
 
-    # if your deployment is using reverse proxies, set this value to the number of proxies in front of Django
-    PROXY_COUNT = None
+# message to show when locked out and have cooloff disabled
+settings.AXES_PERMALOCK_MESSAGE = getattr(
+    settings,
+    "AXES_PERMALOCK_MESSAGE",
+    _(
+        "Account locked: too many login attempts. Contact an admin to unlock your account."
+    ),
+)
 
-    # if your deployment is using reverse proxies, set to your trusted proxy IP addresses prefixes if needed
-    PROXY_TRUSTED_IPS = None
+# if your deployment is using reverse proxies, set this value to 'left-most' or 'right-most' per your configuration
+settings.AXES_PROXY_ORDER = getattr(settings, "AXES_PROXY_ORDER", "left-most")
 
-    # set to the names of request.META attributes that should be checked for the IP address of the client
-    # if your deployment is using reverse proxies, ensure that the header attributes are securely set by the proxy
-    # ensure that the client can not spoof the headers by setting them and sending them through the proxy
-    META_PRECEDENCE_ORDER = getattr(
-        settings, 'AXES_META_PRECEDENCE_ORDER', getattr(
-            settings, 'IPWARE_META_PRECEDENCE_ORDER', (
-                'REMOTE_ADDR',
-            )
-        )
-    )
+# if your deployment is using reverse proxies, set this value to the number of proxies in front of Django
+settings.AXES_PROXY_COUNT = getattr(settings, "AXES_PROXY_COUNT", None)
+
+# if your deployment is using reverse proxies, set to your trusted proxy IP addresses prefixes if needed
+settings.AXES_PROXY_TRUSTED_IPS = getattr(settings, "AXES_PROXY_TRUSTED_IPS", None)
+
+# set to the names of request.META attributes that should be checked for the IP address of the client
+# if your deployment is using reverse proxies, ensure that the header attributes are securely set by the proxy
+# ensure that the client can not spoof the headers by setting them and sending them through the proxy
+settings.AXES_META_PRECEDENCE_ORDER = getattr(
+    settings,
+    "AXES_META_PRECEDENCE_ORDER",
+    getattr(settings, "IPWARE_META_PRECEDENCE_ORDER", ("REMOTE_ADDR",)),
+)
+
+# set CORS allowed origins when calling authentication over ajax
+settings.AXES_ALLOWED_CORS_ORIGINS = getattr(settings, "AXES_ALLOWED_CORS_ORIGINS", "*")
+
+# set the list of sensitive parameters to cleanse from get/post data before logging
+settings.AXES_SENSITIVE_PARAMETERS = getattr(
+    settings,
+    "AXES_SENSITIVE_PARAMETERS",
+    [],
+)
+
+# set the callable for the readable string that can be used in
+# e.g. logging to distinguish client requests
+settings.AXES_CLIENT_STR_CALLABLE = getattr(settings, "AXES_CLIENT_STR_CALLABLE", None)
+
+# set the HTTP response code given by too many requests
+settings.AXES_HTTP_RESPONSE_CODE = getattr(settings, "AXES_HTTP_RESPONSE_CODE", 403)

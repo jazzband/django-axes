@@ -1,8 +1,11 @@
 from unittest.mock import patch, MagicMock
 
 from axes.backends import AxesBackend
-from axes.exceptions import AxesBackendRequestParameterRequired, AxesBackendPermissionDenied
-from axes.tests.base import AxesTestCase
+from axes.exceptions import (
+    AxesBackendRequestParameterRequired,
+    AxesBackendPermissionDenied,
+)
+from tests.base import AxesTestCase
 
 
 class BackendTestCase(AxesTestCase):
@@ -12,7 +15,7 @@ class BackendTestCase(AxesTestCase):
         with self.assertRaises(AxesBackendRequestParameterRequired):
             AxesBackend().authenticate(request)
 
-    @patch('axes.handlers.proxy.AxesProxyHandler.is_allowed', return_value=False)
+    @patch("axes.handlers.proxy.AxesProxyHandler.is_allowed", return_value=False)
     def test_authenticate_raises_on_locked_request(self, _):
         request = MagicMock()
 

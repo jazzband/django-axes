@@ -1,9 +1,11 @@
 from django.contrib.auth.backends import ModelBackend
 
-from axes.exceptions import AxesBackendPermissionDenied, AxesBackendRequestParameterRequired
+from axes.exceptions import (
+    AxesBackendPermissionDenied,
+    AxesBackendRequestParameterRequired,
+)
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_credentials, get_lockout_message, toggleable
-from axes.request import AxesHttpRequest
 
 
 class AxesBackend(ModelBackend):
@@ -18,7 +20,9 @@ class AxesBackend(ModelBackend):
     """
 
     @toggleable
-    def authenticate(self, request: AxesHttpRequest, username: str = None, password: str = None, **kwargs: dict):
+    def authenticate(
+        self, request, username: str = None, password: str = None, **kwargs: dict
+    ):
         """
         Checks user lockout status and raises an exception if user is not allowed to log in.
 
@@ -31,7 +35,9 @@ class AxesBackend(ModelBackend):
         """
 
         if request is None:
-            raise AxesBackendRequestParameterRequired('AxesBackend requires a request as an argument to authenticate')
+            raise AxesBackendRequestParameterRequired(
+                "AxesBackend requires a request as an argument to authenticate"
+            )
 
         credentials = get_credentials(username=username, password=password, **kwargs)
 
@@ -42,22 +48,15 @@ class AxesBackend(ModelBackend):
         # Its a bit weird to pass a context and expect a response value but its nice to get a "why" back.
 
         error_msg = get_lockout_message()
-        response_context = kwargs.get('response_context', {})
-        response_context['error'] = error_msg
+        response_context = kwargs.get("response_context", {})
+        response_context["error"] = error_msg
 
         # Raise an error that stops the authentication flows at django.contrib.auth.authenticate.
         # This error stops bubbling up at the authenticate call which catches backend PermissionDenied errors.
         # After this error is caught by authenticate it emits a signal indicating user login failed,
-        # which is processed by axes.signals.log_user_login_failed which logs the attempt and raises
-        # a second exception which bubbles up the middleware stack and produces a HTTP 403 Forbidden reply
-        # in the axes.middleware.AxesMiddleware.process_exception middleware exception handler.
+        # which is processed by axes.signals.log_user_login_failed which logs and flags the failed request.
+        # The axes.middleware.AxesMiddleware further processes the flagged request into a readable response.
 
-        raise AxesBackendPermissionDenied('AxesBackend detected that the given user is locked out')
-
-
-class AxesModelBackend(AxesBackend):
-    """
-    Backwards compatibility class for version 4 to version 5 migration.
-
-    See the ``AxesBackend`` class documentation and implementation.
-    """
+        raise AxesBackendPermissionDenied(
+            "AxesBackend detected that the given user is locked out"
+        )

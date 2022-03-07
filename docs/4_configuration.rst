@@ -16,63 +16,108 @@ The following ``settings.py`` options are available for customizing Axes behavio
 
 * ``AXES_ENABLED``: Enable or disable Axes plugin functionality,
   for example in test runner setup. Default: ``True``
-* ``AXES_FAILURE_LIMIT``: The number of login attempts allowed before a
-  record is created for the failed logins.  Default: ``3``
+* ``AXES_FAILURE_LIMIT``: The integer number of login attempts allowed before a
+  record is created for the failed logins. This can also be a callable
+  or a dotted path to callable that returns an integer and all of the following are valid:
+  ``AXES_FAILURE_LIMIT = 42``,
+  ``AXES_FAILURE_LIMIT = lambda *args: 42``, and
+  ``AXES_FAILURE_LIMIT = 'project.app.get_login_failure_limit'``.
+  Default: ``3``
 * ``AXES_LOCK_OUT_AT_FAILURE``: After the number of allowed login attempts
   are exceeded, should we lock out this IP (and optional user agent)?
   Default: ``True``
 * ``AXES_COOLOFF_TIME``: If set, defines a period of inactivity after which
-  old failed login attempts will be cleared. Can be set to a Python
-  timedelta object or an integer. If an integer, will be interpreted as a
-  number of hours.  Default: ``None``
-* ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True``, prevent login
-  from IP under a particular username if the attempt limit has been exceeded,
-  otherwise lock out based on IP.
+  old failed login attempts will be cleared.
+  Can be set to a Python timedelta object, an integer, a callable,
+  or a string path to a callable which takes no arguments.
+  If an integer, will be interpreted as a number of hours.
+  Default: ``None``
+* ``AXES_ONLY_ADMIN_SITE``: If ``True``, lock is only enabled for admin site.
+  Admin site is determined by checking request path against the path of ``"admin:index"`` view.
+  If admin urls are not registered in current urlconf, all requests will not be locked.
   Default: ``False``
 * ``AXES_ONLY_USER_FAILURES`` : If ``True``, only lock based on username,
   and never lock based on IP if attempts exceed the limit.
   Otherwise utilize the existing IP and user locking logic.
   Default: ``False``
+* ``AXES_ENABLE_ADMIN``: If ``True``, admin views for access attempts and
+  logins are shown in Django admin interface.
+  Default: ``True``
+* ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``: If ``True``, prevent login
+  from IP under a particular username if the attempt limit has been exceeded,
+  otherwise lock out based on IP.
+  Default: ``False``
+* ``AXES_LOCK_OUT_BY_USER_OR_IP``: If ``True``, prevent login
+  from if the attempt limit has been exceeded for IP or username.
+  Default: ``False``
 * ``AXES_USE_USER_AGENT``: If ``True``, lock out and log based on the IP address
   and the user agent.  This means requests from different user agents but from
   the same IP are treated differently. This settings has no effect if the
-  ``AXES_ONLY_USER_FAILURES`` setting is active. Default: ``False``
-* ``AXES_LOGGER``: If set, specifies a logging mechanism for Axes to use.
-  Default: ``'axes.watch_login'``
-* ``AXES_HANDLER``: The path to to handler class to use.
+  ``AXES_ONLY_USER_FAILURES`` setting is active.
+  Default: ``False``
+* ``AXES_HANDLER``: The path to the handler class to use.
   If set, overrides the default signal handler backend.
-  Default: ``'axes.handlers.database.DatabaseHandler'``
+  Default: ``'axes.handlers.database.AxesDatabaseHandler'``
 * ``AXES_CACHE``: The name of the cache for Axes to use.
   Default: ``'default'``
 * ``AXES_LOCKOUT_TEMPLATE``: If set, specifies a template to render when a
-  user is locked out. Template receives ``cooloff_time`` and ``failure_limit`` as
-  context variables. Default: ``None``
-* ``AXES_LOCKOUT_URL``: If set, specifies a URL to redirect to on lockout. If
-  both ``AXES_LOCKOUT_TEMPLATE`` and ``AXES_LOCKOUT_URL`` are set, the template will
-  be used. Default: ``None``
+  user is locked out. Template receives ``cooloff_timedelta``, ``cooloff_time``, ``username`` and ``failure_limit`` as
+  context variables.
+  Default: ``None``
+* ``AXES_LOCKOUT_URL``: If set, specifies a URL to redirect to on lockout. If both
+  ``AXES_LOCKOUT_TEMPLATE`` and ``AXES_LOCKOUT_URL`` are set, the template will be used.
+  Default: ``None``
 * ``AXES_VERBOSE``: If ``True``, you'll see slightly more logging for Axes.
   Default: ``True``
-* ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your
-  users usernames. Default: ``username``
-* ``AXES_USERNAME_CALLABLE``: A callable or a string path to function that takes
+* ``AXES_USERNAME_FORM_FIELD``: the name of the form field that contains your users usernames.
+  Default: ``username``
+* ``AXES_USERNAME_CALLABLE``: A callable or a string path to callable that takes
   two arguments for user lookups: ``def get_username(request: HttpRequest, credentials: dict) -> str: ...``.
   This can be any callable such as ``AXES_USERNAME_CALLABLE = lambda request, credentials: 'username'``
   or a full Python module path to callable such as ``AXES_USERNAME_CALLABLE = 'example.get_username``.
   The ``request`` is a HttpRequest like object and the ``credentials`` is a dictionary like object.
   ``credentials`` are the ones that were passed to Django ``authenticate()`` in the login flow.
   If no function is supplied, Axes fetches the username from the ``credentials`` or ``request.POST``
-  dictionaries based on ``AXES_USERNAME_FORM_FIELD``. Default: ``None``
-* ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your
-  users password. Default: ``password``
+  dictionaries based on ``AXES_USERNAME_FORM_FIELD``.
+* ``AXES_WHITELIST_CALLABLE``: A callable or a string path to callable that takes
+  two arguments for whitelisting determination and returns True,
+  if user should be whitelisted:
+  ``def is_whitelisted(request: HttpRequest, credentials: dict) -> bool: ...``.
+  This can be any callable similarly to ``AXES_USERNAME_CALLABLE``.
+  Default: ``None``
+* ``AXES_LOCKOUT_CALLABLE``: A callable or a string path to callable that takes
+  two arguments returns a response. For example:
+  ``def generate_lockout_response(request: HttpRequest, credentials: dict) -> HttpResponse: ...``.
+  This can be any callable similarly to ``AXES_USERNAME_CALLABLE``.
+  If not callable is defined, then the default implementation in ``axes.helpers.get_lockout_response``
+  is used for determining the correct lockout response that is sent to the requesting client.
+  Default: ``None``
+* ``AXES_PASSWORD_FORM_FIELD``: the name of the form or credentials field that contains your users password.
+  Default: ``password``
+* ``AXES_SENSITIVE_PARAMETERS``: Configures POST and GET parameter values (in addition to the value of
+  ``AXES_PASSWORD_FORM_FIELD``) to mask in login attempt logging.
+  Default: ``[]``
 * ``AXES_NEVER_LOCKOUT_GET``: If ``True``, Axes will never lock out HTTP GET requests.
   Default: ``False``
 * ``AXES_NEVER_LOCKOUT_WHITELIST``: If ``True``, users can always login from whitelisted IP addresses.
   Default: ``False``
-* ``AXES_IP_BLACKLIST``: An iterable of IPs to be blacklisted. Takes precedence over whitelists. For example: ``AXES_IP_BLACKLIST = ['0.0.0.0']``. Default: ``None``
-* ``AXES_IP_WHITELIST``: An iterable of IPs to be whitelisted. For example: ``AXES_IP_WHITELIST = ['0.0.0.0']``. Default: ``None``
-* ``AXES_DISABLE_ACCESS_LOG``: If ``True``, disable all access logging, so the admin interface will be empty. Default: ``False``
-* ``AXES_DISABLE_SUCCESS_ACCESS_LOG``: If ``True``, successful logins will not be logged, so the access log shown in the admin interface will only list unsuccessful login attempts. Default: ``False``
-* ``AXES_RESET_ON_SUCCESS``: If ``True``, a successful login will reset the number of failed logins. Default: ``False``
+* ``AXES_IP_BLACKLIST``: An iterable of IPs to be blacklisted.
+  Takes precedence over whitelists. For example: ``AXES_IP_BLACKLIST = ['0.0.0.0']``.
+  Default: ``None``
+* ``AXES_IP_WHITELIST``: An iterable of IPs to be whitelisted.
+  For example: ``AXES_IP_WHITELIST = ['0.0.0.0']``.
+  Default: ``None``
+* ``AXES_DISABLE_ACCESS_LOG``: If ``True``, disable writing login and logout access logs to database,
+  so the admin interface will not have user login trail for successful user authentication.
+  Default: ``False``
+* ``AXES_RESET_ON_SUCCESS``: If ``True``, a successful login will reset the number of failed logins.
+  Default: ``False``
+* ``AXES_ALLOWED_CORS_ORIGINS``: Configures lockout response CORS headers for XHR requests.
+  Default: ``*``
+* ``AXES_HTTP_RESPONSE_CODE``: Sets the http response code returned when ``AXES_FAILURE_LIMIT`` is
+  reached.
+  For example: ``AXES_HTTP_RESPONSE_CODE = 429``
+  Default: ``403``
 
 The configuration option precedences for the access attempt monitoring are:
 
@@ -97,6 +142,19 @@ following settings to suit your set up to correctly resolve client IP addresses:
 * ``AXES_META_PRECEDENCE_ORDER``: The names of ``request.META`` attributes as a tuple of strings
   to check to get the client IP address. Check the Django documentation for header naming conventions.
   Default: ``IPWARE_META_PRECEDENCE_ORDER`` setting if set, else ``('REMOTE_ADDR', )``
+
+.. note::
+   For reverse proxies or e.g. Heroku, you might also want to fetch IP addresses from a HTTP header such as ``X-Forwarded-For``. To configure this, you can fetch IPs through the ``HTTP_X_FORWARDED_FOR`` key from the ``request.META`` property which contains all the HTTP headers in Django:
+
+   .. code-block:: python
+
+      # refer to the Django request and response objects documentation
+      AXES_META_PRECEDENCE_ORDER = [
+          'HTTP_X_FORWARDED_FOR',
+          'REMOTE_ADDR',
+      ]
+
+   Please note that proxies have different behaviours with the HTTP headers. Make sure that your proxy either strips the incoming value or otherwise makes sure of the validity of the header that is used because **any header values used in application configuration must be secure and trusted**. Otherwise the client can spoof IP addresses by just setting the header in their request and circumvent the IP address monitoring. Normal proxy server behaviours include overriding and appending the header value depending on the platform. Different platforms and gateway services utilize different headers, please refer to your deployment target documentation for up-to-date information on correct configuration.
 
 
 Configuring handlers
@@ -124,7 +182,7 @@ with the ``AXES_HANDLER`` setting in project configuration:
 - ``axes.handlers.dummy.AxesDummyHandler``
   does nothing with attempts and can be used to disable Axes handlers
   if the user does not wish Axes to execute any logic on login signals.
-  Note that this effectively disables any Axes security features,
+  Please note that this effectively disables any Axes security features,
   and is meant to be used on e.g. local development setups
   and testing deployments where login monitoring is not wanted.
 
@@ -144,8 +202,8 @@ predictably if the cache in use is not the same for all the Django processes.
 
 Axes needs to cache access attempts application-wide, and e.g. the
 in-memory cache only caches access attempts per Django process, so for example
-resets made in the command line might not remove lock-outs that are in a sepate
-processes in-memory cache such as the web server serving your login or admin page.
+resets made in the command line might not remove lock-outs that are in a separate
+process's in-memory cache such as the web server serving your login or admin page.
 
 To circumvent this problem, please use somethings else than
 ``django.core.cache.backends.dummy.DummyCache``,
@@ -193,4 +251,3 @@ with third party applications and plugins such as
 - Django REST Framework
 - Django Allauth
 - Django Simple Captcha
-

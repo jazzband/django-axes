@@ -149,7 +149,27 @@ into ``my_namespace-username``:
 
     AXES_USERNAME_CALLABLE = 'example.utils.get_username'
 
-NOTE: You still have to make these modifications yourself before calling
-authenticate. If you want to re-use the same function for consistency, that's
-fine, but Axes does not inject these changes into the authentication flow
-for you.
+.. note::
+   You still have to make these modifications yourself before calling
+   authenticate. If you want to re-use the same function for consistency, that's
+   fine, but Axes does not inject these changes into the authentication flow
+   for you.
+
+
+Customizing lockout responses
+-----------------------------
+
+Axes can be configured with ``AXES_LOCKOUT_CALLABLE`` to return a custom lockout response when using the plugin with e.g. DRF (Django REST Framework) or other third party libraries which require specialized formats such as JSON or XML response formats or customized response status codes.
+
+An example of usage could be e.g. a custom view for processing lockouts.
+
+``example/views.py``::
+
+    from django.http import JsonResponse
+
+    def lockout(request, credentials, *args, **kwargs):
+        return JsonResponse({"status": "Locked out due to too many login failures"}, status=403)
+
+``settings.py``::
+
+    AXES_LOCKOUT_CALLABLE = "example.views.lockout"
