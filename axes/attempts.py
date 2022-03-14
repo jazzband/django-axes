@@ -67,9 +67,9 @@ def clean_expired_user_attempts(attempt_time: datetime = None) -> int:
     Clean expired user attempts from the database.
     """
 
-    if settings.AXES_COOLOFF_TIME is None:
+    if not settings.AXES_CLEAN_EXPIRED_USER_ATTEMPTS:
         log.debug(
-            "AXES: Skipping clean for expired access attempts because no AXES_COOLOFF_TIME is configured"
+            "AXES: Skipping clean for expired access attempts because AXES_CLEAN_EXPIRED_USER_ATTEMPTS is configured"
         )
         return 0
 
