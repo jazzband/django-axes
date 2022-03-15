@@ -174,6 +174,29 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         """
         return 0
 
+    def reset_failure_logs(self, *, age_days: int = None) -> int:
+        """
+        Resets access failure logs that are older than given number of days.
+
+        This method makes more sense for the DB backend, but as it is used by the ProxyHandler
+        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+
+        Please overwrite it on each specialized handler as needed.
+        """
+        return 0
+
+
+    def remove_out_of_limit_failure_logs(self, *, username: str, limit: int = None) -> int:
+        """Remove access failure logs that are over
+        AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT for user username.
+
+        This method makes more sense for the DB backend, but as it is used by the ProxyHandler
+        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+
+        Please overwrite it on each specialized handler as needed.
+
+        """
+        return 0
 
 class AxesHandler(AbstractAxesHandler, AxesBaseHandler):
     """

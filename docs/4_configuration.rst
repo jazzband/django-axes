@@ -110,6 +110,13 @@ The following ``settings.py`` options are available for customizing Axes behavio
 * ``AXES_DISABLE_ACCESS_LOG``: If ``True``, disable writing login and logout access logs to database,
   so the admin interface will not have user login trail for successful user authentication.
   Default: ``False``
+* ``AXES_ENABLE_ACCESS_FAILURE_LOG``: If ``True``, enable writing
+  login failure logs to database, so you will have every user login
+  trail for unsuccessful user authentication.  Default: ``False``
+* ``AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT``: Sets the number of
+  failures to trail for each user. When the access failure log reach
+  this number of records, an automatic removal is ran.  Default:
+  ``1000``
 * ``AXES_RESET_ON_SUCCESS``: If ``True``, a successful login will reset the number of failed logins.
   Default: ``False``
 * ``AXES_ALLOWED_CORS_ORIGINS``: Configures lockout response CORS headers for XHR requests.
