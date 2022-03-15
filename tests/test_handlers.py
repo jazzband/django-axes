@@ -12,7 +12,7 @@ from django.utils.timezone import timedelta
 from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_str
-from axes.models import AccessAttempt, AccessLog
+from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 from tests.base import AxesTestCase
 
 
@@ -212,6 +212,7 @@ class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
     AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler",
     AXES_COOLOFF_TIME=timedelta(seconds=2),
     AXES_RESET_ON_SUCCESS=True,
+    AXES_ENABLE_ACCESS_FAILURE_LOG=True,
 )
 @mark.xfail(
     python_implementation() == "PyPy",
@@ -239,6 +240,28 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         self.assertEqual(AccessLog.objects.count(), 2)
         self.assertEqual(1, AxesProxyHandler.reset_logs(age_days=42))
         self.assertEqual(AccessLog.objects.count(), 1)
+
+    def test_handler_reset_failure_logs(self):
+        self.create_failure_log()
+        self.assertEqual(1, AxesProxyHandler.reset_failure_logs())
+        self.assertFalse(AccessFailureLog.objects.count())
+
+    def test_handler_reset_failure_logs_older_than_42_days(self):
+        self.create_failure_log()
+
+        then = timezone.now() - timezone.timedelta(days=90)
+        with patch("django.utils.timezone.now", return_value=then):
+            self.create_failure_log()
+
+        self.assertEqual(AccessFailureLog.objects.count(), 2)
+        self.assertEqual(1, AxesProxyHandler.reset_failure_logs(age_days=42))
+        self.assertEqual(AccessFailureLog.objects.count(), 1)
+
+    def test_handler_remove_out_of_limit_failure_logs(self):
+        _more = 10
+        for i in range(settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT + _more):
+            self.create_failure_log()
+        self.assertEqual(_more, AxesProxyHandler.remove_out_of_limit_failure_logs(username=self.username))
 
     @override_settings(AXES_RESET_ON_SUCCESS=True)
     def test_handler(self):

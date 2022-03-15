@@ -19,7 +19,7 @@ from axes.helpers import (
     get_credentials,
     get_failure_limit,
 )
-from axes.models import AccessAttempt, AccessLog
+from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 from axes.utils import reset
 
 
@@ -79,6 +79,7 @@ class AxesTestCase(TestCase):
         self.request.axes_path_info = get_client_path_info(self.request)
         self.request.axes_http_accept = get_client_http_accept(self.request)
         self.request.axes_failures_since_start = None
+        self.request.axes_locked_out = False
 
         self.credentials = get_credentials(self.username)
 
@@ -102,6 +103,9 @@ class AxesTestCase(TestCase):
 
     def create_log(self, **kwargs):
         return AccessLog.objects.create(**self.get_kwargs_with_defaults(**kwargs))
+
+    def create_failure_log(self, **kwargs):
+        return AccessFailureLog.objects.create(**self.get_kwargs_with_defaults(**kwargs))
 
     def reset(self, ip=None, username=None):
         return reset(ip, username)
