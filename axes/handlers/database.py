@@ -139,6 +139,17 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             request,
         )
 
+        # If axes denied access, don't record the failed attempt as that would reset the lockout time.
+        if request.axes_locked_out:
+            request.axes_credentials = credentials
+            user_locked_out.send(
+                "axes",
+                request=request,
+                username=username,
+                ip_address=request.axes_ip_address,
+            )
+            return
+
         # This replaces null byte chars that crash saving failures.
         get_data = get_query_str(request.GET).replace("\0", "0x00")
         post_data = get_query_str(request.POST).replace("\0", "0x00")

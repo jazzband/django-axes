@@ -78,7 +78,8 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
             )
             return
         if not hasattr(request, "axes_updated"):
-            request.axes_locked_out = False
+            if not hasattr(request, "axes_locked_out"):
+                request.axes_locked_out = False
             request.axes_attempt_time = now()
             request.axes_ip_address = get_client_ip_address(request)
             request.axes_user_agent = get_client_user_agent(request)

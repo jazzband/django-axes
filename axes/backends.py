@@ -51,6 +51,9 @@ class AxesBackend(ModelBackend):
         response_context = kwargs.get("response_context", {})
         response_context["error"] = error_msg
 
+        # This flag can be used later to check if it was Axes that denied the login attempt.
+        request.axes_locked_out = True
+
         # Raise an error that stops the authentication flows at django.contrib.auth.authenticate.
         # This error stops bubbling up at the authenticate call which catches backend PermissionDenied errors.
         # After this error is caught by authenticate it emits a signal indicating user login failed,
