@@ -125,6 +125,9 @@ The following ``settings.py`` options are available for customizing Axes behavio
   reached.
   For example: ``AXES_HTTP_RESPONSE_CODE = 429``
   Default: ``403``
+* ``AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT``: If ``True``, a failed login attempt during lockout will
+  reset the cool off period.
+  Default: ``True``
 
 The configuration option precedences for the access attempt monitoring are:
 
