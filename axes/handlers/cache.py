@@ -24,7 +24,6 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
 
     def __init__(self):
         self.cache = get_cache()
-        self.cache_timeout = get_cache_timeout()
 
     def reset_attempts(
         self,
@@ -84,6 +83,17 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             )
             return
 
+        # If axes denied access, don't record the failed attempt as that would reset the lockout time.
+        if request.axes_locked_out:
+            request.axes_credentials = credentials
+            user_locked_out.send(
+                "axes",
+                request=request,
+                username=username,
+                ip_address=request.axes_ip_address,
+            )
+            return
+
         client_str = get_client_str(
             username,
             request.axes_ip_address,
@@ -115,7 +125,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
         cache_keys = get_client_cache_key(request, credentials)
         for cache_key in cache_keys:
             failures = self.cache.get(cache_key, default=0)
-            self.cache.set(cache_key, failures + 1, self.cache_timeout)
+            self.cache.set(cache_key, failures + 1, get_cache_timeout())
 
         if (
             settings.AXES_LOCK_OUT_AT_FAILURE
