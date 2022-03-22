@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 
 from axes.exceptions import (
@@ -52,7 +53,8 @@ class AxesBackend(ModelBackend):
         response_context["error"] = error_msg
 
         # This flag can be used later to check if it was Axes that denied the login attempt.
-        request.axes_locked_out = True
+        if not settings.AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT:
+            request.axes_locked_out = True
 
         # Raise an error that stops the authentication flows at django.contrib.auth.authenticate.
         # This error stops bubbling up at the authenticate call which catches backend PermissionDenied errors.

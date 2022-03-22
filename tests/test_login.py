@@ -13,7 +13,7 @@ from django.test import override_settings, TestCase
 from django.urls import reverse
 
 from axes.conf import settings
-from axes.helpers import get_cache, make_cache_key_list, get_cool_off
+from axes.helpers import get_cache, make_cache_key_list, get_cool_off, get_failure_limit
 from axes.models import AccessAttempt
 from tests.base import AxesTestCase
 
@@ -632,20 +632,45 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self.client.get(reverse("admin:login"), REMOTE_ADDR=self.IP_1)
         self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
 
-    @override_settings(AXES_COOLOFF_TIME=timedelta(seconds=1))
+    @override_settings(
+        AXES_COOLOFF_TIME=timedelta(seconds=1),
+        AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT=False,
+        AXES_FAILURE_LIMIT=2,
+    )
     def test_login_during_lockout_doesnt_reset_cool_off_time(self):
         # Lockout
-        self.lockout()
+        for _ in range(get_failure_limit(None, None)):
+            self.login(self.USER_1)
 
         # Attempt during lockout
         sleep_time = get_cool_off().total_seconds() / 2
         sleep(sleep_time)
-        self.login()
+        self.login(self.USER_1)
         sleep(sleep_time)
 
         # New attempt after initial lockout period: should work
         response = self.login(is_valid_username=True, is_valid_password=True)
-        self.assertNotContains(response, self.LOCKED_MESSAGE, status_code=302)
+        self.assertNotContains(response, self.LOCKED_MESSAGE, status_code=self.ALLOWED)
+
+    @override_settings(
+        AXES_COOLOFF_TIME=timedelta(seconds=1),
+        AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT=True,
+        AXES_FAILURE_LIMIT=2,
+    )
+    def test_login_during_lockout_does_reset_cool_off_time(self):
+        # Lockout
+        for _ in range(get_failure_limit(None, None)):
+            self.login(self.USER_1)
+
+        # Attempt during lockout
+        sleep_time = get_cool_off().total_seconds() / 2
+        sleep(sleep_time)
+        self.login(self.USER_1)
+        sleep(sleep_time)
+
+        # New attempt after initial lockout period: should not work
+        response = self.login(is_valid_username=True, is_valid_password=True)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
 
 
 # Test the same logic with cache handler

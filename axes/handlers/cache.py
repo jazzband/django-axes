@@ -84,7 +84,10 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         # If axes denied access, don't record the failed attempt as that would reset the lockout time.
-        if request.axes_locked_out:
+        if (
+            not settings.AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT
+            and request.axes_locked_out
+        ):
             request.axes_credentials = credentials
             user_locked_out.send(
                 "axes",
