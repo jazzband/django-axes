@@ -3,6 +3,18 @@ Changes
 =======
 
 
+5.32.0 (2022-04-08)
+-------------------
+
+- Add support for persistent failure logging
+  where failed login attempts are persisted in the database
+  until a specific threshold is reached.
+  [p1-gdd]
+- Add support for not resetting login times when users
+  try to login during the lockout cooloff period.
+  [antoine-42]
+
+
 5.31.0 (2022-01-08)
 -------------------
 
