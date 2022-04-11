@@ -17,7 +17,7 @@ from axes.helpers import get_client_ip_address
 log = getLogger(__name__)
 
 
-def reset(ip: str = None, username: str = None, ip_or_username=False) -> int:
+def reset(ip: Optional[str] = None, username: Optional[str] = None, ip_or_username=False) -> int:
     """
     Reset records that match IP or username, and return the count of removed attempts.
 

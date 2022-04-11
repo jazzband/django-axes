@@ -1,5 +1,6 @@
 import re
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
@@ -41,7 +42,7 @@ class AbstractAxesHandler(ABC):
         raise NotImplementedError("user_logged_out should be implemented")
 
     @abstractmethod
-    def get_failures(self, request, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: Optional[dict] = None) -> int:
         """
         Checks the number of failures associated to the given request and credentials.
 
@@ -65,7 +66,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
     .. note:: This is a virtual class and **can not be used without specialization**.
     """
 
-    def is_allowed(self, request, credentials: dict = None) -> bool:
+    def is_allowed(self, request, credentials: Optional[dict] = None) -> bool:
         """
         Checks if the user is allowed to access or use given functionality such as a login view or authentication.
 
@@ -94,7 +95,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return True
 
-    def is_blacklisted(self, request, credentials: dict = None) -> bool:
+    def is_blacklisted(self, request, credentials: Optional[dict] = None) -> bool:
         """
         Checks if the request or given credentials are blacklisted from access.
         """
@@ -104,7 +105,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return False
 
-    def is_whitelisted(self, request, credentials: dict = None) -> bool:
+    def is_whitelisted(self, request, credentials: Optional[dict] = None) -> bool:
         """
         Checks if the request or given credentials are whitelisted for access.
         """
@@ -120,7 +121,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return False
 
-    def is_locked(self, request, credentials: dict = None) -> bool:
+    def is_locked(self, request, credentials: Optional[dict] = None) -> bool:
         """
         Checks if the request or given credentials are locked.
         """
@@ -149,8 +150,8 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
     def reset_attempts(
         self,
         *,
-        ip_address: str = None,
-        username: str = None,
+        ip_address: Optional[str] = None,
+        username: Optional[str] = None,
         ip_or_username: bool = False,
     ) -> int:
         """
@@ -163,7 +164,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         """
         return 0
 
-    def reset_logs(self, *, age_days: int = None) -> int:
+    def reset_logs(self, *, age_days: Optional[int] = None) -> int:
         """
         Resets access logs that are older than given number of days.
 
@@ -174,7 +175,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         """
         return 0
 
-    def reset_failure_logs(self, *, age_days: int = None) -> int:
+    def reset_failure_logs(self, *, age_days: Optional[int] = None) -> int:
         """
         Resets access failure logs that are older than given number of days.
 
@@ -186,7 +187,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         return 0
 
 
-    def remove_out_of_limit_failure_logs(self, *, username: str, limit: int = None) -> int:
+    def remove_out_of_limit_failure_logs(self, *, username: str, limit: Optional[int] = None) -> int:
         """Remove access failure logs that are over
         AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT for user username.
 
@@ -212,5 +213,5 @@ class AxesHandler(AbstractAxesHandler, AxesBaseHandler):
     def user_logged_out(self, sender, request, user, **kwargs):
         pass
 
-    def get_failures(self, request, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: Optional[dict] = None) -> int:
         return 0
