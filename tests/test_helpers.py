@@ -670,6 +670,18 @@ class AxesCoolOffTestCase(AxesTestCase):
     def test_get_cool_off_int(self):
         self.assertEqual(get_cool_off(), timedelta(hours=2))
 
+    @override_settings(AXES_COOLOFF_TIME=2.0)
+    def test_get_cool_off_int(self):
+        self.assertEqual(get_cool_off(), timedelta(minutes=120))
+
+    @override_settings(AXES_COOLOFF_TIME=0.25)
+    def test_get_cool_off_int(self):
+        self.assertEqual(get_cool_off(), timedelta(minutes=15))
+
+    @override_settings(AXES_COOLOFF_TIME=1.7)
+    def test_get_cool_off_int(self):
+        self.assertEqual(get_cool_off(), timedelta(seconds=6120))
+
     @override_settings(AXES_COOLOFF_TIME=lambda: timedelta(seconds=30))
     def test_get_cool_off_callable(self):
         self.assertEqual(get_cool_off(), timedelta(seconds=30))

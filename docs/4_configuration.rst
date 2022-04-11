@@ -28,9 +28,12 @@ The following ``settings.py`` options are available for customizing Axes behavio
   Default: ``True``
 * ``AXES_COOLOFF_TIME``: If set, defines a period of inactivity after which
   old failed login attempts will be cleared.
-  Can be set to a Python timedelta object, an integer, a callable,
+  Can be set to a Python timedelta object, an integer, a float, a callable,
   or a string path to a callable which takes no arguments.
-  If an integer, will be interpreted as a number of hours.
+  If an integer or float, will be interpreted as a number of hours:
+  ``AXES_COOLOFF_TIME = 2`` 2 hours
+  ``AXES_COOLOFF_TIME = 2.0`` 2 hours, 120 minutes
+  ``AXES_COOLOFF_TIME = 1.7`` 1.7 houts, 102 minutes, 6120 seconds
   Default: ``None``
 * ``AXES_ONLY_ADMIN_SITE``: If ``True``, lock is only enabled for admin site.
   Admin site is determined by checking request path against the path of ``"admin:index"`` view.
