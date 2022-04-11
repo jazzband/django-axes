@@ -59,6 +59,8 @@ def get_cool_off() -> Optional[timedelta]:
 
     if isinstance(cool_off, int):
         return timedelta(hours=cool_off)
+    if isinstance(cool_off, float):
+        return timedelta(minutes=cool_off * 60)
     if isinstance(cool_off, str):
         return import_string(cool_off)()
     if callable(cool_off):
