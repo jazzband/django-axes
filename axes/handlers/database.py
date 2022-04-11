@@ -1,4 +1,5 @@
 from logging import getLogger
+from typing import Optional
 
 from django.db import transaction
 from django.db.models import F, Sum, Value, Q
@@ -36,8 +37,8 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
     def reset_attempts(
         self,
         *,
-        ip_address: str = None,
-        username: str = None,
+        ip_address: Optional[str] = None,
+        username: Optional[str] = None,
         ip_or_username: bool = False,
     ) -> int:
         attempts = AccessAttempt.objects.all()
@@ -55,7 +56,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         return count
 
-    def reset_logs(self, *, age_days: int = None) -> int:
+    def reset_logs(self, *, age_days: Optional[int] = None) -> int:
         if age_days is None:
             count, _ = AccessLog.objects.all().delete()
             log.info("AXES: Reset all %d access logs from database.", count)
@@ -70,7 +71,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         return count
 
-    def reset_failure_logs(self, *, age_days: int = None) -> int:
+    def reset_failure_logs(self, *, age_days: Optional[int] = None) -> int:
         if age_days is None:
             count, _ = AccessFailureLog.objects.all().delete()
             log.info("AXES: Reset all %d access failure logs from database.", count)
@@ -89,7 +90,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             self,
             *,
             username: str,
-            limit: int = settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT) -> int:
+            limit: Optional[int] = settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT) -> int:
         count = 0
         failures = AccessFailureLog.objects.filter(username=username)
         out_of_limit_failures_logs = failures.count() - limit
@@ -99,7 +100,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 count += 1
         return count
 
-    def get_failures(self, request, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: Optional[dict] = None) -> int:
         attempts_list = get_user_attempts(request, credentials)
         attempt_count = max(
             (

@@ -1,4 +1,5 @@
 from axes.handlers.base import AxesHandler
+from typing import Optional
 
 
 class AxesTestHandler(AxesHandler):  # pylint: disable=unused-argument
@@ -9,17 +10,17 @@ class AxesTestHandler(AxesHandler):  # pylint: disable=unused-argument
     def reset_attempts(
         self,
         *,
-        ip_address: str = None,
-        username: str = None,
+        ip_address: Optional[str] = None,
+        username: Optional[str] = None,
         ip_or_username: bool = False,
     ) -> int:
         return 0
 
-    def reset_logs(self, *, age_days: int = None) -> int:
+    def reset_logs(self, *, age_days: Optional[int] = None) -> int:
         return 0
 
-    def is_allowed(self, request, credentials: dict = None) -> bool:
+    def is_allowed(self, request, credentials: Optional[dict] = None) -> bool:
         return True
 
-    def get_failures(self, request, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: Optional[dict] = None) -> int:
         return 0

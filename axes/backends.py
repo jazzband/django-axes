@@ -1,3 +1,4 @@
+from typing import Optional
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 
@@ -22,7 +23,7 @@ class AxesBackend(ModelBackend):
 
     @toggleable
     def authenticate(
-        self, request, username: str = None, password: str = None, **kwargs: dict
+        self, request, username: Optional[str] = None, password: Optional[str] = None, **kwargs: dict
     ):
         """
         Checks user lockout status and raises an exception if user is not allowed to log in.

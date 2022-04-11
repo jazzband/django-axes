@@ -1,4 +1,5 @@
 from logging import getLogger
+from typing import Optional
 
 from axes.conf import settings
 from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
@@ -56,7 +57,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
 
         return count
 
-    def get_failures(self, request, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: Optional[dict] = None) -> int:
         cache_keys = get_client_cache_key(request, credentials)
         failure_count = max(
             self.cache.get(cache_key, default=0) for cache_key in cache_keys
