@@ -33,7 +33,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
   If an integer or float, will be interpreted as a number of hours:
   ``AXES_COOLOFF_TIME = 2`` 2 hours
   ``AXES_COOLOFF_TIME = 2.0`` 2 hours, 120 minutes
-  ``AXES_COOLOFF_TIME = 1.7`` 1.7 houts, 102 minutes, 6120 seconds
+  ``AXES_COOLOFF_TIME = 1.7`` 1.7 hours, 102 minutes, 6120 seconds
   Default: ``None``
 * ``AXES_ONLY_ADMIN_SITE``: If ``True``, lock is only enabled for admin site.
   Admin site is determined by checking request path against the path of ``"admin:index"`` view.
