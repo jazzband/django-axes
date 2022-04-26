@@ -1,6 +1,7 @@
 from typing import Optional
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
+from django.http import HttpRequest
 
 from axes.exceptions import (
     AxesBackendPermissionDenied,
@@ -23,7 +24,7 @@ class AxesBackend(ModelBackend):
 
     @toggleable
     def authenticate(
-        self, request, username: Optional[str] = None, password: Optional[str] = None, **kwargs: dict
+        self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs: dict
     ):
         """
         Checks user lockout status and raises an exception if user is not allowed to log in.

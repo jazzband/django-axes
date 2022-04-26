@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
 from axes.conf import settings
@@ -39,7 +40,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         "failures_since_start",
     ]
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
 
@@ -74,7 +75,7 @@ class AccessLogAdmin(admin.ModelAdmin):
         "logout_time",
     ]
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
 
@@ -109,7 +110,7 @@ class AccessFailureLogAdmin(admin.ModelAdmin):
         "locked_out",
     ]
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
 

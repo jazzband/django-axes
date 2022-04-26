@@ -1,6 +1,7 @@
 from typing import Callable
 
 from django.conf import settings
+from django.http import HttpRequest, HttpResponse
 
 from axes.helpers import get_lockout_response
 
@@ -29,10 +30,10 @@ class AxesMiddleware:
     - ``AXES_PERMALOCK_MESSAGE``.
     """
 
-    def __init__(self, get_response: Callable):
+    def __init__(self, get_response: Callable) -> None:
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.get_response(request)
 
         if settings.AXES_ENABLED:

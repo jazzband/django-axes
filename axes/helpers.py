@@ -105,7 +105,7 @@ def get_credentials(username: Optional[str] = None, **kwargs) -> dict:
     return credentials
 
 
-def get_client_username(request, credentials: Optional[dict] = None) -> str:
+def get_client_username(request: HttpRequest, credentials: Optional[dict] = None) -> str:
     """
     Resolve client username from the given request or credentials if supplied.
 
@@ -146,7 +146,7 @@ def get_client_username(request, credentials: Optional[dict] = None) -> str:
     return request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
-def get_client_ip_address(request) -> str:
+def get_client_ip_address(request: HttpRequest) -> str:
     """
     Get client IP address as configured by the user.
 
@@ -165,15 +165,15 @@ def get_client_ip_address(request) -> str:
     return client_ip_address
 
 
-def get_client_user_agent(request) -> str:
+def get_client_user_agent(request: HttpRequest) -> str:
     return request.META.get("HTTP_USER_AGENT", "<unknown>")[:255]
 
 
-def get_client_path_info(request) -> str:
+def get_client_path_info(request: HttpRequest) -> str:
     return request.META.get("PATH_INFO", "<unknown>")[:255]
 
 
-def get_client_http_accept(request) -> str:
+def get_client_http_accept(request: HttpRequest) -> str:
     return request.META.get("HTTP_ACCEPT", "<unknown>")[:1025]
 
 
@@ -344,7 +344,7 @@ def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
     return query_str[:max_length]
 
 
-def get_failure_limit(request, credentials) -> int:
+def get_failure_limit(request: HttpRequest, credentials) -> int:
     if callable(settings.AXES_FAILURE_LIMIT):
         return settings.AXES_FAILURE_LIMIT(  # pylint: disable=not-callable
             request, credentials
@@ -362,7 +362,7 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def get_lockout_response(request, credentials: Optional[dict] = None) -> HttpResponse:
+def get_lockout_response(request: HttpRequest, credentials: Optional[dict] = None) -> HttpResponse:
     if settings.AXES_LOCKOUT_CALLABLE:
         if callable(settings.AXES_LOCKOUT_CALLABLE):
             return settings.AXES_LOCKOUT_CALLABLE(  # pylint: disable=not-callable
@@ -432,7 +432,7 @@ def is_ip_address_in_blacklist(ip_address: str) -> bool:
     )
 
 
-def is_client_ip_address_whitelisted(request):
+def is_client_ip_address_whitelisted(request: HttpRequest):
     """
     Check if the given request refers to a whitelisted IP.
     """
@@ -450,7 +450,7 @@ def is_client_ip_address_whitelisted(request):
     return False
 
 
-def is_client_ip_address_blacklisted(request) -> bool:
+def is_client_ip_address_blacklisted(request: HttpRequest) -> bool:
     """
     Check if the given request refers to a blacklisted IP.
     """
@@ -466,7 +466,7 @@ def is_client_ip_address_blacklisted(request) -> bool:
     return False
 
 
-def is_client_method_whitelisted(request) -> bool:
+def is_client_method_whitelisted(request: HttpRequest) -> bool:
     """
     Check if the given request uses a whitelisted method.
     """
@@ -477,7 +477,7 @@ def is_client_method_whitelisted(request) -> bool:
     return False
 
 
-def is_user_attempt_whitelisted(request, credentials: Optional[dict] = None) -> bool:
+def is_user_attempt_whitelisted(request: HttpRequest, credentials: Optional[dict] = None) -> bool:
     """
     Check if the given request or credentials refer to a whitelisted username.
 

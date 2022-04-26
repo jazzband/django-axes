@@ -2,6 +2,7 @@ from logging import getLogger
 from typing import List, Optional
 
 from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.utils.timezone import datetime, now
 
 from axes.conf import settings
@@ -27,7 +28,7 @@ def get_cool_off_threshold(attempt_time: Optional[datetime] = None) -> datetime:
     return attempt_time - cool_off
 
 
-def filter_user_attempts(request, credentials: Optional[dict] = None) -> List[QuerySet]:
+def filter_user_attempts(request: HttpRequest, credentials: Optional[dict] = None) -> List[QuerySet]:
     """
     Return a list querysets of AccessAttempts that match the given request and credentials.
     """
@@ -44,7 +45,7 @@ def filter_user_attempts(request, credentials: Optional[dict] = None) -> List[Qu
     return attempts_list
 
 
-def get_user_attempts(request, credentials: Optional[dict] = None) -> List[QuerySet]:
+def get_user_attempts(request: HttpRequest, credentials: Optional[dict] = None) -> List[QuerySet]:
     """
     Get list of querysets with valid user attempts that match the given request and credentials.
     """
@@ -83,7 +84,7 @@ def clean_expired_user_attempts(attempt_time: Optional[datetime] = None) -> int:
     return count
 
 
-def reset_user_attempts(request, credentials: Optional[dict] = None) -> int:
+def reset_user_attempts(request: HttpRequest, credentials: Optional[dict] = None) -> int:
     """
     Reset all user attempts that match the given request and credentials.
     """
