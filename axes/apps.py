@@ -30,20 +30,15 @@ class AppConfig(apps.AppConfig):
 
         # Skip startup log messages if Axes is not set to verbose
         if settings.AXES_VERBOSE:
-            log.info("AXES: BEGIN LOG")
-            log.info(
-                "AXES: Using django-axes version %s",
-                get_distribution("django-axes").version,
-            )
-
             if settings.AXES_ONLY_USER_FAILURES:
-                log.info("AXES: blocking by username only.")
+                mode = "blocking by username only"
             elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-                log.info("AXES: blocking by combination of username and IP.")
+                mode = "blocking by combination of username and IP"
             elif settings.AXES_LOCK_OUT_BY_USER_OR_IP:
-                log.info("AXES: blocking by username or IP.")
+                mode = "blocking by username or IP"
             else:
-                log.info("AXES: blocking by IP only.")
+                mode = "blocking by IP only"
+            log.info("AXES: BEGIN version %s, %s", get_distribution("django-axes").version, mode)
 
     def ready(self):
         self.initialize()
