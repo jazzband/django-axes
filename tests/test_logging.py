@@ -2,10 +2,14 @@ from unittest.mock import patch
 
 from django.test import override_settings
 from django.urls import reverse
+from pkg_resources import get_distribution
 
 from axes.apps import AppConfig
 from axes.models import AccessAttempt, AccessLog
 from tests.base import AxesTestCase
+
+_BEGIN = "AXES: BEGIN version %s, %s"
+_VERSION = get_distribution("django-axes").version
 
 
 @patch("axes.apps.AppConfig.initialized", False)
@@ -33,22 +37,22 @@ class AppsTestCase(AxesTestCase):
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_axes_config_log_user_only(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with("AXES: blocking by username only.")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username only")
 
     @override_settings(AXES_ONLY_USER_FAILURES=False)
     def test_axes_config_log_ip_only(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with("AXES: blocking by IP only.")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by IP only")
 
     @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
     def test_axes_config_log_user_ip(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with("AXES: blocking by combination of username and IP.")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by combination of username and IP")
 
     @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
     def test_axes_config_log_user_or_ip(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with("AXES: blocking by username or IP.")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username or IP")
 
 
 class AccessLogTestCase(AxesTestCase):
