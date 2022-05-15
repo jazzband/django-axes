@@ -1,5 +1,5 @@
 from datetime import timedelta
-from hashlib import md5
+from hashlib import sha256
 from logging import getLogger
 from string import Template
 from typing import Callable, Optional, Type, Union
@@ -214,7 +214,7 @@ def make_cache_key_list(filter_kwargs_list):
         cache_key_components = "".join(
             value for value in filter_kwargs.values() if value
         )
-        cache_key_digest = md5(cache_key_components.encode()).hexdigest()
+        cache_key_digest = sha256(cache_key_components.encode()).hexdigest()
         cache_keys.append(f"axes-{cache_key_digest}")
     return cache_keys
 
