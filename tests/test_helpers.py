@@ -1,5 +1,5 @@
 from datetime import timedelta
-from hashlib import md5
+from hashlib import sha256
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -353,7 +353,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
         Test the cache key format.
         """
 
-        cache_hash_digest = md5(self.ip_address.encode()).hexdigest()
+        cache_hash_digest = sha256(self.ip_address.encode()).hexdigest()
         cache_hash_key = f"axes-{cache_hash_digest}"
 
         # Getting cache key from request
@@ -385,7 +385,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
 
         empty_ip_address = ""
 
-        cache_hash_digest = md5(empty_ip_address.encode()).hexdigest()
+        cache_hash_digest = sha256(empty_ip_address.encode()).hexdigest()
         cache_hash_key = f"axes-{cache_hash_digest}"
 
         # Getting cache key from request
@@ -418,7 +418,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
         """
 
         ip_address = self.ip_address
-        cache_hash_digest = md5(ip_address.encode()).hexdigest()
+        cache_hash_digest = sha256(ip_address.encode()).hexdigest()
         cache_hash_key = f"axes-{cache_hash_digest}"
 
         # Getting cache key from request

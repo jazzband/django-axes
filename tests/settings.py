@@ -24,6 +24,9 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+# Use MD5 for tests as it is considerably faster than other options
+# note that this should never be used in any online setting
+# where users actually log in to the system due to easy exploitability
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 ROOT_URLCONF = "tests.urls"
