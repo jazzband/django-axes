@@ -13,7 +13,7 @@ envlist =
     py{37,38,39,310,py3}-dj32
     py{38,39,310,py3}-dj40
     py{38,39,310}-djmain
-    py38-djqa
+    py310-djqa
 
 [gh-actions]
 python =
