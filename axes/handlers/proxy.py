@@ -1,3 +1,6 @@
+# pylint: disable=arguments-differ
+# pylint generates false negatives from proxy class method overrides
+
 from logging import getLogger
 from typing import Optional
 
