@@ -24,7 +24,11 @@ class AxesBackend(ModelBackend):
 
     @toggleable
     def authenticate(
-        self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs: dict
+        self,
+        request: HttpRequest,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        **kwargs: dict,
     ):
         """
         Checks user lockout status and raises an exception if user is not allowed to log in.

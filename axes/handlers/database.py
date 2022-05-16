@@ -87,10 +87,11 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         return count
 
     def remove_out_of_limit_failure_logs(
-            self,
-            *,
-            username: str,
-            limit: Optional[int] = settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT) -> int:
+        self,
+        *,
+        username: str,
+        limit: Optional[int] = settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT,
+    ) -> int:
         count = 0
         failures = AccessFailureLog.objects.filter(username=username)
         out_of_limit_failures_logs = failures.count() - limit
@@ -251,7 +252,6 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                     locked_out=request.axes_locked_out,
                 )
                 self.remove_out_of_limit_failure_logs(username=username)
-
 
     def user_logged_in(self, sender, request, user, **kwargs):
         """
