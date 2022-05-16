@@ -2,6 +2,6 @@ ignore-paths:
   - docs
   - axes/migrations
 
-pep8:
+pycodestyle:
   options:
     max-line-length: 142
