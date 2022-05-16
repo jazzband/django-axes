@@ -57,9 +57,13 @@ settings.AXES_RESET_ON_SUCCESS = getattr(settings, "AXES_RESET_ON_SUCCESS", Fals
 
 settings.AXES_DISABLE_ACCESS_LOG = getattr(settings, "AXES_DISABLE_ACCESS_LOG", False)
 
-settings.AXES_ENABLE_ACCESS_FAILURE_LOG = getattr(settings, "AXES_ENABLE_ACCESS_FAILURE_LOG", False)
+settings.AXES_ENABLE_ACCESS_FAILURE_LOG = getattr(
+    settings, "AXES_ENABLE_ACCESS_FAILURE_LOG", False
+)
 
-settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT = getattr(settings, "AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT", 1000)
+settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT = getattr(
+    settings, "AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT", 1000
+)
 
 settings.AXES_HANDLER = getattr(
     settings, "AXES_HANDLER", "axes.handlers.database.AxesDatabaseHandler"

@@ -67,8 +67,12 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
         return cls.get_implementation().reset_failure_logs(age_days=age_days)
 
     @classmethod
-    def remove_out_of_limit_failure_logs(cls, *, username: str, limit: Optional[int] = None) -> int:
-        return cls.get_implementation().remove_out_of_limit_failure_logs(username=username)
+    def remove_out_of_limit_failure_logs(
+        cls, *, username: str, limit: Optional[int] = None
+    ) -> int:
+        return cls.get_implementation().remove_out_of_limit_failure_logs(
+            username=username
+        )
 
     @staticmethod
     def update_request(request):

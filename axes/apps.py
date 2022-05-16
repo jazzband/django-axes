@@ -38,7 +38,11 @@ class AppConfig(apps.AppConfig):
                 mode = "blocking by username or IP"
             else:
                 mode = "blocking by IP only"
-            log.info("AXES: BEGIN version %s, %s", get_distribution("django-axes").version, mode)
+            log.info(
+                "AXES: BEGIN version %s, %s",
+                get_distribution("django-axes").version,
+                mode,
+            )
 
     def ready(self):
         self.initialize()

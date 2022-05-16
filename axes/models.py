@@ -22,10 +22,12 @@ class AccessBase(models.Model):
 
 
 class AccessFailureLog(AccessBase):
-    locked_out = models.BooleanField(_("Access lock out"), null=False, blank=True, default=False)
+    locked_out = models.BooleanField(
+        _("Access lock out"), null=False, blank=True, default=False
+    )
 
     def __str__(self):
-        locked_out_str = ' locked out' if self.locked_out else ''
+        locked_out_str = " locked out" if self.locked_out else ""
         return f"Failed access: user {self.username}{locked_out_str} on {self.attempt_time} from {self.ip_address}"
 
     class Meta:

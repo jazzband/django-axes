@@ -6,25 +6,64 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('axes', '0007_alter_accessattempt_unique_together'),
+        ("axes", "0007_alter_accessattempt_unique_together"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AccessFailureLog',
+            name="AccessFailureLog",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user_agent', models.CharField(db_index=True, max_length=255, verbose_name='User Agent')),
-                ('ip_address', models.GenericIPAddressField(db_index=True, null=True, verbose_name='IP Address')),
-                ('username', models.CharField(db_index=True, max_length=255, null=True, verbose_name='Username')),
-                ('http_accept', models.CharField(max_length=1025, verbose_name='HTTP Accept')),
-                ('path_info', models.CharField(max_length=255, verbose_name='Path')),
-                ('attempt_time', models.DateTimeField(auto_now_add=True, verbose_name='Attempt Time')),
-                ('locked_out', models.BooleanField(blank=True, default=False, verbose_name='Access lock out')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "user_agent",
+                    models.CharField(
+                        db_index=True, max_length=255, verbose_name="User Agent"
+                    ),
+                ),
+                (
+                    "ip_address",
+                    models.GenericIPAddressField(
+                        db_index=True, null=True, verbose_name="IP Address"
+                    ),
+                ),
+                (
+                    "username",
+                    models.CharField(
+                        db_index=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Username",
+                    ),
+                ),
+                (
+                    "http_accept",
+                    models.CharField(max_length=1025, verbose_name="HTTP Accept"),
+                ),
+                ("path_info", models.CharField(max_length=255, verbose_name="Path")),
+                (
+                    "attempt_time",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Attempt Time"
+                    ),
+                ),
+                (
+                    "locked_out",
+                    models.BooleanField(
+                        blank=True, default=False, verbose_name="Access lock out"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'access failure',
-                'verbose_name_plural': 'access failures',
+                "verbose_name": "access failure",
+                "verbose_name_plural": "access failures",
             },
         ),
     ]

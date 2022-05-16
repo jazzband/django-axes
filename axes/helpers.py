@@ -105,7 +105,9 @@ def get_credentials(username: Optional[str] = None, **kwargs) -> dict:
     return credentials
 
 
-def get_client_username(request: HttpRequest, credentials: Optional[dict] = None) -> str:
+def get_client_username(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> str:
     """
     Resolve client username from the given request or credentials if supplied.
 
@@ -220,7 +222,8 @@ def make_cache_key_list(filter_kwargs_list):
 
 
 def get_client_cache_key(
-    request_or_attempt: Union[HttpRequest, AccessBase], credentials: Optional[dict] = None
+    request_or_attempt: Union[HttpRequest, AccessBase],
+    credentials: Optional[dict] = None,
 ) -> str:
     """
     Build cache key name from request or AccessAttempt object.
@@ -362,7 +365,9 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def get_lockout_response(request: HttpRequest, credentials: Optional[dict] = None) -> HttpResponse:
+def get_lockout_response(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> HttpResponse:
     if settings.AXES_LOCKOUT_CALLABLE:
         if callable(settings.AXES_LOCKOUT_CALLABLE):
             return settings.AXES_LOCKOUT_CALLABLE(  # pylint: disable=not-callable
@@ -477,7 +482,9 @@ def is_client_method_whitelisted(request: HttpRequest) -> bool:
     return False
 
 
-def is_user_attempt_whitelisted(request: HttpRequest, credentials: Optional[dict] = None) -> bool:
+def is_user_attempt_whitelisted(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> bool:
     """
     Check if the given request or credentials refer to a whitelisted username.
 

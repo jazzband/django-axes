@@ -186,8 +186,9 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         """
         return 0
 
-
-    def remove_out_of_limit_failure_logs(self, *, username: str, limit: Optional[int] = None) -> int:
+    def remove_out_of_limit_failure_logs(
+        self, *, username: str, limit: Optional[int] = None
+    ) -> int:
         """Remove access failure logs that are over
         AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT for user username.
 
@@ -198,6 +199,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         """
         return 0
+
 
 class AxesHandler(AbstractAxesHandler, AxesBaseHandler):
     """
