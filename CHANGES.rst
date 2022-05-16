@@ -3,6 +3,19 @@ Changes
 =======
 
 
+5.33.0 (2022-05-16)
+-------------------
+
+- Migrate MD5 cache key digests to SHA256.
+  [aleksihakli]
+- Improve and streamline startup logging.
+  [ShaheedHaque]
+- Improve module typing.
+  [hramezani]
+- Add support for float or partial hours for ``AXES_COOLOFF_TIME``.
+  [hramezani]
+
+
 5.32.0 (2022-04-08)
 -------------------
 
@@ -213,7 +226,7 @@ Changes
 - Add ``DEFAULT_AUTO_FIELD`` to test settings.
   [hramezani]
 - Fix documentation language.
-  [danielquinn] 
+  [danielquinn]
 - Fix Python package version specifiers and remove redundant imports.
   [aleksihakli]
 
