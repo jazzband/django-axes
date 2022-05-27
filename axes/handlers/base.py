@@ -158,7 +158,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         Resets access attempts that match the given IP address or username.
 
         This method makes more sense for the DB backend, but as it is used by the ProxyHandler
-        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+        (via inherent), it needs to be defined here, so we get compliant with all proxy methods.
 
         Please overwrite it on each specialized handler as needed.
         """
@@ -169,7 +169,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         Resets access logs that are older than given number of days.
 
         This method makes more sense for the DB backend, but as it is used by the ProxyHandler
-        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+        (via inherent), it needs to be defined here, so we get compliant with all proxy methods.
 
         Please overwrite it on each specialized handler as needed.
         """
@@ -180,7 +180,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         Resets access failure logs that are older than given number of days.
 
         This method makes more sense for the DB backend, but as it is used by the ProxyHandler
-        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+        (via inherent), it needs to be defined here, so we get compliant with all proxy methods.
 
         Please overwrite it on each specialized handler as needed.
         """
@@ -193,7 +193,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT for user username.
 
         This method makes more sense for the DB backend, but as it is used by the ProxyHandler
-        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+        (via inherent), it needs to be defined here, so we get compliant with all proxy methods.
 
         Please overwrite it on each specialized handler as needed.
 
