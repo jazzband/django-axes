@@ -23,15 +23,20 @@ After installing the package, the project settings need to be configured.
         'axes',
     ]
 
-**2.** Add ``axes.backends.AxesBackend`` to the top of ``AUTHENTICATION_BACKENDS``::
+**2.** Add ``axes.backends.AxesStandaloneBackend`` to the top of ``AUTHENTICATION_BACKENDS``::
 
     AUTHENTICATION_BACKENDS = [
-        # AxesBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
-        'axes.backends.AxesBackend',
+        # AxesStandaloneBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
+        'axes.backends.AxesStandaloneBackend',
 
         # Django ModelBackend is the default authentication backend.
         'django.contrib.auth.backends.ModelBackend',
     ]
+
+    For backwards compatibility, ``AxesBackend`` can be used in place of ``AxesStandaloneBackend``. 
+    The only difference is that ``AxesBackend`` also provides the permissions-checking functionality
+    of Django's ``ModelBackend`` behind the scenes. We recommend using ``AxesStandaloneBackend``
+    if you have any custom logic to override Django's standard permissions checks. 
 
 **3.** Add ``axes.middleware.AxesMiddleware`` to your list of ``MIDDLEWARE``::
 
