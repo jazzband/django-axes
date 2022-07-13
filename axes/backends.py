@@ -1,6 +1,6 @@
 from typing import Optional
 from django.conf import settings
-from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.backends import BaseBackend, ModelBackend
 from django.http import HttpRequest
 
 from axes.exceptions import (
@@ -11,7 +11,7 @@ from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_credentials, get_lockout_message, toggleable
 
 
-class AxesBackend(ModelBackend):
+class AxesStandaloneBackend(BaseBackend):
     """
     Authentication backend class that forbids login attempts for locked out users.
 
@@ -19,6 +19,7 @@ class AxesBackend(ModelBackend):
     prevent locked out users from being logged in by the Django authentication flow.
 
     .. note:: This backend does not log your user in. It monitors login attempts.
+              It also does not run any permissions checks at all. 
               Authentication is handled by the following backends that are configured in ``AUTHENTICATION_BACKENDS``.
     """
 
@@ -71,3 +72,16 @@ class AxesBackend(ModelBackend):
         raise AxesBackendPermissionDenied(
             "AxesBackend detected that the given user is locked out"
         )
+
+
+class AxesBackend(AxesStandaloneBackend, ModelBackend):
+    """
+    Axes authentication backend that also inherits from ModelBackend, 
+    and thus also performs other functions of ModelBackend such as permissions checks.
+
+    Use this class as the first item of ``AUTHENTICATION_BACKENDS`` to
+    prevent locked out users from being logged in by the Django authentication flow.
+
+    .. note:: This backend does not log your user in. It monitors login attempts.
+              Authentication is handled by the following backends that are configured in ``AUTHENTICATION_BACKENDS``.
+    """
