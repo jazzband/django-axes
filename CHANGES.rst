@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.36.0 (2022-07-17)
+-------------------
+
+- Add ``AxesStandaloneBackend`` without ``ModelBackend`` dependencies.
+  [jcgiuffrida]
+
+
 5.35.0 (2022-06-01)
 -------------------
 
