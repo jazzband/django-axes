@@ -19,7 +19,7 @@ class AxesStandaloneBackend(BaseBackend):
     prevent locked out users from being logged in by the Django authentication flow.
 
     .. note:: This backend does not log your user in. It monitors login attempts.
-              It also does not run any permissions checks at all. 
+              It also does not run any permissions checks at all.
               Authentication is handled by the following backends that are configured in ``AUTHENTICATION_BACKENDS``.
     """
 
@@ -76,7 +76,7 @@ class AxesStandaloneBackend(BaseBackend):
 
 class AxesBackend(AxesStandaloneBackend, ModelBackend):
     """
-    Axes authentication backend that also inherits from ModelBackend, 
+    Axes authentication backend that also inherits from ModelBackend,
     and thus also performs other functions of ModelBackend such as permissions checks.
 
     Use this class as the first item of ``AUTHENTICATION_BACKENDS`` to
