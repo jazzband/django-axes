@@ -14,7 +14,7 @@ jobs:
       max-parallel: 5
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10', 'pypy-3.8']
-        django-version: ['3.2', '4.0']
+        django-version: ['3.2', '4.0', '4.1']
         include:
           # Tox configuration for QA environment
           - python-version: '3.10'
@@ -36,6 +36,8 @@ jobs:
           # Exclude Python 3.7 for Django 4.0 and Django main
           - python-version: '3.7'
             django-version: '4.0'
+          - python-version: '3.7'
+            django-version: '4.1'
           - python-version: '3.7'
             django-version: 'main'
 
