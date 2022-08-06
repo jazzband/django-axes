@@ -5,7 +5,7 @@ from django.core.checks import (  # pylint: disable=redefined-builtin
 )
 from django.utils.module_loading import import_string
 
-from axes.backends import AxesBackend
+from axes.backends import AxesStandaloneBackend
 from axes.conf import settings
 
 
@@ -19,16 +19,14 @@ class Messages:
     MIDDLEWARE_INVALID = (
         "You do not have 'axes.middleware.AxesMiddleware' in your settings.MIDDLEWARE."
     )
-    BACKEND_INVALID = "You do not have 'axes.backends.AxesBackend' or a subclass in your settings.AUTHENTICATION_BACKENDS."
+    BACKEND_INVALID = "You do not have 'axes.backends.AxesStandaloneBackend' or a subclass in your settings.AUTHENTICATION_BACKENDS."
     SETTING_DEPRECATED = "You have a deprecated setting {deprecated_setting} configured in your project settings"
 
 
 class Hints:
     CACHE_INVALID = None
     MIDDLEWARE_INVALID = None
-    BACKEND_INVALID = (
-        "AxesModelBackend was renamed to AxesBackend in django-axes version 5.0."
-    )
+    BACKEND_INVALID = "AxesModelBackend was renamed to AxesStandaloneBackend in django-axes version 5.0."
     SETTING_DEPRECATED = None
 
 
@@ -101,7 +99,7 @@ def axes_backend_check(app_configs, **kwargs):  # pylint: disable=unused-argumen
                 "Can not import backend class defined in settings.AUTHENTICATION_BACKENDS"
             ) from e
 
-        if issubclass(backend, AxesBackend):
+        if issubclass(backend, AxesStandaloneBackend):
             found = True
             break
 
