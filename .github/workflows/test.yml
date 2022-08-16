@@ -30,6 +30,9 @@ jobs:
             django-version: 'main'
             experimental: true
           - python-version: 'pypy-3.8'
+            django-version: '4.1'
+            experimental: true
+          - python-version: 'pypy-3.8'
             django-version: 'main'
             experimental: true
         exclude:
