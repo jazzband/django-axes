@@ -2,6 +2,14 @@
 Changes
 =======
 
+
+5.38.0 (2022-08-16)
+-------------------
+
+- Adjust changelog so release notes are correctly visible on PyPy and released package.
+  [aleksihakli]
+
+
 5.37.0 (2022-08-16)
 -------------------
 
