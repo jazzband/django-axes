@@ -47,8 +47,10 @@ setenv =
 # Django development version is allowed to fail the test matrix
 ignore_outcome =
     djmain: True
+    pypy38-dj41: True
 ignore_errors =
     djmain: True
+    pypy38-dj41: True
 
 # QA runs type checks, linting, and code formatting checks
 [testenv:py310-djqa]
