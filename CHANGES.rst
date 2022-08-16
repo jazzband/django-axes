@@ -2,6 +2,12 @@
 Changes
 =======
 
+5.37.0 (2022-08-16)
+-------------------
+
+- Add Django 4.1 support. PyPy 3.8 has a known issue with Django 4.1 and is exempted.
+  [hramezani]
+
 
 5.36.0 (2022-07-17)
 -------------------
