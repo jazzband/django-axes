@@ -3,6 +3,13 @@ Changes
 =======
 
 
+5.39.0 (2022-08-18)
+-------------------
+
+- Utilize new backend class in tests to fix false negative system check warnings.
+  [simonkern]
+
+
 5.38.0 (2022-08-16)
 -------------------
 
