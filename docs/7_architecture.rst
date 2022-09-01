@@ -56,7 +56,7 @@ are not blocked, and allows the requests to go through if the check passes.
 
 If the authentication attempt matches a lockout rule, e.g. it is from a
 blacklisted IP or exceeds the maximum configured authentication attempts,
-it is blocked by raising the ``PermissionDenied`` excepton in the backend.
+it is blocked by raising the ``PermissionDenied`` exception in the backend.
 
 Axes monitors logins with the ``user_login_failed`` signal receiver
 and records authentication failures from both the ``AxesBackend`` and
