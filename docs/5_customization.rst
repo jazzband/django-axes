@@ -34,7 +34,7 @@ Here is a more detailed example of sending the necessary signals using
 and a custom auth backend at an endpoint that expects JSON
 requests. The custom authentication can be swapped out with ``authenticate``
 and ``login`` from ``django.contrib.auth``, but beware that those methods take
-care of sending the nessary signals for you, and there is no need to duplicate
+care of sending the necessary signals for you, and there is no need to duplicate
 them as per the example.
 
 ``example/forms.py``::
