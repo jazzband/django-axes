@@ -1,7 +1,8 @@
 from logging import getLogger
 
 from django import apps
-from pkg_resources import get_distribution
+
+from axes import __version__
 
 log = getLogger(__name__)
 
@@ -40,7 +41,7 @@ class AppConfig(apps.AppConfig):
                 mode = "blocking by IP only"
             log.info(
                 "AXES: BEGIN version %s, %s",
-                get_distribution("django-axes").version,
+                __version__,
                 mode,
             )
 
