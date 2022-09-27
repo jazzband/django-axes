@@ -3,7 +3,7 @@
 Requirements
 ============
 
-Axes requires a supported Django version and runs on Python versions 3.6 and above.
+Axes requires a supported Django version and runs on Python versions 3.7 and above.
 
 Refer to the project source code repository in
 `GitHub <https://github.com/jazzband/django-axes/>`_ and see the
