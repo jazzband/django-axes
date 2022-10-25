@@ -6,21 +6,23 @@ from django.db.models import Count
 
 def deduplicate_attempts(apps, schema_editor):
     AccessAttempt = apps.get_model("axes", "AccessAttempt")
+    db_alias = schema_editor.connection.alias
     duplicated_attempts = (
-        AccessAttempt.objects.values("username", "user_agent", "ip_address")
+        AccessAttempt.objects.using(db_alias)
+        .values("username", "user_agent", "ip_address")
         .annotate(Count("id"))
         .order_by()
         .filter(id__count__gt=1)
     )
 
     for attempt in duplicated_attempts:
-        redundant_attempts = AccessAttempt.objects.filter(
+        redundant_attempts = AccessAttempt.objects.using(db_alias).filter(
             username=attempt["username"],
             user_agent=attempt["user_agent"],
             ip_address=attempt["ip_address"],
         )[1:]
         for redundant_attempt in redundant_attempts:
-            redundant_attempt.delete()
+            redundant_attempt.delete(using=db_alias)
 
 
 class Migration(migrations.Migration):
