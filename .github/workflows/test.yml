@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       max-parallel: 5
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', 'pypy-3.8']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', 'pypy-3.8']
         django-version: ['3.2', '4.0', '4.1']
         include:
           # Tox configuration for QA environment
@@ -27,6 +27,9 @@ jobs:
             django-version: 'main'
             experimental: true
           - python-version: '3.10'
+            django-version: 'main'
+            experimental: true
+          - python-version: '3.11'
             django-version: 'main'
             experimental: true
           - python-version: 'pypy-3.8'
@@ -43,6 +46,12 @@ jobs:
             django-version: '4.1'
           - python-version: '3.7'
             django-version: 'main'
+          # Exclude Python 3.11 for Django 3.2 and Django 4.0
+          - python-version: '3.11'
+            django-version: '3.2'
+          - python-version: '3.11'
+            django-version: '4.0'
+
 
     steps:
     - uses: actions/checkout@v3
