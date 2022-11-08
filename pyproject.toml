@@ -10,8 +10,8 @@ DJANGO_SETTINGS_MODULE = "tests.settings"
 legacy_tox_ini = """
 [tox]
 envlist =
-    py{37,38,39,310,311,py38}-dj32
-    py{38,39,310,311,py38}-dj40
+    py{37,38,39,310,py38}-dj32
+    py{38,39,310,py38}-dj40
     py{38,39,310,311,py38}-dj41
     py{38,39,310,311,py38}-djmain
     py310-djqa
