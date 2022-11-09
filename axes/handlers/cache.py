@@ -29,8 +29,8 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
     def reset_attempts(
         self,
         *,
-        ip_address: str = None,
-        username: str = None,
+        ip_address: Optional[str] = None,
+        username: Optional[str] = None,
         ip_or_username: bool = False,
     ) -> int:
         cache_keys: list = []
