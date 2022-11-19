@@ -3,6 +3,23 @@ Changes
 =======
 
 
+5.40.0 (2022-11-19)
+-------------------
+
+- Update packages and linters for new version support.
+  [hramezani]
+- Update documentation links.
+  [Arhell]
+- Use importlib instead of setuptools for Python 3.8+.
+  [jedie]
+- Python 3.11 support.
+  [joshuadavidthomas]
+- Documentation improvements.
+  [nsht]
+- Documentation improvements.
+  [timgates42]
+
+
 5.39.0 (2022-08-18)
 -------------------
 
