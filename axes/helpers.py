@@ -205,7 +205,7 @@ def get_client_parameters(username: str, ip_address: str, user_agent: str) -> li
 
         if settings.AXES_USE_USER_AGENT:
             # 4. The HTTP User-Agent can be used to track e.g. one browser
-            filter_query.append({"user_agent": user_agent})
+            filter_query[0]["user_agent"] = user_agent
 
     return filter_query
 
