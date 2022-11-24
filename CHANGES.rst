@@ -3,6 +3,12 @@ Changes
 =======
 
 
+5.40.1 (2022-11-24)
+-------------------
+
+- Fix bug in user agent request blocking. [PetrDlouhy]
+
+
 5.40.0 (2022-11-19)
 -------------------
 
