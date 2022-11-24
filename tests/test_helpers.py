@@ -329,7 +329,7 @@ class ClientParametersTestCase(AxesTestCase):
     def test_get_filter_kwargs_ip_and_agent(self):
         self.assertEqual(
             get_client_parameters(self.username, self.ip_address, self.user_agent),
-            [{"ip_address": self.ip_address}, {"user_agent": self.user_agent}],
+            [{"ip_address": self.ip_address, "user_agent": self.user_agent}],
         )
 
     @override_settings(
@@ -341,8 +341,7 @@ class ClientParametersTestCase(AxesTestCase):
         self.assertEqual(
             get_client_parameters(self.username, self.ip_address, self.user_agent),
             [
-                {"username": self.username, "ip_address": self.ip_address},
-                {"user_agent": self.user_agent},
+                {"username": self.username, "ip_address": self.ip_address, "user_agent": self.user_agent},
             ],
         )
 

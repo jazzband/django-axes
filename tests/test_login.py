@@ -86,7 +86,7 @@ class DatabaseLoginTestCase(AxesTestCase):
     ALLOWED = 302
     BLOCKED = 403
 
-    def _login(self, username, password, ip_addr="127.0.0.1", **kwargs):
+    def _login(self, username, password, ip_addr="127.0.0.1", user_agent="test-browser", **kwargs):
         """
         Login a user and get the response.
 
@@ -101,13 +101,13 @@ class DatabaseLoginTestCase(AxesTestCase):
             reverse("admin:login"),
             post_data,
             REMOTE_ADDR=ip_addr,
-            HTTP_USER_AGENT="test-browser",
+            HTTP_USER_AGENT=user_agent,
         )
 
-    def _lockout_user_from_ip(self, username, ip_addr):
+    def _lockout_user_from_ip(self, username, ip_addr, user_agent="test-browser"):
         for _ in range(settings.AXES_FAILURE_LIMIT):
             response = self._login(
-                username=username, password=self.WRONG_PASSWORD, ip_addr=ip_addr
+                username=username, password=self.WRONG_PASSWORD, ip_addr=ip_addr, user_agent=user_agent,
             )
         return response
 
@@ -367,6 +367,19 @@ class DatabaseLoginTestCase(AxesTestCase):
         # Still possible to access the login page
         response = self.client.get(reverse("admin:login"), REMOTE_ADDR=self.IP_1)
         self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
+
+    @override_settings(AXES_USE_USER_AGENT=True)
+    def test_lockout_by_user_still_allows_login_with_differnet_user_agent(self):
+        # User with empty username is locked out with "test-browser" user agent.
+        self._lockout_user_from_ip(username="username", ip_addr=self.IP_1, user_agent="test-browser")
+
+        # Test he is locked:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test with another user agent:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser-2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
 
     # Test for true and false positives when blocking by IP *OR* user (default)
     # With cache enabled. Default criteria.
