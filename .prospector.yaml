@@ -5,3 +5,11 @@ ignore-paths:
 pycodestyle:
   options:
     max-line-length: 142
+
+pylint:
+  disable:
+    - django-not-configured
+
+pyflakes:
+  disable:
+    - F401
