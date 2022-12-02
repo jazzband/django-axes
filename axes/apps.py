@@ -1,3 +1,5 @@
+# pylint: disable=import-outside-toplevel, unused-import
+
 from logging import getLogger
 
 from django import apps
@@ -26,8 +28,8 @@ class AppConfig(apps.AppConfig):
         cls.initialized = True
 
         # Only import settings, checks, and signals one time after Django has been initialized
-        from axes.conf import settings  # noqa
-        from axes import checks, signals  # noqa
+        from axes.conf import settings
+        from axes import checks, signals
 
         # Skip startup log messages if Axes is not set to verbose
         if settings.AXES_VERBOSE:
