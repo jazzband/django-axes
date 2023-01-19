@@ -20,12 +20,6 @@ jobs:
           - python-version: '3.10'
             django-version: 'qa'
           # Django main
-          - python-version: '3.8'
-            django-version: 'main'
-            experimental: true
-          - python-version: '3.9'
-            django-version: 'main'
-            experimental: true
           - python-version: '3.10'
             django-version: 'main'
             experimental: true
@@ -34,9 +28,6 @@ jobs:
             experimental: true
           - python-version: 'pypy-3.8'
             django-version: '4.1'
-            experimental: true
-          - python-version: 'pypy-3.8'
-            django-version: 'main'
             experimental: true
         exclude:
           # Exclude Python 3.7 for Django 4.0 and Django main
