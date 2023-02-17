@@ -69,6 +69,7 @@ class AccessLogTestCase(AxesTestCase):
 
         self.assertIsNotNone(AccessLog.objects.latest("id").logout_time)
 
+    @override_settings(DATA_UPLOAD_MAX_NUMBER_FIELDS=1500)
     def test_log_data_truncated(self):
         """
         Test that get_query_str properly truncates data to the max_length (default 1024).
