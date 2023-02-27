@@ -26,7 +26,6 @@ def deduplicate_attempts(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("axes", "0006_remove_accesslog_trusted"),
     ]
