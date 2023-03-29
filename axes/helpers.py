@@ -6,9 +6,9 @@ from typing import Callable, Optional, Type, Union
 from urllib.parse import urlencode
 
 import ipware.ip
-from django.core.cache import caches, BaseCache
+from django.core.cache import BaseCache, caches
 from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.utils.module_loading import import_string
 
 from axes.conf import settings
@@ -152,9 +152,26 @@ def get_client_ip_address(request: HttpRequest) -> str:
     """
     Get client IP address as configured by the user.
 
-    The django-ipware package is used for address resolution
-    and parameters can be configured in the Axes package.
+    The order of preference for address resolution is as follows:
+
+    1. If configured, use ``AXES_CLIENT_IP_CALLABLE``, and supply ``request`` as argument
+    2. Use django-ipware package (parameters can be configured in the Axes package)
+
+    :param request: incoming Django ``HttpRequest`` or similar object from authentication backend or other source
     """
+
+    if settings.AXES_CLIENT_IP_CALLABLE:
+        log.debug("Using settings.AXES_CLIENT_IP_CALLABLE to get username")
+
+        if callable(settings.AXES_CLIENT_IP_CALLABLE):
+            return settings.AXES_CLIENT_IP_CALLABLE(  # pylint: disable=not-callable
+                request
+            )
+        if isinstance(settings.AXES_CLIENT_IP_CALLABLE, str):
+            return import_string(settings.AXES_CLIENT_IP_CALLABLE)(request)
+        raise TypeError(
+            "settings.AXES_CLIENT_IP_CALLABLE needs to be a string, callable, or None."
+        )
 
     client_ip_address, _ = ipware.ip.get_client_ip(
         request,
