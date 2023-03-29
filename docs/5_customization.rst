@@ -173,3 +173,18 @@ An example of usage could be e.g. a custom view for processing lockouts.
 ``settings.py``::
 
     AXES_LOCKOUT_CALLABLE = "example.views.lockout"
+
+
+Customizing client ip address lookups
+-----------------------------
+
+Axes can be configured with ``AXES_CLIENT_IP_CALLABLE`` to use custom client ip address lookup logic.
+
+``example/utils.py``::
+
+    def get_client_ip(request):
+        return request.META.get("REMOTE_ADDR")
+
+``settings.py``::
+
+    AXES_LOCKOUT_CALLABLE = "example.utils.get_client_ip"
