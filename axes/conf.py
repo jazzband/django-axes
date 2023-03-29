@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-
 # disable plugin when set to False
 settings.AXES_ENABLED = getattr(settings, "AXES_ENABLED", True)
 
@@ -51,6 +50,9 @@ settings.AXES_WHITELIST_CALLABLE = getattr(settings, "AXES_WHITELIST_CALLABLE", 
 
 # return custom lockout response if configured
 settings.AXES_LOCKOUT_CALLABLE = getattr(settings, "AXES_LOCKOUT_CALLABLE", None)
+
+# use a provided callable to get client ip address
+settings.AXES_CLIENT_IP_CALLABLE = getattr(settings, "AXES_CLIENT_IP_CALLABLE", None)
 
 # reset the number of failed attempts after one successful attempt
 settings.AXES_RESET_ON_SUCCESS = getattr(settings, "AXES_RESET_ON_SUCCESS", False)
