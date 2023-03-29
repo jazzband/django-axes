@@ -3,16 +3,18 @@ from hashlib import sha256
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.http import JsonResponse, HttpResponseRedirect, HttpResponse, HttpRequest
-from django.test import override_settings, RequestFactory
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.test import RequestFactory, override_settings
 
 from axes.apps import AppConfig
 from axes.helpers import (
+    cleanse_parameters,
     get_cache_timeout,
+    get_client_cache_key,
+    get_client_ip_address,
+    get_client_parameters,
     get_client_str,
     get_client_username,
-    get_client_cache_key,
-    get_client_parameters,
     get_cool_off,
     get_cool_off_iso8601,
     get_lockout_response,
@@ -23,7 +25,6 @@ from axes.helpers import (
     is_ip_address_in_whitelist,
     is_user_attempt_whitelisted,
     toggleable,
-    cleanse_parameters,
 )
 from axes.models import AccessAttempt
 from tests.base import AxesTestCase
@@ -341,7 +342,11 @@ class ClientParametersTestCase(AxesTestCase):
         self.assertEqual(
             get_client_parameters(self.username, self.ip_address, self.user_agent),
             [
-                {"username": self.username, "ip_address": self.ip_address, "user_agent": self.user_agent},
+                {
+                    "username": self.username,
+                    "ip_address": self.ip_address,
+                    "user_agent": self.user_agent,
+                },
             ],
         )
 
@@ -551,6 +556,43 @@ class UsernameTestCase(AxesTestCase):
 
 def get_username(request, credentials: dict) -> str:
     return "username"
+
+
+def get_ip(request: HttpRequest) -> str:
+    return "127.0.0.1"
+
+
+class ClientIpAddressTestCase(AxesTestCase):
+    @override_settings(AXES_CLIENT_IP_CALLABLE=get_ip)
+    def test_get_client_ip_address(self):
+        self.assertEqual(get_client_ip_address(HttpRequest()), "127.0.0.1")
+
+    @override_settings(AXES_CLIENT_IP_CALLABLE="tests.test_helpers.get_ip")
+    def test_get_client_ip_address_str(self):
+        self.assertEqual(get_client_ip_address(HttpRequest()), "127.0.0.1")
+
+    @override_settings(
+        AXES_CLIENT_IP_CALLABLE=lambda request: "127.0.0.1"
+    )  # pragma: no cover
+    def test_get_client_ip_address_lambda(self):
+        self.assertEqual(get_client_ip_address(HttpRequest()), "127.0.0.1")
+
+    @override_settings(AXES_CLIENT_IP_CALLABLE=True)
+    def test_get_client_ip_address_not_callable(self):
+        with self.assertRaises(TypeError):
+            get_client_ip_address(HttpRequest())
+
+    @override_settings(AXES_CLIENT_IP_CALLABLE=lambda: None)  # pragma: no cover
+    def test_get_client_ip_address_invalid_callable_too_few_arguments(self):
+        with self.assertRaises(TypeError):
+            get_client_ip_address(HttpRequest())
+
+    @override_settings(
+        AXES_CLIENT_IP_CALLABLE=lambda request, extra: None
+    )  # pragma: no cover
+    def test_get_client_ip_address_invalid_callable_too_many_arguments(self):
+        with self.assertRaises(TypeError):
+            get_client_ip_address(HttpRequest())
 
 
 class IPWhitelistTestCase(AxesTestCase):
