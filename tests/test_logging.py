@@ -64,7 +64,7 @@ class AccessLogTestCase(AxesTestCase):
         self.login(is_valid_username=True, is_valid_password=True)
         self.assertIsNone(AccessLog.objects.latest("id").logout_time)
 
-        response = self.client.get(reverse("admin:logout"))
+        response = self.client.post(reverse("admin:logout"))
         self.assertContains(response, "Logged out")
 
         self.assertIsNotNone(AccessLog.objects.latest("id").logout_time)
@@ -85,7 +85,7 @@ class AccessLogTestCase(AxesTestCase):
         AccessLog.objects.all().delete()
 
         response = self.login(is_valid_username=True, is_valid_password=True)
-        response = self.client.get(reverse("admin:logout"))
+        response = self.client.post(reverse("admin:logout"))
 
         self.assertEqual(AccessLog.objects.all().count(), 0)
         self.assertContains(response, "Logged out", html=True)
@@ -108,7 +108,7 @@ class AccessLogTestCase(AxesTestCase):
         AccessLog.objects.all().delete()
 
         response = self.login(is_valid_username=True, is_valid_password=True)
-        response = self.client.get(reverse("admin:logout"))
+        response = self.client.post(reverse("admin:logout"))
 
         self.assertEqual(AccessLog.objects.count(), 0)
         self.assertContains(response, "Logged out", html=True)
