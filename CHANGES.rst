@@ -3,6 +3,14 @@ Changes
 =======
 
 
+5.41.0 (2023-04-02)
+-------------------
+
+- Fix tests. [hirotasoshu]
+- Add ``AXES_CLIENT_CALLABLE`` setting. [hirotasoshu]
+- Update Python, Django, and package versions. [hramezani]
+
+
 5.40.1 (2022-11-24)
 -------------------
 
