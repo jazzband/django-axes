@@ -306,7 +306,7 @@ def get_client_str(
         client_dict = {}
         for client in client_list:
             client_dict.update(client)
-
+    client_dict = cleanse_parameters(client_dict.copy())
     # Path info is always included as last component in the client string for traceability purposes
     if path_info and isinstance(path_info, (tuple, list)):
         path_info = path_info[0]
