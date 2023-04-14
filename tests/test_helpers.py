@@ -269,6 +269,26 @@ class ClientStringTestCase(AxesTestCase):
             self.email,
         )
 
+    @override_settings(AXES_SENSITIVE_PARAMETERS=["username"])
+    def test_get_client_str_with_sensitive_parameters(self):
+        username = "test@example.com"
+        ip_address = "127.0.0.1"
+        user_agent = "Googlebot/2.1 (+http://www.googlebot.com/bot.html)"
+        path_info = "/admin/"
+
+        expected = self.get_expected_client_str(
+            "********************",
+            ip_address,
+            user_agent,
+            path_info,
+            self.request
+        )
+        actual = get_client_str(
+            username, ip_address, user_agent, path_info, self.request
+        )
+
+        self.assertEqual(expected, actual)
+
 
 def get_dummy_client_str(username, ip_address, user_agent, path_info, request):
     return "client string"
