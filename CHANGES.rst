@@ -3,6 +3,11 @@ Changes
 =======
 
 
+5.41.1 (2023-04-16)
+-------------------
+
+- Fix sensitive parameter logging for database handler. [stereodamage]
+
 5.41.0 (2023-04-02)
 -------------------
 
