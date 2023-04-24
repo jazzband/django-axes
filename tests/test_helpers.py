@@ -791,12 +791,12 @@ class AxesLockoutTestCase(AxesTestCase):
 
     def test_get_lockout_response(self):
         response = get_lockout_response(self.request, self.credentials)
-        self.assertEqual(403, response.status_code)
+        self.assertEqual(429, response.status_code)
 
-    @override_settings(AXES_HTTP_RESPONSE_CODE=429)
+    @override_settings(AXES_HTTP_RESPONSE_CODE=403)
     def test_get_lockout_response_with_custom_http_response_code(self):
         response = get_lockout_response(self.request, self.credentials)
-        self.assertEqual(429, response.status_code)
+        self.assertEqual(403, response.status_code)
 
     @override_settings(AXES_LOCKOUT_CALLABLE=mock_get_lockout_response)
     def test_get_lockout_response_override_callable(self):

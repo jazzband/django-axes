@@ -84,7 +84,7 @@ class DatabaseLoginTestCase(AxesTestCase):
     LOGIN_FORM_KEY = '<input type="submit" value="Log in" />'
     ATTEMPT_NOT_BLOCKED = 200
     ALLOWED = 302
-    BLOCKED = 403
+    BLOCKED = 429
 
     def _login(self, username, password, ip_addr="127.0.0.1", user_agent="test-browser", **kwargs):
         """
@@ -197,7 +197,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         # So, we shouldn't have gotten a lock-out yet.
         # But we should get one now
         response = self.login(is_valid_username=True, is_valid_password=False)
-        self.assertContains(response, self.LOCKED_MESSAGE, status_code=403)
+        self.assertContains(response, self.LOCKED_MESSAGE, status_code=429)
 
     @override_settings(AXES_ONLY_USER_FAILURES=True)
     def test_lockout_by_only_user_failures(self):
