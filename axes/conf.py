@@ -141,7 +141,7 @@ settings.AXES_SENSITIVE_PARAMETERS = getattr(
 settings.AXES_CLIENT_STR_CALLABLE = getattr(settings, "AXES_CLIENT_STR_CALLABLE", None)
 
 # set the HTTP response code given by too many requests
-settings.AXES_HTTP_RESPONSE_CODE = getattr(settings, "AXES_HTTP_RESPONSE_CODE", 403)
+settings.AXES_HTTP_RESPONSE_CODE = getattr(settings, "AXES_HTTP_RESPONSE_CODE", 429)
 
 # If True, a failed login attempt during lockout will reset the cool off period
 settings.AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = getattr(
