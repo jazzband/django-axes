@@ -12,7 +12,7 @@ def get_username(request, credentials: dict) -> str:
 
 class MiddlewareTestCase(AxesTestCase):
     STATUS_SUCCESS = 200
-    STATUS_LOCKOUT = 403
+    STATUS_LOCKOUT = 429
 
     def setUp(self):
         self.request = HttpRequest()
