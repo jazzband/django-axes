@@ -3,6 +3,12 @@ Changes
 =======
 
 
+6.0.0b1 (2023-04-25)
+--------------------
+
+- Set 429 as the default lockout response code. [hirotasoshu]
+
+
 5.41.1 (2023-04-16)
 -------------------
 
