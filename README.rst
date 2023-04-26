@@ -77,30 +77,7 @@ If you have questions or have trouble using the app please file a bug report at:
 https://github.com/jazzband/django-axes/issues
 
 
-Contributions
+Contributing
 -------------
 
-All contributions are welcome!
-
-It is best to separate proposed changes and PRs into small, distinct patches
-by type so that they can be merged faster into upstream and released quicker.
-
-One way to organize contributions would be to separate PRs for e.g.
-
-* bugfixes,
-* new features,
-* code and design improvements,
-* documentation improvements, or
-* tooling and CI improvements.
-
-Merging contributions requires passing the checks configured
-with the CI. This includes running tests and linters successfully
-on the currently officially supported Python and Django versions.
-
-The test automation is run automatically with GitHub Actions, but you can
-run it locally with the ``tox`` command before pushing commits.
-
-Please note that this is a `Jazzband <https://jazzband.co>`_ project.
-By contributing you agree to abide by the
-`Contributor Code of Conduct <https://jazzband.co/about/conduct>`_
-and follow the `guidelines <https://jazzband.co/about/guidelines>`_.
+See `CONTRIBUTING <CONTRIBUTING.rst>`
