@@ -80,4 +80,4 @@ https://github.com/jazzband/django-axes/issues
 Contributing
 -------------
 
-See `CONTRIBUTING <CONTRIBUTING.rst>`
+See `CONTRIBUTING <CONTRIBUTING.rst>`__.
