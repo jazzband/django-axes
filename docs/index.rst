@@ -18,7 +18,7 @@ Contents
    6_integration
    7_architecture
    8_reference
-   9_development
+   9_contributing
    10_changelog
 
 
