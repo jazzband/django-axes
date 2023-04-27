@@ -614,6 +614,16 @@ class ClientIpAddressTestCase(AxesTestCase):
         with self.assertRaises(TypeError):
             get_client_ip_address(HttpRequest())
 
+    def test_get_client_ip_address_with_ipware(self):
+        request = HttpRequest()
+        request.META["REMOTE_ADDR"] = "127.0.0.2"
+        self.assertEqual(get_client_ip_address(request, use_ipware=True), "127.0.0.2")
+
+    def test_get_client_ip_address_without_ipware(self):
+        request = HttpRequest()
+        request.META["REMOTE_ADDR"] = "127.0.0.3"
+        self.assertEqual(get_client_ip_address(request, use_ipware=False), "127.0.0.3")
+
 
 class IPWhitelistTestCase(AxesTestCase):
     def setUp(self):
