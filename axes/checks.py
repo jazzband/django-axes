@@ -122,6 +122,12 @@ def axes_deprecation_check(app_configs, **kwargs):  # pylint: disable=unused-arg
     deprecated_settings = [
         "AXES_DISABLE_SUCCESS_ACCESS_LOG",
         "AXES_LOGGER",
+        # AXES_PROXY_ and AXES_META_ parameters were updated to more explicit
+        # AXES_IPWARE_PROXY_ and AXES_IPWARE_META_ prefixes in version 6.x
+        "AXES_PROXY_ORDER",
+        "AXES_PROXY_COUNT",
+        "AXES_PROXY_TRUSTED_IPS",
+        "AXES_META_PRECEDENCE_ORDER",
     ]
 
     for deprecated_setting in deprecated_settings:
