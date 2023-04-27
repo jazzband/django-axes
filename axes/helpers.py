@@ -192,10 +192,10 @@ def get_client_ip_address(
 
         client_ip_address, _ = ipware.ip.get_client_ip(
             request,
-            proxy_order=settings.AXES_PROXY_ORDER,
-            proxy_count=settings.AXES_PROXY_COUNT,
-            proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
-            request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
+            proxy_order=settings.AXES_IPWARE_PROXY_ORDER,
+            proxy_count=settings.AXES_IPWARE_PROXY_COUNT,
+            proxy_trusted_ips=settings.AXES_IPWARE_PROXY_TRUSTED_IPS,
+            request_header_order=settings.AXES_IPWARE_META_PRECEDENCE_ORDER,
         )
         return client_ip_address
 

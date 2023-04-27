@@ -103,8 +103,8 @@ and uses some conservative configuration parameters by default for security.
 If you are using reverse proxies, you will need to configure one or more of the
 following settings to suit your set up to correctly resolve client IP addresses:
 
-* ``AXES_PROXY_COUNT``: The number of reverse proxies in front of Django as an integer. Default: ``None``
-* ``AXES_META_PRECEDENCE_ORDER``: The names of ``request.META`` attributes as a tuple of strings
+* ``AXES_IPWARE_PROXY_COUNT``: The number of reverse proxies in front of Django as an integer. Default: ``None``
+* ``AXES_IPWARE_META_PRECEDENCE_ORDER``: The names of ``request.META`` attributes as a tuple of strings
   to check to get the client IP address. Check the Django documentation for header naming conventions.
   Default: ``IPWARE_META_PRECEDENCE_ORDER`` setting if set, else ``('REMOTE_ADDR', )``
 
@@ -114,7 +114,7 @@ following settings to suit your set up to correctly resolve client IP addresses:
    .. code-block:: python
 
       # refer to the Django request and response objects documentation
-      AXES_META_PRECEDENCE_ORDER = [
+      AXES_IPWARE_META_PRECEDENCE_ORDER = [
           'HTTP_X_FORWARDED_FOR',
           'REMOTE_ADDR',
       ]

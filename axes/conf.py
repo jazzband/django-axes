@@ -108,24 +108,6 @@ settings.AXES_PERMALOCK_MESSAGE = getattr(
     ),
 )
 
-# if your deployment is using reverse proxies, set this value to 'left-most' or 'right-most' per your configuration
-settings.AXES_PROXY_ORDER = getattr(settings, "AXES_PROXY_ORDER", "left-most")
-
-# if your deployment is using reverse proxies, set this value to the number of proxies in front of Django
-settings.AXES_PROXY_COUNT = getattr(settings, "AXES_PROXY_COUNT", None)
-
-# if your deployment is using reverse proxies, set to your trusted proxy IP addresses prefixes if needed
-settings.AXES_PROXY_TRUSTED_IPS = getattr(settings, "AXES_PROXY_TRUSTED_IPS", None)
-
-# set to the names of request.META attributes that should be checked for the IP address of the client
-# if your deployment is using reverse proxies, ensure that the header attributes are securely set by the proxy
-# ensure that the client can not spoof the headers by setting them and sending them through the proxy
-settings.AXES_META_PRECEDENCE_ORDER = getattr(
-    settings,
-    "AXES_META_PRECEDENCE_ORDER",
-    getattr(settings, "IPWARE_META_PRECEDENCE_ORDER", ("REMOTE_ADDR",)),
-)
-
 # set CORS allowed origins when calling authentication over ajax
 settings.AXES_ALLOWED_CORS_ORIGINS = getattr(settings, "AXES_ALLOWED_CORS_ORIGINS", "*")
 
@@ -146,4 +128,45 @@ settings.AXES_HTTP_RESPONSE_CODE = getattr(settings, "AXES_HTTP_RESPONSE_CODE", 
 # If True, a failed login attempt during lockout will reset the cool off period
 settings.AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = getattr(
     settings, "AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT", True
+)
+
+
+###
+# django-ipware settings for client IP address calculation and proxy detection
+# there are old AXES_PROXY_ and AXES_META_ legacy keys present for backwards compatibility
+# see https://github.com/un33k/django-ipware for further details
+###
+
+# if your deployment is using reverse proxies, set this value to 'left-most' or 'right-most' per your configuration
+settings.AXES_IPWARE_PROXY_ORDER = getattr(
+    settings,
+    "AXES_IPWARE_PROXY_ORDER",
+    getattr(settings, "AXES_PROXY_ORDER", "left-most"),
+)
+
+# if your deployment is using reverse proxies, set this value to the number of proxies in front of Django
+settings.AXES_IPWARE_PROXY_COUNT = getattr(
+    settings,
+    "AXES_IPWARE_PROXY_COUNT",
+    getattr(settings, "AXES_PROXY_COUNT", None),
+)
+
+# if your deployment is using reverse proxies, set to your trusted proxy IP addresses prefixes if needed
+settings.AXES_IPWARE_PROXY_TRUSTED_IPS = getattr(
+    settings,
+    "AXES_IPWARE_PROXY_TRUSTED_IPS",
+    getattr(settings, "AXES_PROXY_TRUSTED_IPS", None),
+)
+
+# set to the names of request.META attributes that should be checked for the IP address of the client
+# if your deployment is using reverse proxies, ensure that the header attributes are securely set by the proxy
+# ensure that the client can not spoof the headers by setting them and sending them through the proxy
+settings.AXES_IPWARE_META_PRECEDENCE_ORDER = getattr(
+    settings,
+    "AXES_IPWARE_META_PRECEDENCE_ORDER",
+    getattr(
+        settings,
+        "AXES_META_PRECEDENCE_ORDER",
+        getattr(settings, "IPWARE_META_PRECEDENCE_ORDER", ("REMOTE_ADDR",)),
+    ),
 )
