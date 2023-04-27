@@ -5,7 +5,6 @@ from string import Template
 from typing import Callable, Optional, Type, Union
 from urllib.parse import urlencode
 
-import ipware.ip
 from django.core.cache import BaseCache, caches
 from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import redirect, render
@@ -15,6 +14,13 @@ from axes.conf import settings
 from axes.models import AccessBase
 
 log = getLogger(__name__)
+
+try:
+    import ipware.ip
+
+    IPWARE_INSTALLED = True
+except ImportError:
+    IPWARE_INSTALLED = False
 
 
 def get_cache() -> BaseCache:
@@ -148,20 +154,24 @@ def get_client_username(
     return request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
-def get_client_ip_address(request: HttpRequest) -> str:
+def get_client_ip_address(
+    request: HttpRequest,
+    use_ipware: Optional[bool] = None,
+) -> Optional[str]:
     """
     Get client IP address as configured by the user.
 
     The order of preference for address resolution is as follows:
 
     1. If configured, use ``AXES_CLIENT_IP_CALLABLE``, and supply ``request`` as argument
-    2. Use django-ipware package (parameters can be configured in the Axes package)
+    2. If available, use django-ipware package (parameters can be configured in the Axes package)
+    3. Use ``request.META.get('REMOTE_ADDR', None)`` as a fallback
 
     :param request: incoming Django ``HttpRequest`` or similar object from authentication backend or other source
     """
 
     if settings.AXES_CLIENT_IP_CALLABLE:
-        log.debug("Using settings.AXES_CLIENT_IP_CALLABLE to get username")
+        log.debug("Using settings.AXES_CLIENT_IP_CALLABLE to get client IP address")
 
         if callable(settings.AXES_CLIENT_IP_CALLABLE):
             return settings.AXES_CLIENT_IP_CALLABLE(  # pylint: disable=not-callable
@@ -173,15 +183,26 @@ def get_client_ip_address(request: HttpRequest) -> str:
             "settings.AXES_CLIENT_IP_CALLABLE needs to be a string, callable, or None."
         )
 
-    client_ip_address, _ = ipware.ip.get_client_ip(
-        request,
-        proxy_order=settings.AXES_PROXY_ORDER,
-        proxy_count=settings.AXES_PROXY_COUNT,
-        proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
-        request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
-    )
+    # Resolve using django-ipware from a configuration flag that can be set to False to explicitly disable
+    # this is added to both enable or disable the branch when ipware is installed in the test environment
+    if use_ipware is None:
+        use_ipware = IPWARE_INSTALLED
+    if use_ipware:
+        log.debug("Using django-ipware to get client IP address")
 
-    return client_ip_address
+        client_ip_address, _ = ipware.ip.get_client_ip(
+            request,
+            proxy_order=settings.AXES_PROXY_ORDER,
+            proxy_count=settings.AXES_PROXY_COUNT,
+            proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
+            request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
+        )
+        return client_ip_address
+
+    log.debug(
+        "Using request.META.get('REMOTE_ADDR', None) fallback method to get client IP address"
+    )
+    return request.META.get("REMOTE_ADDR", None)
 
 
 def get_client_user_agent(request: HttpRequest) -> str:

@@ -5,7 +5,8 @@ Installation
 
 Axes is easy to install from the PyPI package::
 
-    $ pip install django-axes
+    $ pip install django-axes[ipware]  # use django-ipware for resolving client IP addresses OR
+    $ pip install django-axes          # implement and configure custom AXES_CLIENT_IP_CALLABLE
 
 After installing the package, the project settings need to be configured.
 
