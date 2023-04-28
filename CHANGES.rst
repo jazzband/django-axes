@@ -3,6 +3,17 @@ Changes
 =======
 
 
+6.0.0b2 (2023-04-28)
+--------------------
+
+- Make ``django-ipware`` an optional dependency. Install it with e.g. ``pip install django-axes[ipware]`` package and extras specifier. [aleksihakli]
+- Deprecate and rename old configuration flags. Old flags will be removed in or after version ``6.1``. [aleksihakli]
+   * ``AXES_PROXY_ORDER`` is now ``AXES_IPWARE_PROXY_ORDER``, 
+   * ``AXES_PROXY_COUNT`` is now ``AXES_IPWARE_PROXY_COUNT``, 
+   * ``AXES_IPWARE_PROXY_TRUSTED_IPS`` is now ``AXES_PROXY_TRUSTED_IPS``, and 
+   * ``AXES_IPWARE_META_PRECEDENCE_ORDER`` is now ``AXES_META_PRECEDENCE_ORDER``. 
+
+
 6.0.0b1 (2023-04-25)
 --------------------
 
