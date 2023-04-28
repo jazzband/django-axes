@@ -6,7 +6,7 @@ from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
 from axes.helpers import (
     get_cache,
     get_cache_timeout,
-    get_client_cache_key,
+    get_client_cache_keys,
     get_client_str,
     get_client_username,
     get_credentials,
@@ -110,7 +110,18 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             log.info("AXES: Login failed from whitelisted client %s.", client_str)
             return
 
-        failures_since_start = 1 + self.get_failures(request, credentials)
+        cache_keys = get_client_cache_keys(request, credentials)
+        cache_timeout = get_cache_timeout()
+        failures = []
+        for cache_key in cache_keys:
+            added = self.cache.add(key=cache_key, value=1, timeout=cache_timeout)
+            if added:
+                failures.append(1)
+            else:
+                failures.append(self.cache.incr(key=cache_key, delta=1))
+                self.cache.touch(key=cache_key, timeout=cache_timeout)
+
+        failures_since_start = max(failures)
         request.axes_failures_since_start = failures_since_start
 
         if failures_since_start > 1:
@@ -125,11 +136,6 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
                 "AXES: New login failure by %s. Creating new record in the cache.",
                 client_str,
             )
-
-        cache_keys = get_client_cache_keys(request, credentials)
-        for cache_key in cache_keys:
-            failures = self.cache.get(cache_key, default=0)
-            self.cache.set(cache_key, failures + 1, get_cache_timeout())
 
         if (
             settings.AXES_LOCK_OUT_AT_FAILURE

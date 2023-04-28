@@ -496,12 +496,12 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
             "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
         )
 
-    @patch.object(cache, "set")
-    def test_user_login_failed_with_none_username(self, cache_set):
+    @patch.object(cache, "add")
+    def test_user_login_failed_with_none_username(self, cache_add):
         credentials = {"username": None, "password": "test"}
         sender = MagicMock()
         AxesProxyHandler.user_login_failed(sender, credentials, self.request)
-        self.assertTrue(cache_set.called)
+        self.assertTrue(cache_add.called)
 
 
 @override_settings(AXES_HANDLER="axes.handlers.dummy.AxesDummyHandler")
