@@ -11,7 +11,6 @@ legacy_tox_ini = """
 [tox]
 envlist =
     py{37,38,39,310,py38}-dj32
-    py{38,39,310,py38}-dj40
     py{38,39,310,311,py38}-dj41
     py{38,39,310,311,py38}-dj42
     py{310,311,py38}-djmain
@@ -29,7 +28,6 @@ python =
 [gh-actions:env]
 DJANGO =
     3.2: dj32
-    4.0: dj40
     4.1: dj41
     4.2: dj42
     main: djmain
@@ -40,7 +38,6 @@ DJANGO =
 deps =
     -r requirements-test.txt
     dj32: django>=3.2,<3.3
-    dj40: django>=4.0,<4.1
     dj41: django>=4.1,<4.2
     dj42: django>=4.1,<4.2
     djmain: https://github.com/django/django/archive/main.tar.gz
