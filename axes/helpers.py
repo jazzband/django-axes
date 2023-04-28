@@ -259,7 +259,7 @@ def make_cache_key_list(filter_kwargs_list):
     return cache_keys
 
 
-def get_client_cache_key(
+def get_client_cache_keys(
     request_or_attempt: Union[HttpRequest, AccessBase],
     credentials: Optional[dict] = None,
 ) -> str:

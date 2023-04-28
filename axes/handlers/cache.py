@@ -44,7 +44,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             )
 
         cache_keys.extend(
-            get_client_cache_key(
+            get_client_cache_keys(
                 AccessAttempt(username=username, ip_address=ip_address)
             )
         )
@@ -58,7 +58,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
         return count
 
     def get_failures(self, request, credentials: Optional[dict] = None) -> int:
-        cache_keys = get_client_cache_key(request, credentials)
+        cache_keys = get_client_cache_keys(request, credentials)
         failure_count = max(
             self.cache.get(cache_key, default=0) for cache_key in cache_keys
         )
@@ -126,7 +126,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
                 client_str,
             )
 
-        cache_keys = get_client_cache_key(request, credentials)
+        cache_keys = get_client_cache_keys(request, credentials)
         for cache_key in cache_keys:
             failures = self.cache.get(cache_key, default=0)
             self.cache.set(cache_key, failures + 1, get_cache_timeout())
@@ -166,7 +166,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
         log.info("AXES: Successful login by %s.", client_str)
 
         if settings.AXES_RESET_ON_SUCCESS:
-            cache_keys = get_client_cache_key(request, credentials)
+            cache_keys = get_client_cache_keys(request, credentials)
             for cache_key in cache_keys:
                 failures_since_start = self.cache.get(cache_key, default=0)
                 self.cache.delete(cache_key)

@@ -10,7 +10,7 @@ from axes.apps import AppConfig
 from axes.helpers import (
     cleanse_parameters,
     get_cache_timeout,
-    get_client_cache_key,
+    get_client_cache_keys,
     get_client_ip_address,
     get_client_parameters,
     get_client_str,
@@ -372,7 +372,7 @@ class ClientParametersTestCase(AxesTestCase):
 
 
 class ClientCacheKeyTestCase(AxesTestCase):
-    def test_get_cache_key(self):
+    def test_get_cache_keys(self):
         """
         Test the cache key format.
         """
@@ -386,7 +386,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             "/admin/login/", data={"username": self.username, "password": "test"}
         )
 
-        self.assertEqual([cache_hash_key], get_client_cache_key(request))
+        self.assertEqual([cache_hash_key], get_client_cache_keys(request))
 
         # Getting cache key from AccessAttempt Object
         attempt = AccessAttempt(
@@ -400,7 +400,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             failures_since_start=0,
         )
 
-        self.assertEqual([cache_hash_key], get_client_cache_key(attempt))
+        self.assertEqual([cache_hash_key], get_client_cache_keys(attempt))
 
     def test_get_cache_key_empty_ip_address(self):
         """
@@ -420,7 +420,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             REMOTE_ADDR=empty_ip_address,
         )
 
-        self.assertEqual([cache_hash_key], get_client_cache_key(request))
+        self.assertEqual([cache_hash_key], get_client_cache_keys(request))
 
         # Getting cache key from AccessAttempt Object
         attempt = AccessAttempt(
@@ -434,7 +434,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             failures_since_start=0,
         )
 
-        self.assertEqual([cache_hash_key], get_client_cache_key(attempt))
+        self.assertEqual([cache_hash_key], get_client_cache_keys(attempt))
 
     def test_get_cache_key_credentials(self):
         """
@@ -454,7 +454,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
         # Difference between the upper test: new call signature with credentials
         credentials = {"username": self.username}
 
-        self.assertEqual([cache_hash_key], get_client_cache_key(request, credentials))
+        self.assertEqual([cache_hash_key], get_client_cache_keys(request, credentials))
 
         # Getting cache key from AccessAttempt Object
         attempt = AccessAttempt(
@@ -467,7 +467,7 @@ class ClientCacheKeyTestCase(AxesTestCase):
             path_info=request.META.get("PATH_INFO", "<unknown>"),
             failures_since_start=0,
         )
-        self.assertEqual([cache_hash_key], get_client_cache_key(attempt))
+        self.assertEqual([cache_hash_key], get_client_cache_keys(attempt))
 
 
 class UsernameTestCase(AxesTestCase):
