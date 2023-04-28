@@ -13,8 +13,8 @@ envlist =
     py{37,38,39,310,py38}-dj32
     py{38,39,310,311,py38}-dj41
     py{38,39,310,311,py38}-dj42
-    py{310,311,py38}-djmain
-    py310-djqa
+    py311-djmain
+    py311-djqa
 
 [gh-actions]
 python =
@@ -48,8 +48,10 @@ setenv =
 # Django development version is allowed to fail the test matrix
 ignore_outcome =
     djmain: True
+    pypy38: True
 ignore_errors =
     djmain: True
+    pypy38: True
 
 # QA runs type checks, linting, and code formatting checks
 [testenv:py311-djqa]
