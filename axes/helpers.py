@@ -2,7 +2,7 @@ from datetime import timedelta
 from hashlib import sha256
 from logging import getLogger
 from string import Template
-from typing import Callable, Optional, Type, Union
+from typing import Callable, Optional, Type, Union, List
 from urllib.parse import urlencode
 
 from django.core.cache import BaseCache, caches
@@ -248,7 +248,7 @@ def get_client_parameters(username: str, ip_address: str, user_agent: str) -> li
     return filter_query
 
 
-def make_cache_key_list(filter_kwargs_list):
+def make_cache_key_list(filter_kwargs_list: List[dict]) -> List[str]:
     cache_keys = []
     for filter_kwargs in filter_kwargs_list:
         cache_key_components = "".join(
@@ -262,7 +262,7 @@ def make_cache_key_list(filter_kwargs_list):
 def get_client_cache_keys(
     request_or_attempt: Union[HttpRequest, AccessBase],
     credentials: Optional[dict] = None,
-) -> str:
+) -> List[str]:
     """
     Build cache key name from request or AccessAttempt object.
 
