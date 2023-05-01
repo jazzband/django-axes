@@ -3,6 +3,13 @@ Changes
 =======
 
 
+6.0.0b3 (2023-05-01)
+--------------------
+
+- Use Django ``cache.incr`` API for atomic cached failure counting
+  [hirotasoshu, aleksihakli]
+
+
 6.0.0b2 (2023-04-28)
 --------------------
 
@@ -114,7 +121,7 @@ Changes
 5.32.0 (2022-04-08)
 -------------------
 
-- Add support for persistent failure logging
+- Add support for persistent logging
   where failed login attempts are persisted in the database
   until a specific threshold is reached.
   [p1-gdd]
