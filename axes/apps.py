@@ -33,14 +33,22 @@ class AppConfig(apps.AppConfig):
 
         # Skip startup log messages if Axes is not set to verbose
         if settings.AXES_VERBOSE:
-            if settings.AXES_ONLY_USER_FAILURES:
-                mode = "blocking by username only"
-            elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-                mode = "blocking by combination of username and IP"
-            elif settings.AXES_LOCK_OUT_BY_USER_OR_IP:
-                mode = "blocking by username or IP"
+
+            if callable(settings.AXES_LOCKOUT_PARAMETERS) or isinstance(
+                settings.AXES_LOCKOUT_PARAMETERS, str
+            ):
+                mode = "blocking by parameters that are calculated in a custom callable"
+
             else:
-                mode = "blocking by IP only"
+                mode = "blocking by " + " or ".join(
+                    [
+                        param
+                        if isinstance(param, str)
+                        else "combination of " + " and ".join(param)
+                        for param in settings.AXES_LOCKOUT_PARAMETERS
+                    ]
+                )
+
             log.info(
                 "AXES: BEGIN version %s, %s",
                 __version__,
