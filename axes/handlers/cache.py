@@ -11,6 +11,7 @@ from axes.helpers import (
     get_client_username,
     get_credentials,
     get_failure_limit,
+    get_lockout_parameters,
 )
 from axes.models import AccessAttempt
 from axes.signals import user_locked_out
@@ -78,9 +79,10 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         username = get_client_username(request, credentials)
-        if settings.AXES_ONLY_USER_FAILURES and username is None:
+        lockout_parameters = list(get_lockout_parameters(request, credentials))
+        if lockout_parameters == ["username"] and username is None:
             log.warning(
-                "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
+                "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."
             )
             return
 
