@@ -128,6 +128,13 @@ def axes_deprecation_check(app_configs, **kwargs):  # pylint: disable=unused-arg
         "AXES_PROXY_COUNT",
         "AXES_PROXY_TRUSTED_IPS",
         "AXES_META_PRECEDENCE_ORDER",
+        # AXES_ONLY_USER_FAILURES, AXES_USE_USER_AGENT and
+        # AXES_LOCK_OUT parameters were replaced with AXES_LOCKOUT_PARAMETERS
+        # in version 6.x
+        "AXES_ONLY_USER_FAILURES",
+        "AXES_LOCK_OUT_BY_USER_OR_IP",
+        "AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP",
+        "AXES_USE_USER_AGENT",
     ]
 
     for deprecated_setting in deprecated_settings:
