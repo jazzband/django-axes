@@ -218,6 +218,26 @@ def get_client_http_accept(request: HttpRequest) -> str:
 
 
 def get_client_parameters(username: str, ip_address: str, user_agent: str) -> list:
+def get_lockout_parameters(
+    request_or_attempt: Union[HttpRequest, AccessBase],
+    credentials: Optional[dict] = None,
+) -> Iterable[Union[str, Iterable]]:
+    if callable(settings.AXES_LOCKOUT_PARAMETERS):
+        return settings.AXES_LOCKOUT_PARAMETERS(
+            request_or_attempt, credentials
+        )  # pylint: disable=not-callable
+
+    elif isinstance(settings.AXES_LOCKOUT_PARAMETERS, str):
+        return import_string(settings.AXES_LOCKOUT_PARAMETERS)(
+            request_or_attempt, credentials
+        )
+
+    elif isinstance(settings.AXES_LOCKOUT_PARAMETERS, Iterable):
+        return settings.AXES_LOCKOUT_PARAMETERS
+
+    raise TypeError(
+        "settings.AXES_LOCKOUT_PARAMETERS needs to be a callable or iterable"
+    )
     """
     Get query parameters for filtering AccessAttempt queryset.
 
