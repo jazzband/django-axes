@@ -34,25 +34,26 @@ class AppsTestCase(AxesTestCase):
         AppConfig.initialize()
         self.assertFalse(log.info.called)
 
-    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username"])
     def test_axes_config_log_user_only(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username only")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username")
 
-    @override_settings(AXES_ONLY_USER_FAILURES=False)
     def test_axes_config_log_ip_only(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by IP only")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by ip_address")
 
-    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
     def test_axes_config_log_user_ip(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by combination of username and IP")
+        log.info.assert_called_with(
+            _BEGIN, _VERSION, "blocking by combination of username and ip_address"
+        )
 
-    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username", "ip_address"])
     def test_axes_config_log_user_or_ip(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username or IP")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username or ip_address")
 
 
 class AccessLogTestCase(AxesTestCase):
