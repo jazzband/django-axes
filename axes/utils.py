@@ -12,7 +12,7 @@ from django.http import HttpRequest
 
 from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
-from axes.helpers import get_client_ip_address
+from axes.helpers import get_client_ip_address, get_lockout_parameters
 
 log = getLogger(__name__)
 
@@ -37,23 +37,38 @@ def reset_request(request: HttpRequest) -> int:
 
     This utility method is meant to be used from the CLI or via Python API.
     """
+    lockout_paramaters = get_lockout_parameters(request)
 
     ip: Optional[str] = get_client_ip_address(request)
     username = request.GET.get("username", None)
 
-    ip_or_username = settings.AXES_LOCK_OUT_BY_USER_OR_IP
-    if settings.AXES_ONLY_USER_FAILURES:
+    ip_required = False
+    username_required = False
+    ip_and_username = False
+
+    for param in lockout_paramaters:
+        # hack: in works with all iterables, including strings
+        # so this checks works with separate parameters
+        # and with parameters combinations
+        if "username" in param and "ip_address" in param:
+            ip_and_username = True
+            ip_required = True
+            username_required = True
+            break
+        elif "username" in param:
+            username_required = True
+        elif "ip_address" in param:
+            ip_required = True
+
+    ip_or_username = not ip_and_username and ip_required and username_required
+    if not ip_required:
         ip = None
-    elif not (
-        settings.AXES_LOCK_OUT_BY_USER_OR_IP
-        or settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP
-    ):
+    if not username_required:
         username = None
 
     if not ip and not username:
         return 0
         # We don't want to reset everything, if there is some wrong request parameter
 
-    # if settings.AXES_USE_USER_AGENT:
     # TODO: reset based on user_agent?
     return reset(ip, username, ip_or_username)
