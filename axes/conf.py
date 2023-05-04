@@ -10,27 +10,36 @@ settings.AXES_FAILURE_LIMIT = getattr(settings, "AXES_FAILURE_LIMIT", 3)
 # see if the user has set axes to lock out logins after failure limit
 settings.AXES_LOCK_OUT_AT_FAILURE = getattr(settings, "AXES_LOCK_OUT_AT_FAILURE", True)
 
-# lock out with the combination of username and IP address
-settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = getattr(
-    settings, "AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP", False
-)
+# lockout parameters
+# default value will be ["ip_address"] after removing AXES_LOCK_OUT params support
+settings.AXES_LOCKOUT_PARAMETERS = getattr(settings, "AXES_LOCKOUT_PARAMETERS", None)
 
-# lock out with the username or IP address
-settings.AXES_LOCK_OUT_BY_USER_OR_IP = getattr(
-    settings, "AXES_LOCK_OUT_BY_USER_OR_IP", False
-)
+# TODO: remove it in future versions
+if settings.AXES_LOCKOUT_PARAMETERS is None:
+    if getattr(settings, "AXES_ONLY_USER_FAILURES", False):
+        settings.AXES_LOCKOUT_PARAMETERS = ["username"]
+    else:
+        if getattr(settings, "AXES_LOCK_OUT_BY_USER_OR_IP", False):
+            settings.AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+        elif getattr(settings, "AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP", False):
+            settings.AXES_LOCKOUT_PARAMETERS = [("username", "ip_address")]
+        else:
+            settings.AXES_LOCKOUT_PARAMETERS = ["ip_address"]
 
-# lock out with username and never the IP or user agent
-settings.AXES_ONLY_USER_FAILURES = getattr(settings, "AXES_ONLY_USER_FAILURES", False)
+    if getattr(settings, "AXES_USE_USER_AGENT", False):
+        if isinstance(settings.AXES_LOCKOUT_PARAMETERS[0], str):
+            settings.AXES_LOCKOUT_PARAMETERS[0] = (
+                settings.AXES_LOCKOUT_PARAMETERS[0],
+                "user_agent",
+            )
+        else:
+            settings.AXES_LOCKOUT_PARAMETERS[0] += ("user_agent",)
 
 # lock out just for admin site
 settings.AXES_ONLY_ADMIN_SITE = getattr(settings, "AXES_ONLY_ADMIN_SITE", False)
 
 # show Axes logs in admin
 settings.AXES_ENABLE_ADMIN = getattr(settings, "AXES_ENABLE_ADMIN", True)
-
-# lock out with the user agent, has no effect when ONLY_USER_FAILURES is set
-settings.AXES_USE_USER_AGENT = getattr(settings, "AXES_USE_USER_AGENT", False)
 
 # use a specific username field to retrieve from login POST data
 settings.AXES_USERNAME_FORM_FIELD = getattr(
