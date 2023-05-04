@@ -18,6 +18,7 @@ from axes.helpers import (
     get_client_username,
     get_credentials,
     get_failure_limit,
+    get_lockout_parameters,
     get_query_str,
 )
 from axes.models import AccessLog, AccessAttempt, AccessFailureLog
@@ -164,9 +165,10 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         # 2. database query: Get or create access record with the new failure data
-        if settings.AXES_ONLY_USER_FAILURES and username is None:
+        lockout_parameters = list(get_lockout_parameters(request, credentials))
+        if lockout_parameters == ["username"] and username is None:
             log.warning(
-                "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
+                "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."
             )
         else:
             with transaction.atomic():
