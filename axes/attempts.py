@@ -38,7 +38,7 @@ def filter_user_attempts(
     username = get_client_username(request, credentials)
 
     filter_kwargs_list = get_client_parameters(
-        username, request.axes_ip_address, request.axes_user_agent
+        username, request.axes_ip_address, request.axes_user_agent, request, credentials
     )
     attempts_list = [
         AccessAttempt.objects.filter(**filter_kwargs)
