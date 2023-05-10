@@ -324,20 +324,20 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
             (
                 2,
                 1,
-                {"AXES_LOCKOUT_PARAMETERS": [("ip_address", "user_agent")]},
+                {"AXES_LOCKOUT_PARAMETERS": [["ip_address", "user_agent"]]},
                 ["admin", "admin1"],
             ),
             (2, 1, {"AXES_LOCKOUT_PARAMETERS": ["username"]}, ["admin", "admin1"]),
             (
                 2,
                 1,
-                {"AXES_LOCKOUT_PARAMETERS": [("username", "ip_address")]},
+                {"AXES_LOCKOUT_PARAMETERS": [["username", "ip_address"]]},
                 ["admin", "admin1"],
             ),
             (
                 1,
                 2,
-                {"AXES_LOCKOUT_PARAMETERS": [("username", "ip_address")]},
+                {"AXES_LOCKOUT_PARAMETERS": [["username", "ip_address"]]},
                 ["admin", "admin"],
             ),
             (
@@ -454,7 +454,7 @@ class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
         self.check_failures(0, ip_address=self.IP_1)
         self.check_failures(2, ip_address=self.IP_2)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_handler_reset_attempts_ip_and_username(self):
         self.set_up_login_attempts()
         self.check_failures(1, username=self.USERNAME_1, ip_address=self.IP_1)

@@ -79,7 +79,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         username = get_client_username(request, credentials)
-        lockout_parameters = list(get_lockout_parameters(request, credentials))
+        lockout_parameters = get_lockout_parameters(request, credentials)
         if lockout_parameters == ["username"] and username is None:
             log.warning(
                 "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."

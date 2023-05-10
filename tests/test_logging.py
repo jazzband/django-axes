@@ -43,7 +43,7 @@ class AppsTestCase(AxesTestCase):
         AppConfig.initialize()
         log.info.assert_called_with(_BEGIN, _VERSION, "blocking by ip_address")
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_axes_config_log_user_ip(self, log):
         AppConfig.initialize()
         log.info.assert_called_with(

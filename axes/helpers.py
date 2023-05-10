@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 from datetime import timedelta
 from hashlib import sha256
 from logging import getLogger
@@ -221,18 +220,18 @@ def get_client_http_accept(request: HttpRequest) -> str:
 def get_lockout_parameters(
     request_or_attempt: Union[HttpRequest, AccessBase],
     credentials: Optional[dict] = None,
-) -> Iterable[Union[str, Iterable]]:
+) -> List[Union[str, List[str]]]:
     if callable(settings.AXES_LOCKOUT_PARAMETERS):
         return settings.AXES_LOCKOUT_PARAMETERS(
             request_or_attempt, credentials
-        )  # pylint: disable=not-callable
+        )
 
-    elif isinstance(settings.AXES_LOCKOUT_PARAMETERS, str):
+    if isinstance(settings.AXES_LOCKOUT_PARAMETERS, str):
         return import_string(settings.AXES_LOCKOUT_PARAMETERS)(
             request_or_attempt, credentials
         )
 
-    elif isinstance(settings.AXES_LOCKOUT_PARAMETERS, Iterable):
+    if isinstance(settings.AXES_LOCKOUT_PARAMETERS, list):
         return settings.AXES_LOCKOUT_PARAMETERS
 
     raise TypeError(
@@ -281,6 +280,7 @@ def get_client_parameters(
                 f"{e} lockout parameter is not allowed. "
                 f"Allowed parameters: {', '.join(parameters_dict.keys())}"
             )
+            log.exception(error_msg)
             raise ValueError(error_msg) from e
 
     return filter_kwargs
