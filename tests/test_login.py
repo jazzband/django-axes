@@ -182,7 +182,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         self.assertContains(response, self.LOCKED_MESSAGE, status_code=self.BLOCKED)
         self.assertTrue(self.attempt_count())
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_combination_user_and_ip(self):
         """
         Test login failure when lockout parameters is combination
@@ -322,7 +322,7 @@ class DatabaseLoginTestCase(AxesTestCase):
 
     # Test for true and false positives when blocking by user and IP together.
     # Cache disabled. When LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_blocks_when_same_user_same_ip_without_cache(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
@@ -331,7 +331,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_allows_when_same_user_diff_ip_without_cache(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
@@ -340,7 +340,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_without_cache(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
@@ -349,7 +349,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_allows_when_diff_user_diff_ip_without_cache(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
@@ -358,7 +358,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_without_cache(
         self,
     ):
@@ -369,7 +369,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self.client.get(reverse("admin:login"), REMOTE_ADDR=self.IP_1)
         self.assertContains(response, self.LOGIN_FORM_KEY, status_code=200, html=True)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("ip_address", "user_agent")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "user_agent"]])
     def test_lockout_by_user_still_allows_login_with_differnet_user_agent(self):
         # User with empty username is locked out with "test-browser" user agent.
         self._lockout_user_from_ip(username="username", ip_addr=self.IP_1, user_agent="test-browser")
@@ -465,7 +465,7 @@ class DatabaseLoginTestCase(AxesTestCase):
 
     # Test for true and false positives when blocking by user and IP together.
     # With cache enabled. When LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_blocks_when_same_user_same_ip_using_cache(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
@@ -474,7 +474,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.BLOCKED)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_allows_when_same_user_diff_ip_using_cache(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
@@ -483,7 +483,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self._login(self.USER_1, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_using_cache(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
@@ -492,7 +492,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_1)
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_allows_when_diff_user_diff_ip_using_cache(self):
         # User 1 is locked out from IP 1.
         self._lockout_user1_from_ip1()
@@ -502,7 +502,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         self.assertEqual(response.status_code, self.ALLOWED)
 
     @override_settings(
-        AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")], AXES_FAILURE_LIMIT=2
+        AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]], AXES_FAILURE_LIMIT=2
     )
     def test_lockout_by_user_and_ip_allows_when_diff_user_same_ip_using_cache_multiple_attempts(
         self,
@@ -531,7 +531,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         response = self._login(self.USER_2, self.VALID_PASSWORD, ip_addr=self.IP_2)
         self.assertEqual(response.status_code, self.ALLOWED)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_lockout_by_user_and_ip_with_empty_username_allows_other_users_using_cache(
         self,
     ):

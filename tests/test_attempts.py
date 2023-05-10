@@ -130,24 +130,24 @@ class ResetResponseTestCase(AxesTestCase):
         reset_request(self.request)
         self.assertEqual(AccessAttempt.objects.count(), 2)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_reset_user_and_ip(self):
         reset_request(self.request)
         self.assertEqual(AccessAttempt.objects.count(), 5)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_reset_ip_user_and_ip(self):
         self.request.META["REMOTE_ADDR"] = self.IP_1
         reset_request(self.request)
         self.assertEqual(AccessAttempt.objects.count(), 3)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_reset_username_user_and_ip(self):
         self.request.GET["username"] = self.USERNAME_1
         reset_request(self.request)
         self.assertEqual(AccessAttempt.objects.count(), 3)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_reset_ip_username_user_and_ip(self):
         self.request.GET["username"] = self.USERNAME_1
         self.request.META["REMOTE_ADDR"] = self.IP_1

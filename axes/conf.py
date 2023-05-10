@@ -22,18 +22,18 @@ if settings.AXES_LOCKOUT_PARAMETERS is None:
         if getattr(settings, "AXES_LOCK_OUT_BY_USER_OR_IP", False):
             settings.AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
         elif getattr(settings, "AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP", False):
-            settings.AXES_LOCKOUT_PARAMETERS = [("username", "ip_address")]
+            settings.AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
         else:
             settings.AXES_LOCKOUT_PARAMETERS = ["ip_address"]
 
     if getattr(settings, "AXES_USE_USER_AGENT", False):
         if isinstance(settings.AXES_LOCKOUT_PARAMETERS[0], str):
-            settings.AXES_LOCKOUT_PARAMETERS[0] = (
+            settings.AXES_LOCKOUT_PARAMETERS[0] = [
                 settings.AXES_LOCKOUT_PARAMETERS[0],
                 "user_agent",
-            )
+            ]
         else:
-            settings.AXES_LOCKOUT_PARAMETERS[0] += ("user_agent",)
+            settings.AXES_LOCKOUT_PARAMETERS[0].append("user_agent")
 
 # lock out just for admin site
 settings.AXES_ONLY_ADMIN_SITE = getattr(settings, "AXES_ONLY_ADMIN_SITE", False)

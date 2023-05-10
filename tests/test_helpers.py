@@ -182,7 +182,7 @@ class ClientStringTestCase(AxesTestCase):
 
         self.assertEqual(expected, actual)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_user_ip_combo_client_details(self):
         username = "test@example.com"
@@ -199,7 +199,7 @@ class ClientStringTestCase(AxesTestCase):
 
         self.assertEqual(expected, actual)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_user_ip_combo_client_details(self):
         username = "test@example.com"
@@ -214,7 +214,7 @@ class ClientStringTestCase(AxesTestCase):
 
         self.assertEqual(expected, actual)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("ip_address", "user_agent")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "user_agent"]])
     @override_settings(AXES_VERBOSE=True)
     def test_verbose_user_agent_client_details(self):
         username = "test@example.com"
@@ -231,7 +231,7 @@ class ClientStringTestCase(AxesTestCase):
 
         self.assertEqual(expected, actual)
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("ip_address", "user_agent")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "user_agent"]])
     @override_settings(AXES_VERBOSE=False)
     def test_non_verbose_user_agent_client_details(self):
         username = "test@example.com"
@@ -314,7 +314,7 @@ class ClientParametersTestCase(AxesTestCase):
             [{"ip_address": self.ip_address}],
         )
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("username", "ip_address")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_get_filter_kwargs_user_and_ip(self):
         self.assertEqual(
             get_client_parameters(self.username, self.ip_address, self.user_agent, self.request, self.credentials),
@@ -328,7 +328,7 @@ class ClientParametersTestCase(AxesTestCase):
             [{"username": self.username}, {"ip_address": self.ip_address}],
         )
 
-    @override_settings(AXES_LOCKOUT_PARAMETERS=[("ip_address", "user_agent")])
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "user_agent"]])
     def test_get_filter_kwargs_ip_and_agent(self):
         self.assertEqual(
             get_client_parameters(self.username, self.ip_address, self.user_agent, self.request, self.credentials),
@@ -336,7 +336,7 @@ class ClientParametersTestCase(AxesTestCase):
         )
 
     @override_settings(
-        AXES_LOCKOUT_PARAMETERS=[("username", "ip_address", "user_agent")]
+        AXES_LOCKOUT_PARAMETERS=[["username", "ip_address", "user_agent"]]
     )
     def test_get_filter_kwargs_user_ip_agent(self):
         self.assertEqual(

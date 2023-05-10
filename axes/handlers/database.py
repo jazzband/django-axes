@@ -165,7 +165,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         # 2. database query: Get or create access record with the new failure data
-        lockout_parameters = list(get_lockout_parameters(request, credentials))
+        lockout_parameters = get_lockout_parameters(request, credentials)
         if lockout_parameters == ["username"] and username is None:
             log.warning(
                 "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."
