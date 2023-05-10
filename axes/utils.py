@@ -10,7 +10,6 @@ from typing import Optional
 
 from django.http import HttpRequest
 
-from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_ip_address, get_lockout_parameters
 
@@ -55,7 +54,7 @@ def reset_request(request: HttpRequest) -> int:
             ip_required = True
             username_required = True
             break
-        elif "username" in param:
+        if "username" in param:
             username_required = True
         elif "ip_address" in param:
             ip_required = True
