@@ -222,9 +222,7 @@ def get_lockout_parameters(
     credentials: Optional[dict] = None,
 ) -> List[Union[str, List[str]]]:
     if callable(settings.AXES_LOCKOUT_PARAMETERS):
-        return settings.AXES_LOCKOUT_PARAMETERS(
-            request_or_attempt, credentials
-        )
+        return settings.AXES_LOCKOUT_PARAMETERS(request_or_attempt, credentials)
 
     if isinstance(settings.AXES_LOCKOUT_PARAMETERS, str):
         return import_string(settings.AXES_LOCKOUT_PARAMETERS)(

@@ -33,7 +33,6 @@ class AppConfig(apps.AppConfig):
 
         # Skip startup log messages if Axes is not set to verbose
         if settings.AXES_VERBOSE:
-
             if callable(settings.AXES_LOCKOUT_PARAMETERS) or isinstance(
                 settings.AXES_LOCKOUT_PARAMETERS, str
             ):
