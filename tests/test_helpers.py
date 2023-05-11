@@ -325,11 +325,39 @@ class ClientParametersTestCase(AxesTestCase):
             [{"username": self.username, "ip_address": self.ip_address}],
         )
 
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "user_agent"]])
+    def test_get_filter_kwargs_user_and_user_agent(self):
+        self.assertEqual(
+            get_client_parameters(self.username, self.ip_address, self.user_agent, self.request, self.credentials),
+            [{"username": self.username, "user_agent": self.user_agent}],
+        )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["ip_address", ["username", "user_agent"]])
+    def test_get_filter_kwargs_ip_or_user_and_user_agent(self):
+        self.assertEqual(
+            get_client_parameters(self.username, self.ip_address, self.user_agent, self.request, self.credentials),
+            [{"ip_address": self.ip_address}, {"username": self.username, "user_agent": self.user_agent}],
+        )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "user_agent"], ["username", "user_agent"]])
+    def test_get_filter_kwargs_ip_and_user_agent_or_user_and_user_agent(self):
+        self.assertEqual(
+            get_client_parameters(self.username, self.ip_address, self.user_agent, self.request, self.credentials),
+            [{"ip_address": self.ip_address, "user_agent": self.user_agent}, {"username": self.username, "user_agent": self.user_agent}],
+        )
+
     @override_settings(AXES_LOCKOUT_PARAMETERS=["username", "ip_address"])
     def test_get_filter_kwargs_user_or_ip(self):
         self.assertEqual(
             get_client_parameters(self.username, self.ip_address, self.user_agent, self.request, self.credentials),
             [{"username": self.username}, {"ip_address": self.ip_address}],
+        )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username", "ip_address", "user_agent"])
+    def test_get_filter_kwargs_user_or_ip_or_user_agent(self):
+        self.assertEqual(
+            get_client_parameters(self.username, self.ip_address, self.user_agent, self.request, self.credentials),
+            [{"username": self.username}, {"ip_address": self.ip_address}, {"user_agent": self.user_agent}],
         )
 
     @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "user_agent"]])
