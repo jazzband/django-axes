@@ -300,6 +300,10 @@ def get_dummy_client_str_using_request(
     return f"{request.user.email}"
 
 
+def get_dummy_lockout_parameters(request, credentials=None):
+    return ["ip_address", ["username", "user_agent"]]
+
+
 class ClientParametersTestCase(AxesTestCase):
     @override_settings(AXES_LOCKOUT_PARAMETERS=["username"])
     def test_get_filter_kwargs_user(self):
@@ -349,6 +353,180 @@ class ClientParametersTestCase(AxesTestCase):
                 },
             ],
         )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["wrong_param"])
+    @patch("axes.helpers.log")
+    def test_get_filter_kwargs_invalid_parameter(self, log):
+        with self.assertRaises(ValueError):
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            )
+            log.exception.assert_called_with(
+                (
+                    "wrong_param lockout parameter is not allowed. "
+                    "Allowed lockout parameters: username, ip_address, user_agent"
+                )
+            )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "wrong_param"]])
+    @patch("axes.helpers.log")
+    def test_get_filter_kwargs_invalid_combined_parameter(self, log):
+        with self.assertRaises(ValueError):
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            )
+            log.exception.assert_called_with(
+                (
+                    "wrong_param lockout parameter is not allowed. "
+                    "Allowed lockout parameters: username, ip_address, user_agent"
+                )
+            )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=get_dummy_lockout_parameters)
+    def test_get_filter_kwargs_callable_lockout_parameters(self):
+        self.assertEqual(
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            ),
+            [
+                {
+                    "ip_address": self.ip_address,
+                },
+                {
+                    "username": self.username,
+                    "user_agent": self.user_agent,
+                },
+            ],
+        )
+
+    @override_settings(
+        AXES_LOCKOUT_PARAMETERS="tests.test_helpers.get_dummy_lockout_parameters"
+    )
+    def test_get_filter_kwargs_callable_str_lockout_parameters(self):
+        self.assertEqual(
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            ),
+            [
+                {
+                    "ip_address": self.ip_address,
+                },
+                {
+                    "username": self.username,
+                    "user_agent": self.user_agent,
+                },
+            ],
+        )
+
+    @override_settings(
+        AXES_LOCKOUT_PARAMETERS=lambda request, credentials: ["username"]
+    )
+    def test_get_filter_kwargs_callable_lambda_lockout_parameters(self):
+        self.assertEqual(
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            ),
+            [
+                {
+                    "username": self.username,
+                },
+            ],
+        )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=True)
+    def test_get_filter_kwargs_not_list_or_callable(self):
+        with self.assertRaises(TypeError):
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=lambda: None)
+    def test_get_filter_kwargs_invalid_callable_too_few_arguments(self):
+        with self.assertRaises(TypeError):
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            )
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=lambda request, credentials, extra: None)
+    def test_get_filter_kwargs_invalid_callable_too_many_arguments(self):
+        with self.assertRaises(TypeError):
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            )
+
+    @override_settings(
+        AXES_LOCKOUT_PARAMETERS=lambda request, credentials: ["wrong_param"]
+    )
+    @patch("axes.helpers.log")
+    def test_get_filter_kwargs_callable_invalid_lockout_param(self, log):
+        with self.assertRaises(ValueError):
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            )
+            log.exception.assert_called_with(
+                (
+                    "wrong_param lockout parameter is not allowed. "
+                    "Allowed lockout parameters: username, ip_address, user_agent"
+                )
+            )
+
+    @override_settings(
+        AXES_LOCKOUT_PARAMETERS=lambda request, credentials: [
+            ["ip_address", "wrong_param"]
+        ]
+    )
+    @patch("axes.helpers.log")
+    def test_get_filter_kwargs_callable_invalid_combined_lockout_param(self, log):
+        with self.assertRaises(ValueError):
+            get_client_parameters(
+                self.username,
+                self.ip_address,
+                self.user_agent,
+                self.request,
+                self.credentials,
+            )
+            log.exception.assert_called_with(
+                (
+                    "wrong_param lockout parameter is not allowed. "
+                    "Allowed lockout parameters: username, ip_address, user_agent"
+                )
+            )
 
 
 class ClientCacheKeyTestCase(AxesTestCase):
