@@ -239,6 +239,139 @@ class DatabaseLoginTestCase(AxesTestCase):
             response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True
         )
 
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["user_agent"])
+    def test_lockout_by_user_agent_only(self):
+        """
+        Test login failure when lockout parameter is only user_agent
+        """
+        # User is locked out with "test-browser" user agent.
+        self._lockout_user_from_ip(username="username", ip_addr=self.IP_1, user_agent="test-browser")
+
+        # Test he is locked:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked with another username:
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked with another ip:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test with another user agent:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser-2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["ip_address", "username", "user_agent"])
+    def test_lockout_by_all_parameters(self):
+        # User is locked out with "test-browser" user agent.
+        self._lockout_user_from_ip(username="username", ip_addr=self.IP_1, user_agent="test-browser")
+
+        # Test he is locked:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked by username:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked by ip:
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked by user_agent:
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+       
+        # Test he is allowed to login with different username, ip and user_agent
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "username", "user_agent"]])
+    def test_lockout_by_combination_of_all_parameters(self):
+        # User is locked out with "test-browser" user agent.
+        self._lockout_user_from_ip(username="username", ip_addr=self.IP_1, user_agent="test-browser")
+
+        # Test he is locked:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is allowed to login with different username:
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Test he is allowed to login with different IP:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Test he is allowed to login with different user_agent:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+       
+        # Test he is allowed to login with different username, ip and user_agent
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["ip_address", ["username", "user_agent"]])
+    def test_lockout_by_ip_or_username_and_user_agent(self):
+        # User is locked out with "test-browser" user agent.
+        self._lockout_user_from_ip(username="username", ip_addr=self.IP_1, user_agent="test-browser")
+
+        # Test he is locked:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked by ip:
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked by username and user_agent:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is allowed to login with different username and ip
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Test he is allowed to login with different user_agent and ip
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Test he is allowed to login with different username, ip and user_agent
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["ip_address", "user_agent"], ["username", "user_agent"]])
+    def test_lockout_by_ip_and_user_agent_or_username_and_user_agent(self):
+        # User is locked out with "test-browser" user agent.
+        self._lockout_user_from_ip(username="username", ip_addr=self.IP_1, user_agent="test-browser")
+
+        # Test he is locked:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked by ip and user_agent:
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is locked by username and user_agent:
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.BLOCKED)
+
+        # Test he is allowed to login with different username and ip
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Test he is allowed to login with different user_agent
+        response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+        # Test he is allowed to login with different username, ip and user_agent
+        response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser2")
+        self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
+
+
     # Test for true and false positives when blocking by IP *OR* user (default)
     # Cache disabled. Default settings.
     def test_lockout_by_ip_blocks_when_same_user_same_ip_without_cache(self):
