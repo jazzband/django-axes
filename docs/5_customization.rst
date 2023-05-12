@@ -155,7 +155,6 @@ into ``my_namespace-username``:
    fine, but Axes does not inject these changes into the authentication flow
    for you.
 
-
 Customizing lockout responses
 -----------------------------
 
@@ -174,9 +173,50 @@ An example of usage could be e.g. a custom view for processing lockouts.
 
     AXES_LOCKOUT_CALLABLE = "example.views.lockout"
 
+.. _customizing-lockout-parameters:
+
+Customizing lockout parameters
+------------------------------
+
+Axes can be configured with ``AXES_LOCKOUT_PARAMETERS`` to lock out users not only by IP address.
+
+``AXES_LOCKOUT_PARAMETERS`` can be a list of strings (which represents a separate lockout parameter) or nested lists of strings (which represents lockout parameters used in combination) or a callable which accepts HttpRequest or AccessAttempt and credentials and returns a list of the same form as described earlier.
+
+Example ``AXES_LOCKOUT_PARAMETERS`` configuration:
+
+``settings.py``::
+
+    AXES_LOCKOUT_PARAMETERS = ["ip_address", ["username", "user_agent"]]
+
+This way, axes will lock out users using ip_address and/or combination of username and user agent
+
+Example of callable ``AXES_LOCKOUT_PARAMETERS``:
+
+``example/utils.py``::
+
+    from django.http import HttpRequest
+
+    def get_lockout_parameters(request_or_attempt, credentials):
+
+        if isinstance(request_or_attempt, HttpRequest):
+           is_localhost = request.META.get("REMOTE_ADDR") == "127.0.0.1"
+
+        else:
+           is_localhost = request_or_attempt.ip_address == "127.0.0.1"
+        
+        if is_localhost:
+           return ["username"] 
+        
+        return ["ip_address", "username"]
+
+``settings.py``::
+
+    AXES_LOCKOUT_CALLABLE = "example.utils.get_lockout_parameters"
+
+This way, if client ip_address is localhost, axes will lockout client only by username. In other case, axes will lockout client by username and/or ip_address.
 
 Customizing client ip address lookups
------------------------------
+-------------------------------------
 
 Axes can be configured with ``AXES_CLIENT_IP_CALLABLE`` to use custom client ip address lookup logic.
 
