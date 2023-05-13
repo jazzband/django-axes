@@ -203,15 +203,15 @@ Example of callable ``AXES_LOCKOUT_PARAMETERS``:
 
         else:
            is_localhost = request_or_attempt.ip_address == "127.0.0.1"
-        
+
         if is_localhost:
-           return ["username"] 
-        
+           return ["username"]
+
         return ["ip_address", "username"]
 
 ``settings.py``::
 
-    AXES_LOCKOUT_CALLABLE = "example.utils.get_lockout_parameters"
+    AXES_LOCKOUT_PARAMETERS = "example.utils.get_lockout_parameters"
 
 This way, if client ip_address is localhost, axes will lockout client only by username. In other case, axes will lockout client by username and/or ip_address.
 
@@ -227,4 +227,4 @@ Axes can be configured with ``AXES_CLIENT_IP_CALLABLE`` to use custom client ip 
 
 ``settings.py``::
 
-    AXES_LOCKOUT_CALLABLE = "example.utils.get_client_ip"
+    AXES_CLIENT_IP_CALLABLE = "example.utils.get_client_ip"
