@@ -3,6 +3,15 @@ Changes
 =======
 
 
+6.0.0b4 (2023-05-13)
+--------------------
+
+- Add ``AXES_LOCKOUT_PARAMETERS`` configuration flag that will supersede ``AXES_ONLY_USER_FAILURES``, ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``, ``AXES_LOCK_OUT_BY_USER_OR_IP``, and ``AXES_USE_USER_AGENT`` configurations. Add deprecation warnings for old flags. See project documentation on RTD for update instructions.
+  [hirotasoshu]
+- Improve translations.
+  [hirotasoshu]
+
+
 6.0.0b3 (2023-05-01)
 --------------------
 
