@@ -3,6 +3,13 @@ Changes
 =======
 
 
+6.0.0b5 (2023-05-15)
+--------------------
+
+- Deprecate ``is_admin_site`` API call with misleading naming.
+  [hirotasoshu]
+
+
 6.0.0b4 (2023-05-13)
 --------------------
 
