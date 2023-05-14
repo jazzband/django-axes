@@ -55,14 +55,36 @@ class AxesHandlerTestCase(AxesTestCase):
         for setting_value, url, expected in tests:
             with override_settings(AXES_ONLY_ADMIN_SITE=setting_value):
                 request.path = url
-                self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
+                with self.assertWarns(DeprecationWarning):
+                    self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
+
+    def test_is_admin_request(self):
+        request = MagicMock()
+        tests = (  # (URL, Expected)
+            ("/test/", False),
+            (reverse("admin:index"), True),
+        )
+
+        for url, expected in tests:
+            request.path = url
+            self.assertEqual(AxesProxyHandler().is_admin_request(request), expected)
 
     @override_settings(ROOT_URLCONF="tests.urls_empty")
     @override_settings(AXES_ONLY_ADMIN_SITE=True)
     def test_is_admin_site_no_admin_site(self):
         request = MagicMock()
         request.path = "/admin/"
-        self.assertTrue(AxesProxyHandler().is_admin_site(self.request))
+        with self.assertWarns(DeprecationWarning):
+            self.assertTrue(AxesProxyHandler().is_admin_site(self.request))
+
+    @override_settings(ROOT_URLCONF="tests.urls_empty")
+    def test_is_admin_request_no_admin_site(self):
+        request = MagicMock()
+        request.path = "/admin/"
+        self.assertFalse(AxesProxyHandler().is_admin_request(self.request))
+
+    def test_is_admin_request_no_path(self):
+        self.assertFalse(AxesProxyHandler().is_admin_request(self.request))
 
 
 class AxesProxyHandlerTestCase(AxesTestCase):
