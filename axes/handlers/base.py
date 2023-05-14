@@ -1,6 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from typing import Optional
+from warnings import warn
 
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
@@ -81,7 +82,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         and inspiration on some common checks and access restrictions before writing your own implementation.
         """
 
-        if self.is_admin_site(request):
+        if settings.AXES_ONLY_ADMIN_SITE and not self.is_admin_request(request):
             return True
 
         if self.is_blacklisted(request, credentials):
@@ -134,10 +135,41 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return False
 
+    def get_admin_url(self) -> Optional[str]:
+        """
+        Returns admin url if exists, otherwise returns None
+        """
+        try:
+            return reverse("admin:index")
+        except NoReverseMatch:
+            return None
+
+    def is_admin_request(self, request) -> bool:
+        """
+        Checks that request located under admin site
+        """
+        if hasattr(request, "path"):
+            admin_url = self.get_admin_url()
+            return (
+                admin_url is not None
+                and re.match(f"^{admin_url}", request.path) is not None
+            )
+
+        return False
+
     def is_admin_site(self, request) -> bool:
         """
-        Checks if the request is for admin site.
+        Checks if the request is NOT for admin site
+        if `settings.AXES_ONLY_ADMIN_SITE` is True.
         """
+        warn(
+            (
+                "This method is deprecated and will be removed in future versions. "
+                "If you looking for method that checks if `request.path` located under "
+                "admin site, use `is_admin_request` instead."
+            ),
+            DeprecationWarning,
+        )
         if settings.AXES_ONLY_ADMIN_SITE and hasattr(request, "path"):
             try:
                 admin_url = reverse("admin:index")
