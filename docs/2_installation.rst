@@ -34,10 +34,10 @@ After installing the package, the project settings need to be configured.
         'django.contrib.auth.backends.ModelBackend',
     ]
 
-    For backwards compatibility, ``AxesBackend`` can be used in place of ``AxesStandaloneBackend``. 
+    For backwards compatibility, ``AxesBackend`` can be used in place of ``AxesStandaloneBackend``.
     The only difference is that ``AxesBackend`` also provides the permissions-checking functionality
     of Django's ``ModelBackend`` behind the scenes. We recommend using ``AxesStandaloneBackend``
-    if you have any custom logic to override Django's standard permissions checks. 
+    if you have any custom logic to override Django's standard permissions checks.
 
 **3.** Add ``axes.middleware.AxesMiddleware`` to your list of ``MIDDLEWARE``::
 
@@ -73,6 +73,76 @@ of your regular CI workflows to verify that your project is not misconfigured.
 Axes uses checks to verify your Django settings configuration for security and functionality.
 Many people have different configurations for their development and production environments,
 and running the application with misconfigured settings can prevent security features from working.
+
+
+Version 6 breaking changes and upgrading from django-axes version 5
+-------------------------------------------------------------------
+
+If you have not specialized ``django-axes`` configuration in any way
+you do not have to update any of the configuration.
+
+The instructions apply to users who have configured ``django-axes`` in their projects
+and have used flags that are deprecated. The deprecated flags will be removed in the future
+but are compatible for at least version 6.0 of ``django-axes``.
+
+The following flags and configuration have changed:
+
+``django-ipware`` has become an optional dependency.
+To keep old behaviour, use ``pip install django-axes[ipware]``
+in your install script or use ``django-axes[ipware]``
+in your requirements file(s) instead of plain ``django-axes``.
+The new ``django-axes`` package does not include ``django-ipware`` by default
+but does use ``django-ipware`` if it is installed
+and no callables for IP address resolution are configured
+with the ``settings.AXES_CLIENT_IP_CALLABLE`` configuration flag.
+
+``django-ipware`` related flags have changed names.
+The old flags have been deprecated and will be removed in the future.
+To keep old behaviour, rename them in your settings file:
+
+- ``settings.AXES_PROXY_ORDER`` is now ``settings.AXES_IPWARE_PROXY_ORDER``,
+- ``settings.AXES_PROXY_COUNT``  is now ``settings.AXES_IPWARE_PROXY_COUNT``,
+- ``settings.AXES_PROXY_TRUSTED_IPS`` is now ``settings.AXES_IPWARE_PROXY_TRUSTED_IPS``, and
+- ``settings.AXES_META_PRECEDENCE_ORDER`` is now ``settings.AXES_IPWARE_META_PRECEDENCE_ORDER``.
+
+``settings.AXES_LOCKOUT_PARAMETERS`` configuration flag has been added which supersedes the following configuration keys:
+
+#. No configuration for failure tracking in the following items (default behaviour).
+#. ``settings.AXES_ONLY_USER_FAILURES``,
+#. ``settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``,
+#. ``settings.AXES_LOCK_OUT_BY_USER_OR_IP``, and
+#. ``settings.AXES_USE_USER_AGENT``.
+
+To keep old behaviour with the new flag, configure the following:
+
+#. If you did not use any flags, use ``settings.AXES_LOCKOUT_PARAMETERS = ["ip_address"]``,
+#. If you used ``settings.AXES_ONLY_USER_FAILURES``, use ``settings.AXES_LOCKOUT_PARAMETERS = ["username"]``,
+#. If you used ``settings.AXES_LOCK_OUT_BY_USER_OR_IP``, use ``settings.AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]``, and
+#. If you used ``settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``, use ``settings.AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]``,
+#. If you used ``settings.AXES_USE_USER_AGENT``, add ``"user_agent"`` to your list(s) of lockout parameters.
+    #. ``settings.AXES_USE_USER_AGENT`` would become ``settings.AXES_LOCKOUT_PARAMETERS = ["ip_address", "user_agent"]``
+    #. ``settings.AXES_USE_USER_AGENT`` with ``settings.AXES_ONLY_USER_FAILURES`` would become ``settings.AXES_LOCKOUT_PARAMETERS = [["username", "user_agent"]]``
+    #. ``settings.AXES_USE_USER_AGENT`` with ``settings.AXES_LOCK_OUT_BY_USER_OR_IP`` would become ``settings.AXES_LOCKOUT_PARAMETERS = [["ip_address", "user_agent"], "username"]``
+    #. ``settings.AXES_USE_USER_AGENT`` with ``settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP`` would become ``settings.AXES_LOCKOUT_PARAMETERS = [["ip_address", "user_agent", "username"]]``
+    #. Other combinations of flags were previously not considered; the flags had precedence over each other as described in the documentation but were less-than-trivial to understand in their previous form. The new form is more explicit and flexible, although it requires more in-depth configuration.
+
+The new lockout parameters define a combined list of attributes to consider when tracking failed authentication attempts.
+They can be any combination of ``username``, ``ip_address`` or ``user_agent`` in a list of strings or list of lists of strings.
+The attributes defined in the lists are combined and saved into the database, cache, or other backend for failed logins.
+The semantics of the evaluation are available in the documentation and ``axes.helpers.get_client_parameters`` callable.
+
+``settings.AXES_HTTP_RESPONSE_CODE`` default has been changed from ``403`` (Forbidden) to ``429`` (Too Many Requests).
+To keep the old behavior, set ``settings.AXES_HTTP_RESPONSE_CODE = 403`` in your settings.
+
+``axes.handlers.base.AxesBaseHandler.is_admin_site`` has been deprecated due to misleading naming
+in favour of better-named ``axes.handlers.base.AxesBaseHandler.is_admin_request``.
+The old implementation has been kept for backwards compatibility, but will be removed in the future.
+The old implementation checked if a request is NOT made for an admin site if ``settings.AXES_ONLY_ADMIN_SITE`` was set.
+The new implementation correctly checks if a request is made for an admin site.
+
+``axes.handlers.cache.AxesCacheHandler`` has been updated to use atomic ``cache.incr`` calls
+instead of old ``cache.set`` calls in authentication failure tracking
+to enable better parallel backend support for atomic cache backends like Redis and Memcached.
 
 
 Disabling Axes system checks
@@ -128,7 +198,7 @@ other code, preventing the login mechanisms from working due to e.g. exception
 being thrown in some part of the code, preventing access attempts being logged
 to database with Axes or causing similar problems.
 
-If new attempts or log objects are not being correctly written to the Axes tables, 
+If new attempts or log objects are not being correctly written to the Axes tables,
 it is possible to configure Django ``ATOMIC_REQUESTS`` setting to to ``False``::
 
     ATOMIC_REQUESTS = False

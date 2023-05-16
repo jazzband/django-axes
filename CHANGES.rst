@@ -3,43 +3,27 @@ Changes
 =======
 
 
-6.0.0b5 (2023-05-15)
---------------------
+6.0.0 (2023-05-17)
+------------------
 
+Version 6 is a breaking release. Please see the documentation for upgrade instructions.
+
+- Deprecate Python 3.7 support.
+  [aleksihakli]
 - Deprecate ``is_admin_site`` API call with misleading naming.
   [hirotasoshu]
-
-
-6.0.0b4 (2023-05-13)
---------------------
-
 - Add ``AXES_LOCKOUT_PARAMETERS`` configuration flag that will supersede ``AXES_ONLY_USER_FAILURES``, ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``, ``AXES_LOCK_OUT_BY_USER_OR_IP``, and ``AXES_USE_USER_AGENT`` configurations. Add deprecation warnings for old flags. See project documentation on RTD for update instructions.
   [hirotasoshu]
 - Improve translations.
   [hirotasoshu]
-
-
-6.0.0b3 (2023-05-01)
---------------------
-
 - Use Django ``cache.incr`` API for atomic cached failure counting
   [hirotasoshu, aleksihakli]
-
-
-6.0.0b2 (2023-04-28)
---------------------
-
 - Make ``django-ipware`` an optional dependency. Install it with e.g. ``pip install django-axes[ipware]`` package and extras specifier. [aleksihakli]
 - Deprecate and rename old configuration flags. Old flags will be removed in or after version ``6.1``. [aleksihakli]
    * ``AXES_PROXY_ORDER`` is now ``AXES_IPWARE_PROXY_ORDER``,
    * ``AXES_PROXY_COUNT`` is now ``AXES_IPWARE_PROXY_COUNT``,
    * ``AXES_PROXY_TRUSTED_IPS`` is now ``AXES_IPWARE_PROXY_TRUSTED_IPS``, and
    * ``AXES_META_PRECEDENCE_ORDER`` is now ``AXES_IPWARE_META_PRECEDENCE_ORDER``.
-
-
-6.0.0b1 (2023-04-25)
---------------------
-
 - Set 429 as the default lockout response code. [hirotasoshu]
 
 
