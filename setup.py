@@ -35,7 +35,7 @@ setup(
     package_dir={"axes": "axes"},
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     install_requires=["django>=3.2", "setuptools"],
     extras_require={
         "ipware": "django-ipware>=3",
@@ -56,7 +56,6 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
