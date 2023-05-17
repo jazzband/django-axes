@@ -35,7 +35,7 @@ setup(
     package_dir={"axes": "axes"},
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
-    python_requires=">=3.8",
+    python_requires=">=3.7",
     install_requires=["django>=3.2", "setuptools"],
     extras_require={
         "ipware": "django-ipware>=3",
