@@ -3,6 +3,13 @@ Changes
 =======
 
 
+6.0.1 (2023-05-17)
+------------------
+
+- Fine-tune CI pipelines and RTD build requirements.
+  [aleksihakli]
+
+
 6.0.0 (2023-05-17)
 ------------------
 
