@@ -120,7 +120,7 @@ To keep old behaviour with the new flag, configure the following:
 #. If you used ``settings.AXES_LOCK_OUT_BY_USER_OR_IP``, use ``settings.AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]``, and
 #. If you used ``settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``, use ``settings.AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]``,
 #. If you used ``settings.AXES_USE_USER_AGENT``, add ``"user_agent"`` to your list(s) of lockout parameters.
-    #. ``settings.AXES_USE_USER_AGENT`` would become ``settings.AXES_LOCKOUT_PARAMETERS = ["ip_address", "user_agent"]``
+    #. ``settings.AXES_USE_USER_AGENT`` would become ``settings.AXES_LOCKOUT_PARAMETERS = [["ip_address", "user_agent"]]``
     #. ``settings.AXES_USE_USER_AGENT`` with ``settings.AXES_ONLY_USER_FAILURES`` would become ``settings.AXES_LOCKOUT_PARAMETERS = [["username", "user_agent"]]``
     #. ``settings.AXES_USE_USER_AGENT`` with ``settings.AXES_LOCK_OUT_BY_USER_OR_IP`` would become ``settings.AXES_LOCKOUT_PARAMETERS = [["ip_address", "user_agent"], "username"]``
     #. ``settings.AXES_USE_USER_AGENT`` with ``settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP`` would become ``settings.AXES_LOCKOUT_PARAMETERS = [["ip_address", "user_agent", "username"]]``
