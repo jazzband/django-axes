@@ -110,3 +110,22 @@ class DeprecatedSettingsTestCase(AxesTestCase):
     def test_deprecated_success_access_log_flag(self):
         warnings = run_checks()
         self.assertEqual(warnings, [self.disable_success_access_log_warning])
+
+
+class ConfCheckTestCase(AxesTestCase):
+    @override_settings(AXES_USERNAME_CALLABLE="module.not_defined")
+    def test_invalid_import_path(self):
+        warnings = run_checks()
+        warning = Warning(
+            msg=Messages.CALLABLE_INVALID.format(
+                callable_setting="AXES_USERNAME_CALLABLE"
+            ),
+            hint=Hints.CALLABLE_INVALID,
+            id=Codes.CALLABLE_INVALID,
+        )
+        self.assertEqual(warnings, [warning])
+
+    @override_settings(AXES_COOLOFF_TIME=lambda: 1)
+    def test_valid_callable(self):
+        warnings = run_checks()
+        self.assertEqual(warnings, [])
