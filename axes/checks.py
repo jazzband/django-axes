@@ -21,6 +21,7 @@ class Messages:
     )
     BACKEND_INVALID = "You do not have 'axes.backends.AxesStandaloneBackend' or a subclass in your settings.AUTHENTICATION_BACKENDS."
     SETTING_DEPRECATED = "You have a deprecated setting {deprecated_setting} configured in your project settings"
+    CALLABLE_INVALID = "{callable_setting} is not a valid callable."
 
 
 class Hints:
@@ -28,6 +29,7 @@ class Hints:
     MIDDLEWARE_INVALID = None
     BACKEND_INVALID = "AxesModelBackend was renamed to AxesStandaloneBackend in django-axes version 5.0."
     SETTING_DEPRECATED = None
+    CALLABLE_INVALID = None
 
 
 class Codes:
@@ -35,6 +37,7 @@ class Codes:
     MIDDLEWARE_INVALID = "axes.W002"
     BACKEND_INVALID = "axes.W003"
     SETTING_DEPRECATED = "axes.W004"
+    CALLABLE_INVALID = "axes.W005"
 
 
 @register(Tags.security, Tags.caches, Tags.compatibility)
@@ -153,3 +156,49 @@ def axes_deprecation_check(app_configs, **kwargs):  # pylint: disable=unused-arg
             pass
 
     return warnings
+
+
+@register
+def axes_conf_check(app_configs, **kwargs):  # pylint: disable=unused-argument
+    warnings = []
+
+    callable_settings = [
+        "AXES_CLIENT_IP_CALLABLE",
+        "AXES_CLIENT_STR_CALLABLE",
+        "AXES_LOCKOUT_CALLABLE",
+        "AXES_USERNAME_CALLABLE",
+        "AXES_WHITELIST_CALLABLE",
+        "AXES_COOLOFF_TIME",
+        "AXES_LOCKOUT_PARAMETERS",
+    ]
+
+    for callable_setting in callable_settings:
+        value = getattr(settings, callable_setting)
+        if not is_valid_callable(value):
+            warnings.append(
+                Warning(
+                    msg=Messages.CALLABLE_INVALID.format(
+                        callable_setting=callable_setting
+                    ),
+                    hint=Hints.CALLABLE_INVALID,
+                    id=Codes.CALLABLE_INVALID,
+                )
+            )
+
+    return warnings
+
+
+def is_valid_callable(value) -> bool:
+    if value is None:
+        return True
+
+    if callable(value):
+        return True
+
+    if isinstance(value, str):
+        try:
+            import_string(value)
+        except ImportError:
+            return False
+
+    return True
