@@ -3,6 +3,17 @@ Changes
 =======
 
 
+6.0.2 (2023-06-13)
+------------------
+
+- Add Django system checks for validating callable import path settings.
+  [iafisher]
+- Improve documentation.
+  [hirotasoshu]
+- Improve repository issue and PR templates.
+  [hirotasoshu]
+
+
 6.0.1 (2023-05-17)
 ------------------
 
