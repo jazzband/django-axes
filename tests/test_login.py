@@ -28,7 +28,7 @@ class DjangoLoginTestCase(TestCase):
         self.username = "john.doe"
         self.password = "hunter2"
 
-        self.user = get_user_model().objects.create(username=self.username)
+        self.user = get_user_model().objects.create(username=self.username, is_staff=True)
         self.user.set_password(self.password)
         self.user.save()
         self.user.backend = "django.contrib.auth.backends.ModelBackend"
@@ -47,13 +47,19 @@ class DjangoContribAuthLoginTestCase(DjangoLoginTestCase):
 class DjangoTestClientLoginTestCase(DjangoLoginTestCase):
     def test_client_login(self):
         self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse("admin:index"))
+        self.assertEqual(response.status_code, 200)
 
     def test_client_logout(self):
         self.client.login(username=self.username, password=self.password)
         self.client.logout()
+        response = self.client.get(reverse("admin:index"))
+        self.assertEqual(response.status_code, 302)
 
     def test_client_force_login(self):
         self.client.force_login(self.user)
+        response = self.client.get(reverse("admin:index"))
+        self.assertEqual(response.status_code, 200)
 
 
 class DatabaseLoginTestCase(AxesTestCase):
@@ -283,7 +289,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         # Test he is locked by user_agent:
         response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser")
         self.assertEqual(response.status_code, self.BLOCKED)
-       
+
         # Test he is allowed to login with different username, ip and user_agent
         response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser2")
         self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
@@ -308,7 +314,7 @@ class DatabaseLoginTestCase(AxesTestCase):
         # Test he is allowed to login with different user_agent:
         response = self._login("username", self.VALID_PASSWORD, ip_addr=self.IP_1, user_agent="test-browser2")
         self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
-       
+
         # Test he is allowed to login with different username, ip and user_agent
         response = self._login("username2", self.VALID_PASSWORD, ip_addr=self.IP_2, user_agent="test-browser2")
         self.assertEqual(response.status_code, self.ATTEMPT_NOT_BLOCKED)
