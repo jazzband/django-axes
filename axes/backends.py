@@ -1,6 +1,6 @@
 from typing import Optional
 from django.conf import settings
-from django.contrib.auth.backends import BaseBackend, ModelBackend
+from django.contrib.auth.backends import ModelBackend
 from django.http import HttpRequest
 
 from axes.exceptions import (
@@ -11,7 +11,7 @@ from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_credentials, get_lockout_message, toggleable
 
 
-class AxesStandaloneBackend(BaseBackend):
+class AxesStandaloneBackend:
     """
     Authentication backend class that forbids login attempts for locked out users.
 
