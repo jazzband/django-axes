@@ -3,6 +3,13 @@ Changes
 =======
 
 
+6.0.4 (2023-06-22)
+------------------
+
+- Remove unused methods from AxesStandaloneBackend.
+  [314eter]
+
+
 6.0.3 (2023-06-18)
 ------------------
 
