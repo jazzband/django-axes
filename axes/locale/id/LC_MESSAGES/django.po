@@ -1,0 +1,105 @@
+# Indonesian translation for django-axes.
+# Copyright (C) 2023
+# This file is distributed under the same license as the django-axes package.
+# Kira <kiraware@github.com>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: django-axes 6.0.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-06-30 09:21+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Kira <kiraware@github.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+#: .\axes\admin.py:27
+msgid "Form Data"
+msgstr "Data Formulir"
+
+#: .\axes\admin.py:28 .\axes\admin.py:65 .\axes\admin.py:100
+msgid "Meta Data"
+msgstr "Meta Data"
+
+#: .\axes\conf.py:108
+msgid "Account locked: too many login attempts. Please try again later."
+msgstr "Akun terkunci: terlalu banyak percobaan login. Silakan coba lagi nanti."
+
+#: .\axes\conf.py:116
+msgid ""
+"Account locked: too many login attempts. Contact an admin to unlock your "
+"account."
+msgstr "Akun terkunci: terlalu banyak percobaan login. Hubungi admin untuk"
+" membuka kunci akun"
+
+#: .\axes\models.py:6
+msgid "User Agent"
+msgstr "User Agent"
+
+#: .\axes\models.py:8
+msgid "IP Address"
+msgstr "Alamat IP"
+
+#: .\axes\models.py:10
+msgid "Username"
+msgstr "Nama Pengguna"
+
+#: .\axes\models.py:12
+msgid "HTTP Accept"
+msgstr "HTTP Accept"
+
+#: .\axes\models.py:14
+msgid "Path"
+msgstr "Path"
+
+#: .\axes\models.py:16
+msgid "Attempt Time"
+msgstr "Waktu Percobaan"
+
+#: .\axes\models.py:26
+msgid "Access lock out"
+msgstr "Akses terkunci"
+
+#: .\axes\models.py:34
+msgid "access failure"
+msgstr "kegagalan akses"
+
+#: .\axes\models.py:35
+msgid "access failures"
+msgstr "kegagalan akses"
+
+#: .\axes\models.py:39
+msgid "GET Data"
+msgstr "Data GET"
+
+#: .\axes\models.py:41
+msgid "POST Data"
+msgstr "Data POST"
+
+#: .\axes\models.py:43
+msgid "Failed Logins"
+msgstr "Login Gagal"
+
+#: .\axes\models.py:49
+msgid "access attempt"
+msgstr "upaya akses"
+
+#: .\axes\models.py:50
+msgid "access attempts"
+msgstr "upaya akses"
+
+#: .\axes\models.py:55
+msgid "Logout Time"
+msgstr "Waktu Logout"
+
+#: .\axes\models.py:61
+msgid "access log"
+msgstr "log akses"
+
+#: .\axes\models.py:62
+msgid "access logs"
+msgstr "log akses"
