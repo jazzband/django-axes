@@ -4,6 +4,7 @@ about: Suggest an idea for django-axes
 title: 'FEATURE REQUEST: Short description of requested feature'
 labels: 'feature request'
 assignees: ''
+
 ---
 
 **Is your feature request related to a problem? Please describe.**
