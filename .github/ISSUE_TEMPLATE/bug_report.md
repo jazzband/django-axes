@@ -4,6 +4,7 @@ about: Create a report to help us improve django-axes
 title: 'BUG: Short description of the problem'
 labels: 'bug'
 assignees: ''
+
 ---
 
 **Describe the bug**
