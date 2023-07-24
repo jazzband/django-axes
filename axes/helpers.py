@@ -37,7 +37,7 @@ def get_cache_timeout() -> Optional[int]:
 
     The cache timeout can be either None if not configured or integer of seconds if configured.
 
-    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, integer, callable, or str path,
+    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, float, integer, callable, or str path,
     and this function offers a unified _integer or None_ representation of that configuration
     for use with the Django cache backends.
     """
@@ -54,7 +54,7 @@ def get_cool_off() -> Optional[timedelta]:
 
     The return value is either None or timedelta.
 
-    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer of hours,
+    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer/float of hours,
     and this function offers a unified _timedelta or None_ representation of that configuration
     for use with the Axes internal implementations.
 
