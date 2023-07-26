@@ -113,7 +113,7 @@ In your code, you can use the ``axes.utils.reset`` function.
 Data privacy and GDPR
 ^^^^^^^^^^^^^^^^^^^^^
 
-Most European countries have quite strict laws regarding data protection and privacy It's highly recommended and good 
+Most European countries have quite strict laws regarding data protection and privacy. It's highly recommended and good 
 practice to treat your sensitive user data with care. The general rule here is that you shouldn't store what you don't need.
 
 When dealing with brute-force protection, the IP address and the username (often the email address) are most crucial.
