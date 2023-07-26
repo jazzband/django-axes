@@ -107,3 +107,25 @@ In your code, you can use the ``axes.utils.reset`` function.
    Please note that if you give both ``username`` and ``ip`` arguments to ``reset``
    that attempts that have both the set IP and username are reset.
    The effective behaviour of ``reset`` is to ``and`` the terms instead of ``or`` ing them.
+
+
+
+Data privacy and GDPR
+^^^^^^^^^^^^^^^^^^^^^
+
+Most European countries have quite strict laws regarding data protection and privacy - especially Germany. Even if you
+are not working for a German company, it's highly recommended and good practice to treat your sensitive user data with
+care. The general rule here is that you shouldn't store what you don't need.
+
+When dealing with brute-force protection, the IP address and the username (often the email address) are most crucial.
+Given that you can perfectly use `django-axes` without locking the user out by IP but by username, it does make sense to
+avoid storing the IP address at all. You can lose what you don't have.
+
+You can adjust the AXES settings as follows::
+
+    # Block by Username only (i.e.: Same user different IP is still blocked, but different user same IP is not)
+    AXES_LOCKOUT_PARAMETERS = ["username"]
+
+    # Disable logging the IP-Address of failed login attempts by returning None for attempts to get the IP
+    # Ignore assigning a lambda function to a variable for brevity
+    AXES_CLIENT_IP_CALLABLE = lambda x: None  # noqa: E731
