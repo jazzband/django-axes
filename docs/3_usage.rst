@@ -113,13 +113,12 @@ In your code, you can use the ``axes.utils.reset`` function.
 Data privacy and GDPR
 ^^^^^^^^^^^^^^^^^^^^^
 
-Most European countries have quite strict laws regarding data protection and privacy - especially Germany. Even if you
-are not working for a German company, it's highly recommended and good practice to treat your sensitive user data with
-care. The general rule here is that you shouldn't store what you don't need.
+Most European countries have quite strict laws regarding data protection and privacy It's highly recommended and good 
+practice to treat your sensitive user data with care. The general rule here is that you shouldn't store what you don't need.
 
 When dealing with brute-force protection, the IP address and the username (often the email address) are most crucial.
 Given that you can perfectly use `django-axes` without locking the user out by IP but by username, it does make sense to
-avoid storing the IP address at all. You can lose what you don't have.
+avoid storing the IP address at all. You can not lose what you don't have.
 
 You can adjust the AXES settings as follows::
 
