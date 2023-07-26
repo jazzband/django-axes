@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("axes", "0007_alter_accessattempt_unique_together"),
     ]

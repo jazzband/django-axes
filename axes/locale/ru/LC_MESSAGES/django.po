@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-11 12:20+0300\n"
+"POT-Creation-Date: 2023-05-13 12:36+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,80 +18,92 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: axes/admin.py:38
+#: axes/admin.py:27
 msgid "Form Data"
 msgstr "Данные формы"
 
-#: axes/admin.py:41 axes/admin.py:95
+#: axes/admin.py:28 axes/admin.py:65 axes/admin.py:100
 msgid "Meta Data"
 msgstr "Метаданные"
 
-#: axes/conf.py:58
+#: axes/conf.py:99
 msgid "Account locked: too many login attempts. Please try again later."
 msgstr ""
-"Учетная запись заблокирована: слишком много попыток входа. "
-"Повторите попытку позже."
+"Учетная запись заблокирована: слишком много попыток входа. Повторите попытку "
+"позже."
 
-#: axes/conf.py:61
+#: axes/conf.py:107
 msgid ""
 "Account locked: too many login attempts. Contact an admin to unlock your "
 "account."
 msgstr ""
-"Учетная запись заблокирована: слишком много попыток входа. "
-"Обратитесь к администратору для разблокирования учетной записи."
+"Учетная запись заблокирована: слишком много попыток входа. Свяжитесь с "
+"администратором, чтобы разблокировать учетную запись."
 
-#: axes/models.py:9
+#: axes/models.py:6
 msgid "User Agent"
-msgstr "Браузер пользователя"
+msgstr "User Agent"
 
-#: axes/models.py:15
+#: axes/models.py:8
 msgid "IP Address"
-msgstr "Адрес IP"
+msgstr "IP Адрес"
 
-#: axes/models.py:21
+#: axes/models.py:10
 msgid "Username"
-msgstr "Пользователь"
+msgstr "Имя пользователя"
 
-#: axes/models.py:35
+#: axes/models.py:12
 msgid "HTTP Accept"
-msgstr "Запрос HTTP"
+msgstr "HTTP Accept"
 
-#: axes/models.py:40
+#: axes/models.py:14
 msgid "Path"
 msgstr "Путь"
 
-#: axes/models.py:45
+#: axes/models.py:16
 msgid "Attempt Time"
-msgstr "Время входа"
+msgstr "Время попытки входа"
 
-#: axes/models.py:57
+#: axes/models.py:26
+msgid "Access lock out"
+msgstr "Доступ запрещен"
+
+#: axes/models.py:34
+msgid "access failure"
+msgstr "Ошибка доступа"
+
+#: axes/models.py:35
+msgid "access failures"
+msgstr "Ошибки доступа"
+
+#: axes/models.py:39
 msgid "GET Data"
 msgstr "Данные GET-запроса"
 
-#: axes/models.py:61
+#: axes/models.py:41
 msgid "POST Data"
 msgstr "Данные POST-запроса"
 
-#: axes/models.py:65
+#: axes/models.py:43
 msgid "Failed Logins"
 msgstr "Ошибочные попытки"
 
-#: axes/models.py:76
+#: axes/models.py:49
 msgid "access attempt"
 msgstr "Запись о попытке доступа"
 
-#: axes/models.py:77
+#: axes/models.py:50
 msgid "access attempts"
 msgstr "Попытки доступа"
 
-#: axes/models.py:81
+#: axes/models.py:55
 msgid "Logout Time"
 msgstr "Время выхода"
 
-#: axes/models.py:90
+#: axes/models.py:61
 msgid "access log"
 msgstr "Запись о доступе"
 
-#: axes/models.py:91
+#: axes/models.py:62
 msgid "access logs"
 msgstr "Логи доступа"

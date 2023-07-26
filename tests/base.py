@@ -48,7 +48,7 @@ class AxesTestCase(TestCase):
 
     STATUS_SUCCESS = 200
     ALLOWED = 302
-    BLOCKED = 403
+    BLOCKED = 429
 
     def setUp(self):
         """

@@ -34,25 +34,26 @@ class AppsTestCase(AxesTestCase):
         AppConfig.initialize()
         self.assertFalse(log.info.called)
 
-    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username"])
     def test_axes_config_log_user_only(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username only")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username")
 
-    @override_settings(AXES_ONLY_USER_FAILURES=False)
     def test_axes_config_log_ip_only(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by IP only")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by ip_address")
 
-    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_axes_config_log_user_ip(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by combination of username and IP")
+        log.info.assert_called_with(
+            _BEGIN, _VERSION, "blocking by combination of username and ip_address"
+        )
 
-    @override_settings(AXES_LOCK_OUT_BY_USER_OR_IP=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username", "ip_address"])
     def test_axes_config_log_user_or_ip(self, log):
         AppConfig.initialize()
-        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username or IP")
+        log.info.assert_called_with(_BEGIN, _VERSION, "blocking by username or ip_address")
 
 
 class AccessLogTestCase(AxesTestCase):
@@ -64,11 +65,12 @@ class AccessLogTestCase(AxesTestCase):
         self.login(is_valid_username=True, is_valid_password=True)
         self.assertIsNone(AccessLog.objects.latest("id").logout_time)
 
-        response = self.client.get(reverse("admin:logout"))
+        response = self.client.post(reverse("admin:logout"))
         self.assertContains(response, "Logged out")
 
         self.assertIsNotNone(AccessLog.objects.latest("id").logout_time)
 
+    @override_settings(DATA_UPLOAD_MAX_NUMBER_FIELDS=1500)
     def test_log_data_truncated(self):
         """
         Test that get_query_str properly truncates data to the max_length (default 1024).
@@ -84,7 +86,7 @@ class AccessLogTestCase(AxesTestCase):
         AccessLog.objects.all().delete()
 
         response = self.login(is_valid_username=True, is_valid_password=True)
-        response = self.client.get(reverse("admin:logout"))
+        response = self.client.post(reverse("admin:logout"))
 
         self.assertEqual(AccessLog.objects.all().count(), 0)
         self.assertContains(response, "Logged out", html=True)
@@ -107,7 +109,7 @@ class AccessLogTestCase(AxesTestCase):
         AccessLog.objects.all().delete()
 
         response = self.login(is_valid_username=True, is_valid_password=True)
-        response = self.client.get(reverse("admin:logout"))
+        response = self.client.post(reverse("admin:logout"))
 
         self.assertEqual(AccessLog.objects.count(), 0)
         self.assertContains(response, "Logged out", html=True)

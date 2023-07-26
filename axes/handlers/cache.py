@@ -6,11 +6,12 @@ from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
 from axes.helpers import (
     get_cache,
     get_cache_timeout,
-    get_client_cache_key,
+    get_client_cache_keys,
     get_client_str,
     get_client_username,
     get_credentials,
     get_failure_limit,
+    get_lockout_parameters,
 )
 from axes.models import AccessAttempt
 from axes.signals import user_locked_out
@@ -29,8 +30,8 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
     def reset_attempts(
         self,
         *,
-        ip_address: str = None,
-        username: str = None,
+        ip_address: Optional[str] = None,
+        username: Optional[str] = None,
         ip_or_username: bool = False,
     ) -> int:
         cache_keys: list = []
@@ -44,7 +45,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             )
 
         cache_keys.extend(
-            get_client_cache_key(
+            get_client_cache_keys(
                 AccessAttempt(username=username, ip_address=ip_address)
             )
         )
@@ -58,7 +59,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
         return count
 
     def get_failures(self, request, credentials: Optional[dict] = None) -> int:
-        cache_keys = get_client_cache_key(request, credentials)
+        cache_keys = get_client_cache_keys(request, credentials)
         failure_count = max(
             self.cache.get(cache_key, default=0) for cache_key in cache_keys
         )
@@ -78,9 +79,10 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         username = get_client_username(request, credentials)
-        if settings.AXES_ONLY_USER_FAILURES and username is None:
+        lockout_parameters = get_lockout_parameters(request, credentials)
+        if lockout_parameters == ["username"] and username is None:
             log.warning(
-                "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
+                "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."
             )
             return
 
@@ -110,7 +112,18 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             log.info("AXES: Login failed from whitelisted client %s.", client_str)
             return
 
-        failures_since_start = 1 + self.get_failures(request, credentials)
+        cache_keys = get_client_cache_keys(request, credentials)
+        cache_timeout = get_cache_timeout()
+        failures = []
+        for cache_key in cache_keys:
+            added = self.cache.add(key=cache_key, value=1, timeout=cache_timeout)
+            if added:
+                failures.append(1)
+            else:
+                failures.append(self.cache.incr(key=cache_key, delta=1))
+                self.cache.touch(key=cache_key, timeout=cache_timeout)
+
+        failures_since_start = max(failures)
         request.axes_failures_since_start = failures_since_start
 
         if failures_since_start > 1:
@@ -125,11 +138,6 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
                 "AXES: New login failure by %s. Creating new record in the cache.",
                 client_str,
             )
-
-        cache_keys = get_client_cache_key(request, credentials)
-        for cache_key in cache_keys:
-            failures = self.cache.get(cache_key, default=0)
-            self.cache.set(cache_key, failures + 1, get_cache_timeout())
 
         if (
             settings.AXES_LOCK_OUT_AT_FAILURE
@@ -166,7 +174,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
         log.info("AXES: Successful login by %s.", client_str)
 
         if settings.AXES_RESET_ON_SUCCESS:
-            cache_keys = get_client_cache_key(request, credentials)
+            cache_keys = get_client_cache_keys(request, credentials)
             for cache_key in cache_keys:
                 failures_since_start = self.cache.get(cache_key, default=0)
                 self.cache.delete(cache_key)

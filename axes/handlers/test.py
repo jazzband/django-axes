@@ -2,7 +2,7 @@ from axes.handlers.base import AxesHandler
 from typing import Optional
 
 
-class AxesTestHandler(AxesHandler):  # pylint: disable=unused-argument
+class AxesTestHandler(AxesHandler):
     """
     Signal handler implementation that does nothing, ideal for a test suite.
     """

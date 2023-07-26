@@ -1,6 +1,7 @@
 -e .
-coverage==6.4.1
-pytest==7.1.2
-pytest-cov==3.0.0
+django-ipware>=3
+coverage==7.2.7
+pytest==7.4.0
+pytest-cov==4.1.0
 pytest-django==4.5.2
-pytest-subtests==0.8.0
+pytest-subtests==0.11.0

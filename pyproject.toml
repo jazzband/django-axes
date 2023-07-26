@@ -10,23 +10,25 @@ DJANGO_SETTINGS_MODULE = "tests.settings"
 legacy_tox_ini = """
 [tox]
 envlist =
-    py{37,38,39,310,py38}-dj32
-    py{38,39,310,py38}-dj40
-    py{38,39,310,py38}-djmain
-    py310-djqa
+    py{38,39,310,py38}-dj32
+    py{38,39,310,311,py38}-dj41
+    py{38,39,310,311,py38}-dj42
+    py311-djmain
+    py311-djqa
 
 [gh-actions]
 python =
-    3.7: py37
     3.8: py38
     3.9: py39
     3.10: py310
+    3.11: py311
     pypy-3.8: pypy38
 
 [gh-actions:env]
 DJANGO =
     3.2: dj32
-    4.0: dj40
+    4.1: dj41
+    4.2: dj42
     main: djmain
     qa: djqa
 
@@ -35,7 +37,8 @@ DJANGO =
 deps =
     -r requirements-test.txt
     dj32: django>=3.2,<3.3
-    dj40: django>=4.0,<4.1
+    dj41: django>=4.1,<4.2
+    dj42: django>=4.1,<4.2
     djmain: https://github.com/django/django/archive/main.tar.gz
 usedevelop = true
 commands = pytest
@@ -44,11 +47,13 @@ setenv =
 # Django development version is allowed to fail the test matrix
 ignore_outcome =
     djmain: True
+    pypy38: True
 ignore_errors =
     djmain: True
+    pypy38: True
 
 # QA runs type checks, linting, and code formatting checks
-[testenv:py310-djqa]
+[testenv:py311-djqa]
 deps = -r requirements-qa.txt
 commands =
     mypy axes

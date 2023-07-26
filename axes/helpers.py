@@ -2,19 +2,25 @@ from datetime import timedelta
 from hashlib import sha256
 from logging import getLogger
 from string import Template
-from typing import Callable, Optional, Type, Union
+from typing import Callable, Optional, Type, Union, List
 from urllib.parse import urlencode
 
-import ipware.ip
-from django.core.cache import caches, BaseCache
+from django.core.cache import BaseCache, caches
 from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.utils.module_loading import import_string
 
 from axes.conf import settings
 from axes.models import AccessBase
 
 log = getLogger(__name__)
+
+try:
+    import ipware.ip
+
+    IPWARE_INSTALLED = True
+except ImportError:
+    IPWARE_INSTALLED = False
 
 
 def get_cache() -> BaseCache:
@@ -31,7 +37,7 @@ def get_cache_timeout() -> Optional[int]:
 
     The cache timeout can be either None if not configured or integer of seconds if configured.
 
-    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, integer, callable, or str path,
+    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, float, integer, callable, or str path,
     and this function offers a unified _integer or None_ representation of that configuration
     for use with the Django cache backends.
     """
@@ -48,7 +54,7 @@ def get_cool_off() -> Optional[timedelta]:
 
     The return value is either None or timedelta.
 
-    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer of hours,
+    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer/float of hours,
     and this function offers a unified _timedelta or None_ representation of that configuration
     for use with the Axes internal implementations.
 
@@ -148,23 +154,55 @@ def get_client_username(
     return request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
-def get_client_ip_address(request: HttpRequest) -> str:
+def get_client_ip_address(
+    request: HttpRequest,
+    use_ipware: Optional[bool] = None,
+) -> Optional[str]:
     """
     Get client IP address as configured by the user.
 
-    The django-ipware package is used for address resolution
-    and parameters can be configured in the Axes package.
+    The order of preference for address resolution is as follows:
+
+    1. If configured, use ``AXES_CLIENT_IP_CALLABLE``, and supply ``request`` as argument
+    2. If available, use django-ipware package (parameters can be configured in the Axes package)
+    3. Use ``request.META.get('REMOTE_ADDR', None)`` as a fallback
+
+    :param request: incoming Django ``HttpRequest`` or similar object from authentication backend or other source
     """
 
-    client_ip_address, _ = ipware.ip.get_client_ip(
-        request,
-        proxy_order=settings.AXES_PROXY_ORDER,
-        proxy_count=settings.AXES_PROXY_COUNT,
-        proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
-        request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
-    )
+    if settings.AXES_CLIENT_IP_CALLABLE:
+        log.debug("Using settings.AXES_CLIENT_IP_CALLABLE to get client IP address")
 
-    return client_ip_address
+        if callable(settings.AXES_CLIENT_IP_CALLABLE):
+            return settings.AXES_CLIENT_IP_CALLABLE(  # pylint: disable=not-callable
+                request
+            )
+        if isinstance(settings.AXES_CLIENT_IP_CALLABLE, str):
+            return import_string(settings.AXES_CLIENT_IP_CALLABLE)(request)
+        raise TypeError(
+            "settings.AXES_CLIENT_IP_CALLABLE needs to be a string, callable, or None."
+        )
+
+    # Resolve using django-ipware from a configuration flag that can be set to False to explicitly disable
+    # this is added to both enable or disable the branch when ipware is installed in the test environment
+    if use_ipware is None:
+        use_ipware = IPWARE_INSTALLED
+    if use_ipware:
+        log.debug("Using django-ipware to get client IP address")
+
+        client_ip_address, _ = ipware.ip.get_client_ip(
+            request,
+            proxy_order=settings.AXES_IPWARE_PROXY_ORDER,
+            proxy_count=settings.AXES_IPWARE_PROXY_COUNT,
+            proxy_trusted_ips=settings.AXES_IPWARE_PROXY_TRUSTED_IPS,
+            request_header_order=settings.AXES_IPWARE_META_PRECEDENCE_ORDER,
+        )
+        return client_ip_address
+
+    log.debug(
+        "Using request.META.get('REMOTE_ADDR', None) fallback method to get client IP address"
+    )
+    return request.META.get("REMOTE_ADDR", None)
 
 
 def get_client_user_agent(request: HttpRequest) -> str:
@@ -179,7 +217,33 @@ def get_client_http_accept(request: HttpRequest) -> str:
     return request.META.get("HTTP_ACCEPT", "<unknown>")[:1025]
 
 
-def get_client_parameters(username: str, ip_address: str, user_agent: str) -> list:
+def get_lockout_parameters(
+    request_or_attempt: Union[HttpRequest, AccessBase],
+    credentials: Optional[dict] = None,
+) -> List[Union[str, List[str]]]:
+    if callable(settings.AXES_LOCKOUT_PARAMETERS):
+        return settings.AXES_LOCKOUT_PARAMETERS(request_or_attempt, credentials)
+
+    if isinstance(settings.AXES_LOCKOUT_PARAMETERS, str):
+        return import_string(settings.AXES_LOCKOUT_PARAMETERS)(
+            request_or_attempt, credentials
+        )
+
+    if isinstance(settings.AXES_LOCKOUT_PARAMETERS, list):
+        return settings.AXES_LOCKOUT_PARAMETERS
+
+    raise TypeError(
+        "settings.AXES_LOCKOUT_PARAMETERS needs to be a callable or iterable"
+    )
+
+
+def get_client_parameters(
+    username: str,
+    ip_address: str,
+    user_agent: str,
+    request_or_attempt: Union[HttpRequest, AccessBase],
+    credentials: Optional[dict] = None,
+) -> List[dict]:
     """
     Get query parameters for filtering AccessAttempt queryset.
 
@@ -188,29 +252,39 @@ def get_client_parameters(username: str, ip_address: str, user_agent: str) -> li
 
     Returns list of dict, every item of list are separate parameters
     """
+    lockout_parameters = get_lockout_parameters(request_or_attempt, credentials)
 
-    if settings.AXES_ONLY_USER_FAILURES:
-        # 1. Only individual usernames can be tracked with parametrization
-        filter_query = [{"username": username}]
-    else:
-        if settings.AXES_LOCK_OUT_BY_USER_OR_IP:
-            # One of `username` or `IP address` is used
-            filter_query = [{"username": username}, {"ip_address": ip_address}]
-        elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-            # 2. A combination of username and IP address can be used as well
-            filter_query = [{"username": username, "ip_address": ip_address}]
-        else:
-            # 3. Default case is to track the IP address only, which is the most secure option
-            filter_query = [{"ip_address": ip_address}]
+    parameters_dict = {
+        "username": username,
+        "ip_address": ip_address,
+        "user_agent": user_agent,
+    }
 
-        if settings.AXES_USE_USER_AGENT:
-            # 4. The HTTP User-Agent can be used to track e.g. one browser
-            filter_query.append({"user_agent": user_agent})
+    filter_kwargs = []
 
-    return filter_query
+    for parameter in lockout_parameters:
+        try:
+            if isinstance(parameter, str):
+                filter_kwarg = {parameter: parameters_dict[parameter]}
+            else:
+                filter_kwarg = {
+                    combined_parameter: parameters_dict[combined_parameter]
+                    for combined_parameter in parameter
+                }
+            filter_kwargs.append(filter_kwarg)
+
+        except KeyError as e:
+            error_msg = (
+                f"{e} lockout parameter is not allowed. "
+                f"Allowed parameters: {', '.join(parameters_dict.keys())}"
+            )
+            log.exception(error_msg)
+            raise ValueError(error_msg) from e
+
+    return filter_kwargs
 
 
-def make_cache_key_list(filter_kwargs_list):
+def make_cache_key_list(filter_kwargs_list: List[dict]) -> List[str]:
     cache_keys = []
     for filter_kwargs in filter_kwargs_list:
         cache_key_components = "".join(
@@ -221,10 +295,10 @@ def make_cache_key_list(filter_kwargs_list):
     return cache_keys
 
 
-def get_client_cache_key(
+def get_client_cache_keys(
     request_or_attempt: Union[HttpRequest, AccessBase],
     credentials: Optional[dict] = None,
-) -> str:
+) -> List[str]:
     """
     Build cache key name from request or AccessAttempt object.
 
@@ -242,7 +316,9 @@ def get_client_cache_key(
         ip_address = get_client_ip_address(request_or_attempt)
         user_agent = get_client_user_agent(request_or_attempt)
 
-    filter_kwargs_list = get_client_parameters(username, ip_address, user_agent)
+    filter_kwargs_list = get_client_parameters(
+        username, ip_address, user_agent, request_or_attempt, credentials
+    )
 
     return make_cache_key_list(filter_kwargs_list)
 
@@ -285,11 +361,11 @@ def get_client_str(
         client_dict["user_agent"] = user_agent
     else:
         # Other modes initialize the attributes that are used for the actual lockouts
-        client_list = get_client_parameters(username, ip_address, user_agent)
+        client_list = get_client_parameters(username, ip_address, user_agent, request)
         client_dict = {}
         for client in client_list:
             client_dict.update(client)
-
+    client_dict = cleanse_parameters(client_dict.copy())
     # Path info is always included as last component in the client string for traceability purposes
     if path_info and isinstance(path_info, (tuple, list)):
         path_info = path_info[0]

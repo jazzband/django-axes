@@ -20,6 +20,7 @@ Django Allauth                                           |check|
 Django Simple Captcha                                    |check|
 Django OAuth Toolkit                                     |check|
 Django Reversion                                         |check|
+Django Auth LDAP                          |check|               
 =======================   =============   ============   ============   ==============
 
 .. |check|  unicode:: U+2713

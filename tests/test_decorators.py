@@ -8,7 +8,7 @@ from tests.base import AxesTestCase
 
 class DecoratorTestCase(AxesTestCase):
     SUCCESS_RESPONSE = HttpResponse(status=200, content="Dispatched")
-    LOCKOUT_RESPONSE = HttpResponse(status=403, content="Locked out")
+    LOCKOUT_RESPONSE = HttpResponse(status=429, content="Locked out")
 
     def setUp(self):
         self.request = MagicMock()

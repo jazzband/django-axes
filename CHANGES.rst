@@ -3,6 +3,133 @@ Changes
 =======
 
 
+6.0.5 (2023-07-01)
+------------------
+
+- Add Indonesion translation.
+  [kiraware]
+
+
+6.0.4 (2023-06-22)
+------------------
+
+- Remove unused methods from AxesStandaloneBackend.
+  [314eter]
+
+
+6.0.3 (2023-06-18)
+------------------
+
+- Add username to admin fieldsets.
+  [sevdog]
+
+
+6.0.2 (2023-06-13)
+------------------
+
+- Add Django system checks for validating callable import path settings.
+  [iafisher]
+- Improve documentation.
+  [hirotasoshu]
+- Improve repository issue and PR templates.
+  [hirotasoshu]
+
+
+6.0.1 (2023-05-17)
+------------------
+
+- Fine-tune CI pipelines and RTD build requirements.
+  [aleksihakli]
+
+
+6.0.0 (2023-05-17)
+------------------
+
+Version 6 is a breaking release. Please see the documentation for upgrade instructions.
+
+- Deprecate Python 3.7 support.
+  [aleksihakli]
+- Deprecate ``is_admin_site`` API call with misleading naming.
+  [hirotasoshu]
+- Add ``AXES_LOCKOUT_PARAMETERS`` configuration flag that will supersede ``AXES_ONLY_USER_FAILURES``, ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``, ``AXES_LOCK_OUT_BY_USER_OR_IP``, and ``AXES_USE_USER_AGENT`` configurations. Add deprecation warnings for old flags. See project documentation on RTD for update instructions.
+  [hirotasoshu]
+- Improve translations.
+  [hirotasoshu]
+- Use Django ``cache.incr`` API for atomic cached failure counting
+  [hirotasoshu, aleksihakli]
+- Make ``django-ipware`` an optional dependency. Install it with e.g. ``pip install django-axes[ipware]`` package and extras specifier. [aleksihakli]
+- Deprecate and rename old configuration flags. Old flags will be removed in or after version ``6.1``. [aleksihakli]
+   * ``AXES_PROXY_ORDER`` is now ``AXES_IPWARE_PROXY_ORDER``,
+   * ``AXES_PROXY_COUNT`` is now ``AXES_IPWARE_PROXY_COUNT``,
+   * ``AXES_PROXY_TRUSTED_IPS`` is now ``AXES_IPWARE_PROXY_TRUSTED_IPS``, and
+   * ``AXES_META_PRECEDENCE_ORDER`` is now ``AXES_IPWARE_META_PRECEDENCE_ORDER``.
+- Set 429 as the default lockout response code. [hirotasoshu]
+
+
+5.41.1 (2023-04-16)
+-------------------
+
+- Fix sensitive parameter logging for database handler. [stereodamage]
+
+5.41.0 (2023-04-02)
+-------------------
+
+- Fix tests. [hirotasoshu]
+- Add ``AXES_CLIENT_CALLABLE`` setting. [hirotasoshu]
+- Update Python, Django, and package versions. [hramezani]
+
+
+5.40.1 (2022-11-24)
+-------------------
+
+- Fix bug in user agent request blocking. [PetrDlouhy]
+
+
+5.40.0 (2022-11-19)
+-------------------
+
+- Update packages and linters for new version support.
+  [hramezani]
+- Update documentation links.
+  [Arhell]
+- Use importlib instead of setuptools for Python 3.8+.
+  [jedie]
+- Python 3.11 support.
+  [joshuadavidthomas]
+- Documentation improvements.
+  [nsht]
+- Documentation improvements.
+  [timgates42]
+
+
+5.39.0 (2022-08-18)
+-------------------
+
+- Utilize new backend class in tests to fix false negative system check warnings.
+  [simonkern]
+
+
+5.38.0 (2022-08-16)
+-------------------
+
+- Adjust changelog so release notes are correctly visible on PyPy and released package.
+  [aleksihakli]
+
+
+5.37.0 (2022-08-16)
+-------------------
+
+- Add Django 4.1 support. PyPy 3.8 has a known issue with Django 4.1 and is exempted.
+  [hramezani]
+
+
+5.36.0 (2022-07-17)
+-------------------
+
+- Add ``AxesStandaloneBackend`` without ``ModelBackend`` dependencies.
+  [jcgiuffrida]
+
+
 5.35.0 (2022-06-01)
 -------------------
 
