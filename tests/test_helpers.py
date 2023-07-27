@@ -82,6 +82,7 @@ class TimestampTestCase(AxesTestCase):
                 self.assertEqual(get_cool_off_iso8601(delta), iso_duration)
 
 
+@override_settings(AXES_SENSITIVE_PARAMETERS=[])
 class ClientStringTestCase(AxesTestCase):
     @staticmethod
     def get_expected_client_str(*args, **kwargs):
@@ -1020,6 +1021,7 @@ class AxesCleanseParamsTestCase(AxesTestCase):
             "other_sensitive_data": "sensitive",
         }
 
+    @override_settings(AXES_SENSITIVE_PARAMETERS=[])
     def test_cleanse_parameters(self):
         cleansed = cleanse_parameters(self.parameters)
         self.assertEqual("test_user", cleansed["username"])
@@ -1041,6 +1043,7 @@ class AxesCleanseParamsTestCase(AxesTestCase):
         self.assertEqual("********************", cleansed["password"])
         self.assertEqual("********************", cleansed["other_sensitive_data"])
 
+    @override_settings(AXES_SENSITIVE_PARAMETERS=[])
     @override_settings(AXES_PASSWORD_FORM_FIELD=None)
     def test_cleanse_parameters_override_empty(self):
         cleansed = cleanse_parameters(self.parameters)

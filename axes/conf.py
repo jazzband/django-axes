@@ -124,7 +124,7 @@ settings.AXES_ALLOWED_CORS_ORIGINS = getattr(settings, "AXES_ALLOWED_CORS_ORIGIN
 settings.AXES_SENSITIVE_PARAMETERS = getattr(
     settings,
     "AXES_SENSITIVE_PARAMETERS",
-    [],
+    ["username", "ip_address"],
 )
 
 # set the callable for the readable string that can be used in
