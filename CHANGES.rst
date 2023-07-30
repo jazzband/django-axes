@@ -3,6 +3,17 @@ Changes
 =======
 
 
+6.1.0 (2023-07-30)
+------------------
+
+- Set ``AXES_SENSITIVE_PARAMETERS`` default value to ``["username", "ip_address"]`` in addition to the ``AXES_PASSWORD_FORM_FIELD`` configuration flag.
+  This masks the username and IP address fields by default in the logs when writing information about login attempts to the application logs.
+  Reverting to old configuration default of ``[]`` can be done by setting ``AXES_SENSITIVE_PARAMETERS = []`` in the Django project settings file.
+  [GitRon]
+- Improve documentation on GDPR and privacy notes and configuration flags.
+  [GitRon]
+
+
 6.0.5 (2023-07-01)
 ------------------
 
