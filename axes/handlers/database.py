@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import Optional
 
-from django.db import transaction
+from django.db import transaction, connections
 from django.db.models import F, Sum, Value, Q
 from django.db.models.functions import Concat
 from django.utils import timezone
@@ -23,6 +23,9 @@ from axes.helpers import (
 )
 from axes.models import AccessLog, AccessAttempt, AccessFailureLog
 from axes.signals import user_locked_out
+
+from django.db.utils import ProgrammingError, InternalError
+from psycopg2.errors import InFailedSqlTransaction
 
 log = getLogger(__name__)
 
@@ -277,7 +280,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         if not settings.AXES_DISABLE_ACCESS_LOG:
             # 2. database query: Insert new access logs with login time
-            AccessLog.objects.create(
+            accesslog_obj = AccessLog.objects.create(
                 username=username,
                 ip_address=request.axes_ip_address,
                 user_agent=request.axes_user_agent,
@@ -285,6 +288,28 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 path_info=request.axes_path_info,
                 attempt_time=request.axes_attempt_time,
             )
+
+            ##### BEGIN CouponCabin minor override to track the user ID #####
+            if settings.SITE_ENV in ('stage', 'prod'):
+                usadmin = settings.DB_SCHEMA.get('usadmin', '')
+                tbl_name = AccessLog._meta.db_table
+                user_id = user.pk
+                accesslog_id = accesslog_obj.pk
+
+                query = f"""
+                    UPDATE "{usadmin}{tbl_name}"
+                    SET user_id = {user_id}
+                    WHERE id = {accesslog_id}
+                """
+
+                try:
+                    with connections['default'].cursor() as cursor:
+                        cursor.execute(query)
+                except (BaseException, ProgrammingError, InternalError, InFailedSqlTransaction) as e:
+                    log.warning(f'Unable to set the user_id on the {tbl_name} for {username} ({user_id}): {e}')
+                except:
+                    log.warning(f'Unable to set the user_id on the {tbl_name} for {username} ({user_id})')
+            ##### END CouponCabin minor override to track the user ID #####
 
         if settings.AXES_RESET_ON_SUCCESS:
             # 3. database query: Reset failed attempts for the logging in user
