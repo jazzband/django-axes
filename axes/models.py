@@ -55,7 +55,7 @@ class AccessAttempt(AccessBase):
 class AccessLog(AccessBase):
     logout_time = models.DateTimeField(_("Logout Time"), null=True, blank=True)
 
-    user = models.ForeignKey(User, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"Access Log for {self.username} @ {self.attempt_time}"

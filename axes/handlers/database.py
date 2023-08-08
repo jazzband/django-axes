@@ -290,25 +290,24 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             )
 
             ##### BEGIN CouponCabin minor override to track the user ID #####
-            if settings.SITE_ENV in ('stage', 'prod'):
-                usadmin = settings.DB_SCHEMA.get('usadmin', '')
-                tbl_name = AccessLog._meta.db_table
-                user_id = user.pk
-                accesslog_id = accesslog_obj.pk
+            usadmin = settings.DB_SCHEMA.get('usadmin', '')
+            tbl_name = AccessLog._meta.db_table
+            user_id = user.pk
+            accesslog_id = accesslog_obj.pk
 
-                query = f"""
-                    UPDATE "{usadmin}{tbl_name}"
-                    SET user_id = {user_id}
-                    WHERE id = {accesslog_id}
-                """
+            query = f"""
+                UPDATE "{usadmin}{tbl_name}"
+                SET user_id = {user_id}
+                WHERE id = {accesslog_id}
+            """
 
-                try:
-                    with connections['default'].cursor() as cursor:
-                        cursor.execute(query)
-                except (BaseException, ProgrammingError, InternalError, InFailedSqlTransaction) as e:
-                    log.warning(f'Unable to set the user_id on the {tbl_name} for {username} ({user_id}): {e}')
-                except:
-                    log.warning(f'Unable to set the user_id on the {tbl_name} for {username} ({user_id})')
+            try:
+                with connections['default'].cursor() as cursor:
+                    cursor.execute(query)
+            except (BaseException, ProgrammingError, InternalError, InFailedSqlTransaction) as e:
+                log.warning(f'Unable to set the user_id on the {tbl_name} for {username} ({user_id}): {e}')
+            except:
+                log.warning(f'Unable to set the user_id on the {tbl_name} for {username} ({user_id})')
             ##### END CouponCabin minor override to track the user ID #####
 
         if settings.AXES_RESET_ON_SUCCESS:
