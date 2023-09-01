@@ -3,6 +3,14 @@ Changes
 =======
 
 
+6.1.1 (2023-08-01)
+------------------
+
+- Fix `TransactionManagementError` when using the database handler
+  with a custom database with for `AccessAttempt` or `AccessFailureLog`.
+  [hirotasoshu]
+
+
 6.1.0 (2023-07-30)
 ------------------
 
