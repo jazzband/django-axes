@@ -6,8 +6,8 @@ Changes
 6.1.1 (2023-08-01)
 ------------------
 
-- Fix `TransactionManagementError` when using the database handler
-  with a custom database with for `AccessAttempt` or `AccessFailureLog`.
+- Fix ``TransactionManagementError`` when using the database handler
+  with a custom database with for ``AccessAttempt`` or ``AccessFailureLog``.
   [hirotasoshu]
 
 
