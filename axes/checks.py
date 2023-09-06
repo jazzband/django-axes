@@ -197,8 +197,8 @@ def is_valid_callable(value) -> bool:
 
     if isinstance(value, str):
         try:
-            import_string(value)
+            return is_valid_callable(import_string(value))
         except ImportError:
             return False
 
-    return True
+    return False
