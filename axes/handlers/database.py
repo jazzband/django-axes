@@ -278,6 +278,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         if not settings.AXES_DISABLE_ACCESS_LOG:
             # 2. database query: Insert new access logs with login time
             AccessLog.objects.create(
+                user=user,
                 username=username,
                 ip_address=request.axes_ip_address,
                 user_agent=request.axes_user_agent,

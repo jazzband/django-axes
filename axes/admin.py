@@ -47,6 +47,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (
         "attempt_time",
+        "user",
         "logout_time",
         "ip_address",
         "username",
@@ -54,14 +55,14 @@ class AccessLogAdmin(admin.ModelAdmin):
         "path_info",
     )
 
-    list_filter = ["attempt_time", "logout_time", "path_info"]
+    list_filter = ["attempt_time", "user", "logout_time", "path_info"]
 
     search_fields = ["ip_address", "user_agent", "username", "path_info"]
 
     date_hierarchy = "attempt_time"
 
     fieldsets = (
-        (None, {"fields": ("username", "path_info")}),
+        (None, {"fields": ("user", "username", "path_info")}),
         (_("Meta Data"), {"fields": ("user_agent", "ip_address", "http_accept")}),
     )
 
@@ -72,6 +73,7 @@ class AccessLogAdmin(admin.ModelAdmin):
         "http_accept",
         "path_info",
         "attempt_time",
+        "user",
         "logout_time",
     ]
 
