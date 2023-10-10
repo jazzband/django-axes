@@ -25,6 +25,7 @@ class AccessBase(models.Model):
         if self.pk is None or self.attempt_time is None:
             self.attempt_time = timezone.now()
         return super().save(*args, **kwargs)
+        
 
 class AccessFailureLog(AccessBase):
     locked_out = models.BooleanField(
