@@ -16,16 +16,16 @@ class AccessBase(models.Model):
 
     attempt_time = models.DateTimeField(_("Attempt Time"), auto_now_add=False)
 
+    def save(self, *args, **kwargs):
+        if self.pk is None or self.attempt_time is None:
+            self.attempt_time = timezone.now()
+        return super().save(*args, **kwargs)
+
     class Meta:
         app_label = "axes"
         abstract = True
         ordering = ["-attempt_time"]
 
-    def save(self, *args, **kwargs):
-        if self.pk is None or self.attempt_time is None:
-            self.attempt_time = timezone.now()
-        return super().save(*args, **kwargs)
-        
 
 class AccessFailureLog(AccessBase):
     locked_out = models.BooleanField(
