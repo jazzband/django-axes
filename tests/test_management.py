@@ -56,18 +56,22 @@ class ManagementCommandTestCase(AxesTestCase):
             username="john.doe", ip_address="10.0.0.2", failures_since_start="15"
         )
 
+        AccessAttempt.objects.create(
+            username="richard.doe", ip_address="10.0.0.4", failures_since_start="12"
+        )
+
     def test_axes_list_attempts(self):
         out = StringIO()
         call_command("axes_list_attempts", stdout=out)
 
-        expected = "10.0.0.1\tjane.doe\t4\n10.0.0.2\tjohn.doe\t15\n"
+        expected = "10.0.0.1\tjane.doe\t4\n10.0.0.2\tjohn.doe\t15\n10.0.0.4\trichard.doe\t12\n"
         self.assertEqual(expected, out.getvalue())
 
     def test_axes_reset(self):
         out = StringIO()
         call_command("axes_reset", stdout=out)
 
-        expected = "2 attempts removed.\n"
+        expected = "3 attempts removed.\n"
         self.assertEqual(expected, out.getvalue())
 
     def test_axes_reset_not_found(self):
@@ -83,6 +87,13 @@ class ManagementCommandTestCase(AxesTestCase):
     def test_axes_reset_ip(self):
         out = StringIO()
         call_command("axes_reset_ip", "10.0.0.1", stdout=out)
+
+        expected = "1 attempts removed.\n"
+        self.assertEqual(expected, out.getvalue())
+
+    def test_axes_reset_ip_username(self):
+        out = StringIO()
+        call_command("axes_reset_ip_username", "10.0.0.4", "richard.doe", stdout=out)
 
         expected = "1 attempts removed.\n"
         self.assertEqual(expected, out.getvalue())
