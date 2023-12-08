@@ -3,6 +3,19 @@ Changes
 =======
 
 
+6.2.0 (2023-12-08)
+------------------
+
+- Update documentation.
+  [funkybob]
+- Add new management command ``axes_reset_ip_username``.
+  [p-l-]
+- Add French translations.
+  [laulaz]
+- Avoid running data migration on incorrect databases.
+  [christianbundy]
+
+
 6.1.1 (2023-08-01)
 ------------------
 
