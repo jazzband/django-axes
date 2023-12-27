@@ -3,6 +3,13 @@ Changes
 =======
 
 
+6.3.0 (2023-12-27)
+------------------
+
+- Add async support to middleware.
+  [Taikono-Himazin]
+
+
 6.2.0 (2023-12-08)
 ------------------
 
