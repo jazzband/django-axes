@@ -3,6 +3,13 @@ Changes
 =======
 
 
+6.3.1 (2024-03-04)
+------------------
+
+- Drop ``setuptools`` and ``pkg_resources`` dependencies.
+  [Viicos]
+
+
 6.3.0 (2023-12-27)
 ------------------
 
