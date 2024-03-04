@@ -3,6 +3,13 @@ Changes
 =======
 
 
+6.4.0 (2024-03-04)
+------------------
+
+- Add support for Python 3.12 and Django 5.0, drop support for Django 4.1.
+  [aleksihakli]
+
+
 6.3.1 (2024-03-04)
 ------------------
 
