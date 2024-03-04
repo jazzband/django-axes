@@ -1,4 +1,4 @@
-black==24.1.1
+black==24.2.0
 mypy==1.8.0
 prospector==1.10.3
 types-pkg_resources  # Type stub
