@@ -2,14 +2,14 @@ from unittest.mock import patch
 
 from django.test import override_settings
 from django.urls import reverse
-from pkg_resources import get_distribution
 
+from axes import __version__
 from axes.apps import AppConfig
 from axes.models import AccessAttempt, AccessLog
 from tests.base import AxesTestCase
 
 _BEGIN = "AXES: BEGIN version %s, %s"
-_VERSION = get_distribution("django-axes").version
+_VERSION = __version__
 
 
 @patch("axes.apps.AppConfig.initialized", False)
