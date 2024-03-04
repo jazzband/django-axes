@@ -41,9 +41,11 @@ class AppConfig(apps.AppConfig):
             else:
                 mode = "blocking by " + " or ".join(
                     [
-                        param
-                        if isinstance(param, str)
-                        else "combination of " + " and ".join(param)
+                        (
+                            param
+                            if isinstance(param, str)
+                            else "combination of " + " and ".join(param)
+                        )
                         for param in settings.AXES_LOCKOUT_PARAMETERS
                     ]
                 )
