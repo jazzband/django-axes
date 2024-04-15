@@ -36,7 +36,10 @@ setup(
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
     python_requires=">=3.7",
-    install_requires=["django>=3.2"],
+    install_requires=[
+        "django>=3.2",
+        "asgiref>=3.6.0",
+    ],
     extras_require={
         "ipware": "django-ipware>=3",
     },
