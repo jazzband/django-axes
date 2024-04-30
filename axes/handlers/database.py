@@ -14,6 +14,7 @@ from axes.attempts import (
 from axes.conf import settings
 from axes.handlers.base import AxesBaseHandler, AbstractAxesHandler
 from axes.helpers import (
+    get_client_session_hash,
     get_client_str,
     get_client_username,
     get_credentials,
@@ -284,6 +285,9 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 http_accept=request.axes_http_accept,
                 path_info=request.axes_path_info,
                 attempt_time=request.axes_attempt_time,
+                # evaluate session hash here to ensure having the correct
+                # value which is stored on the backend
+                session_hash=get_client_session_hash(request),
             )
 
         if settings.AXES_RESET_ON_SUCCESS:
@@ -317,7 +321,10 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         if username and not settings.AXES_DISABLE_ACCESS_LOG:
             # 2. database query: Update existing attempt logs with logout time
             AccessLog.objects.filter(
-                username=username, logout_time__isnull=True
+                username=username,
+                logout_time__isnull=True,
+                # update only access log for given session
+                session_hash=get_client_session_hash(request),
             ).update(logout_time=request.axes_attempt_time)
 
     def post_save_access_attempt(self, instance, **kwargs):

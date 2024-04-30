@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 from django.core.cache import BaseCache, caches
 from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import redirect, render
+from django.utils.encoding import force_bytes
 from django.utils.module_loading import import_string
 
 from axes.conf import settings
@@ -614,3 +615,24 @@ def toggleable(func) -> Callable:
             return func(*args, **kwargs)
 
     return inner
+
+
+def get_client_session_hash(request: HttpRequest) -> str:
+    """
+    Get client session and returns the SHA256 hash of session key, forcing session creation if required.
+
+    If no session is available on request returns an empty string.
+    """
+    try:
+        session = request.session
+    except AttributeError:
+        # when no session is available just return an empty string
+        return ""
+
+    # ensure that a session key exists at this point
+    # because session middleware usually creates the session key at the end
+    # of request cycle
+    if session.session_key is None:
+        session.create()
+
+    return sha256(force_bytes(session.session_key)).hexdigest()

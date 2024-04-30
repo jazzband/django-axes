@@ -137,6 +137,12 @@ with the ``AXES_HANDLER`` setting in project configuration:
   logs attempts to database and creates AccessAttempt and AccessLog records
   that persist until removed from the database manually or automatically
   after their cool offs expire (checked on each login event).
+
+.. note::
+  To keep track of concurrent sessions AccessLog stores an hash of ``session_key`` if the session engine is configured.
+  When no session engine is configured each access is stored with the same dummy value, then a logout will cause each *not-logged-out yet* logs to set a logout time.
+  Due to how ``django.contrib.auth`` works it is not possible to correctly track the logout of a session in which the user changed its password, since it will create a new session without firing any logout event.
+
 - ``axes.handlers.cache.AxesCacheHandler``
   only uses the cache for monitoring attempts and does not persist data
   other than in the cache backend; this data can be purged automatically
