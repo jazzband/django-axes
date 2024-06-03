@@ -2,7 +2,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("axes", "0003_auto_20160322_0929")]
 
     operations = [

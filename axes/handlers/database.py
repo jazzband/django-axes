@@ -1,7 +1,8 @@
 from logging import getLogger
+from typing import Optional
 
-from django.db import transaction
-from django.db.models import F, Sum, Value, Q
+from django.db import router, transaction
+from django.db.models import F, Q, Sum, Value
 from django.db.models.functions import Concat
 from django.utils import timezone
 
@@ -17,9 +18,10 @@ from axes.helpers import (
     get_client_username,
     get_credentials,
     get_failure_limit,
+    get_lockout_parameters,
     get_query_str,
 )
-from axes.models import AccessLog, AccessAttempt
+from axes.models import AccessLog, AccessAttempt, AccessFailureLog
 from axes.signals import user_locked_out
 
 log = getLogger(__name__)
@@ -36,8 +38,8 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
     def reset_attempts(
         self,
         *,
-        ip_address: str = None,
-        username: str = None,
+        ip_address: Optional[str] = None,
+        username: Optional[str] = None,
         ip_or_username: bool = False,
     ) -> int:
         attempts = AccessAttempt.objects.all()
@@ -55,7 +57,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         return count
 
-    def reset_logs(self, *, age_days: int = None) -> int:
+    def reset_logs(self, *, age_days: Optional[int] = None) -> int:
         if age_days is None:
             count, _ = AccessLog.objects.all().delete()
             log.info("AXES: Reset all %d access logs from database.", count)
@@ -70,7 +72,37 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         return count
 
-    def get_failures(self, request, credentials: dict = None) -> int:
+    def reset_failure_logs(self, *, age_days: Optional[int] = None) -> int:
+        if age_days is None:
+            count, _ = AccessFailureLog.objects.all().delete()
+            log.info("AXES: Reset all %d access failure logs from database.", count)
+        else:
+            limit = timezone.now() - timezone.timedelta(days=age_days)
+            count, _ = AccessFailureLog.objects.filter(attempt_time__lte=limit).delete()
+            log.info(
+                "AXES: Reset %d access failure logs older than %d days from database.",
+                count,
+                age_days,
+            )
+
+        return count
+
+    def remove_out_of_limit_failure_logs(
+        self,
+        *,
+        username: str,
+        limit: Optional[int] = settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT,
+    ) -> int:
+        count = 0
+        failures = AccessFailureLog.objects.filter(username=username)
+        out_of_limit_failures_logs = failures.count() - limit
+        if out_of_limit_failures_logs > 0:
+            for failure in failures[:out_of_limit_failures_logs]:
+                failure.delete()
+                count += 1
+        return count
+
+    def get_failures(self, request, credentials: Optional[dict] = None) -> int:
         attempts_list = get_user_attempts(request, credentials)
         attempt_count = max(
             (
@@ -83,11 +115,11 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         )
         return attempt_count
 
-    def user_login_failed(
-        self, sender, credentials: dict, request=None, **kwargs
-    ):  # pylint: disable=too-many-locals
-        """
-        When user login fails, save AccessAttempt record in database, mark request with lockout attribute and emit lockout signal.
+    def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
+        """When user login fails, save AccessFailureLog record in database,
+        save AccessAttempt record in database, mark request with
+        lockout attribute and emit lockout signal.
+
         """
 
         log.info("AXES: User login failed, running database handler for failure.")
@@ -110,6 +142,20 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             request,
         )
 
+        # If axes denied access, don't record the failed attempt as that would reset the lockout time.
+        if (
+            not settings.AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT
+            and request.axes_locked_out
+        ):
+            request.axes_credentials = credentials
+            user_locked_out.send(
+                "axes",
+                request=request,
+                username=username,
+                ip_address=request.axes_ip_address,
+            )
+            return
+
         # This replaces null byte chars that crash saving failures.
         get_data = get_query_str(request.GET).replace("\0", "0x00")
         post_data = get_query_str(request.POST).replace("\0", "0x00")
@@ -119,9 +165,10 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         # 2. database query: Get or create access record with the new failure data
-        if settings.AXES_ONLY_USER_FAILURES and username is None:
+        lockout_parameters = get_lockout_parameters(request, credentials)
+        if lockout_parameters == ["username"] and username is None:
             log.warning(
-                "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
+                "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."
             )
         else:
             (
@@ -148,7 +195,8 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 log.warning(
                     "AXES: New login failure by %s. Created new record in the database.",
                     client_str,
-                )
+
+            
 
             # 3. database query if there were previous attempts in the database
             # Update failed attempt information but do not touch the username, IP address, or user agent fields,
@@ -193,9 +241,21 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 ip_address=request.axes_ip_address,
             )
 
-    def user_logged_in(
-        self, sender, request, user, **kwargs
-    ):  # pylint: disable=unused-argument
+        # 5. database entry: Log for ever the attempt in the AccessFailureLog
+        if settings.AXES_ENABLE_ACCESS_FAILURE_LOG:
+            with transaction.atomic(using=router.db_for_write(AccessFailureLog)):
+                AccessFailureLog.objects.create(
+                    username=username,
+                    ip_address=request.axes_ip_address,
+                    user_agent=request.axes_user_agent,
+                    http_accept=request.axes_http_accept,
+                    path_info=request.axes_path_info,
+                    attempt_time=request.axes_attempt_time,
+                    locked_out=request.axes_locked_out,
+                )
+                self.remove_out_of_limit_failure_logs(username=username)
+
+    def user_logged_in(self, sender, request, user, **kwargs):
         """
         When user logs in, update the AccessLog related to the user.
         """
@@ -235,9 +295,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 client_str,
             )
 
-    def user_logged_out(
-        self, sender, request, user, **kwargs
-    ):  # pylint: disable=unused-argument
+    def user_logged_out(self, sender, request, user, **kwargs):
         """
         When user logs out, update the AccessLog related to the user.
         """

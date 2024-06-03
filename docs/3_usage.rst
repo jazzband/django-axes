@@ -80,7 +80,7 @@ Resetting attempts from command line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Axes offers a command line interface with
-``axes_reset``, ``axes_reset_ip``, and ``axes_reset_username``
+``axes_reset``, ``axes_reset_ip``, ``axes_reset_username``, and ``axes_reset_ip_username``
 management commands with the Django ``manage.py`` or ``django-admin`` command helpers:
 
 - ``python manage.py axes_reset``
@@ -89,6 +89,8 @@ management commands with the Django ``manage.py`` or ``django-admin`` command he
   will clear lockouts and records for the given IP addresses.
 - ``python manage.py axes_reset_username [username ...]``
   will clear lockouts and records for the given usernames.
+- ``python manage.py axes_reset_ip_username [ip] [username]``
+  will clear lockouts and records for the given IP address and username.
 - ``python manage.py axes_reset_logs (age)``
   will reset (i.e. delete) AccessLog records that are older
   than the given age where the default is 30 days.
@@ -107,3 +109,24 @@ In your code, you can use the ``axes.utils.reset`` function.
    Please note that if you give both ``username`` and ``ip`` arguments to ``reset``
    that attempts that have both the set IP and username are reset.
    The effective behaviour of ``reset`` is to ``and`` the terms instead of ``or`` ing them.
+
+
+
+Data privacy and GDPR
+---------------------
+
+Most European countries have quite strict laws regarding data protection and privacy. It's highly recommended and good 
+practice to treat your sensitive user data with care. The general rule here is that you shouldn't store what you don't need.
+
+When dealing with brute-force protection, the IP address and the username (often the email address) are most crucial.
+Given that you can perfectly use `django-axes` without locking the user out by IP but by username, it does make sense to
+avoid storing the IP address at all. You can not lose what you don't have.
+
+You can adjust the AXES settings as follows::
+
+    # Block by Username only (i.e.: Same user different IP is still blocked, but different user same IP is not)
+    AXES_LOCKOUT_PARAMETERS = ["username"]
+
+    # Disable logging the IP-Address of failed login attempts by returning None for attempts to get the IP
+    # Ignore assigning a lambda function to a variable for brevity
+    AXES_CLIENT_IP_CALLABLE = lambda x: None  # noqa: E731

@@ -20,6 +20,7 @@ Django Allauth                                           |check|
 Django Simple Captcha                                    |check|
 Django OAuth Toolkit                                     |check|
 Django Reversion                                         |check|
+Django Auth LDAP                          |check|               
 =======================   =============   ============   ============   ==============
 
 .. |check|  unicode:: U+2713
@@ -98,6 +99,11 @@ You also need to decorate ``dispatch()`` and ``form_invalid()`` methods of the A
 Integration with Django REST Framework
 --------------------------------------
 
+.. warning::
+   The following guide only covers authentication schemes that rely on
+   Django's ``authenticate()`` function. Other schemes (e.g.
+   ``TokenAuthentication``) are currently not supported.
+
 Django Axes requires REST Framework to be connected
 via lockout signals for correct functionality.
 
@@ -126,7 +132,7 @@ And then configure your application to load it in ``examples/apps.py``::
 
 Please check the Django signals documentation for more information:
 
-https://docs.djangoproject.com/en/3.1/topics/signals/
+https://docs.djangoproject.com/en/3.2/topics/signals/
 
 When a user login fails a signal is emitted and PermissionDenied
 raises a HTTP 403 reply which interrupts the login process.

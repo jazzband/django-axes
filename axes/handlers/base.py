@@ -1,5 +1,7 @@
 import re
 from abc import ABC, abstractmethod
+from typing import Optional
+from warnings import warn
 
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
@@ -41,7 +43,7 @@ class AbstractAxesHandler(ABC):
         raise NotImplementedError("user_logged_out should be implemented")
 
     @abstractmethod
-    def get_failures(self, request, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: Optional[dict] = None) -> int:
         """
         Checks the number of failures associated to the given request and credentials.
 
@@ -65,7 +67,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
     .. note:: This is a virtual class and **can not be used without specialization**.
     """
 
-    def is_allowed(self, request, credentials: dict = None) -> bool:
+    def is_allowed(self, request, credentials: Optional[dict] = None) -> bool:
         """
         Checks if the user is allowed to access or use given functionality such as a login view or authentication.
 
@@ -80,7 +82,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
         and inspiration on some common checks and access restrictions before writing your own implementation.
         """
 
-        if self.is_admin_site(request):
+        if settings.AXES_ONLY_ADMIN_SITE and not self.is_admin_request(request):
             return True
 
         if self.is_blacklisted(request, credentials):
@@ -94,7 +96,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return True
 
-    def is_blacklisted(self, request, credentials: dict = None) -> bool:
+    def is_blacklisted(self, request, credentials: Optional[dict] = None) -> bool:
         """
         Checks if the request or given credentials are blacklisted from access.
         """
@@ -104,7 +106,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return False
 
-    def is_whitelisted(self, request, credentials: dict = None) -> bool:
+    def is_whitelisted(self, request, credentials: Optional[dict] = None) -> bool:
         """
         Checks if the request or given credentials are whitelisted for access.
         """
@@ -120,7 +122,7 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return False
 
-    def is_locked(self, request, credentials: dict = None) -> bool:
+    def is_locked(self, request, credentials: Optional[dict] = None) -> bool:
         """
         Checks if the request or given credentials are locked.
         """
@@ -133,44 +135,100 @@ class AxesBaseHandler:  # pylint: disable=unused-argument
 
         return False
 
+    def get_admin_url(self) -> Optional[str]:
+        """
+        Returns admin url if exists, otherwise returns None
+        """
+        try:
+            return reverse("admin:index")
+        except NoReverseMatch:
+            return None
+
+    def is_admin_request(self, request) -> bool:
+        """
+        Checks that request located under admin site
+        """
+        if hasattr(request, "path"):
+            admin_url = self.get_admin_url()
+            return (
+                admin_url is not None
+                and re.match(f"^{admin_url}", request.path) is not None
+            )
+
+        return False
+
     def is_admin_site(self, request) -> bool:
         """
-        Checks if the request is for admin site.
+        Checks if the request is NOT for admin site
+        if `settings.AXES_ONLY_ADMIN_SITE` is True.
         """
+        warn(
+            (
+                "This method is deprecated and will be removed in future versions. "
+                "If you looking for method that checks if `request.path` located under "
+                "admin site, use `is_admin_request` instead."
+            ),
+            DeprecationWarning,
+        )
         if settings.AXES_ONLY_ADMIN_SITE and hasattr(request, "path"):
             try:
                 admin_url = reverse("admin:index")
             except NoReverseMatch:
                 return True
-            return not re.match("^%s" % admin_url, request.path)
+            return not re.match(f"^{admin_url}", request.path)
 
         return False
 
     def reset_attempts(
         self,
         *,
-        ip_address: str = None,
-        username: str = None,
+        ip_address: Optional[str] = None,
+        username: Optional[str] = None,
         ip_or_username: bool = False,
     ) -> int:
         """
         Resets access attempts that match the given IP address or username.
 
         This method makes more sense for the DB backend, but as it is used by the ProxyHandler
-        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+        (via inherent), it needs to be defined here, so we get compliant with all proxy methods.
 
         Please overwrite it on each specialized handler as needed.
         """
         return 0
 
-    def reset_logs(self, *, age_days: int = None) -> int:
+    def reset_logs(self, *, age_days: Optional[int] = None) -> int:
         """
         Resets access logs that are older than given number of days.
 
         This method makes more sense for the DB backend, but as it is used by the ProxyHandler
-        (via inherent), it needs to be defined here so we get compliant with all proxy methods.
+        (via inherent), it needs to be defined here, so we get compliant with all proxy methods.
 
         Please overwrite it on each specialized handler as needed.
+        """
+        return 0
+
+    def reset_failure_logs(self, *, age_days: Optional[int] = None) -> int:
+        """
+        Resets access failure logs that are older than given number of days.
+
+        This method makes more sense for the DB backend, but as it is used by the ProxyHandler
+        (via inherent), it needs to be defined here, so we get compliant with all proxy methods.
+
+        Please overwrite it on each specialized handler as needed.
+        """
+        return 0
+
+    def remove_out_of_limit_failure_logs(
+        self, *, username: str, limit: Optional[int] = None
+    ) -> int:
+        """Remove access failure logs that are over
+        AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT for user username.
+
+        This method makes more sense for the DB backend, but as it is used by the ProxyHandler
+        (via inherent), it needs to be defined here, so we get compliant with all proxy methods.
+
+        Please overwrite it on each specialized handler as needed.
+
         """
         return 0
 
@@ -189,5 +247,5 @@ class AxesHandler(AbstractAxesHandler, AxesBaseHandler):
     def user_logged_out(self, sender, request, user, **kwargs):
         pass
 
-    def get_failures(self, request, credentials: dict = None) -> int:
+    def get_failures(self, request, credentials: Optional[dict] = None) -> int:
         return 0

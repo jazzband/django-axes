@@ -3,6 +3,257 @@ Changes
 =======
 
 
+6.4.0 (2024-03-04)
+------------------
+
+- Add support for Python 3.12 and Django 5.0, drop support for Django 4.1.
+  [aleksihakli]
+
+
+6.3.1 (2024-03-04)
+------------------
+
+- Drop ``setuptools`` and ``pkg_resources`` dependencies.
+  [Viicos]
+
+
+6.3.0 (2023-12-27)
+------------------
+
+- Add async support to middleware.
+  [Taikono-Himazin]
+
+
+6.2.0 (2023-12-08)
+------------------
+
+- Update documentation.
+  [funkybob]
+- Add new management command ``axes_reset_ip_username``.
+  [p-l-]
+- Add French translations.
+  [laulaz]
+- Avoid running data migration on incorrect databases.
+  [christianbundy]
+
+
+6.1.1 (2023-08-01)
+------------------
+
+- Fix ``TransactionManagementError`` when using the database handler
+  with a custom database with for ``AccessAttempt`` or ``AccessFailureLog``.
+  [hirotasoshu]
+
+
+6.1.0 (2023-07-30)
+------------------
+
+- Set ``AXES_SENSITIVE_PARAMETERS`` default value to ``["username", "ip_address"]`` in addition to the ``AXES_PASSWORD_FORM_FIELD`` configuration flag.
+  This masks the username and IP address fields by default in the logs when writing information about login attempts to the application logs.
+  Reverting to old configuration default of ``[]`` can be done by setting ``AXES_SENSITIVE_PARAMETERS = []`` in the Django project settings file.
+  [GitRon]
+- Improve documentation on GDPR and privacy notes and configuration flags.
+  [GitRon]
+
+
+6.0.5 (2023-07-01)
+------------------
+
+- Add Indonesion translation.
+  [kiraware]
+
+
+6.0.4 (2023-06-22)
+------------------
+
+- Remove unused methods from AxesStandaloneBackend.
+  [314eter]
+
+
+6.0.3 (2023-06-18)
+------------------
+
+- Add username to admin fieldsets.
+  [sevdog]
+
+
+6.0.2 (2023-06-13)
+------------------
+
+- Add Django system checks for validating callable import path settings.
+  [iafisher]
+- Improve documentation.
+  [hirotasoshu]
+- Improve repository issue and PR templates.
+  [hirotasoshu]
+
+
+6.0.1 (2023-05-17)
+------------------
+
+- Fine-tune CI pipelines and RTD build requirements.
+  [aleksihakli]
+
+
+6.0.0 (2023-05-17)
+------------------
+
+Version 6 is a breaking release. Please see the documentation for upgrade instructions.
+
+- Deprecate Python 3.7 support.
+  [aleksihakli]
+- Deprecate ``is_admin_site`` API call with misleading naming.
+  [hirotasoshu]
+- Add ``AXES_LOCKOUT_PARAMETERS`` configuration flag that will supersede ``AXES_ONLY_USER_FAILURES``, ``AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP``, ``AXES_LOCK_OUT_BY_USER_OR_IP``, and ``AXES_USE_USER_AGENT`` configurations. Add deprecation warnings for old flags. See project documentation on RTD for update instructions.
+  [hirotasoshu]
+- Improve translations.
+  [hirotasoshu]
+- Use Django ``cache.incr`` API for atomic cached failure counting
+  [hirotasoshu, aleksihakli]
+- Make ``django-ipware`` an optional dependency. Install it with e.g. ``pip install django-axes[ipware]`` package and extras specifier. [aleksihakli]
+- Deprecate and rename old configuration flags. Old flags will be removed in or after version ``6.1``. [aleksihakli]
+   * ``AXES_PROXY_ORDER`` is now ``AXES_IPWARE_PROXY_ORDER``,
+   * ``AXES_PROXY_COUNT`` is now ``AXES_IPWARE_PROXY_COUNT``,
+   * ``AXES_PROXY_TRUSTED_IPS`` is now ``AXES_IPWARE_PROXY_TRUSTED_IPS``, and
+   * ``AXES_META_PRECEDENCE_ORDER`` is now ``AXES_IPWARE_META_PRECEDENCE_ORDER``.
+- Set 429 as the default lockout response code. [hirotasoshu]
+
+
+5.41.1 (2023-04-16)
+-------------------
+
+- Fix sensitive parameter logging for database handler. [stereodamage]
+
+5.41.0 (2023-04-02)
+-------------------
+
+- Fix tests. [hirotasoshu]
+- Add ``AXES_CLIENT_CALLABLE`` setting. [hirotasoshu]
+- Update Python, Django, and package versions. [hramezani]
+
+
+5.40.1 (2022-11-24)
+-------------------
+
+- Fix bug in user agent request blocking. [PetrDlouhy]
+
+
+5.40.0 (2022-11-19)
+-------------------
+
+- Update packages and linters for new version support.
+  [hramezani]
+- Update documentation links.
+  [Arhell]
+- Use importlib instead of setuptools for Python 3.8+.
+  [jedie]
+- Python 3.11 support.
+  [joshuadavidthomas]
+- Documentation improvements.
+  [nsht]
+- Documentation improvements.
+  [timgates42]
+
+
+5.39.0 (2022-08-18)
+-------------------
+
+- Utilize new backend class in tests to fix false negative system check warnings.
+  [simonkern]
+
+
+5.38.0 (2022-08-16)
+-------------------
+
+- Adjust changelog so release notes are correctly visible on PyPy and released package.
+  [aleksihakli]
+
+
+5.37.0 (2022-08-16)
+-------------------
+
+- Add Django 4.1 support. PyPy 3.8 has a known issue with Django 4.1 and is exempted.
+  [hramezani]
+
+
+5.36.0 (2022-07-17)
+-------------------
+
+- Add ``AxesStandaloneBackend`` without ``ModelBackend`` dependencies.
+  [jcgiuffrida]
+
+
+5.35.0 (2022-06-01)
+-------------------
+
+- Add Arabic translations.
+  [YDA93]
+
+
+5.34.0 (2022-05-28)
+-------------------
+
+- Improve German translations.
+  [GitRon]
+
+
+5.33.0 (2022-05-16)
+-------------------
+
+- Migrate MD5 cache key digests to SHA256.
+  [aleksihakli]
+- Improve and streamline startup logging.
+  [ShaheedHaque]
+- Improve module typing.
+  [hramezani]
+- Add support for float or partial hours for ``AXES_COOLOFF_TIME``.
+  [hramezani]
+
+
+5.32.0 (2022-04-08)
+-------------------
+
+- Add support for persistent failure logging
+  where failed login attempts are persisted in the database
+  until a specific threshold is reached.
+  [p1-gdd]
+- Add support for not resetting login times when users
+  try to login during the lockout cooloff period.
+  [antoine-42]
+
+
+5.31.0 (2022-01-08)
+-------------------
+
+- Adjust version specifiers for newer Python and other package versions.
+  Set package minimum Python version to 3.7.
+  Relax ``django-ipware`` version requirements to allow newer versions.
+  [aleksihakli]
+
+
+5.30.0 (2022-01-08)
+-------------------
+
+- Fix package build error in 5.29.0 to allow publishing.
+  [aleksihakli]
+
+
+5.29.0 (2022-01-08)
+-------------------
+
+- Drop Python 3.6 support.
+  [aleksihakli]
+
+
+5.28.0 (2021-12-14)
+-------------------
+
+- Drop Django < 3.2 support.
+  [hramezani]
+- Add Django 4.0 to test matrix.
+  [hramezani]
+
+
 5.27.0 (2021-11-04)
 -------------------
 
@@ -169,7 +420,7 @@ Changes
 - Add ``DEFAULT_AUTO_FIELD`` to test settings.
   [hramezani]
 - Fix documentation language.
-  [danielquinn] 
+  [danielquinn]
 - Fix Python package version specifiers and remove redundant imports.
   [aleksihakli]
 

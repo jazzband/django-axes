@@ -2,6 +2,14 @@ ignore-paths:
   - docs
   - axes/migrations
 
-pep8:
+pycodestyle:
   options:
     max-line-length: 142
+
+pylint:
+  disable:
+    - django-not-configured
+
+pyflakes:
+  disable:
+    - F401

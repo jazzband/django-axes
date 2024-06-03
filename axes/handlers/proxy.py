@@ -1,4 +1,8 @@
+# pylint: disable=arguments-differ
+# pylint generates false negatives from proxy class method overrides
+
 from logging import getLogger
+from typing import Optional
 
 from django.utils.module_loading import import_string
 from django.utils.timezone import now
@@ -46,8 +50,8 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
     def reset_attempts(
         cls,
         *,
-        ip_address: str = None,
-        username: str = None,
+        ip_address: Optional[str] = None,
+        username: Optional[str] = None,
         ip_or_username: bool = False,
     ) -> int:
         return cls.get_implementation().reset_attempts(
@@ -55,8 +59,20 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
         )
 
     @classmethod
-    def reset_logs(cls, *, age_days: int = None) -> int:
+    def reset_logs(cls, *, age_days: Optional[int] = None) -> int:
         return cls.get_implementation().reset_logs(age_days=age_days)
+
+    @classmethod
+    def reset_failure_logs(cls, *, age_days: Optional[int] = None) -> int:
+        return cls.get_implementation().reset_failure_logs(age_days=age_days)
+
+    @classmethod
+    def remove_out_of_limit_failure_logs(
+        cls, *, username: str, limit: Optional[int] = None
+    ) -> int:
+        return cls.get_implementation().remove_out_of_limit_failure_logs(
+            username=username
+        )
 
     @staticmethod
     def update_request(request):
@@ -70,7 +86,8 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
             )
             return
         if not hasattr(request, "axes_updated"):
-            request.axes_locked_out = False
+            if not hasattr(request, "axes_locked_out"):
+                request.axes_locked_out = False
             request.axes_attempt_time = now()
             request.axes_ip_address = get_client_ip_address(request)
             request.axes_user_agent = get_client_user_agent(request)
@@ -81,17 +98,17 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_credentials = None
 
     @classmethod
-    def is_locked(cls, request, credentials: dict = None) -> bool:
+    def is_locked(cls, request, credentials: Optional[dict] = None) -> bool:
         cls.update_request(request)
         return cls.get_implementation().is_locked(request, credentials)
 
     @classmethod
-    def is_allowed(cls, request, credentials: dict = None) -> bool:
+    def is_allowed(cls, request, credentials: Optional[dict] = None) -> bool:
         cls.update_request(request)
         return cls.get_implementation().is_allowed(request, credentials)
 
     @classmethod
-    def get_failures(cls, request, credentials: dict = None) -> int:
+    def get_failures(cls, request, credentials: Optional[dict] = None) -> int:
         cls.update_request(request)
         return cls.get_implementation().get_failures(request, credentials)
 

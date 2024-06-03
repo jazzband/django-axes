@@ -1,6 +1,8 @@
 from typing import Callable
 
+from asgiref.sync import iscoroutinefunction, markcoroutinefunction, sync_to_async
 from django.conf import settings
+from django.http import HttpRequest, HttpResponse
 
 from axes.helpers import get_lockout_response
 
@@ -29,15 +31,37 @@ class AxesMiddleware:
     - ``AXES_PERMALOCK_MESSAGE``.
     """
 
-    def __init__(self, get_response: Callable):
+    async_capable = True
+    sync_capable = True
+
+    def __init__(self, get_response: Callable) -> None:
         self.get_response = get_response
+        if iscoroutinefunction(self.get_response):
+            markcoroutinefunction(self)
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        # Exit out to async mode, if needed
+        if iscoroutinefunction(self):
+            return self.__acall__(request)
+
         response = self.get_response(request)
-
         if settings.AXES_ENABLED:
             if getattr(request, "axes_locked_out", None):
                 credentials = getattr(request, "axes_credentials", None)
                 response = get_lockout_response(request, credentials)  # type: ignore
+
+        return response
+
+    async def __acall__(self, request: HttpRequest) -> HttpResponse:
+        response = await self.get_response(request)
+
+        if settings.AXES_ENABLED:
+            if getattr(request, "axes_locked_out", None):
+                credentials = getattr(request, "axes_credentials", None)
+                response = await sync_to_async(
+                    get_lockout_response, thread_sensitive=True
+                )(
+                    request, credentials
+                )  # type: ignore
 
         return response

@@ -4,7 +4,7 @@ from django.db.migrations.autodetector import MigrationAutodetector
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.state import ProjectState
 
-from axes.models import AccessAttempt, AccessLog
+from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 from tests.base import AxesTestCase
 
 
@@ -16,12 +16,16 @@ class ModelsTestCase(AxesTestCase):
             failures_since_start=self.failures_since_start
         )
         self.access_log = AccessLog()
+        self.access_failure_log = AccessFailureLog()
 
     def test_access_attempt_str(self):
         self.assertIn("Access", str(self.access_attempt))
 
     def test_access_log_str(self):
         self.assertIn("Access", str(self.access_log))
+
+    def test_access_failure_log_str(self):
+        self.assertIn("Failed", str(self.access_failure_log))
 
 
 class MigrationsTestCase(AxesTestCase):

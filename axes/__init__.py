@@ -1,8 +1,3 @@
-from pkg_resources import get_distribution
+from importlib.metadata import version
 
-import django
-
-if django.VERSION < (3, 2):
-    default_app_config = "axes.apps.AppConfig"
-
-__version__ = get_distribution("django-axes").version
+__version__ = version("django-axes")

@@ -1,20 +1,26 @@
 from datetime import timedelta
-from hashlib import md5
+from hashlib import sha256
 from logging import getLogger
 from string import Template
-from typing import Callable, Optional, Type, Union
+from typing import Callable, Optional, Type, Union, List
 from urllib.parse import urlencode
 
-import ipware.ip
-from django.core.cache import caches, BaseCache
+from django.core.cache import BaseCache, caches
 from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.utils.module_loading import import_string
 
 from axes.conf import settings
 from axes.models import AccessBase
 
 log = getLogger(__name__)
+
+try:
+    import ipware.ip
+
+    IPWARE_INSTALLED = True
+except ImportError:
+    IPWARE_INSTALLED = False
 
 
 def get_cache() -> BaseCache:
@@ -31,7 +37,7 @@ def get_cache_timeout() -> Optional[int]:
 
     The cache timeout can be either None if not configured or integer of seconds if configured.
 
-    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, integer, callable, or str path,
+    Notice that the settings.AXES_COOLOFF_TIME can be None, timedelta, float, integer, callable, or str path,
     and this function offers a unified _integer or None_ representation of that configuration
     for use with the Django cache backends.
     """
@@ -48,7 +54,7 @@ def get_cool_off() -> Optional[timedelta]:
 
     The return value is either None or timedelta.
 
-    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer of hours,
+    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer/float of hours,
     and this function offers a unified _timedelta or None_ representation of that configuration
     for use with the Axes internal implementations.
 
@@ -59,10 +65,12 @@ def get_cool_off() -> Optional[timedelta]:
 
     if isinstance(cool_off, int):
         return timedelta(hours=cool_off)
+    if isinstance(cool_off, float):
+        return timedelta(minutes=cool_off * 60)
     if isinstance(cool_off, str):
         return import_string(cool_off)()
     if callable(cool_off):
-        return cool_off()
+        return cool_off()  # pylint: disable=not-callable
 
     return cool_off
 
@@ -90,7 +98,7 @@ def get_cool_off_iso8601(delta: timedelta) -> str:
     return f"P{days_str}"
 
 
-def get_credentials(username: str = None, **kwargs) -> dict:
+def get_credentials(username: Optional[str] = None, **kwargs) -> dict:
     """
     Calculate credentials for Axes to use internally from given username and kwargs.
 
@@ -103,7 +111,9 @@ def get_credentials(username: str = None, **kwargs) -> dict:
     return credentials
 
 
-def get_client_username(request, credentials: dict = None) -> str:
+def get_client_username(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> str:
     """
     Resolve client username from the given request or credentials if supplied.
 
@@ -121,7 +131,9 @@ def get_client_username(request, credentials: dict = None) -> str:
         log.debug("Using settings.AXES_USERNAME_CALLABLE to get username")
 
         if callable(settings.AXES_USERNAME_CALLABLE):
-            return settings.AXES_USERNAME_CALLABLE(request, credentials)
+            return settings.AXES_USERNAME_CALLABLE(  # pylint: disable=not-callable
+                request, credentials
+            )
         if isinstance(settings.AXES_USERNAME_CALLABLE, str):
             return import_string(settings.AXES_USERNAME_CALLABLE)(request, credentials)
         raise TypeError(
@@ -142,38 +154,96 @@ def get_client_username(request, credentials: dict = None) -> str:
     return request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
 
 
-def get_client_ip_address(request) -> str:
+def get_client_ip_address(
+    request: HttpRequest,
+    use_ipware: Optional[bool] = None,
+) -> Optional[str]:
     """
     Get client IP address as configured by the user.
 
-    The django-ipware package is used for address resolution
-    and parameters can be configured in the Axes package.
+    The order of preference for address resolution is as follows:
+
+    1. If configured, use ``AXES_CLIENT_IP_CALLABLE``, and supply ``request`` as argument
+    2. If available, use django-ipware package (parameters can be configured in the Axes package)
+    3. Use ``request.META.get('REMOTE_ADDR', None)`` as a fallback
+
+    :param request: incoming Django ``HttpRequest`` or similar object from authentication backend or other source
     """
 
-    client_ip_address, _ = ipware.ip.get_client_ip(
-        request,
-        proxy_order=settings.AXES_PROXY_ORDER,
-        proxy_count=settings.AXES_PROXY_COUNT,
-        proxy_trusted_ips=settings.AXES_PROXY_TRUSTED_IPS,
-        request_header_order=settings.AXES_META_PRECEDENCE_ORDER,
+    if settings.AXES_CLIENT_IP_CALLABLE:
+        log.debug("Using settings.AXES_CLIENT_IP_CALLABLE to get client IP address")
+
+        if callable(settings.AXES_CLIENT_IP_CALLABLE):
+            return settings.AXES_CLIENT_IP_CALLABLE(  # pylint: disable=not-callable
+                request
+            )
+        if isinstance(settings.AXES_CLIENT_IP_CALLABLE, str):
+            return import_string(settings.AXES_CLIENT_IP_CALLABLE)(request)
+        raise TypeError(
+            "settings.AXES_CLIENT_IP_CALLABLE needs to be a string, callable, or None."
+        )
+
+    # Resolve using django-ipware from a configuration flag that can be set to False to explicitly disable
+    # this is added to both enable or disable the branch when ipware is installed in the test environment
+    if use_ipware is None:
+        use_ipware = IPWARE_INSTALLED
+    if use_ipware:
+        log.debug("Using django-ipware to get client IP address")
+
+        client_ip_address, _ = ipware.ip.get_client_ip(
+            request,
+            proxy_order=settings.AXES_IPWARE_PROXY_ORDER,
+            proxy_count=settings.AXES_IPWARE_PROXY_COUNT,
+            proxy_trusted_ips=settings.AXES_IPWARE_PROXY_TRUSTED_IPS,
+            request_header_order=settings.AXES_IPWARE_META_PRECEDENCE_ORDER,
+        )
+        return client_ip_address
+
+    log.debug(
+        "Using request.META.get('REMOTE_ADDR', None) fallback method to get client IP address"
     )
+    return request.META.get("REMOTE_ADDR", None)
 
-    return client_ip_address
 
-
-def get_client_user_agent(request) -> str:
+def get_client_user_agent(request: HttpRequest) -> str:
     return request.META.get("HTTP_USER_AGENT", "<unknown>")[:255]
 
 
-def get_client_path_info(request) -> str:
+def get_client_path_info(request: HttpRequest) -> str:
     return request.META.get("PATH_INFO", "<unknown>")[:255]
 
 
-def get_client_http_accept(request) -> str:
+def get_client_http_accept(request: HttpRequest) -> str:
     return request.META.get("HTTP_ACCEPT", "<unknown>")[:1025]
 
 
-def get_client_parameters(username: str, ip_address: str, user_agent: str) -> list:
+def get_lockout_parameters(
+    request_or_attempt: Union[HttpRequest, AccessBase],
+    credentials: Optional[dict] = None,
+) -> List[Union[str, List[str]]]:
+    if callable(settings.AXES_LOCKOUT_PARAMETERS):
+        return settings.AXES_LOCKOUT_PARAMETERS(request_or_attempt, credentials)
+
+    if isinstance(settings.AXES_LOCKOUT_PARAMETERS, str):
+        return import_string(settings.AXES_LOCKOUT_PARAMETERS)(
+            request_or_attempt, credentials
+        )
+
+    if isinstance(settings.AXES_LOCKOUT_PARAMETERS, list):
+        return settings.AXES_LOCKOUT_PARAMETERS
+
+    raise TypeError(
+        "settings.AXES_LOCKOUT_PARAMETERS needs to be a callable or iterable"
+    )
+
+
+def get_client_parameters(
+    username: str,
+    ip_address: str,
+    user_agent: str,
+    request_or_attempt: Union[HttpRequest, AccessBase],
+    credentials: Optional[dict] = None,
+) -> List[dict]:
     """
     Get query parameters for filtering AccessAttempt queryset.
 
@@ -182,42 +252,53 @@ def get_client_parameters(username: str, ip_address: str, user_agent: str) -> li
 
     Returns list of dict, every item of list are separate parameters
     """
+    lockout_parameters = get_lockout_parameters(request_or_attempt, credentials)
 
-    if settings.AXES_ONLY_USER_FAILURES:
-        # 1. Only individual usernames can be tracked with parametrization
-        filter_query = [{"username": username}]
-    else:
-        if settings.AXES_LOCK_OUT_BY_USER_OR_IP:
-            # One of `username` or `IP address` is used
-            filter_query = [{"username": username}, {"ip_address": ip_address}]
-        elif settings.AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP:
-            # 2. A combination of username and IP address can be used as well
-            filter_query = [{"username": username, "ip_address": ip_address}]
-        else:
-            # 3. Default case is to track the IP address only, which is the most secure option
-            filter_query = [{"ip_address": ip_address}]
+    parameters_dict = {
+        "username": username,
+        "ip_address": ip_address,
+        "user_agent": user_agent,
+    }
 
-        if settings.AXES_USE_USER_AGENT:
-            # 4. The HTTP User-Agent can be used to track e.g. one browser
-            filter_query.append({"user_agent": user_agent})
+    filter_kwargs = []
 
-    return filter_query
+    for parameter in lockout_parameters:
+        try:
+            if isinstance(parameter, str):
+                filter_kwarg = {parameter: parameters_dict[parameter]}
+            else:
+                filter_kwarg = {
+                    combined_parameter: parameters_dict[combined_parameter]
+                    for combined_parameter in parameter
+                }
+            filter_kwargs.append(filter_kwarg)
+
+        except KeyError as e:
+            error_msg = (
+                f"{e} lockout parameter is not allowed. "
+                f"Allowed parameters: {', '.join(parameters_dict.keys())}"
+            )
+            log.exception(error_msg)
+            raise ValueError(error_msg) from e
+
+    return filter_kwargs
 
 
-def make_cache_key_list(filter_kwargs_list):
+def make_cache_key_list(filter_kwargs_list: List[dict]) -> List[str]:
     cache_keys = []
     for filter_kwargs in filter_kwargs_list:
         cache_key_components = "".join(
             value for value in filter_kwargs.values() if value
         )
-        cache_key_digest = md5(cache_key_components.encode()).hexdigest()
+        cache_key_digest = sha256(cache_key_components.encode()).hexdigest()
         cache_keys.append(f"axes-{cache_key_digest}")
     return cache_keys
 
 
-def get_client_cache_key(
-    request_or_attempt: Union[HttpRequest, AccessBase], credentials: dict = None
-) -> str:
+def get_client_cache_keys(
+    request_or_attempt: Union[HttpRequest, AccessBase],
+    credentials: Optional[dict] = None,
+) -> List[str]:
     """
     Build cache key name from request or AccessAttempt object.
 
@@ -235,7 +316,9 @@ def get_client_cache_key(
         ip_address = get_client_ip_address(request_or_attempt)
         user_agent = get_client_user_agent(request_or_attempt)
 
-    filter_kwargs_list = get_client_parameters(username, ip_address, user_agent)
+    filter_kwargs_list = get_client_parameters(
+        username, ip_address, user_agent, request_or_attempt, credentials
+    )
 
     return make_cache_key_list(filter_kwargs_list)
 
@@ -258,7 +341,7 @@ def get_client_str(
         log.debug("Using settings.AXES_CLIENT_STR_CALLABLE to get client string.")
 
         if callable(settings.AXES_CLIENT_STR_CALLABLE):
-            return settings.AXES_CLIENT_STR_CALLABLE(
+            return settings.AXES_CLIENT_STR_CALLABLE(  # pylint: disable=not-callable
                 username, ip_address, user_agent, path_info, request
             )
         if isinstance(settings.AXES_CLIENT_STR_CALLABLE, str):
@@ -269,7 +352,7 @@ def get_client_str(
             "settings.AXES_CLIENT_STR_CALLABLE needs to be a string, callable or None."
         )
 
-    client_dict = dict()
+    client_dict = {}
 
     if settings.AXES_VERBOSE:
         # Verbose mode logs every attribute that is available
@@ -278,11 +361,11 @@ def get_client_str(
         client_dict["user_agent"] = user_agent
     else:
         # Other modes initialize the attributes that are used for the actual lockouts
-        client_list = get_client_parameters(username, ip_address, user_agent)
+        client_list = get_client_parameters(username, ip_address, user_agent, request)
         client_dict = {}
         for client in client_list:
             client_dict.update(client)
-
+    client_dict = cleanse_parameters(client_dict.copy())
     # Path info is always included as last component in the client string for traceability purposes
     if path_info and isinstance(path_info, (tuple, list)):
         path_info = path_info[0]
@@ -340,9 +423,11 @@ def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
     return query_str[:max_length]
 
 
-def get_failure_limit(request, credentials) -> int:
+def get_failure_limit(request: HttpRequest, credentials) -> int:
     if callable(settings.AXES_FAILURE_LIMIT):
-        return settings.AXES_FAILURE_LIMIT(request, credentials)
+        return settings.AXES_FAILURE_LIMIT(  # pylint: disable=not-callable
+            request, credentials
+        )
     if isinstance(settings.AXES_FAILURE_LIMIT, str):
         return import_string(settings.AXES_FAILURE_LIMIT)(request, credentials)
     if isinstance(settings.AXES_FAILURE_LIMIT, int):
@@ -356,10 +441,14 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
+def get_lockout_response(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> HttpResponse:
     if settings.AXES_LOCKOUT_CALLABLE:
         if callable(settings.AXES_LOCKOUT_CALLABLE):
-            return settings.AXES_LOCKOUT_CALLABLE(request, credentials)
+            return settings.AXES_LOCKOUT_CALLABLE(  # pylint: disable=not-callable
+                request, credentials
+            )
         if isinstance(settings.AXES_LOCKOUT_CALLABLE, str):
             return import_string(settings.AXES_LOCKOUT_CALLABLE)(request, credentials)
         raise TypeError(
@@ -385,13 +474,13 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
 
     if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
         json_response = JsonResponse(context, status=status)
-        json_response[
-            "Access-Control-Allow-Origin"
-        ] = settings.AXES_ALLOWED_CORS_ORIGINS
+        json_response["Access-Control-Allow-Origin"] = (
+            settings.AXES_ALLOWED_CORS_ORIGINS
+        )
         json_response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-        json_response[
-            "Access-Control-Allow-Headers"
-        ] = "Origin, Content-Type, Accept, Authorization, x-requested-with"
+        json_response["Access-Control-Allow-Headers"] = (
+            "Origin, Content-Type, Accept, Authorization, x-requested-with"
+        )
         return json_response
 
     if settings.AXES_LOCKOUT_TEMPLATE:
@@ -400,7 +489,7 @@ def get_lockout_response(request, credentials: dict = None) -> HttpResponse:
     if settings.AXES_LOCKOUT_URL:
         lockout_url = settings.AXES_LOCKOUT_URL
         query_string = urlencode({"username": context["username"]})
-        url = "{}?{}".format(lockout_url, query_string)
+        url = f"{lockout_url}?{query_string}"
         return redirect(url)
 
     return HttpResponse(get_lockout_message(), status=status)
@@ -410,17 +499,21 @@ def is_ip_address_in_whitelist(ip_address: str) -> bool:
     if not settings.AXES_IP_WHITELIST:
         return False
 
-    return ip_address in settings.AXES_IP_WHITELIST
+    return (  # pylint: disable=unsupported-membership-test
+        ip_address in settings.AXES_IP_WHITELIST
+    )
 
 
 def is_ip_address_in_blacklist(ip_address: str) -> bool:
     if not settings.AXES_IP_BLACKLIST:
         return False
 
-    return ip_address in settings.AXES_IP_BLACKLIST
+    return (  # pylint: disable=unsupported-membership-test
+        ip_address in settings.AXES_IP_BLACKLIST
+    )
 
 
-def is_client_ip_address_whitelisted(request):
+def is_client_ip_address_whitelisted(request: HttpRequest):
     """
     Check if the given request refers to a whitelisted IP.
     """
@@ -438,7 +531,7 @@ def is_client_ip_address_whitelisted(request):
     return False
 
 
-def is_client_ip_address_blacklisted(request) -> bool:
+def is_client_ip_address_blacklisted(request: HttpRequest) -> bool:
     """
     Check if the given request refers to a blacklisted IP.
     """
@@ -454,7 +547,7 @@ def is_client_ip_address_blacklisted(request) -> bool:
     return False
 
 
-def is_client_method_whitelisted(request) -> bool:
+def is_client_method_whitelisted(request: HttpRequest) -> bool:
     """
     Check if the given request uses a whitelisted method.
     """
@@ -465,7 +558,9 @@ def is_client_method_whitelisted(request) -> bool:
     return False
 
 
-def is_user_attempt_whitelisted(request, credentials: dict = None) -> bool:
+def is_user_attempt_whitelisted(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> bool:
     """
     Check if the given request or credentials refer to a whitelisted username.
 
@@ -494,7 +589,7 @@ def is_user_attempt_whitelisted(request, credentials: dict = None) -> bool:
     if whitelist_callable is None:
         return False
     if callable(whitelist_callable):
-        return whitelist_callable(request, credentials)
+        return whitelist_callable(request, credentials)  # pylint: disable=not-callable
     if isinstance(whitelist_callable, str):
         return import_string(whitelist_callable)(request, credentials)
 

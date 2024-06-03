@@ -1,7 +1,8 @@
 from logging import getLogger
-from typing import List
+from typing import List, Optional
 
 from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.utils.timezone import datetime, now
 
 from axes.conf import settings
@@ -11,7 +12,7 @@ from axes.models import AccessAttempt
 log = getLogger(__name__)
 
 
-def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:
+def get_cool_off_threshold(attempt_time: Optional[datetime] = None) -> datetime:
     """
     Get threshold for fetching access attempts from the database.
     """
@@ -27,7 +28,9 @@ def get_cool_off_threshold(attempt_time: datetime = None) -> datetime:
     return attempt_time - cool_off
 
 
-def filter_user_attempts(request, credentials: dict = None) -> List[QuerySet]:
+def filter_user_attempts(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> List[QuerySet]:
     """
     Return a list querysets of AccessAttempts that match the given request and credentials.
     """
@@ -35,7 +38,7 @@ def filter_user_attempts(request, credentials: dict = None) -> List[QuerySet]:
     username = get_client_username(request, credentials)
 
     filter_kwargs_list = get_client_parameters(
-        username, request.axes_ip_address, request.axes_user_agent
+        username, request.axes_ip_address, request.axes_user_agent, request, credentials
     )
     attempts_list = [
         AccessAttempt.objects.filter(**filter_kwargs)
@@ -44,7 +47,9 @@ def filter_user_attempts(request, credentials: dict = None) -> List[QuerySet]:
     return attempts_list
 
 
-def get_user_attempts(request, credentials: dict = None) -> List[QuerySet]:
+def get_user_attempts(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> List[QuerySet]:
     """
     Get list of querysets with valid user attempts that match the given request and credentials.
     """
@@ -62,7 +67,7 @@ def get_user_attempts(request, credentials: dict = None) -> List[QuerySet]:
     return [attempts.filter(attempt_time__gte=threshold) for attempts in attempts_list]
 
 
-def clean_expired_user_attempts(attempt_time: datetime = None) -> int:
+def clean_expired_user_attempts(attempt_time: Optional[datetime] = None) -> int:
     """
     Clean expired user attempts from the database.
     """
@@ -83,7 +88,9 @@ def clean_expired_user_attempts(attempt_time: datetime = None) -> int:
     return count
 
 
-def reset_user_attempts(request, credentials: dict = None) -> int:
+def reset_user_attempts(
+    request: HttpRequest, credentials: Optional[dict] = None
+) -> int:
     """
     Reset all user attempts that match the given request and credentials.
     """

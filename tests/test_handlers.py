@@ -12,7 +12,7 @@ from django.utils.timezone import timedelta
 from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_str
-from axes.models import AccessAttempt, AccessLog
+from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 from tests.base import AxesTestCase
 
 
@@ -55,14 +55,36 @@ class AxesHandlerTestCase(AxesTestCase):
         for setting_value, url, expected in tests:
             with override_settings(AXES_ONLY_ADMIN_SITE=setting_value):
                 request.path = url
-                self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
+                with self.assertWarns(DeprecationWarning):
+                    self.assertEqual(AxesProxyHandler().is_admin_site(request), expected)
+
+    def test_is_admin_request(self):
+        request = MagicMock()
+        tests = (  # (URL, Expected)
+            ("/test/", False),
+            (reverse("admin:index"), True),
+        )
+
+        for url, expected in tests:
+            request.path = url
+            self.assertEqual(AxesProxyHandler().is_admin_request(request), expected)
 
     @override_settings(ROOT_URLCONF="tests.urls_empty")
     @override_settings(AXES_ONLY_ADMIN_SITE=True)
     def test_is_admin_site_no_admin_site(self):
         request = MagicMock()
         request.path = "/admin/"
-        self.assertTrue(AxesProxyHandler().is_admin_site(self.request))
+        with self.assertWarns(DeprecationWarning):
+            self.assertTrue(AxesProxyHandler().is_admin_site(self.request))
+
+    @override_settings(ROOT_URLCONF="tests.urls_empty")
+    def test_is_admin_request_no_admin_site(self):
+        request = MagicMock()
+        request.path = "/admin/"
+        self.assertFalse(AxesProxyHandler().is_admin_request(self.request))
+
+    def test_is_admin_request_no_path(self):
+        self.assertFalse(AxesProxyHandler().is_admin_request(self.request))
 
 
 class AxesProxyHandlerTestCase(AxesTestCase):
@@ -212,6 +234,7 @@ class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
     AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler",
     AXES_COOLOFF_TIME=timedelta(seconds=2),
     AXES_RESET_ON_SUCCESS=True,
+    AXES_ENABLE_ACCESS_FAILURE_LOG=True,
 )
 @mark.xfail(
     python_implementation() == "PyPy",
@@ -239,6 +262,31 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         self.assertEqual(AccessLog.objects.count(), 2)
         self.assertEqual(1, AxesProxyHandler.reset_logs(age_days=42))
         self.assertEqual(AccessLog.objects.count(), 1)
+
+    def test_handler_reset_failure_logs(self):
+        self.create_failure_log()
+        self.assertEqual(1, AxesProxyHandler.reset_failure_logs())
+        self.assertFalse(AccessFailureLog.objects.count())
+
+    def test_handler_reset_failure_logs_older_than_42_days(self):
+        self.create_failure_log()
+
+        then = timezone.now() - timezone.timedelta(days=90)
+        with patch("django.utils.timezone.now", return_value=then):
+            self.create_failure_log()
+
+        self.assertEqual(AccessFailureLog.objects.count(), 2)
+        self.assertEqual(1, AxesProxyHandler.reset_failure_logs(age_days=42))
+        self.assertEqual(AccessFailureLog.objects.count(), 1)
+
+    def test_handler_remove_out_of_limit_failure_logs(self):
+        _more = 10
+        for i in range(settings.AXES_ACCESS_FAILURE_LOG_PER_USER_LIMIT + _more):
+            self.create_failure_log()
+        self.assertEqual(
+            _more,
+            AxesProxyHandler.remove_out_of_limit_failure_logs(username=self.username),
+        )
 
     @override_settings(AXES_RESET_ON_SUCCESS=True)
     def test_handler(self):
@@ -273,7 +321,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_whitelist(self, log):
         self.check_whitelist(log)
 
-    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username"])
     @patch("axes.handlers.database.log")
     def test_user_login_failed_only_user_failures_with_none_username(self, log):
         credentials = {"username": None, "password": "test"}
@@ -282,7 +330,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         attempt = AccessAttempt.objects.all()
         self.assertEqual(0, AccessAttempt.objects.count())
         log.warning.assert_called_with(
-            "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
+            "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."
         )
 
     def test_user_login_failed_with_none_username(self):
@@ -295,22 +343,37 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_user_login_failed_multiple_username(self):
         configurations = (
             (2, 1, {}, ["admin", "admin1"]),
-            (2, 1, {"AXES_USE_USER_AGENT": True}, ["admin", "admin1"]),
-            (2, 1, {"AXES_ONLY_USER_FAILURES": True}, ["admin", "admin1"]),
             (
                 2,
                 1,
-                {"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True},
+                {"AXES_LOCKOUT_PARAMETERS": [["ip_address", "user_agent"]]},
+                ["admin", "admin1"],
+            ),
+            (2, 1, {"AXES_LOCKOUT_PARAMETERS": ["username"]}, ["admin", "admin1"]),
+            (
+                2,
+                1,
+                {"AXES_LOCKOUT_PARAMETERS": [["username", "ip_address"]]},
                 ["admin", "admin1"],
             ),
             (
                 1,
                 2,
-                {"AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP": True},
+                {"AXES_LOCKOUT_PARAMETERS": [["username", "ip_address"]]},
                 ["admin", "admin"],
             ),
-            (1, 2, {"AXES_LOCK_OUT_BY_USER_OR_IP": True}, ["admin", "admin"]),
-            (2, 1, {"AXES_LOCK_OUT_BY_USER_OR_IP": True}, ["admin", "admin1"]),
+            (
+                1,
+                2,
+                {"AXES_LOCKOUT_PARAMETERS": ["username", "ip_address"]},
+                ["admin", "admin"],
+            ),
+            (
+                2,
+                1,
+                {"AXES_LOCKOUT_PARAMETERS": ["username", "ip_address"]},
+                ["admin", "admin1"],
+            ),
         )
 
         for (
@@ -377,7 +440,7 @@ class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
         with self.assertRaises(NotImplementedError):
             AxesProxyHandler.reset_attempts()
 
-    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username"])
     def test_handler_reset_attempts_username(self):
         self.set_up_login_attempts()
         self.assertEqual(
@@ -413,7 +476,7 @@ class ResetAttemptsCacheHandlerTestCase(AxesHandlerBaseTestCase):
         self.check_failures(0, ip_address=self.IP_1)
         self.check_failures(2, ip_address=self.IP_2)
 
-    @override_settings(AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=[["username", "ip_address"]])
     def test_handler_reset_attempts_ip_and_username(self):
         self.set_up_login_attempts()
         self.check_failures(1, username=self.USERNAME_1, ip_address=self.IP_1)
@@ -459,7 +522,7 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
     def test_whitelist(self, log):
         self.check_whitelist(log)
 
-    @override_settings(AXES_ONLY_USER_FAILURES=True)
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username"])
     @patch.object(cache, "set")
     @patch("axes.handlers.cache.log")
     def test_user_login_failed_only_user_failures_with_none_username(
@@ -470,15 +533,15 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
         AxesProxyHandler.user_login_failed(sender, credentials, self.request)
         self.assertFalse(cache_set.called)
         log.warning.assert_called_with(
-            "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
+            "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."
         )
 
-    @patch.object(cache, "set")
-    def test_user_login_failed_with_none_username(self, cache_set):
+    @patch.object(cache, "add")
+    def test_user_login_failed_with_none_username(self, cache_add):
         credentials = {"username": None, "password": "test"}
         sender = MagicMock()
         AxesProxyHandler.user_login_failed(sender, credentials, self.request)
-        self.assertTrue(cache_set.called)
+        self.assertTrue(cache_add.called)
 
 
 @override_settings(AXES_HANDLER="axes.handlers.dummy.AxesDummyHandler")
