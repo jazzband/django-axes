@@ -124,54 +124,53 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                 "AXES: Username is None and AXES_ONLY_USER_FAILURES is enabled, new record will NOT be created."
             )
         else:
-            with transaction.atomic():
-                (
-                    attempt,
-                    created,
-                ) = AccessAttempt.objects.select_for_update().get_or_create(
-                    username=username,
-                    ip_address=request.axes_ip_address,
-                    user_agent=request.axes_user_agent,
-                    defaults={
-                        "get_data": get_data,
-                        "post_data": post_data,
-                        "http_accept": request.axes_http_accept,
-                        "path_info": request.axes_path_info,
-                        "failures_since_start": 1,
-                        "attempt_time": request.axes_attempt_time,
-                    },
+            (
+                attempt,
+                created,
+            ) = AccessAttempt.objects.select_for_update().get_or_create(
+                username=username,
+                ip_address=request.axes_ip_address,
+                user_agent=request.axes_user_agent,
+                defaults={
+                    "get_data": get_data,
+                    "post_data": post_data,
+                    "http_accept": request.axes_http_accept,
+                    "path_info": request.axes_path_info,
+                    "failures_since_start": 1,
+                    "attempt_time": request.axes_attempt_time,
+                },
+            )
+
+            # Record failed attempt with all the relevant information.
+            # Filtering based on username, IP address and user agent handled elsewhere,
+            # and this handler just records the available information for further use.
+            if created:
+                log.warning(
+                    "AXES: New login failure by %s. Created new record in the database.",
+                    client_str,
                 )
 
-                # Record failed attempt with all the relevant information.
-                # Filtering based on username, IP address and user agent handled elsewhere,
-                # and this handler just records the available information for further use.
-                if created:
-                    log.warning(
-                        "AXES: New login failure by %s. Created new record in the database.",
-                        client_str,
-                    )
+            # 3. database query if there were previous attempts in the database
+            # Update failed attempt information but do not touch the username, IP address, or user agent fields,
+            # because attackers can request the site with multiple different configurations
+            # in order to bypass the defense mechanisms that are used by the site.
+            else:
+                separator = "\n---------\n"
 
-                # 3. database query if there were previous attempts in the database
-                # Update failed attempt information but do not touch the username, IP address, or user agent fields,
-                # because attackers can request the site with multiple different configurations
-                # in order to bypass the defense mechanisms that are used by the site.
-                else:
-                    separator = "\n---------\n"
+                attempt.get_data = Concat("get_data", Value(separator + get_data))
+                attempt.post_data = Concat(
+                    "post_data", Value(separator + post_data)
+                )
+                attempt.http_accept = request.axes_http_accept
+                attempt.path_info = request.axes_path_info
+                attempt.failures_since_start = F("failures_since_start") + 1
+                attempt.attempt_time = request.axes_attempt_time
+                attempt.save()
 
-                    attempt.get_data = Concat("get_data", Value(separator + get_data))
-                    attempt.post_data = Concat(
-                        "post_data", Value(separator + post_data)
-                    )
-                    attempt.http_accept = request.axes_http_accept
-                    attempt.path_info = request.axes_path_info
-                    attempt.failures_since_start = F("failures_since_start") + 1
-                    attempt.attempt_time = request.axes_attempt_time
-                    attempt.save()
-
-                    log.warning(
-                        "AXES: Repeated login failure by %s. Updated existing record in the database.",
-                        client_str,
-                    )
+                log.warning(
+                    "AXES: Repeated login failure by %s. Updated existing record in the database.",
+                    client_str,
+                )
 
         # 3. or 4. database query: Calculate the current maximum failure number from the existing attempts
         failures_since_start = self.get_failures(request, credentials)
