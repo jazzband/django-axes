@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 from django.test import override_settings
-from django.urls import reverse
 
 from axes import __version__
 from axes.apps import AppConfig
@@ -59,16 +58,21 @@ class AppsTestCase(AxesTestCase):
 class AccessLogTestCase(AxesTestCase):
     def test_access_log_on_logout(self):
         """
-        Test a valid logout and make sure the logout_time is updated.
+        Test a valid logout and make sure the logout_time is updated only for that.
         """
 
         self.login(is_valid_username=True, is_valid_password=True)
-        self.assertIsNone(AccessLog.objects.latest("id").logout_time)
+        latest_log = AccessLog.objects.latest("id")
+        self.assertIsNone(latest_log.logout_time)
+        other_log = self.create_log(session_hash='not-the-session')
+        self.assertIsNone(other_log.logout_time)
 
-        response = self.client.post(reverse("admin:logout"))
+        response = self.logout()
         self.assertContains(response, "Logged out")
-
-        self.assertIsNotNone(AccessLog.objects.latest("id").logout_time)
+        other_log.refresh_from_db()
+        self.assertIsNone(other_log.logout_time)
+        latest_log.refresh_from_db()
+        self.assertIsNotNone(latest_log.logout_time)
 
     @override_settings(DATA_UPLOAD_MAX_NUMBER_FIELDS=1500)
     def test_log_data_truncated(self):
@@ -86,7 +90,7 @@ class AccessLogTestCase(AxesTestCase):
         AccessLog.objects.all().delete()
 
         response = self.login(is_valid_username=True, is_valid_password=True)
-        response = self.client.post(reverse("admin:logout"))
+        response = self.logout()
 
         self.assertEqual(AccessLog.objects.all().count(), 0)
         self.assertContains(response, "Logged out", html=True)
@@ -109,7 +113,7 @@ class AccessLogTestCase(AxesTestCase):
         AccessLog.objects.all().delete()
 
         response = self.login(is_valid_username=True, is_valid_password=True)
-        response = self.client.post(reverse("admin:logout"))
+        response = self.logout()
 
         self.assertEqual(AccessLog.objects.count(), 0)
         self.assertContains(response, "Logged out", html=True)
