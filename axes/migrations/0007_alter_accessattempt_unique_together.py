@@ -35,7 +35,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(deduplicate_attempts),
+        migrations.RunPython(
+            deduplicate_attempts, reverse_code=migrations.RunPython.noop
+        ),
         migrations.AlterUniqueTogether(
             name="accessattempt",
             unique_together={("username", "ip_address", "user_agent")},
