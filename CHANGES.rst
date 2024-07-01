@@ -3,6 +3,13 @@ Changes
 =======
 
 
+6.5.1 (2024-07-01)
+------------------
+
+- Make 0007_alter_accessattempt_unique_together.py migration backwards compatible.
+  [hirotasoshu]
+
+
 6.5.0 (2024-06-11)
 ------------------
 
