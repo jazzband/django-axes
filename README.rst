@@ -57,8 +57,8 @@ or alternatively use a fast and DDoS resistant cache implementation.
 Axes can be configured to monitor login attempts by
 IP address, username, user agent, or their combinations.
 
-Axes supports cool off periods, IP address whitelisting and blacklisting,
-user account whitelisting, and other features for Django access management.
+Axes supports cool off periods, IP address allow listing and block listing,
+user account allow listing, and other features for Django access management.
 
 
 Documentation
