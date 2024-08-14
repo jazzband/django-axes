@@ -59,6 +59,32 @@ class CacheTestCase(AxesTestCase):
     def test_get_cache_timeout_none(self):
         self.assertEqual(get_cache_timeout(), None)
 
+    def test_get_increasing_cache_timeout(self):
+        user_durations = {
+            "ben": timedelta(minutes=5),
+            "jen": timedelta(minutes=10),
+        }
+
+        def _callback(username):
+            previous_duration = user_durations.get(username, timedelta())
+            user_durations[username] = previous_duration + timedelta(minutes=5)
+            return user_durations[username]
+
+        with override_settings(AXES_COOLOFF_TIME=_callback):
+            with self.subTest("no username"):
+                self.assertEqual(get_cache_timeout(), 300)
+
+            with self.subTest("ben"):
+                self.assertEqual(get_cache_timeout("ben"), 600)
+                self.assertEqual(get_cache_timeout("ben"), 900)
+                self.assertEqual(get_cache_timeout("ben"), 1200)
+
+            with self.subTest("jen"):
+                self.assertEqual(get_cache_timeout("jen"), 900)
+
+            with self.subTest("james"):
+                self.assertEqual(get_cache_timeout("james"), 300)
+
 
 class TimestampTestCase(AxesTestCase):
     def test_iso8601(self):
