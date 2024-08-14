@@ -1,3 +1,5 @@
+import functools
+import inspect
 from datetime import timedelta
 from hashlib import sha256
 from logging import getLogger
@@ -32,7 +34,7 @@ def get_cache() -> BaseCache:
     return caches[getattr(settings, "AXES_CACHE", "default")]
 
 
-def get_cache_timeout() -> Optional[int]:
+def get_cache_timeout(username: Optional[str] = None) -> Optional[int]:
     """
     Return the cache timeout interpreted from settings.AXES_COOLOFF_TIME.
 
@@ -43,21 +45,22 @@ def get_cache_timeout() -> Optional[int]:
     for use with the Django cache backends.
     """
 
-    cool_off = get_cool_off()
+    cool_off = get_cool_off(username)
     if cool_off is None:
         return None
     return int(cool_off.total_seconds())
 
 
-def get_cool_off() -> Optional[timedelta]:
+def get_cool_off(username: Optional[str] = None) -> Optional[timedelta]:
     """
     Return the login cool off time interpreted from settings.AXES_COOLOFF_TIME.
 
     The return value is either None or timedelta.
 
-    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, or integer/float of hours,
-    and this function offers a unified _timedelta or None_ representation of that configuration
-    for use with the Axes internal implementations.
+    Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, integer/float of hours,
+    a path to a callable or a callable taking zero or 1 argument (the username). This function
+    offers a unified _timedelta or None_ representation of that configuration for use with the
+    Axes internal implementations.
 
     :exception TypeError: if settings.AXES_COOLOFF_TIME is of wrong type.
     """
@@ -69,11 +72,20 @@ def get_cool_off() -> Optional[timedelta]:
     if isinstance(cool_off, float):
         return timedelta(minutes=cool_off * 60)
     if isinstance(cool_off, str):
-        return import_string(cool_off)()
+        cool_off_func = import_string(cool_off)
+        return _maybe_partial(cool_off_func, username)()
     if callable(cool_off):
-        return cool_off()  # pylint: disable=not-callable
+        return _maybe_partial(cool_off, username)()  # pylint: disable=not-callable
 
     return cool_off
+
+
+def _maybe_partial(func: Callable, username: Optional[str] = None):
+    """Bind the given username to the function if it accepts a single argument."""
+    sig = inspect.signature(func)
+    if len(sig.parameters) == 1:
+        return functools.partial(func, username)
+    return func
 
 
 def get_cool_off_iso8601(delta: timedelta) -> str:

@@ -113,7 +113,7 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         cache_keys = get_client_cache_keys(request, credentials)
-        cache_timeout = get_cache_timeout()
+        cache_timeout = get_cache_timeout(username)
         failures = []
         for cache_key in cache_keys:
             added = self.cache.add(key=cache_key, value=1, timeout=cache_timeout)
