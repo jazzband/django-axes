@@ -23,16 +23,6 @@ jobs:
           - python-version: '3.12'
             django-version: 'main'
             experimental: true
-          # PyPy 3.10
-          - python-version: 'pypy-3.10'
-            django-version: '4.2'
-            experimental: true
-          - python-version: 'pypy-3.10'
-            django-version: '5.0'
-            experimental: true
-          - python-version: 'pypy-3.10'
-            django-version: '5.1'
-            experimental: true
         exclude:
           - python-version: '3.8'
             django-version: '5.0'
@@ -42,8 +32,6 @@ jobs:
             django-version: '5.1'
           - python-version: '3.9'
             django-version: '5.1'
-
-
 
     steps:
     - uses: actions/checkout@v4

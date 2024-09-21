@@ -10,9 +10,9 @@ DJANGO_SETTINGS_MODULE = "tests.settings"
 legacy_tox_ini = """
 [tox]
 envlist =
-    py{38,39,310,311,312,py310}-dj42
-    py{310,311,312,py310}-dj50
-    py{310,311,312,py310}-dj51
+    py{38,39,310,311,312}-dj42
+    py{310,311,312}-dj50
+    py{310,311,312}-dj51
     py311-djmain
     py311-djqa
 
@@ -23,7 +23,6 @@ python =
     3.10: py310
     3.11: py311
     3.12: py312
-    pypy-3.10: pypy310
 
 [gh-actions:env]
 DJANGO =
@@ -48,10 +47,8 @@ setenv =
 # Django development version is allowed to fail the test matrix
 ignore_outcome =
     djmain: True
-    pypy310: True
 ignore_errors =
     djmain: True
-    pypy310: True
 
 # QA runs type checks, linting, and code formatting checks
 [testenv:py312-djqa]
