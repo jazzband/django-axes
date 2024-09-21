@@ -10,9 +10,9 @@ DJANGO_SETTINGS_MODULE = "tests.settings"
 legacy_tox_ini = """
 [tox]
 envlist =
-    py{38,39,310,py310}-dj32
-    py{38,39,310,311,py310}-dj42
-    py{310,311,py310}-dj50
+    py{38,39,310,311,312,py310}-dj42
+    py{310,311,312,py310}-dj50
+    py{310,311,312,py310}-dj51
     py311-djmain
     py311-djqa
 
@@ -27,9 +27,9 @@ python =
 
 [gh-actions:env]
 DJANGO =
-    3.2: dj32
-    4.1: dj41
     4.2: dj42
+    5.0: dj50
+    5.1: dj51
     main: djmain
     qa: djqa
 

@@ -14,7 +14,7 @@ jobs:
       max-parallel: 5
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        django-version: ['3.2', '4.2', '5.0']
+        django-version: ['4.2', '5.0', '5.1']
         include:
           # Tox configuration for QA environment
           - python-version: '3.12'
@@ -25,23 +25,23 @@ jobs:
             experimental: true
           # PyPy 3.10
           - python-version: 'pypy-3.10'
-            django-version: '3.2'
-            experimental: true
-          - python-version: 'pypy-3.10'
             django-version: '4.2'
             experimental: true
           - python-version: 'pypy-3.10'
             django-version: '5.0'
             experimental: true
+          - python-version: 'pypy-3.10'
+            django-version: '5.1'
+            experimental: true
         exclude:
-          - python-version: '3.11'
-            django-version: '3.2'
-          - python-version: '3.12'
-            django-version: '3.2'
           - python-version: '3.8'
             django-version: '5.0'
           - python-version: '3.9'
             django-version: '5.0'
+          - python-version: '3.8'
+            django-version: '5.1'
+          - python-version: '3.9'
+            django-version: '5.1'
 
 
 
