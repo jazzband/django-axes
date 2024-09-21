@@ -3,6 +3,14 @@ Changes
 =======
 
 
+6.5.2 (2024-09-21)
+------------------
+
+- Add test matrix support for Django 5.1.
+- Drop support for EOL Django 3.2.
+- Drop support for PyPy 3.10.
+
+
 6.5.1 (2024-07-01)
 ------------------
 
