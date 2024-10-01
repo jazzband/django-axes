@@ -59,31 +59,37 @@ class CacheTestCase(AxesTestCase):
     def test_get_cache_timeout_none(self):
         self.assertEqual(get_cache_timeout(), None)
 
-    def test_get_increasing_cache_timeout(self):
+    def test_get_increasing_cache_timeout_by_username(self):
         user_durations = {
             "ben": timedelta(minutes=5),
             "jen": timedelta(minutes=10),
         }
 
-        def _callback(username):
+        def _callback(request):
+            username = request.POST["username"] if request else object()
             previous_duration = user_durations.get(username, timedelta())
             user_durations[username] = previous_duration + timedelta(minutes=5)
             return user_durations[username]
+
+        rf = RequestFactory()
+        ben_req = rf.post("/", data={"username": "ben"})
+        jen_req = rf.post("/", data={"username": "jen"})
+        james_req = rf.post("/", data={"username": "james"})
 
         with override_settings(AXES_COOLOFF_TIME=_callback):
             with self.subTest("no username"):
                 self.assertEqual(get_cache_timeout(), 300)
 
             with self.subTest("ben"):
-                self.assertEqual(get_cache_timeout("ben"), 600)
-                self.assertEqual(get_cache_timeout("ben"), 900)
-                self.assertEqual(get_cache_timeout("ben"), 1200)
+                self.assertEqual(get_cache_timeout(ben_req), 600)
+                self.assertEqual(get_cache_timeout(ben_req), 900)
+                self.assertEqual(get_cache_timeout(ben_req), 1200)
 
             with self.subTest("jen"):
-                self.assertEqual(get_cache_timeout("jen"), 900)
+                self.assertEqual(get_cache_timeout(jen_req), 900)
 
             with self.subTest("james"):
-                self.assertEqual(get_cache_timeout("james"), 300)
+                self.assertEqual(get_cache_timeout(james_req), 300)
 
 
 class TimestampTestCase(AxesTestCase):
