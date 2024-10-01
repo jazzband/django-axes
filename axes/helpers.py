@@ -474,7 +474,7 @@ def get_lockout_response(
         "username": get_client_username(request, credentials) or "",
     }
 
-    cool_off = get_cool_off()
+    cool_off = get_cool_off(request)
     if cool_off:
         context.update(
             {
