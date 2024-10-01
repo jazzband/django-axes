@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.http import HttpRequest
-from django.test import override_settings
+from django.test import override_settings, RequestFactory
 from django.utils.timezone import now
 
 from axes.attempts import get_cool_off_threshold
@@ -15,12 +15,13 @@ class GetCoolOffThresholdTestCase(AxesTestCase):
     def test_get_cool_off_threshold(self):
         timestamp = now()
 
+        request = RequestFactory().post("/")
         with patch("axes.attempts.now", return_value=timestamp):
-            attempt_time = timestamp
-            threshold_now = get_cool_off_threshold(attempt_time)
+            request.axes_attempt_time = timestamp
+            threshold_now = get_cool_off_threshold(request)
 
-            attempt_time = None
-            threshold_none = get_cool_off_threshold(attempt_time)
+            request.axes_attempt_time = None
+            threshold_none = get_cool_off_threshold(request)
 
         self.assertEqual(threshold_now, threshold_none)
 
