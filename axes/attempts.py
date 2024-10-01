@@ -12,9 +12,7 @@ from axes.models import AccessAttempt
 log = getLogger(__name__)
 
 
-def get_cool_off_threshold(
-    attempt_time: Optional[datetime] = None, request: Optional[HttpRequest] = None
-) -> datetime:
+def get_cool_off_threshold(request: Optional[HttpRequest] = None) -> datetime:
     """
     Get threshold for fetching access attempts from the database.
     """
@@ -25,6 +23,7 @@ def get_cool_off_threshold(
             "Cool off threshold can not be calculated with settings.AXES_COOLOFF_TIME set to None"
         )
 
+    attempt_time = request.axes_attempt_time
     if attempt_time is None:
         return now() - cool_off
     return attempt_time - cool_off
@@ -64,14 +63,12 @@ def get_user_attempts(
         )
         return attempts_list
 
-    threshold = get_cool_off_threshold(request.axes_attempt_time, request)
+    threshold = get_cool_off_threshold(request)
     log.debug("AXES: Getting access attempts that are newer than %s", threshold)
     return [attempts.filter(attempt_time__gte=threshold) for attempts in attempts_list]
 
 
-def clean_expired_user_attempts(
-    attempt_time: Optional[datetime] = None, request: Optional[HttpRequest] = None
-) -> int:
+def clean_expired_user_attempts(request: Optional[HttpRequest] = None) -> int:
     """
     Clean expired user attempts from the database.
     """
@@ -82,7 +79,7 @@ def clean_expired_user_attempts(
         )
         return 0
 
-    threshold = get_cool_off_threshold(attempt_time, request)
+    threshold = get_cool_off_threshold(request)
     count, _ = AccessAttempt.objects.filter(attempt_time__lt=threshold).delete()
     log.info(
         "AXES: Cleaned up %s expired access attempts from database that were older than %s",
