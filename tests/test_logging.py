@@ -81,7 +81,7 @@ class AccessLogTestCase(AxesTestCase):
         """
 
         # An impossibly large post dict
-        extra_data = {"a" * x: x for x in range(1024)}
+        extra_data = {"too-large-field": "x" * 2 ** 16}
         self.login(**extra_data)
         self.assertEqual(len(AccessAttempt.objects.latest("id").post_data), 1024)
 

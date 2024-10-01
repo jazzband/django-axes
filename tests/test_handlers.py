@@ -236,11 +236,6 @@ class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
     AXES_RESET_ON_SUCCESS=True,
     AXES_ENABLE_ACCESS_FAILURE_LOG=True,
 )
-@mark.xfail(
-    python_implementation() == "PyPy",
-    reason="PyPy implementation is flaky for this test",
-    strict=False,
-)
 class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
     def test_handler_reset_attempts(self):
         self.create_attempt()
