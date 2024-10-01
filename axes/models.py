@@ -53,9 +53,7 @@ class AccessAttempt(AccessBase):
 
 class AccessLog(AccessBase):
     logout_time = models.DateTimeField(_("Logout Time"), null=True, blank=True)
-    session_hash = models.CharField(
-        _("Session key hash (sha256)"), default="", blank=True, max_length=64
-    )
+    session_hash = models.CharField(_("Session key hash (sha256)"), default="", blank=True, max_length=64)
 
     def __str__(self):
         return f"Access Log for {self.username} @ {self.attempt_time}"
