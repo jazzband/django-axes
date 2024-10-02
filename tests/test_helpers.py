@@ -947,7 +947,7 @@ class LockoutResponseTestCase(AxesTestCase):
         self.assertEqual(type(response), HttpResponse)
 
 
-def mock_get_cool_off_str():
+def mock_get_cool_off_str(req):
     return timedelta(seconds=30)
 
 
@@ -972,7 +972,7 @@ class AxesCoolOffTestCase(AxesTestCase):
     def test_get_cool_off_float_gt_0(self):
         self.assertEqual(get_cool_off(), timedelta(seconds=6120))
 
-    @override_settings(AXES_COOLOFF_TIME=lambda: timedelta(seconds=30))
+    @override_settings(AXES_COOLOFF_TIME=lambda r: timedelta(seconds=30))
     def test_get_cool_off_callable(self):
         self.assertEqual(get_cool_off(), timedelta(seconds=30))
 
