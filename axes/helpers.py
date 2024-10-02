@@ -1,5 +1,3 @@
-import functools
-import inspect
 from datetime import timedelta
 from hashlib import sha256
 from logging import getLogger
@@ -58,7 +56,7 @@ def get_cool_off(request: Optional[HttpRequest] = None) -> Optional[timedelta]:
     The return value is either None or timedelta.
 
     Notice that the settings.AXES_COOLOFF_TIME is either None, timedelta, integer/float of hours,
-    a path to a callable or a callable taking zero or 1 argument (the request). This function
+    a path to a callable or a callable taking 1 argument (the request). This function
     offers a unified _timedelta or None_ representation of that configuration for use with the
     Axes internal implementations.
 
@@ -73,19 +71,11 @@ def get_cool_off(request: Optional[HttpRequest] = None) -> Optional[timedelta]:
         return timedelta(minutes=cool_off * 60)
     if isinstance(cool_off, str):
         cool_off_func = import_string(cool_off)
-        return _maybe_partial(cool_off_func, request)()
+        return cool_off_func(request)
     if callable(cool_off):
-        return _maybe_partial(cool_off, request)()  # pylint: disable=not-callable
+        return cool_off(request)  # pylint: disable=not-callable
 
     return cool_off
-
-
-def _maybe_partial(func: Callable, request: Optional[HttpRequest] = None):
-    """Bind the given request to the function if it accepts a single argument."""
-    sig = inspect.signature(func)
-    if len(sig.parameters) == 1:
-        return functools.partial(func, request)
-    return func
 
 
 def get_cool_off_iso8601(delta: timedelta) -> str:
