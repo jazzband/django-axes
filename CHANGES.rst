@@ -3,6 +3,15 @@ Changes
 =======
 
 
+7.0.1 (2024-12-02)
+------------------
+
+- Add Python 3.13 support.
+  [aleksihakli]
+- Deprecate Python 3.8 support.
+  [aleksihakli]
+
+
 7.0.0 (2024-10-02)
 ------------------
 
