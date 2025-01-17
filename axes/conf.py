@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 # disable plugin when set to False
@@ -43,7 +44,7 @@ settings.AXES_ENABLE_ADMIN = getattr(settings, "AXES_ENABLE_ADMIN", True)
 
 # use a specific username field to retrieve from login POST data
 settings.AXES_USERNAME_FORM_FIELD = getattr(
-    settings, "AXES_USERNAME_FORM_FIELD", "username"
+    settings, "AXES_USERNAME_FORM_FIELD", get_user_model().USERNAME_FIELD
 )
 
 # use a specific password field to retrieve from login POST data
