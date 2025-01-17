@@ -195,11 +195,3 @@ class AxesTestCase(TestCase):
         self.cool_off()
         self.check_login()
         self.check_logout()
-
-
-class CustomTestUserModel(AbstractBaseUser):
-    class Meta:
-        app_label = "tests"
-        db_table = "auth_user"
-    USERNAME_FIELD = "email"
-    
