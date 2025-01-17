@@ -15,7 +15,7 @@ from django.urls import reverse
 from axes.conf import settings
 from axes.helpers import get_cache, make_cache_key_list, get_cool_off, get_failure_limit
 from axes.models import AccessAttempt
-from tests.base import AxesTestCase
+from tests.base import AxesTestCase, CustomTestUserModel
 
 
 class DjangoLoginTestCase(TestCase):
@@ -141,6 +141,17 @@ class DatabaseLoginTestCase(AxesTestCase):
         """
 
         response = self._login(self.username, self.password)
+        self.assertNotContains(
+            response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True
+        )
+
+    @override_settings(AUTH_USER_MODEL='tests.CustomTestUserModel')
+    def test_custom_user_model_login(self):
+        """
+        Test a valid login for a custom username field on a custom user model.
+        """
+
+        response = self._login(self.email, self.password)
         self.assertNotContains(
             response, self.LOGIN_FORM_KEY, status_code=self.ALLOWED, html=True
         )
