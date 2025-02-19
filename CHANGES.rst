@@ -3,6 +3,15 @@ Changes
 =======
 
 
+7.0.2 (2025-02-19)
+------------------
+
+- Fix documentation.
+  [Jacobus-afk]
+- Default to using ``settings.AUTH_USER_MODEL.USERNAME_FIELD`` for resolving ``settings.AXES_USERNAME_FORM_FIELD`` if otherwise unset (previously "username").
+  [amneher]
+
+
 7.0.1 (2024-12-02)
 ------------------
 
