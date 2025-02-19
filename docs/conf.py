@@ -71,6 +71,8 @@ todo_include_todos = False
 # a list of builtin themes.
 html_theme = "sphinx_rtd_theme"
 
+html_style = "css/custom_theme.css"
+
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
