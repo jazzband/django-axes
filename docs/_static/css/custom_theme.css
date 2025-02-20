@@ -1,5 +1,9 @@
 @import url("theme.css");
 
 .wy-nav-content {
-    max-width: 90%;
+    max-width: none;
+}
+
+.wy-table-responsive table td, .wy-table-responsive table th {
+    white-space: inherit;
 }

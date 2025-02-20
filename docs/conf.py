@@ -6,7 +6,7 @@ More information on the configuration options is available at:
     https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-import sphinx_rtd_theme
+# import sphinx_rtd_theme
 from pkg_resources import get_distribution
 
 import django
@@ -25,7 +25,7 @@ description = ("Keep track of failed login attempts in Django-powered sites.",)
 
 # Add any Sphinx extension module names here, as strings.
 # They can be extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc"]
+extensions = ["sphinx_rtd_theme","sphinx.ext.autodoc"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -74,7 +74,7 @@ html_theme = "sphinx_rtd_theme"
 html_style = "css/custom_theme.css"
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
