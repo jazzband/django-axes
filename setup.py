@@ -37,7 +37,7 @@ setup(
     setup_requires=["setuptools_scm"],
     python_requires=">=3.7",
     install_requires=[
-        "django>=3.2",
+        "django>=4.2",
         "asgiref>=3.6.0",
     ],
     extras_require={
