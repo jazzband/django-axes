@@ -38,7 +38,7 @@ DJANGO =
 [testenv]
 deps =
     -r requirements-test.txt
-    dj42: django>=4.1,<4.2
+    dj42: django>=4.2,<5
     dj50: django>=5.0,<5.1
     dj51: django>=5.1,<5.2
     dj52: django>=5.2,<6
