@@ -68,7 +68,9 @@ def get_user_attempts(
     return [attempts.filter(attempt_time__gte=threshold) for attempts in attempts_list]
 
 
-def clean_expired_user_attempts(request: Optional[HttpRequest] = None) -> int:
+def clean_expired_user_attempts(
+    request: Optional[HttpRequest] = None, credentials: Optional[dict] = None
+) -> int:
     """
     Clean expired user attempts from the database.
     """
