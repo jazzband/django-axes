@@ -132,7 +132,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         # 1. database query: Clean up expired user attempts from the database before logging new attempts
-        clean_expired_user_attempts(request)
+        clean_expired_user_attempts(request, credentials)
 
         username = get_client_username(request, credentials)
         client_str = get_client_str(
@@ -262,7 +262,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         """
 
         # 1. database query: Clean up expired user attempts from the database
-        clean_expired_user_attempts(request)
+        clean_expired_user_attempts(request, credentials)
 
         username = user.get_username()
         credentials = get_credentials(username)
