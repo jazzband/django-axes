@@ -117,10 +117,10 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         return attempt_count
 
     def user_login_failed(self, sender, credentials: dict, request=None, **kwargs):
-        """When user login fails, save AccessFailureLog record in database,
+        """
+        When user login fails, save AccessFailureLog record in database,
         save AccessAttempt record in database, mark request with
         lockout attribute and emit lockout signal.
-
         """
 
         log.info("AXES: User login failed, running database handler for failure.")
@@ -261,9 +261,6 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         When user logs in, update the AccessLog related to the user.
         """
 
-        # 1. database query: Clean up expired user attempts from the database
-        clean_expired_user_attempts(request, credentials)
-
         username = user.get_username()
         credentials = get_credentials(username)
         client_str = get_client_str(
@@ -275,6 +272,9 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         )
 
         log.info("AXES: Successful login by %s.", client_str)
+
+        # 1. database query: Clean up expired user attempts from the database
+        clean_expired_user_attempts(request, credentials)
 
         if not settings.AXES_DISABLE_ACCESS_LOG:
             # 2. database query: Insert new access logs with login time
@@ -304,10 +304,8 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         When user logs out, update the AccessLog related to the user.
         """
 
-        # 1. database query: Clean up expired user attempts from the database
-        clean_expired_user_attempts(request)
-
         username = user.get_username() if user else None
+        credentials = get_credentials(username) if username else None
         client_str = get_client_str(
             username,
             request.axes_ip_address,
@@ -315,6 +313,9 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             request.axes_path_info,
             request,
         )
+
+        # 1. database query: Clean up expired user attempts from the database
+        clean_expired_user_attempts(request, credentials)
 
         log.info("AXES: Successful logout by %s.", client_str)
 
