@@ -2,6 +2,16 @@
 Changes
 =======
 
+7.1.0 (2025-04-23)
+------------------
+
+- Provide credentials to expired credentials cleanup method.
+  [parul-aro]
+- Update support matrix for Django 5.2.
+  [mkniewallner]
+- Fix documentation.
+  [chango-goat]
+
 
 7.0.2 (2025-02-19)
 ------------------
