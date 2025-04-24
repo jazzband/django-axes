@@ -4,6 +4,7 @@ from typing import Optional
 from django.db import router, transaction
 from django.db.models import F, Q, Sum, Value
 from django.db.models.functions import Concat
+from django.http import HttpRequest
 from django.utils import timezone
 
 from axes.attempts import (
@@ -132,7 +133,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             return
 
         # 1. database query: Clean up expired user attempts from the database before logging new attempts
-        clean_expired_user_attempts(request, credentials)
+        self.clean_expired_user_attempts(request, credentials)
 
         username = get_client_username(request, credentials)
         client_str = get_client_str(
@@ -274,7 +275,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         log.info("AXES: Successful login by %s.", client_str)
 
         # 1. database query: Clean up expired user attempts from the database
-        clean_expired_user_attempts(request, credentials)
+        self.clean_expired_user_attempts(request, credentials)
 
         if not settings.AXES_DISABLE_ACCESS_LOG:
             # 2. database query: Insert new access logs with login time
@@ -315,7 +316,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         )
 
         # 1. database query: Clean up expired user attempts from the database
-        clean_expired_user_attempts(request, credentials)
+        self.clean_expired_user_attempts(request, credentials)
 
         log.info("AXES: Successful logout by %s.", client_str)
 
@@ -343,3 +344,13 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         When needed, all post_delete actions for this backend should be located
         here.
         """
+
+    @staticmethod
+    def clean_expired_user_attempts(
+        request: Optional[HttpRequest] = None, credentials: Optional[dict] = None
+    ) -> int:
+        """
+        Clean expired user attempts from the database.
+        """
+
+        return clean_expired_user_attempts(request, credentials)
