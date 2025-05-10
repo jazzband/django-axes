@@ -2,6 +2,12 @@
 Changes
 =======
 
+8.0.0 (2025-05-10)
+------------------
+
+- Move all database related logic to the default ``axes.handlers.database.AxesDatabaseHandler``.
+  [nefrob]
+
 7.1.0 (2025-04-23)
 ------------------
 
