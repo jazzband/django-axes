@@ -75,6 +75,12 @@ Many people have different configurations for their development and production e
 and running the application with misconfigured settings can prevent security features from working.
 
 
+Version 8 breaking changes and upgrading from django-axes version 7
+-------------------------------------------------------------------
+
+Some database related utility functions have moved from ``axes.helpers`` to ``axes.handlers.database`` module and under the ``axes.handlers.database.AxesDatabaseHandler`` class.
+
+
 Version 7 breaking changes and upgrading from django-axes version 6
 -------------------------------------------------------------------
 
