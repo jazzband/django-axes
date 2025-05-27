@@ -42,6 +42,13 @@ class AccessAttempt(AccessBase):
 
     failures_since_start = models.PositiveIntegerField(_("Failed Logins"))
 
+    expires_at = models.DateTimeField(
+        _("Expires At"),
+        null=True,
+        blank=True,
+        help_text=_("The time when this access attempt expires and is no longer valid."),
+    )
+
     def __str__(self):
         return f"Attempted Access: {self.attempt_time}"
 
