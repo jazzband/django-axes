@@ -7,7 +7,7 @@ from django.db.models.functions import Concat
 from django.http import HttpRequest
 from django.utils import timezone
 
-from axes.attempts import get_cool_off_threshold
+from axes.attempts import get_cool_off_threshold, get_individual_attempt_expiry
 from axes.conf import settings
 from axes.handlers.base import AbstractAxesHandler, AxesBaseHandler
 from axes.helpers import (
@@ -185,6 +185,12 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                         "path_info": request.axes_path_info,
                         "failures_since_start": 1,
                         "attempt_time": request.axes_attempt_time,
+                        # Set the expiry time for the attempt based on the cool off period.
+                        "expires_at": (
+                            get_individual_attempt_expiry(request)
+                            if settings.AXES_INDIVIDUAL_ATTEMPT_EXPIRY
+                            else None
+                        ),
                     },
                 )
 
@@ -212,6 +218,8 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                     attempt.path_info = request.axes_path_info
                     attempt.failures_since_start = F("failures_since_start") + 1
                     attempt.attempt_time = request.axes_attempt_time
+                    if settings.AXES_INDIVIDUAL_ATTEMPT_EXPIRY:
+                        attempt.expires_at = max(get_individual_attempt_expiry(request), attempt.expires_at)
                     attempt.save()
 
                     log.warning(
@@ -382,13 +390,22 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             )
             return 0
 
-        threshold = get_cool_off_threshold(request)
-        count, _ = AccessAttempt.objects.filter(attempt_time__lt=threshold).delete()
-        log.info(
-            "AXES: Cleaned up %s expired access attempts from database that were older than %s",
-            count,
-            threshold,
-        )
+        if settings.AXES_INDIVIDUAL_ATTEMPT_EXPIRY:
+            threshold = timezone.now()
+            count, _ = AccessAttempt.objects.filter(expires_at__lt=threshold).delete()
+            log.info(
+                "AXES: Cleaned up %s expired access attempts from database that expiry were older than %s",
+                count,
+                threshold,
+            )
+        else:
+            threshold = get_cool_off_threshold(request)
+            count, _ = AccessAttempt.objects.filter(attempt_time__lt=threshold).delete()
+            log.info(
+                "AXES: Cleaned up %s expired access attempts from database that were older than %s",
+                count,
+                threshold,
+            )
         return count
 
     def reset_user_attempts(
