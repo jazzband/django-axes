@@ -42,13 +42,6 @@ class AccessAttempt(AccessBase):
 
     failures_since_start = models.PositiveIntegerField(_("Failed Logins"))
 
-    expires_at = models.DateTimeField(
-        _("Expires At"),
-        null=True,
-        blank=True,
-        help_text=_("The time when this access attempt expires and is no longer valid."),
-    )
-
     def __str__(self):
         return f"Attempted Access: {self.attempt_time}"
 
@@ -57,6 +50,24 @@ class AccessAttempt(AccessBase):
         verbose_name_plural = _("access attempts")
         unique_together = [["username", "ip_address", "user_agent"]]
 
+
+class AccessAttemptExpiration(models.Model):
+    access_attempt = models.OneToOneField(
+        AccessAttempt,
+        on_delete=models.CASCADE,
+        related_name="expiration",
+        verbose_name=_("Access Attempt"),
+    )
+    expires_at = models.DateTimeField(
+        _("Expires At"),
+        null=True,
+        blank=True,
+        help_text=_("The time when access attempt expires and is no longer valid."),
+    )
+
+    class Meta:
+        verbose_name = _("access attempt expiration")
+        verbose_name_plural = _("access attempt expirations")
 
 class AccessLog(AccessBase):
     logout_time = models.DateTimeField(_("Logout Time"), null=True, blank=True)
