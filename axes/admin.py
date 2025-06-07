@@ -7,8 +7,8 @@ from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 
 
 class AccessAttemptAdmin(admin.ModelAdmin):
-    if settings.AXES_INDIVIDUAL_ATTEMPT_EXPIRY:
-         list_display = (
+    if settings.AXES_USE_ATTEMPT_EXPIRATION:
+        list_display = (
             "attempt_time",
             "expires_at",
             "ip_address",
@@ -26,7 +26,6 @@ class AccessAttemptAdmin(admin.ModelAdmin):
             "path_info",
             "failures_since_start",
         )
-
 
     list_filter = ["attempt_time", "path_info"]
 
@@ -50,11 +49,16 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         "get_data",
         "post_data",
         "failures_since_start",
+        "expires_at",
     ]
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
+    def expires_at(self, obj: AccessAttempt):
+        if hasattr(obj, "expiration") and obj.expiration.expires_at:
+            return obj.expiration.expires_at #.strftime("%Y-%m-%d %H:%M:%S")
+        return _("Not set")
 
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (
