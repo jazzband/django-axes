@@ -1,18 +1,20 @@
 from platform import python_implementation
 from unittest.mock import MagicMock, patch
+from datetime import datetime, timezone as dt_timezone
+from django.test import override_settings
+from django.utils import timezone
+from axes.handlers.database import AxesDatabaseHandler
+from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 
 from pytest import mark
 
 from django.core.cache import cache
-from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.timezone import timedelta
 
 from axes.conf import settings
 from axes.handlers.proxy import AxesProxyHandler
 from axes.helpers import get_client_str
-from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 from tests.base import AxesTestCase
 
 
@@ -567,3 +569,61 @@ class AxesTestHandlerTestCase(AxesHandlerBaseTestCase):
 
     def test_handler_get_failures(self):
         self.assertEqual(0, AxesProxyHandler.get_failures(self.request, {}))
+
+
+@override_settings(AXES_HANDLER="axes.handlers.database.AxesDatabaseHandler", AXES_COOLOFF_TIME=timezone.timedelta(seconds=10))
+class AxesDatabaseHandlerExpirationFlagTestCase(AxesTestCase):
+    def setUp(self):
+        super().setUp()
+        self.handler = AxesDatabaseHandler()
+        self.mock_request = MagicMock()
+        self.mock_credentials = None
+
+    @override_settings(AXES_USE_ATTEMPT_EXPIRATION=True)
+    @patch("axes.handlers.database.log")
+    @patch("axes.models.AccessAttempt.objects.filter")
+    @patch("django.utils.timezone.now")
+    def test_clean_expired_user_attempts_expiration_true(self, mock_now, mock_filter, mock_log):
+        mock_now.return_value = datetime(2025, 1, 1, tzinfo=dt_timezone.utc)
+        mock_qs = MagicMock()
+        mock_filter.return_value = mock_qs
+        mock_qs.delete.return_value = (3, None)
+
+        count = self.handler.clean_expired_user_attempts(request=None, credentials=None)
+        mock_filter.assert_called_once_with(expiration__expires_at__lt=mock_now.return_value)
+        mock_qs.delete.assert_called_once()
+        mock_log.info.assert_called_with(
+            "AXES: Cleaned up %s expired access attempts from database that expiry were older than %s",
+            3,
+            mock_now.return_value,
+        )
+        self.assertEqual(count, 3)
+
+    @override_settings(AXES_USE_ATTEMPT_EXPIRATION=False)
+    @patch("axes.handlers.database.log")
+    @patch("axes.handlers.database.get_cool_off_threshold")
+    @patch("axes.models.AccessAttempt.objects.filter")
+    def test_clean_expired_user_attempts_expiration_false(self, mock_filter, mock_get_threshold, mock_log):
+        mock_get_threshold.return_value = "fake-threshold"
+        mock_qs = MagicMock()
+        mock_filter.return_value = mock_qs
+        mock_qs.delete.return_value = (2, None)
+
+        count = self.handler.clean_expired_user_attempts(request=self.mock_request, credentials=None)
+        mock_filter.assert_called_once_with(attempt_time__lt="fake-threshold")
+        mock_qs.delete.assert_called_once()
+        mock_log.info.assert_called_with(
+            "AXES: Cleaned up %s expired access attempts from database that were older than %s",
+            2,
+            "fake-threshold",
+        )
+        self.assertEqual(count, 2)
+
+    @override_settings(AXES_COOLOFF_TIME=None)
+    @patch("axes.handlers.database.log")
+    def test_clean_expired_user_attempts_no_cooloff(self, mock_log):
+        count = self.handler.clean_expired_user_attempts(request=None, credentials=None)
+        mock_log.debug.assert_called_with(
+            "AXES: Skipping clean for expired access attempts because no AXES_COOLOFF_TIME is configured"
+        )
+        self.assertEqual(count, 0)
