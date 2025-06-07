@@ -188,7 +188,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                         # Set the expiry time for the attempt based on the cool off period.
                         "expires_at": (
                             get_individual_attempt_expiry(request)
-                            if settings.AXES_INDIVIDUAL_ATTEMPT_EXPIRY
+                            if settings.AXES_USE_ATTEMPT_EXPIRATION
                             else None
                         ),
                     },
@@ -218,7 +218,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                     attempt.path_info = request.axes_path_info
                     attempt.failures_since_start = F("failures_since_start") + 1
                     attempt.attempt_time = request.axes_attempt_time
-                    if settings.AXES_INDIVIDUAL_ATTEMPT_EXPIRY:
+                    if settings.AXES_USE_ATTEMPT_EXPIRATION:
                         attempt.expires_at = max(get_individual_attempt_expiry(request), attempt.expires_at)
                     attempt.save()
 
@@ -390,7 +390,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             )
             return 0
 
-        if settings.AXES_INDIVIDUAL_ATTEMPT_EXPIRY:
+        if settings.AXES_USE_ATTEMPT_EXPIRATION:
             threshold = timezone.now()
             count, _ = AccessAttempt.objects.filter(expires_at__lt=threshold).delete()
             log.info(
