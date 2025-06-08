@@ -4,7 +4,7 @@ from datetime import datetime, timezone as dt_timezone
 from django.test import override_settings
 from django.utils import timezone
 from axes.handlers.database import AxesDatabaseHandler
-from axes.models import AccessAttempt, AccessLog, AccessFailureLog
+from axes.models import AccessAttempt, AccessLog, AccessFailureLog, AccessAttemptExpiration
 
 from pytest import mark
 
@@ -598,6 +598,27 @@ class AxesDatabaseHandlerExpirationFlagTestCase(AxesTestCase):
             mock_now.return_value,
         )
         self.assertEqual(count, 3)
+
+    @override_settings(AXES_USE_ATTEMPT_EXPIRATION=True)
+    @patch("axes.handlers.database.log")
+    def test_clean_expired_user_attempts_expiration_true_with_qs_calls(self, mock_log):
+        AccessAttempt.objects.all().delete()
+        dummy_attempt = AccessAttempt.objects.create(
+            username="test_user",
+            ip_address="192.168.1.1",
+            failures_since_start=1,
+            user_agent="test_agent",
+        )
+        dummy_attempt.expiration = AccessAttemptExpiration.objects.create(
+            access_attempt=dummy_attempt,
+            expires_at=timezone.now() - timezone.timedelta(days=1)  # Set to expire in the past
+        )
+
+        count = self.handler.clean_expired_user_attempts(request=None, credentials=None)
+        mock_log.info.assert_called_once()
+
+        # comparing count=2, as one is the dummy attempt and one is the expiration
+        self.assertEqual(count, 2)
 
     @override_settings(AXES_USE_ATTEMPT_EXPIRATION=False)
     @patch("axes.handlers.database.log")
