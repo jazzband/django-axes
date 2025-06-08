@@ -54,6 +54,7 @@ class AccessAttempt(AccessBase):
 class AccessAttemptExpiration(models.Model):
     access_attempt = models.OneToOneField(
         AccessAttempt,
+        primary_key=True,
         on_delete=models.CASCADE,
         related_name="expiration",
         verbose_name=_("Access Attempt"),
