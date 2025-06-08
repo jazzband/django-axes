@@ -7,7 +7,7 @@ from django.db.models.functions import Concat
 from django.http import HttpRequest
 from django.utils import timezone
 
-from axes.attempts import get_cool_off_threshold, get_individual_attempt_expiry
+from axes.attempts import get_cool_off_threshold
 from axes.conf import settings
 from axes.handlers.base import AbstractAxesHandler, AxesBaseHandler
 from axes.helpers import (
@@ -19,6 +19,7 @@ from axes.helpers import (
     get_failure_limit,
     get_lockout_parameters,
     get_query_str,
+    get_attempt_expiration,
 )
 from axes.models import AccessAttempt, AccessAttemptExpiration, AccessFailureLog, AccessLog
 from axes.signals import user_locked_out
@@ -226,11 +227,11 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                         )
                         attempt.expiration = AccessAttemptExpiration.objects.create(
                             access_attempt=attempt,
-                            expires_at=get_individual_attempt_expiry(request)
+                            expires_at=get_attempt_expiration(request)
                         )
                     else:
                         attempt.expiration.expires_at = max(
-                            get_individual_attempt_expiry(request), attempt.expiration.expires_at
+                            get_attempt_expiration(request), attempt.expiration.expires_at
                         )
                         attempt.expiration.save()
 
