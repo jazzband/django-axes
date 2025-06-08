@@ -219,22 +219,20 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                         client_str,
                     )
 
-                # Set the expiration time for the attempt based on the cool off period.
                 if settings.AXES_USE_ATTEMPT_EXPIRATION:
                     if not hasattr(attempt, "expiration") or attempt.expiration is None:
                         log.debug(
                             "AXES: Creating new AccessAttemptExpiration for %s", client_str
                         )
-                        # Create a new AccessAttemptExpiration if it does not exist
-                        attempt.expiration = AccessAttemptExpiration(
-                            access_attempt=attempt
+                        attempt.expiration = AccessAttemptExpiration.objects.create(
+                            access_attempt=attempt,
+                            expires_at=get_individual_attempt_expiry(request)
                         )
-                        attempt.expiration.expires_at = get_individual_attempt_expiry(request)
                     else:
                         attempt.expiration.expires_at = max(
                             get_individual_attempt_expiry(request), attempt.expiration.expires_at
                         )
-                    attempt.expiration.save()
+                        attempt.expiration.save()
 
         # 3. or 4. database query: Calculate the current maximum failure number from the existing attempts
         failures_since_start = self.get_failures(request, credentials)
