@@ -56,9 +56,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         return False
 
     def expiration(self, obj: AccessAttempt):
-        if hasattr(obj, "expiration") and obj.expiration.expires_at:
-            return obj.expiration.expires_at
-        return _("Not set")
+        return obj.expiration.expires_at if hasattr(obj, "expiration") else _("Not set")
 
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (

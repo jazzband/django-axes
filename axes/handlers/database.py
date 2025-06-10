@@ -400,7 +400,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         if settings.AXES_USE_ATTEMPT_EXPIRATION:
             threshold = timezone.now()
-            count, _ = AccessAttempt.objects.filter(expiration__expires_at__lt=threshold).delete()
+            count, _ = AccessAttempt.objects.filter(expiration__expires_at__lte=threshold).delete()
             log.info(
                 "AXES: Cleaned up %s expired access attempts from database that expiry were older than %s",
                 count,
@@ -408,7 +408,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             )
         else:
             threshold = get_cool_off_threshold(request)
-            count, _ = AccessAttempt.objects.filter(attempt_time__lt=threshold).delete()
+            count, _ = AccessAttempt.objects.filter(attempt_time__lte=threshold).delete()
             log.info(
                 "AXES: Cleaned up %s expired access attempts from database that were older than %s",
                 count,
