@@ -590,7 +590,7 @@ class AxesDatabaseHandlerExpirationFlagTestCase(AxesTestCase):
         mock_qs.delete.return_value = (3, None)
 
         count = self.handler.clean_expired_user_attempts(request=None, credentials=None)
-        mock_filter.assert_called_once_with(expiration__expires_at__lt=mock_now.return_value)
+        mock_filter.assert_called_once_with(expiration__expires_at__lte=mock_now.return_value)
         mock_qs.delete.assert_called_once()
         mock_log.info.assert_called_with(
             "AXES: Cleaned up %s expired access attempts from database that expiry were older than %s",
@@ -601,7 +601,7 @@ class AxesDatabaseHandlerExpirationFlagTestCase(AxesTestCase):
 
     @override_settings(AXES_USE_ATTEMPT_EXPIRATION=True)
     @patch("axes.handlers.database.log")
-    def test_clean_expired_user_attempts_expiration_true_with_qs_calls(self, mock_log):
+    def test_clean_expired_user_attempts_expiration_true_with_complete_deletion(self, mock_log):
         AccessAttempt.objects.all().delete()
         dummy_attempt = AccessAttempt.objects.create(
             username="test_user",
@@ -619,6 +619,94 @@ class AxesDatabaseHandlerExpirationFlagTestCase(AxesTestCase):
 
         # comparing count=2, as one is the dummy attempt and one is the expiration
         self.assertEqual(count, 2)
+        self.assertEqual(
+            AccessAttempt.objects.count(), 0
+        )
+        self.assertEqual(
+            AccessAttemptExpiration.objects.count(), 0
+        )
+
+    @override_settings(AXES_USE_ATTEMPT_EXPIRATION=True)
+    @patch("axes.handlers.database.log")
+    def test_clean_expired_user_attempts_expiration_true_with_partial_deletion(self, mock_log):
+
+        attempt_not_expired = AccessAttempt.objects.create(
+            username="test_user",
+            ip_address="192.168.1.1",
+            failures_since_start=1,
+            user_agent="test_agent",
+        )
+        attempt_not_expired.expiration = AccessAttemptExpiration.objects.create(
+            access_attempt=attempt_not_expired,
+            expires_at=timezone.now() + timezone.timedelta(days=1)  # Set to expire in the future
+        )
+
+        attempt_expired = AccessAttempt.objects.create(
+            username="test_user_2",
+            ip_address="192.168.1.2",
+            failures_since_start=1,
+            user_agent="test_agent",
+        )
+        attempt_expired.expiration = AccessAttemptExpiration.objects.create(
+            access_attempt=attempt_expired,
+            expires_at=timezone.now() - timezone.timedelta(days=1)  # Set to expire in the past
+        )
+
+        access_attempt_count = AccessAttempt.objects.count()
+        access_attempt_expiration_count = AccessAttemptExpiration.objects.count()
+
+        count = self.handler.clean_expired_user_attempts(request=None, credentials=None)
+        mock_log.info.assert_called_once()
+
+        # comparing count=2, as one is the dummy attempt and one is the expiration
+        self.assertEqual(count, 2)
+        self.assertEqual(
+            AccessAttempt.objects.count(), access_attempt_count - 1
+        )
+        self.assertEqual(
+            AccessAttemptExpiration.objects.count(), access_attempt_expiration_count - 1
+        )
+
+    @override_settings(AXES_USE_ATTEMPT_EXPIRATION=True)
+    @patch("axes.handlers.database.log")
+    def test_clean_expired_user_attempts_expiration_true_with_no_deletion(self, mock_log):
+
+        attempt_not_expired_1 = AccessAttempt.objects.create(
+            username="test_user",
+            ip_address="192.168.1.1",
+            failures_since_start=1,
+            user_agent="test_agent",
+        )
+        attempt_not_expired_1.expiration = AccessAttemptExpiration.objects.create(
+            access_attempt=attempt_not_expired_1,
+            expires_at=timezone.now() + timezone.timedelta(days=1)  # Set to expire in the future
+        )
+
+        attempt_not_expired_2 = AccessAttempt.objects.create(
+            username="test_user_2",
+            ip_address="192.168.1.2",
+            failures_since_start=1,
+            user_agent="test_agent",
+        )
+        attempt_not_expired_2.expiration = AccessAttemptExpiration.objects.create(
+            access_attempt=attempt_not_expired_2,
+            expires_at=timezone.now() + timezone.timedelta(days=2)  # Set to expire in the future
+        )
+
+        access_attempt_count = AccessAttempt.objects.count()
+        access_attempt_expiration_count = AccessAttemptExpiration.objects.count()
+
+        count = self.handler.clean_expired_user_attempts(request=None, credentials=None)
+        mock_log.info.assert_called_once()
+
+        # comparing count=2, as one is the dummy attempt and one is the expiration
+        self.assertEqual(count, 0)
+        self.assertEqual(
+            AccessAttempt.objects.count(), access_attempt_count 
+        )
+        self.assertEqual(
+            AccessAttemptExpiration.objects.count(), access_attempt_expiration_count
+        )
 
     @override_settings(AXES_USE_ATTEMPT_EXPIRATION=False)
     @patch("axes.handlers.database.log")
@@ -631,7 +719,7 @@ class AxesDatabaseHandlerExpirationFlagTestCase(AxesTestCase):
         mock_qs.delete.return_value = (2, None)
 
         count = self.handler.clean_expired_user_attempts(request=self.mock_request, credentials=None)
-        mock_filter.assert_called_once_with(attempt_time__lt="fake-threshold")
+        mock_filter.assert_called_once_with(attempt_time__lte="fake-threshold")
         mock_qs.delete.assert_called_once()
         mock_log.info.assert_called_with(
             "AXES: Cleaned up %s expired access attempts from database that were older than %s",
