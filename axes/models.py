@@ -61,8 +61,6 @@ class AccessAttemptExpiration(models.Model):
     )
     expires_at = models.DateTimeField(
         _("Expires At"),
-        null=True,
-        blank=True,
         help_text=_("The time when access attempt expires and is no longer valid."),
     )
 
