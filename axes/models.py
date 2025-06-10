@@ -51,6 +51,23 @@ class AccessAttempt(AccessBase):
         unique_together = [["username", "ip_address", "user_agent"]]
 
 
+class AccessAttemptExpiration(models.Model):
+    access_attempt = models.OneToOneField(
+        AccessAttempt,
+        primary_key=True,
+        on_delete=models.CASCADE,
+        related_name="expiration",
+        verbose_name=_("Access Attempt"),
+    )
+    expires_at = models.DateTimeField(
+        _("Expires At"),
+        help_text=_("The time when access attempt expires and is no longer valid."),
+    )
+
+    class Meta:
+        verbose_name = _("access attempt expiration")
+        verbose_name_plural = _("access attempt expirations")
+
 class AccessLog(AccessBase):
     logout_time = models.DateTimeField(_("Logout Time"), null=True, blank=True)
     session_hash = models.CharField(_("Session key hash (sha256)"), default="", blank=True, max_length=64)

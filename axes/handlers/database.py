@@ -19,8 +19,9 @@ from axes.helpers import (
     get_failure_limit,
     get_lockout_parameters,
     get_query_str,
+    get_attempt_expiration,
 )
-from axes.models import AccessAttempt, AccessFailureLog, AccessLog
+from axes.models import AccessAttempt, AccessAttemptExpiration, AccessFailureLog, AccessLog
 from axes.signals import user_locked_out
 
 log = getLogger(__name__)
@@ -184,7 +185,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                         "http_accept": request.axes_http_accept,
                         "path_info": request.axes_path_info,
                         "failures_since_start": 1,
-                        "attempt_time": request.axes_attempt_time,
+                        "attempt_time": request.axes_attempt_time
                     },
                 )
 
@@ -218,6 +219,21 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
                         "AXES: Repeated login failure by %s. Updated existing record in the database.",
                         client_str,
                     )
+
+                if settings.AXES_USE_ATTEMPT_EXPIRATION:
+                    if not hasattr(attempt, "expiration") or attempt.expiration is None:
+                        log.debug(
+                            "AXES: Creating new AccessAttemptExpiration for %s", client_str
+                        )
+                        attempt.expiration = AccessAttemptExpiration.objects.create(
+                            access_attempt=attempt,
+                            expires_at=get_attempt_expiration(request)
+                        )
+                    else:
+                        attempt.expiration.expires_at = max(
+                            get_attempt_expiration(request), attempt.expiration.expires_at
+                        )
+                        attempt.expiration.save()
 
         # 3. or 4. database query: Calculate the current maximum failure number from the existing attempts
         failures_since_start = self.get_failures(request, credentials)
@@ -382,13 +398,22 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
             )
             return 0
 
-        threshold = get_cool_off_threshold(request)
-        count, _ = AccessAttempt.objects.filter(attempt_time__lt=threshold).delete()
-        log.info(
-            "AXES: Cleaned up %s expired access attempts from database that were older than %s",
-            count,
-            threshold,
-        )
+        if settings.AXES_USE_ATTEMPT_EXPIRATION:
+            threshold = timezone.now()
+            count, _ = AccessAttempt.objects.filter(expiration__expires_at__lte=threshold).delete()
+            log.info(
+                "AXES: Cleaned up %s expired access attempts from database that expiry were older than %s",
+                count,
+                threshold,
+            )
+        else:
+            threshold = get_cool_off_threshold(request)
+            count, _ = AccessAttempt.objects.filter(attempt_time__lte=threshold).delete()
+            log.info(
+                "AXES: Cleaned up %s expired access attempts from database that were older than %s",
+                count,
+                threshold,
+            )
         return count
 
     def reset_user_attempts(

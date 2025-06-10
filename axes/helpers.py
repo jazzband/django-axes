@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from hashlib import sha256
 from logging import getLogger
 from string import Template
@@ -100,6 +100,21 @@ def get_cool_off_iso8601(delta: timedelta) -> str:
         return f"P{days_str}T{time_str}"
     return f"P{days_str}"
 
+def get_attempt_expiration(request: Optional[HttpRequest] = None) -> datetime:
+    """
+    Get threshold for fetching access attempts from the database.
+    """
+
+    cool_off = get_cool_off(request)
+    if cool_off is None:
+        raise TypeError(
+            "Cool off threshold can not be calculated with settings.AXES_COOLOFF_TIME set to None"
+        )
+
+    attempt_time = request.axes_attempt_time
+    if attempt_time is None:
+        return datetime.now() + cool_off
+    return attempt_time + cool_off
 
 def get_credentials(username: Optional[str] = None, **kwargs) -> dict:
     """

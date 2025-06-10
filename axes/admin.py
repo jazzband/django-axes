@@ -7,14 +7,25 @@ from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 
 
 class AccessAttemptAdmin(admin.ModelAdmin):
-    list_display = (
-        "attempt_time",
-        "ip_address",
-        "user_agent",
-        "username",
-        "path_info",
-        "failures_since_start",
-    )
+    if settings.AXES_USE_ATTEMPT_EXPIRATION:
+        list_display = (
+            "attempt_time",
+            "expiration",
+            "ip_address",
+            "user_agent",
+            "username",
+            "path_info",
+            "failures_since_start",
+        )
+    else:
+        list_display = (
+            "attempt_time",
+            "ip_address",
+            "user_agent",
+            "username",
+            "path_info",
+            "failures_since_start",
+        )
 
     list_filter = ["attempt_time", "path_info"]
 
@@ -23,7 +34,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
     date_hierarchy = "attempt_time"
 
     fieldsets = (
-        (None, {"fields": ("username", "path_info", "failures_since_start")}),
+        (None, {"fields": ("username", "path_info", "failures_since_start", "expiration")}),
         (_("Form Data"), {"fields": ("get_data", "post_data")}),
         (_("Meta Data"), {"fields": ("user_agent", "ip_address", "http_accept")}),
     )
@@ -38,11 +49,14 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         "get_data",
         "post_data",
         "failures_since_start",
+        "expiration",
     ]
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
+    def expiration(self, obj: AccessAttempt):
+        return obj.expiration.expires_at if hasattr(obj, "expiration") else _("Not set")
 
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (
