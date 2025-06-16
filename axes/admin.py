@@ -7,14 +7,18 @@ from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 
 
 class AccessAttemptAdmin(admin.ModelAdmin):
-    list_display = (
+    list_display = [
         "attempt_time",
         "ip_address",
         "user_agent",
         "username",
         "path_info",
         "failures_since_start",
-    )
+    ]
+    if isinstance(settings.AXES_FAILURE_LIMIT, int) and settings.AXES_FAILURE_LIMIT > 0:
+        # This will only add the status field if AXES_FAILURE_LIMIT is set to a positive integer
+        # Because callable failure limit requires scope of request object
+        list_display.append("status")
 
     list_filter = ["attempt_time", "path_info"]
 
@@ -43,6 +47,14 @@ class AccessAttemptAdmin(admin.ModelAdmin):
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
+    def status(self, obj: AccessAttempt):
+        if (
+            isinstance(settings.AXES_FAILURE_LIMIT, int)
+            and obj.failures_since_start >= settings.AXES_FAILURE_LIMIT
+        ):
+            return _("Locked Out")
+        return f"{settings.AXES_FAILURE_LIMIT - obj.failures_since_start} "+_("Attempt Remaining") if \
+            obj.failures_since_start < settings.AXES_FAILURE_LIMIT else _("Locked Out")
 
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (
