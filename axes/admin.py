@@ -6,6 +6,24 @@ from axes.conf import settings
 from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 
 
+class IsLockedOutFilter(admin.SimpleListFilter):
+    title = _("Locked Out")
+    parameter_name = "locked_out"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("yes", _("Yes")),
+            ("no", _("No")),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == "yes":
+            return queryset.filter(failures_since_start__gte=settings.AXES_FAILURE_LIMIT)
+        elif self.value() == "no":
+            return queryset.filter(failures_since_start__lt=settings.AXES_FAILURE_LIMIT)
+        return queryset
+
+
 class AccessAttemptAdmin(admin.ModelAdmin):
     list_display = [
         "attempt_time",
@@ -25,6 +43,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         # This will only add the status field if AXES_FAILURE_LIMIT is set to a positive integer
         # Because callable failure limit requires scope of request object
         list_display.append("status")
+        list_filter.append(IsLockedOutFilter)
 
     search_fields = ["ip_address", "username", "user_agent", "path_info"]
 
