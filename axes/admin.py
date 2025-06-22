@@ -21,6 +21,11 @@ class AccessAttemptAdmin(admin.ModelAdmin):
 
     list_filter = ["attempt_time", "path_info"]
 
+    if isinstance(settings.AXES_FAILURE_LIMIT, int) and settings.AXES_FAILURE_LIMIT > 0:
+        # This will only add the status field if AXES_FAILURE_LIMIT is set to a positive integer
+        # Because callable failure limit requires scope of request object
+        list_display.append("status")
+
     search_fields = ["ip_address", "username", "user_agent", "path_info"]
 
     date_hierarchy = "attempt_time"
@@ -49,6 +54,10 @@ class AccessAttemptAdmin(admin.ModelAdmin):
 
     def expiration(self, obj: AccessAttempt):
         return obj.expiration.expires_at if hasattr(obj, "expiration") else _("Not set")
+    
+    def status(self, obj: AccessAttempt):
+        return f"{settings.AXES_FAILURE_LIMIT - obj.failures_since_start} "+_("Attempt Remaining") if \
+            obj.failures_since_start < settings.AXES_FAILURE_LIMIT else _("Locked Out")
 
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (
