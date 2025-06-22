@@ -7,25 +7,17 @@ from axes.models import AccessAttempt, AccessLog, AccessFailureLog
 
 
 class AccessAttemptAdmin(admin.ModelAdmin):
+    list_display = [
+        "attempt_time",
+        "ip_address",
+        "user_agent",
+        "username",
+        "path_info",
+        "failures_since_start",
+    ]
+    
     if settings.AXES_USE_ATTEMPT_EXPIRATION:
-        list_display = (
-            "attempt_time",
-            "expiration",
-            "ip_address",
-            "user_agent",
-            "username",
-            "path_info",
-            "failures_since_start",
-        )
-    else:
-        list_display = (
-            "attempt_time",
-            "ip_address",
-            "user_agent",
-            "username",
-            "path_info",
-            "failures_since_start",
-        )
+        list_display.append('expiration')
 
     list_filter = ["attempt_time", "path_info"]
 
