@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from axes.conf import settings
 from axes.models import AccessAttempt, AccessLog, AccessFailureLog
+from axes.handlers.database import AxesDatabaseHandler
 
 
 class IsLockedOutFilter(admin.SimpleListFilter):
@@ -67,6 +68,17 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         "failures_since_start",
         "expiration",
     ]
+
+    actions = ['cleanup_expired_attempts']
+
+    @admin.action(description=_('Clean up expired attempts'))
+    def cleanup_expired_attempts(self, request, queryset):
+        count = self.handler.clean_expired_user_attempts(request=request)
+        self.message_user(request, _(f"Cleaned up {count} expired access attempts."))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.handler = AxesDatabaseHandler()
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False
