@@ -1,6 +1,6 @@
 -e .
 django-ipware>=3
-coverage==7.9.2
+coverage==7.10.4
 pytest==8.4.0
 pytest-cov==6.2.1
 pytest-django==4.11.1
