@@ -166,7 +166,7 @@ An example of usage could be e.g. a custom view for processing lockouts.
 
     from django.http import JsonResponse
 
-    def lockout(request, credentials, *args, **kwargs):
+    def lockout(request, response, credentials, *args, **kwargs):
         return JsonResponse({"status": "Locked out due to too many login failures"}, status=403)
 
 ``settings.py``::

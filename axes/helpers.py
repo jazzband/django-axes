@@ -476,6 +476,7 @@ def get_lockout_response(
                 return settings.AXES_LOCKOUT_CALLABLE(request, credentials)
         if isinstance(settings.AXES_LOCKOUT_CALLABLE, str):
             callable_obj = import_string(settings.AXES_LOCKOUT_CALLABLE)
+            # Try calling with 3 args, fallback to 2 for backward compatibility
             try:
                 return callable_obj(request, original_response, credentials)
             except TypeError:
