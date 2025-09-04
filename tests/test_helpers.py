@@ -1013,9 +1013,16 @@ def mock_get_lockout_response(request, credentials):
     return HttpResponse(status=400)
 
 
+def mock_get_lockout_response_with_original_response_param(
+    request, response, credentials
+):
+    return HttpResponse(status=400)
+
+
 class AxesLockoutTestCase(AxesTestCase):
     def setUp(self):
         self.request = HttpRequest()
+        self.response = HttpResponse()
         self.credentials = dict()
 
     def test_get_lockout_response(self):
@@ -1037,6 +1044,20 @@ class AxesLockoutTestCase(AxesTestCase):
     )
     def test_get_lockout_response_override_path(self):
         response = get_lockout_response(self.request, self.credentials)
+        self.assertEqual(400, response.status_code)
+
+    @override_settings(
+        AXES_LOCKOUT_CALLABLE=mock_get_lockout_response_with_original_response_param
+    )
+    def test_get_lockout_response_override_callable_with_original_response_param(self):
+        response = get_lockout_response(self.request, self.response, self.credentials)
+        self.assertEqual(400, response.status_code)
+
+    @override_settings(
+        AXES_LOCKOUT_CALLABLE="tests.test_helpers.mock_get_lockout_response_with_original_response_param"
+    )
+    def test_get_lockout_response_override_path_with_original_response_param(self):
+        response = get_lockout_response(self.request, self.response, self.credentials)
         self.assertEqual(400, response.status_code)
 
     @override_settings(AXES_LOCKOUT_CALLABLE=42)

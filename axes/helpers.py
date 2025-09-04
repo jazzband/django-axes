@@ -460,15 +460,26 @@ def get_lockout_message() -> str:
 
 
 def get_lockout_response(
-    request: HttpRequest, credentials: Optional[dict] = None
+    request: HttpRequest,
+    original_response: Optional[HttpResponse] = None,
+    credentials: Optional[dict] = None,
 ) -> HttpResponse:
     if settings.AXES_LOCKOUT_CALLABLE:
         if callable(settings.AXES_LOCKOUT_CALLABLE):
-            return settings.AXES_LOCKOUT_CALLABLE(  # pylint: disable=not-callable
-                request, credentials
-            )
+            # Try calling with 3 args, fallback to 2 for backward compatibility
+            try:
+                return settings.AXES_LOCKOUT_CALLABLE(
+                    request, original_response, credentials
+                )
+            except TypeError:
+                # Fallback: old signature without original_response
+                return settings.AXES_LOCKOUT_CALLABLE(request, credentials)
         if isinstance(settings.AXES_LOCKOUT_CALLABLE, str):
-            return import_string(settings.AXES_LOCKOUT_CALLABLE)(request, credentials)
+            callable_obj = import_string(settings.AXES_LOCKOUT_CALLABLE)
+            try:
+                return callable_obj(request, original_response, credentials)
+            except TypeError:
+                return callable_obj(request, credentials)
         raise TypeError(
             "settings.AXES_LOCKOUT_CALLABLE needs to be a string, callable, or None."
         )
