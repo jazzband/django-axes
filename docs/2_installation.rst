@@ -56,6 +56,9 @@ if you have any custom logic to override Django's standard permissions checks.
         # on failed user authentication attempts from login views.
         # If you do not want Axes to override the authentication response
         # you can skip installing the middleware and use your own views.
+        # AxesMiddleware runs during the reponse phase. It does not conflict
+        # with middleware that runs in the request phase like
+        # django.middleware.cache.FetchFromCacheMiddleware.
         'axes.middleware.AxesMiddleware',
     ]
 
