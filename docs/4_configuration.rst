@@ -109,6 +109,8 @@ following settings to suit your set up to correctly resolve client IP addresses:
 * ``AXES_IPWARE_META_PRECEDENCE_ORDER``: The names of ``request.META`` attributes as a tuple of strings
   to check to get the client IP address. Check the Django documentation for header naming conventions.
   Default: ``IPWARE_META_PRECEDENCE_ORDER`` setting if set, else ``('REMOTE_ADDR', )``
+* ``AXES_IPWARE_PROXY_ORDER``: The order in which to evaluate IP addresses from proxy headers when multiple IPs are present
+  in the header chain. Must be either ``"left-most"`` or ``"right-most"``. **Default:** ``"left-most"``
 
 .. note::
    For reverse proxies or e.g. Heroku, you might also want to fetch IP addresses from a HTTP header such as ``X-Forwarded-For``. To configure this, you can fetch IPs through the ``HTTP_X_FORWARDED_FOR`` key from the ``request.META`` property which contains all the HTTP headers in Django:
