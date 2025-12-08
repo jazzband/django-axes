@@ -22,6 +22,10 @@ class Messages:
     BACKEND_INVALID = "You do not have 'axes.backends.AxesStandaloneBackend' or a subclass in your settings.AUTHENTICATION_BACKENDS."
     SETTING_DEPRECATED = "You have a deprecated setting {deprecated_setting} configured in your project settings"
     CALLABLE_INVALID = "{callable_setting} is not a valid callable."
+    LOCKOUT_PARAMETERS_INVALID = (
+        "AXES_LOCKOUT_PARAMETERS does not contain 'ip_address'."
+        " This configuration allows attackers to bypass rate limits by rotating User-Agents or Cookies."
+    )
 
 
 class Hints:
@@ -30,6 +34,7 @@ class Hints:
     BACKEND_INVALID = "AxesModelBackend was renamed to AxesStandaloneBackend in django-axes version 5.0."
     SETTING_DEPRECATED = None
     CALLABLE_INVALID = None
+    LOCKOUT_PARAMETERS_INVALID = "Add 'ip_address' to AXES_LOCKOUT_PARAMETERS."
 
 
 class Codes:
@@ -38,6 +43,7 @@ class Codes:
     BACKEND_INVALID = "axes.W003"
     SETTING_DEPRECATED = "axes.W004"
     CALLABLE_INVALID = "axes.W005"
+    LOCKOUT_PARAMETERS_INVALID = "axes.W006"
 
 
 @register(Tags.security, Tags.caches, Tags.compatibility)
@@ -154,6 +160,34 @@ def axes_deprecation_check(app_configs, **kwargs):  # pylint: disable=unused-arg
             )
         except AttributeError:
             pass
+
+    return warnings
+
+
+@register(Tags.security)
+def axes_lockout_params_check(app_configs, **kwargs):  # pylint: disable=unused-argument
+    warnings = []
+
+    lockout_params = getattr(settings, "AXES_LOCKOUT_PARAMETERS", None)
+
+    if isinstance(lockout_params, (list, tuple)):
+        has_ip = False
+        for param in lockout_params:
+            if param == "ip_address":
+                has_ip = True
+                break
+            if isinstance(param, (list, tuple)) and "ip_address" in param:
+                has_ip = True
+                break
+
+        if not has_ip:
+            warnings.append(
+                Warning(
+                    msg=Messages.LOCKOUT_PARAMETERS_INVALID,
+                    hint=Hints.LOCKOUT_PARAMETERS_INVALID,
+                    id=Codes.LOCKOUT_PARAMETERS_INVALID,
+                )
+            )
 
     return warnings
 
