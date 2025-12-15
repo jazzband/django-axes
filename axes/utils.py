@@ -1,7 +1,6 @@
 from socket import inet_pton, AF_INET6, error
 
 from django.core.cache import cache
-from django.utils import six
 
 from axes.conf import settings
 from axes.models import AccessAttempt
@@ -16,7 +15,7 @@ def query2str(items, max_length=1024):
     via excessively large payloads.
     """
     return '\n'.join([
-        '%s=%s' % (k, v) for k, v in six.iteritems(items)
+        '%s=%s' % (k, v) for k, v in items.items()
         if k != settings.AXES_PASSWORD_FORM_FIELD
     ][:int(max_length / 2)])[:max_length]
 
