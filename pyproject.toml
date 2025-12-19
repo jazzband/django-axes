@@ -35,7 +35,7 @@ DJANGO =
 # Normal test environment runs pytest which orchestrates other tools
 [testenv]
 deps =
-    -r requirements-test.txt
+    -r requirements.txt
     dj42: django>=4.2,<5
     dj52: django>=5.2,<6
     dj60: django>=6.0,<7
@@ -52,7 +52,7 @@ ignore_errors =
 
 # QA runs type checks, linting, and code formatting checks
 [testenv:py312-djqa]
-deps = -r requirements-qa.txt
+deps = -r requirements.txt
 commands =
     mypy axes
     prospector
