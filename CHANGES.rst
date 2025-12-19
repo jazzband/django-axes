@@ -2,6 +2,15 @@
 Changes
 =======
 
+Not yet released
+----------------
+
+- Add Python 3.14 support.
+- Add Django 6.0 support.
+- Remove Python 3.9 support (EOL).
+- Remove Django 5.1 support (EOL).
+
+
 8.0.0 (2025-05-10)
 ------------------
 
