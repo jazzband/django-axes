@@ -2,14 +2,24 @@
 Changes
 =======
 
-Not yet released
-----------------
+8.1.0 (2025-12-19)
+------------------
 
+- Add Persion (fa) translations for django-axes.
+  [AmirAli-BahramJerdi]
+- Add individual attempt expiry support.
+  [kuldeepkhatke]
+- Add checks for missing ip_address in lockout params.
+  [shayanTaki]
+- Add missing ``settings.AXES_IPWARE_PROXY_ORDER`` documentation.
+  [ram98kgp]
+- Enhance ``get_lockout_response`` to receive original response as parameter.
+  [mounirmesselmeni]
+- Update documentation.
 - Add Python 3.14 support.
 - Add Django 6.0 support.
 - Remove Python 3.9 support (EOL).
 - Remove Django 5.1 support (EOL).
-
 
 8.0.0 (2025-05-10)
 ------------------
