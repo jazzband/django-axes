@@ -1,5 +1,5 @@
 -e .
-black==25.11.0
+black==25.12.0
 coverage==7.13.0
 django-ipware>=3
 mypy==1.19.1
