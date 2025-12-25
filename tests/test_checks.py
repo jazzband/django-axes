@@ -129,3 +129,20 @@ class ConfCheckTestCase(AxesTestCase):
     def test_valid_callable(self):
         warnings = run_checks()
         self.assertEqual(warnings, [])
+
+
+class LockoutParametersCheckTestCase(AxesTestCase):
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["ip_address", "username"])
+    def test_valid_configuration(self):
+        warnings = run_checks()
+        self.assertEqual(warnings, [])
+
+    @override_settings(AXES_LOCKOUT_PARAMETERS=["username", "user_agent"])
+    def test_invalid_configuration(self):
+        warnings = run_checks()
+        warning = Warning(
+            msg=Messages.LOCKOUT_PARAMETERS_INVALID,
+            hint=Hints.LOCKOUT_PARAMETERS_INVALID,
+            id=Codes.LOCKOUT_PARAMETERS_INVALID,
+        )
+        self.assertEqual(warnings, [warning])
