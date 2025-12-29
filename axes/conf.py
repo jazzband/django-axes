@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.functional import SimpleLazyObject
 from django.utils.translation import gettext_lazy as _
 
 # disable plugin when set to False
@@ -43,8 +44,14 @@ settings.AXES_ONLY_ADMIN_SITE = getattr(settings, "AXES_ONLY_ADMIN_SITE", False)
 settings.AXES_ENABLE_ADMIN = getattr(settings, "AXES_ENABLE_ADMIN", True)
 
 # use a specific username field to retrieve from login POST data
+def _get_username_field_default():
+    return get_user_model().USERNAME_FIELD
+
+
 settings.AXES_USERNAME_FORM_FIELD = getattr(
-    settings, "AXES_USERNAME_FORM_FIELD", get_user_model().USERNAME_FIELD
+    settings,
+    "AXES_USERNAME_FORM_FIELD",
+    SimpleLazyObject(_get_username_field_default),
 )
 
 # use a specific password field to retrieve from login POST data
