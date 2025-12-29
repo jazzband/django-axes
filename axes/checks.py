@@ -207,7 +207,7 @@ def axes_conf_check(app_configs, **kwargs):  # pylint: disable=unused-argument
     ]
 
     for callable_setting in callable_settings:
-        value = getattr(settings, callable_setting)
+        value = getattr(settings, callable_setting, None)
         if not is_valid_callable(value):
             warnings.append(
                 Warning(

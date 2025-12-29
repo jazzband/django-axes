@@ -129,3 +129,8 @@ class ConfCheckTestCase(AxesTestCase):
     def test_valid_callable(self):
         warnings = run_checks()
         self.assertEqual(warnings, [])
+
+    def test_missing_settings_no_error(self):
+        warnings = run_checks()
+        self.assertEqual(warnings, [])
+
