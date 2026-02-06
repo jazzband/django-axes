@@ -134,6 +134,7 @@ class ConfCheckTestCase(AxesTestCase):
         warnings = run_checks()
         self.assertEqual(warnings, [])
 
+
 class LockoutParametersCheckTestCase(AxesTestCase):
     @override_settings(AXES_LOCKOUT_PARAMETERS=["ip_address", "username"])
     def test_valid_configuration(self):
