@@ -9,4 +9,4 @@ pytest-django==4.11.1
 pytest-subtests==0.15.0
 pytest==9.0.2
 sphinx_rtd_theme==3.1.0
-tox==4.32.0
+tox==4.34.1
