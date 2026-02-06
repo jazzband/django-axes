@@ -2,6 +2,16 @@
 Changes
 =======
 
+8.2.0 (2026-02-06)
+------------------
+
+- Fix AttributeError when optional settings are undefined.
+  [rodrigo.nogueira]
+- Fix circular import with custom user models.
+  [rodrigo.nogueira]
+- Add unit tests for security check W006.
+  [shayanTaki]
+
 8.1.0 (2025-12-19)
 ------------------
 
