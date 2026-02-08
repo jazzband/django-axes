@@ -7,7 +7,7 @@ More information on the configuration options is available at:
 """
 
 # import sphinx_rtd_theme
-from pkg_resources import get_distribution
+from importlib.metadata import version as get_version
 
 import django
 from django.conf import settings
@@ -43,7 +43,7 @@ copyright = "2016, Jazzband"
 author = "Jazzband"
 
 # The full version, including alpha/beta/rc tags.
-release = get_distribution("django-axes").version
+release = get_version("django-axes")
 
 # The short X.Y version.
 version = ".".join(release.split(".")[:2])
