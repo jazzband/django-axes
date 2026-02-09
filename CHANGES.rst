@@ -2,6 +2,12 @@
 Changes
 =======
 
+8.3.0 (2026-02-09)
+------------------
+
+- Remove deprecated pkg_resources in favour of new importlib.
+  [hugovk]
+
 8.2.0 (2026-02-06)
 ------------------
 
