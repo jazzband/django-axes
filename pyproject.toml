@@ -52,6 +52,7 @@ ignore_errors =
 
 # QA runs type checks, linting, and code formatting checks
 [testenv:py314-djqa]
+stoponfail = false
 deps = -r requirements.txt
 commands =
     mypy axes
