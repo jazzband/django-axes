@@ -55,6 +55,6 @@ ignore_errors =
 deps = -r requirements.txt
 commands =
     mypy axes
-    prospector
+    prospector axes
     black -t py314 --check --diff axes
 """

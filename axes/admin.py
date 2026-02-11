@@ -22,7 +22,7 @@ class IsLockedOutFilter(admin.SimpleListFilter):
             return queryset.filter(
                 failures_since_start__gte=settings.AXES_FAILURE_LIMIT
             )
-        elif self.value() == "no":
+        if self.value() == "no":
             return queryset.filter(failures_since_start__lt=settings.AXES_FAILURE_LIMIT)
         return queryset
 
@@ -77,7 +77,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
     actions = ["cleanup_expired_attempts"]
 
     @admin.action(description=_("Clean up expired attempts"))
-    def cleanup_expired_attempts(self, request, queryset):
+    def cleanup_expired_attempts(self, request, queryset):  # noqa
         count = self.handler.clean_expired_user_attempts(request=request)
         self.message_user(request, _(f"Cleaned up {count} expired access attempts."))
 
