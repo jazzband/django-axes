@@ -11,6 +11,7 @@ class JSONSerializableLazyObject(SimpleLazyObject):
 
     Fixes jazzband/django-axes#1391
     """
+
     def __json__(self):
         return str(self)
 
@@ -54,6 +55,7 @@ settings.AXES_ONLY_ADMIN_SITE = getattr(settings, "AXES_ONLY_ADMIN_SITE", False)
 
 # show Axes logs in admin
 settings.AXES_ENABLE_ADMIN = getattr(settings, "AXES_ENABLE_ADMIN", True)
+
 
 # use a specific username field to retrieve from login POST data
 def _get_username_field_default():
@@ -106,7 +108,9 @@ settings.AXES_LOCKOUT_URL = getattr(settings, "AXES_LOCKOUT_URL", None)
 
 settings.AXES_COOLOFF_TIME = getattr(settings, "AXES_COOLOFF_TIME", None)
 
-settings.AXES_USE_ATTEMPT_EXPIRATION = getattr(settings, "AXES_USE_ATTEMPT_EXPIRATION", False)
+settings.AXES_USE_ATTEMPT_EXPIRATION = getattr(
+    settings, "AXES_USE_ATTEMPT_EXPIRATION", False
+)
 
 settings.AXES_VERBOSE = getattr(settings, "AXES_VERBOSE", settings.AXES_ENABLED)
 
