@@ -3,6 +3,18 @@ from django.contrib.auth import get_user_model
 from django.utils.functional import SimpleLazyObject
 from django.utils.translation import gettext_lazy as _
 
+
+class JSONSerializableLazyObject(SimpleLazyObject):
+    """
+    Celery/Kombu config inspection may JSON-encode Django settings.
+    Provide a JSON-friendly representation for lazy values.
+
+    Fixes jazzband/django-axes#1391
+    """
+    def __json__(self):
+        return str(self)
+
+
 # disable plugin when set to False
 settings.AXES_ENABLED = getattr(settings, "AXES_ENABLED", True)
 
@@ -51,7 +63,7 @@ def _get_username_field_default():
 settings.AXES_USERNAME_FORM_FIELD = getattr(
     settings,
     "AXES_USERNAME_FORM_FIELD",
-    SimpleLazyObject(_get_username_field_default),
+    JSONSerializableLazyObject(_get_username_field_default),
 )
 
 # use a specific password field to retrieve from login POST data
