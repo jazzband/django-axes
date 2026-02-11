@@ -56,5 +56,5 @@ deps = -r requirements.txt
 commands =
     mypy axes
     prospector axes
-    black -t py314 --check --diff axes
+    black --check --diff axes
 """
