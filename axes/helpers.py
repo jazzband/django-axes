@@ -100,6 +100,7 @@ def get_cool_off_iso8601(delta: timedelta) -> str:
         return f"P{days_str}T{time_str}"
     return f"P{days_str}"
 
+
 def get_attempt_expiration(request: Optional[HttpRequest] = None) -> datetime:
     """
     Get threshold for fetching access attempts from the database.
@@ -115,6 +116,7 @@ def get_attempt_expiration(request: Optional[HttpRequest] = None) -> datetime:
     if attempt_time is None:
         return datetime.now() + cool_off
     return attempt_time + cool_off
+
 
 def get_credentials(username: Optional[str] = None, **kwargs) -> dict:
     """

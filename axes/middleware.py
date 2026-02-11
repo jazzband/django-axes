@@ -60,6 +60,8 @@ class AxesMiddleware:
                 credentials = getattr(request, "axes_credentials", None)
                 response = await sync_to_async(
                     get_lockout_response, thread_sensitive=True
-                )(request, credentials)  # type: ignore
+                )(
+                    request, credentials
+                )  # type: ignore
 
         return response
