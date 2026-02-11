@@ -372,7 +372,7 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         return attempts_list
 
     def get_user_attempts(
-        self, request: HttpRequest, credentials: Optional[dict] = None
+        self, request: HttpRequest, credentials: Optional[dict] = None  # noqa
     ) -> List[QuerySet]:
         """
         Get list of querysets with valid user attempts that match the given request and credentials.
@@ -393,7 +393,9 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         ]
 
     def clean_expired_user_attempts(
-        self, request: Optional[HttpRequest] = None, credentials: Optional[dict] = None
+        self,
+        request: Optional[HttpRequest] = None,
+        credentials: Optional[dict] = None,  # noqa
     ) -> int:
         """
         Clean expired user attempts from the database.
