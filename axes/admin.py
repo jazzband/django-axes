@@ -44,7 +44,7 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         # This will only add the status field if AXES_FAILURE_LIMIT is set to a positive integer
         # Because callable failure limit requires scope of request object
         list_display.append("status")
-        list_filter.append(IsLockedOutFilter)
+        list_filter.append(IsLockedOutFilter)  # type: ignore[arg-type]
 
     search_fields = ["ip_address", "username", "user_agent", "path_info"]
 
