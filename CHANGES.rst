@@ -2,6 +2,12 @@
 Changes
 =======
 
+8.3.1 (2026-02-11)
+------------------
+
+- Fix configuration JSON serialization errors for Celery.
+  [aleksihakli]
+
 8.3.0 (2026-02-09)
 ------------------
 
