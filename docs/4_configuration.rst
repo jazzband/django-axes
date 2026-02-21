@@ -17,8 +17,8 @@ The following ``settings.py`` options are available for customizing Axes behavio
 Lockout configuration
 ---------------------
 
-.. list-table:: Project settings
-   :widths: 20 20 60
+.. list-table:: Core lockout settings
+   :widths: 25 15 60
    :header-rows: 1
 
    * - Variable
