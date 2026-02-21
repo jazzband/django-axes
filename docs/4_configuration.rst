@@ -86,6 +86,13 @@ The following ``settings.py`` options are available for customizing Axes behavio
 | AXES_LOCKOUT_PARAMETERS                              | ["ip_address"]                               |  A list of parameters that Axes uses to lock out users. It can also be callable, which takes an http request or AccesAttempt object and credentials and returns a list of parameters. Each parameter can be a string (a single parameter) or a list of strings (a combined parameter). For example, if you configure ``AXES_LOCKOUT_PARAMETERS = ["ip_address", ["username", "user_agent"]]``, axes will block clients by ip and/or username and user agent combination. See :ref:`customizing-lockout-parameters` for more details.                                                                                                                                                                                                      |
 +------------------------------------------------------+----------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+.. note::
+   When ``AXES_COOLOFF_TIME`` is configured, lockout responses automatically include a
+   ``Retry-After`` HTTP header (`RFC 7231 <https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.3>`_)
+   with the cool-off duration in seconds. This applies to JSON, template-rendered, and
+   plain-text lockout responses, but not to redirects (``AXES_LOCKOUT_URL``) or custom
+   callables (``AXES_LOCKOUT_CALLABLE``).
+
 The configuration option precedences for the access attempt monitoring are:
 
 1. Default: only use IP address.

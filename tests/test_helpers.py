@@ -946,6 +946,34 @@ class LockoutResponseTestCase(AxesTestCase):
         response = get_lockout_response(request=self.request)
         self.assertEqual(type(response), HttpResponse)
 
+    @override_settings(AXES_COOLOFF_TIME=2)
+    def test_get_lockout_response_retry_after_header(self):
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(response["Retry-After"], "7200")
+
+    @override_settings(AXES_COOLOFF_TIME=None)
+    def test_get_lockout_response_retry_after_no_cooloff(self):
+        response = get_lockout_response(request=self.request)
+        self.assertFalse(response.has_header("Retry-After"))
+
+    @override_settings(AXES_COOLOFF_TIME=2)
+    def test_get_lockout_response_retry_after_json(self):
+        self.request.META["HTTP_X_REQUESTED_WITH"] = "XMLHttpRequest"
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(response["Retry-After"], "7200")
+
+    @override_settings(AXES_COOLOFF_TIME=2, AXES_LOCKOUT_TEMPLATE="example.html")
+    @patch("axes.helpers.render")
+    def test_get_lockout_response_retry_after_template(self, mock_render):
+        mock_render.return_value = HttpResponse(status=429)
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(response["Retry-After"], "7200")
+
+    @override_settings(AXES_COOLOFF_TIME=2, AXES_LOCKOUT_URL="https://example.com")
+    def test_get_lockout_response_retry_after_redirect_absent(self):
+        response = get_lockout_response(request=self.request)
+        self.assertFalse(response.has_header("Retry-After"))
+
 
 def mock_get_cool_off_str(req):
     return timedelta(seconds=30)
