@@ -44,10 +44,11 @@ Lockout configuration
 
    * - AXES_COOLOFF_TIME
      - None
-     - If set, defines a period of inactivity after which old failed login attempts
-       will be cleared. If ``None``, lockout is permanent until the attempts are
+     - If set, defines the cool-off period after which the lockout is lifted (old
+       attempts are ignored). If ``None``, lockout is permanent until the attempts are
        manually cleared. Can be set to a Python timedelta object, an integer, a float,
        a callable, or a string path to a callable which takes the request as argument.
+       Callable must accept a single request argument (Django-Axes 7.0+ signature).
        For an integer or float, it will be interpreted as a number of hours:
        ``1`` is 1 hour, ``0.5`` is 30 minutes. A ``timedelta`` is recommended for clarity.
        See also ``AXES_USE_ATTEMPT_EXPIRATION`` for rolling window behavior.
@@ -56,7 +57,10 @@ Lockout configuration
      - If ``True``, changes the behavior of ``AXES_COOLOFF_TIME`` to a rolling window
        meaning each failed attempt expires individually after the cool-off time. This
        allows you to configure a "number of failed login attempts per xx minutes"
-       rule (e.g. 3 attempts per 15 minutes). If ``False``, ``AXES_COOLOFF_TIME`` acts
+       rule (e.g. 3 attempts per 15 minutes). When ``True``, only failures inside the
+       cool-off window are counted (sliding/rolling window behavior).
+
+       If ``False``, ``AXES_COOLOFF_TIME`` acts
        as a period of inactivity where attempts are only cleared if no new failures
        occur within the cool-off limit.
 
@@ -236,6 +240,23 @@ Lockout configuration
        :ref:`customizing-lockout-parameters` for more details.
 
 
+
+**Common configurations**
+
+.. code-block:: python
+
+    # Classic: 3 failures -> 30 min lockout
+    AXES_FAILURE_LIMIT = 3
+    AXES_COOLOFF_TIME = timedelta(minutes=30)
+
+    # Rolling window: max 5 failures in any 15-minute period
+    AXES_FAILURE_LIMIT = 5
+    AXES_COOLOFF_TIME = timedelta(minutes=15)
+    AXES_USE_ATTEMPT_EXPIRATION = True
+
+    # Hard lockout (manual reset only)
+    AXES_FAILURE_LIMIT = 5
+    AXES_COOLOFF_TIME = None
 
 The configuration option precedences for the access attempt monitoring are:
 
