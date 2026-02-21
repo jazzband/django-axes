@@ -52,6 +52,7 @@ Lockout configuration
        For an integer or float, it will be interpreted as a number of hours:
        ``1`` is 1 hour, ``0.5`` is 30 minutes. A ``timedelta`` is recommended for clarity.
        See also ``AXES_USE_ATTEMPT_EXPIRATION`` for rolling window behavior.
+
    * - AXES_USE_ATTEMPT_EXPIRATION
      - False
      - If ``True``, changes the behavior of ``AXES_COOLOFF_TIME`` to a rolling window
@@ -232,7 +233,7 @@ Lockout configuration
    * - AXES_LOCKOUT_PARAMETERS
      - ["ip_address"]
      - A list of parameters that Axes uses to lock out users. It can also be callable,
-       which takes an http request or AccesAttempt object and credentials and returns a
+       which takes an http request or AccessAttempt object and credentials and returns a
        list of parameters. Each parameter can be a string (a single parameter) or a
        list of strings (a combined parameter). For example, if you configure
        ``AXES_LOCKOUT_PARAMETERS = ["ip_address", ["username", "user_agent"]]``, axes
