@@ -1,8 +1,12 @@
-from django.core.checks import run_checks, Warning  # pylint: disable=redefined-builtin
-from django.test import override_settings, modify_settings
+from datetime import timedelta
+
+from django.core.checks import (Warning,  # pylint: disable=redefined-builtin
+                                run_checks)
+from django.test import modify_settings, override_settings
 
 from axes.backends import AxesStandaloneBackend
-from axes.checks import Messages, Hints, Codes
+from axes.checks import Codes, Hints, Messages
+from axes.conf import LockoutTier
 from tests.base import AxesTestCase
 
 
@@ -150,3 +154,45 @@ class LockoutParametersCheckTestCase(AxesTestCase):
             id=Codes.LOCKOUT_PARAMETERS_INVALID,
         )
         self.assertEqual(warnings, [warning])
+
+
+class LockoutTiersCheckTestCase(AxesTestCase):
+    SAMPLE_TIERS = [
+        LockoutTier(failures=3, cooloff=timedelta(minutes=15)),
+        LockoutTier(failures=6, cooloff=timedelta(hours=2)),
+    ]
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS, AXES_COOLOFF_TIME=None)
+    def test_tiers_alone_no_warning(self):
+        warnings = run_checks()
+        self.assertEqual(warnings, [])
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS, AXES_COOLOFF_TIME=1)
+    def test_tiers_with_cooloff_time_warns(self):
+        warnings = run_checks()
+        warning = Warning(
+            msg=Messages.LOCKOUT_TIERS_CONFLICT,
+            hint=Hints.LOCKOUT_TIERS_CONFLICT,
+            id=Codes.LOCKOUT_TIERS_CONFLICT,
+        )
+        self.assertIn(warning, warnings)
+
+    @override_settings(AXES_LOCKOUT_TIERS="not a list")
+    def test_tiers_invalid_format_warns(self):
+        warnings = run_checks()
+        warning = Warning(
+            msg=Messages.LOCKOUT_TIERS_INVALID,
+            hint=Hints.LOCKOUT_TIERS_INVALID,
+            id=Codes.LOCKOUT_TIERS_INVALID,
+        )
+        self.assertIn(warning, warnings)
+
+    @override_settings(AXES_LOCKOUT_TIERS=[(3, timedelta(minutes=15))])
+    def test_tiers_plain_tuples_warns(self):
+        warnings = run_checks()
+        warning = Warning(
+            msg=Messages.LOCKOUT_TIERS_INVALID,
+            hint=Hints.LOCKOUT_TIERS_INVALID,
+            id=Codes.LOCKOUT_TIERS_INVALID,
+        )
+        self.assertIn(warning, warnings)

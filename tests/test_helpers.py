@@ -7,6 +7,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonRes
 from django.test import RequestFactory, override_settings
 
 from axes.apps import AppConfig
+from axes.conf import LockoutTier
 from axes.helpers import (
     cleanse_parameters,
     get_cache_timeout,
@@ -18,6 +19,7 @@ from axes.helpers import (
     get_cool_off,
     get_cool_off_iso8601,
     get_lockout_response,
+    get_lockout_tier,
     is_client_ip_address_blacklisted,
     is_client_ip_address_whitelisted,
     is_client_method_whitelisted,
@@ -1103,3 +1105,107 @@ class AxesCleanseParamsTestCase(AxesTestCase):
         self.assertEqual("test_user", cleansed["username"])
         self.assertEqual("********************", cleansed["password"])
         self.assertEqual("sensitive", cleansed["other_sensitive_data"])
+
+
+
+class AxesLockoutTiersTestCase(AxesTestCase):
+    SAMPLE_TIERS = [
+        LockoutTier(failures=3, cooloff=timedelta(minutes=15)),
+        LockoutTier(failures=6, cooloff=timedelta(hours=2)),
+        LockoutTier(failures=10, cooloff=timedelta(days=1)),
+    ]
+
+    # -- get_lockout_tier --
+
+    def test_get_lockout_tier_none_when_not_configured(self):
+        self.assertIsNone(get_lockout_tier(5))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_lockout_tier_below_threshold(self):
+        self.assertIsNone(get_lockout_tier(2))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_lockout_tier_first_tier(self):
+        tier = get_lockout_tier(3)
+        self.assertEqual(tier, LockoutTier(failures=3, cooloff=timedelta(minutes=15)))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_lockout_tier_between_tiers(self):
+        tier = get_lockout_tier(5)
+        self.assertEqual(tier, LockoutTier(failures=3, cooloff=timedelta(minutes=15)))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_lockout_tier_second_tier(self):
+        tier = get_lockout_tier(6)
+        self.assertEqual(tier, LockoutTier(failures=6, cooloff=timedelta(hours=2)))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_lockout_tier_highest_tier(self):
+        tier = get_lockout_tier(10)
+        self.assertEqual(tier, LockoutTier(failures=10, cooloff=timedelta(days=1)))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_lockout_tier_above_highest(self):
+        tier = get_lockout_tier(100)
+        self.assertEqual(tier, LockoutTier(failures=10, cooloff=timedelta(days=1)))
+
+    # -- get_cool_off with tiers --
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_cool_off_with_tiers(self):
+        self.request.axes_failures_since_start = 6
+        self.assertEqual(get_cool_off(self.request), timedelta(hours=2))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_cool_off_tiers_no_failures_attr(self):
+        """When request has no failures attribute, returns None (no tier matched)."""
+        request = HttpRequest()
+        self.assertIsNone(get_cool_off(request))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_cool_off_tiers_below_first_threshold(self):
+        self.request.axes_failures_since_start = 1
+        self.assertIsNone(get_cool_off(self.request))
+
+    # -- get_failure_limit with tiers --
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_failure_limit_returns_lowest_tier(self):
+        from axes.helpers import get_failure_limit
+        self.assertEqual(get_failure_limit(self.request, self.credentials), 3)
+
+    @override_settings(AXES_LOCKOUT_TIERS=[
+        LockoutTier(failures=10, cooloff=timedelta(days=1)),
+        LockoutTier(failures=5, cooloff=timedelta(hours=1)),
+    ])
+    def test_get_failure_limit_sorts_tiers(self):
+        from axes.helpers import get_failure_limit
+        self.assertEqual(get_failure_limit(self.request, self.credentials), 5)
+
+    # -- get_lockout_message with tiers --
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS, AXES_COOLOFF_TIME=None)
+    def test_get_lockout_message_with_tiers(self):
+        from axes.helpers import get_lockout_message
+        from axes.conf import settings
+        self.assertEqual(get_lockout_message(), settings.AXES_COOLOFF_MESSAGE)
+
+    # -- get_lockout_response with tiers --
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS, AXES_COOLOFF_TIME=None)
+    def test_get_lockout_response_includes_failure_count(self):
+        self.request.axes_failures_since_start = 6
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(response.status_code, 429)
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS, AXES_COOLOFF_TIME=None)
+    def test_get_lockout_response_json_with_tiers(self):
+        self.request.axes_failures_since_start = 3
+        self.request.META["HTTP_X_REQUESTED_WITH"] = "XMLHttpRequest"
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(type(response), JsonResponse)
+        import json
+        data = json.loads(response.content)
+        self.assertEqual(data["failure_count"], 3)
+        self.assertIn("cooloff_time", data)
+
