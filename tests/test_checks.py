@@ -1,11 +1,9 @@
+from django.core.checks import run_checks, Warning  # pylint: disable=redefined-builtin
+from django.test import override_settings, modify_settings
 from datetime import timedelta
 
-from django.core.checks import (Warning,  # pylint: disable=redefined-builtin
-                                run_checks)
-from django.test import modify_settings, override_settings
-
 from axes.backends import AxesStandaloneBackend
-from axes.checks import Codes, Hints, Messages
+from axes.checks import Messages, Hints, Codes
 from axes.conf import LockoutTier
 from tests.base import AxesTestCase
 

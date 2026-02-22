@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import timedelta, datetime
 from hashlib import sha256
 from logging import getLogger
 from string import Template
-from typing import Callable, List, Optional, Type, Union
+from typing import Callable, Optional, Type, Union, List
 from urllib.parse import urlencode
 
 from django.core.cache import BaseCache, caches
