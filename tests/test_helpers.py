@@ -1107,7 +1107,6 @@ class AxesCleanseParamsTestCase(AxesTestCase):
         self.assertEqual("sensitive", cleansed["other_sensitive_data"])
 
 
-
 class AxesLockoutTiersTestCase(AxesTestCase):
     SAMPLE_TIERS = [
         LockoutTier(failures=3, cooloff=timedelta(minutes=15)),
@@ -1137,6 +1136,11 @@ class AxesLockoutTiersTestCase(AxesTestCase):
     @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
     def test_get_lockout_tier_second_tier(self):
         tier = get_lockout_tier(6)
+        self.assertEqual(tier, LockoutTier(failures=6, cooloff=timedelta(hours=2)))
+
+    @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
+    def test_get_lockout_tier_seven_failures(self):
+        tier = get_lockout_tier(7)
         self.assertEqual(tier, LockoutTier(failures=6, cooloff=timedelta(hours=2)))
 
     @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
@@ -1172,22 +1176,27 @@ class AxesLockoutTiersTestCase(AxesTestCase):
     @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS)
     def test_get_failure_limit_returns_lowest_tier(self):
         from axes.helpers import get_failure_limit
+
         self.assertEqual(get_failure_limit(self.request, self.credentials), 3)
 
-    @override_settings(AXES_LOCKOUT_TIERS=[
-        LockoutTier(failures=10, cooloff=timedelta(days=1)),
-        LockoutTier(failures=5, cooloff=timedelta(hours=1)),
-    ])
+    @override_settings(
+        AXES_LOCKOUT_TIERS=[
+            LockoutTier(failures=10, cooloff=timedelta(days=1)),
+            LockoutTier(failures=5, cooloff=timedelta(hours=1)),
+        ]
+    )
     def test_get_failure_limit_sorts_tiers(self):
         from axes.helpers import get_failure_limit
+
         self.assertEqual(get_failure_limit(self.request, self.credentials), 5)
 
     # -- get_lockout_message with tiers --
 
     @override_settings(AXES_LOCKOUT_TIERS=SAMPLE_TIERS, AXES_COOLOFF_TIME=None)
     def test_get_lockout_message_with_tiers(self):
-        from axes.helpers import get_lockout_message
         from axes.conf import settings
+        from axes.helpers import get_lockout_message
+
         self.assertEqual(get_lockout_message(), settings.AXES_COOLOFF_MESSAGE)
 
     # -- get_lockout_response with tiers --
@@ -1205,7 +1214,7 @@ class AxesLockoutTiersTestCase(AxesTestCase):
         response = get_lockout_response(request=self.request)
         self.assertEqual(type(response), JsonResponse)
         import json
+
         data = json.loads(response.content)
         self.assertEqual(data["failure_count"], 3)
         self.assertIn("cooloff_time", data)
-
