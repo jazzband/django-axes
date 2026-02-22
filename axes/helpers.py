@@ -109,7 +109,7 @@ def get_cool_off_iso8601(delta: timedelta) -> str:
 
 
 def get_lockout_tier(failures: int) -> Optional[LockoutTier]:
-    """Return the matching ``LockoutTier`` for *failures*, or ``None``."""
+    """Return the highest ``LockoutTier`` threshold met by *failures*."""
     tiers = settings.AXES_LOCKOUT_TIERS
     if not tiers:
         return None
