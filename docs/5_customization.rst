@@ -188,7 +188,7 @@ Example ``AXES_LOCKOUT_PARAMETERS`` configuration:
 
     AXES_LOCKOUT_PARAMETERS = ["ip_address", ["username", "user_agent"]]
 
-This way, axes will lock out users using ip_address and/or combination of username and user agent
+This way, axes will lock out users using ip_address or combination of username and user_agent
 
 Example of callable ``AXES_LOCKOUT_PARAMETERS``:
 
@@ -213,7 +213,7 @@ Example of callable ``AXES_LOCKOUT_PARAMETERS``:
 
     AXES_LOCKOUT_PARAMETERS = "example.utils.get_lockout_parameters"
 
-This way, if client ip_address is localhost, axes will lockout client only by username. In other case, axes will lockout client by username and/or ip_address.
+This way, if client ip_address is localhost, axes will lockout client only by username. In other case, axes will lockout client by username or ip_address.
 
 Customizing client ip address lookups
 -------------------------------------
