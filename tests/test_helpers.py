@@ -792,6 +792,61 @@ class UsernameTestCase(AxesTestCase):
     def test_get_client_username_str(self):
         self.assertEqual(get_client_username(HttpRequest(), {}), "username")
 
+    @override_settings(AXES_USERNAME_FORM_FIELD="auth-username")
+    def test_get_client_username_fallback_to_username_field_from_credentials(self):
+        """
+        Test that when AXES_USERNAME_FORM_FIELD is set to a custom value that
+        doesn't exist in credentials, we fallback to Django's USERNAME_FIELD.
+
+        This fixes https://github.com/jazzband/django-axes/issues/1159
+        """
+        expected = "test-username"
+
+        request = HttpRequest()
+        # Credentials from Django's user_login_failed signal use USERNAME_FIELD (e.g., "username")
+        # not the custom AXES_USERNAME_FORM_FIELD value
+        credentials = {"username": expected}
+
+        actual = get_client_username(request, credentials)
+
+        self.assertEqual(expected, actual)
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="auth-username")
+    def test_get_client_username_fallback_to_username_field_from_request(self):
+        """
+        Test that when AXES_USERNAME_FORM_FIELD is set to a custom value that
+        doesn't exist in request.POST, we fallback to Django's USERNAME_FIELD.
+
+        This fixes https://github.com/jazzband/django-axes/issues/1159
+        """
+        expected = "test-username"
+
+        request = HttpRequest()
+        # POST data might use Django's USERNAME_FIELD instead of custom form field
+        request.POST["username"] = expected
+
+        actual = get_client_username(request)
+
+        self.assertEqual(expected, actual)
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="auth-username")
+    def test_get_client_username_custom_field_takes_priority(self):
+        """
+        Test that AXES_USERNAME_FORM_FIELD takes priority when it exists in credentials.
+        """
+        expected = "custom-field-username"
+        fallback = "username-field-value"
+
+        request = HttpRequest()
+        credentials = {
+            "auth-username": expected,  # Custom field - should be used
+            "username": fallback,  # Django's USERNAME_FIELD - should be ignored
+        }
+
+        actual = get_client_username(request, credentials)
+
+        self.assertEqual(expected, actual)
+
 
 def get_username(request, credentials: dict) -> str:
     return "username"

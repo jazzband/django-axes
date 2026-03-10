@@ -5,6 +5,7 @@ from string import Template
 from typing import Callable, Optional, Type, Union, List
 from urllib.parse import urlencode
 
+from django.contrib.auth import get_user_model
 from django.core.cache import BaseCache, caches
 from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import redirect, render
@@ -164,14 +165,37 @@ def get_client_username(
         log.debug(
             "Using parameter credentials to get username with key settings.AXES_USERNAME_FORM_FIELD"
         )
-        return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)  # type: ignore[return-value]
+        username = credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
+        if username is None:
+            # Fallback to Django's USERNAME_FIELD for compatibility with
+            # Django's user_login_failed signal which uses USERNAME_FIELD as the key
+            # See: https://github.com/jazzband/django-axes/issues/1159
+            username_field = get_user_model().USERNAME_FIELD
+            if username_field != str(settings.AXES_USERNAME_FORM_FIELD):
+                log.debug(
+                    "Falling back to USERNAME_FIELD '%s' for credentials lookup",
+                    username_field,
+                )
+                username = credentials.get(username_field, None)
+        return username  # type: ignore[return-value]
 
     log.debug(
         "Using parameter request.POST to get username with key settings.AXES_USERNAME_FORM_FIELD"
     )
 
     request_data = getattr(request, "data", request.POST)
-    return request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
+    username = request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
+    if username is None:
+        # Fallback to Django's USERNAME_FIELD for compatibility
+        # See: https://github.com/jazzband/django-axes/issues/1159
+        username_field = get_user_model().USERNAME_FIELD
+        if username_field != str(settings.AXES_USERNAME_FORM_FIELD):
+            log.debug(
+                "Falling back to USERNAME_FIELD '%s' for request data lookup",
+                username_field,
+            )
+            username = request_data.get(username_field, None)
+    return username  # type: ignore[return-value]
 
 
 def get_client_ip_address(
