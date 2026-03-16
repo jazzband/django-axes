@@ -946,6 +946,7 @@ class LockoutResponseTestCase(AxesTestCase):
         response = get_lockout_response(request=self.request)
         self.assertEqual(type(response), HttpResponse)
 
+
 def mock_get_cool_off_str(req):
     return timedelta(seconds=30)
 
