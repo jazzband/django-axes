@@ -2,6 +2,28 @@
 Changes
 =======
 
+8.3.1 (2026-02-11)
+------------------
+
+- Fix configuration JSON serialization errors for Celery.
+  [aleksihakli]
+
+8.3.0 (2026-02-09)
+------------------
+
+- Remove deprecated pkg_resources in favour of new importlib.
+  [hugovk]
+
+8.2.0 (2026-02-06)
+------------------
+
+- Fix AttributeError when optional settings are undefined.
+  [rodrigo.nogueira]
+- Fix circular import with custom user models.
+  [rodrigo.nogueira]
+- Add unit tests for security check W006.
+  [shayanTaki]
+
 8.1.0 (2025-12-19)
 ------------------
 

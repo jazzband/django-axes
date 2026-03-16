@@ -1,6 +1,20 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.functional import SimpleLazyObject
 from django.utils.translation import gettext_lazy as _
+
+
+class JSONSerializableLazyObject(SimpleLazyObject):
+    """
+    Celery/Kombu config inspection may JSON-encode Django settings.
+    Provide a JSON-friendly representation for lazy values.
+
+    Fixes jazzband/django-axes#1391
+    """
+
+    def __json__(self):
+        return str(self)
+
 
 # disable plugin when set to False
 settings.AXES_ENABLED = getattr(settings, "AXES_ENABLED", True)
@@ -42,9 +56,16 @@ settings.AXES_ONLY_ADMIN_SITE = getattr(settings, "AXES_ONLY_ADMIN_SITE", False)
 # show Axes logs in admin
 settings.AXES_ENABLE_ADMIN = getattr(settings, "AXES_ENABLE_ADMIN", True)
 
+
 # use a specific username field to retrieve from login POST data
+def _get_username_field_default():
+    return get_user_model().USERNAME_FIELD
+
+
 settings.AXES_USERNAME_FORM_FIELD = getattr(
-    settings, "AXES_USERNAME_FORM_FIELD", get_user_model().USERNAME_FIELD
+    settings,
+    "AXES_USERNAME_FORM_FIELD",
+    JSONSerializableLazyObject(_get_username_field_default),
 )
 
 # use a specific password field to retrieve from login POST data
@@ -87,7 +108,9 @@ settings.AXES_LOCKOUT_URL = getattr(settings, "AXES_LOCKOUT_URL", None)
 
 settings.AXES_COOLOFF_TIME = getattr(settings, "AXES_COOLOFF_TIME", None)
 
-settings.AXES_USE_ATTEMPT_EXPIRATION = getattr(settings, "AXES_USE_ATTEMPT_EXPIRATION", False)
+settings.AXES_USE_ATTEMPT_EXPIRATION = getattr(
+    settings, "AXES_USE_ATTEMPT_EXPIRATION", False
+)
 
 settings.AXES_VERBOSE = getattr(settings, "AXES_VERBOSE", settings.AXES_ENABLED)
 

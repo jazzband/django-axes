@@ -19,8 +19,10 @@ class IsLockedOutFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == "yes":
-            return queryset.filter(failures_since_start__gte=settings.AXES_FAILURE_LIMIT)
-        elif self.value() == "no":
+            return queryset.filter(
+                failures_since_start__gte=settings.AXES_FAILURE_LIMIT
+            )
+        if self.value() == "no":
             return queryset.filter(failures_since_start__lt=settings.AXES_FAILURE_LIMIT)
         return queryset
 
@@ -34,9 +36,9 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         "path_info",
         "failures_since_start",
     ]
-    
+
     if settings.AXES_USE_ATTEMPT_EXPIRATION:
-        list_display.append('expiration')
+        list_display.append("expiration")
 
     list_filter = ["attempt_time", "path_info"]
 
@@ -44,14 +46,17 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         # This will only add the status field if AXES_FAILURE_LIMIT is set to a positive integer
         # Because callable failure limit requires scope of request object
         list_display.append("status")
-        list_filter.append(IsLockedOutFilter)
+        list_filter.append(IsLockedOutFilter)  # type: ignore[arg-type]
 
     search_fields = ["ip_address", "username", "user_agent", "path_info"]
 
     date_hierarchy = "attempt_time"
 
     fieldsets = (
-        (None, {"fields": ("username", "path_info", "failures_since_start", "expiration")}),
+        (
+            None,
+            {"fields": ("username", "path_info", "failures_since_start", "expiration")},
+        ),
         (_("Form Data"), {"fields": ("get_data", "post_data")}),
         (_("Meta Data"), {"fields": ("user_agent", "ip_address", "http_accept")}),
     )
@@ -69,10 +74,10 @@ class AccessAttemptAdmin(admin.ModelAdmin):
         "expiration",
     ]
 
-    actions = ['cleanup_expired_attempts']
+    actions = ["cleanup_expired_attempts"]
 
-    @admin.action(description=_('Clean up expired attempts'))
-    def cleanup_expired_attempts(self, request, queryset):
+    @admin.action(description=_("Clean up expired attempts"))
+    def cleanup_expired_attempts(self, request, queryset):  # noqa
         count = self.handler.clean_expired_user_attempts(request=request)
         self.message_user(request, _(f"Cleaned up {count} expired access attempts."))
 
@@ -85,10 +90,15 @@ class AccessAttemptAdmin(admin.ModelAdmin):
 
     def expiration(self, obj: AccessAttempt):
         return obj.expiration.expires_at if hasattr(obj, "expiration") else _("Not set")
-    
+
     def status(self, obj: AccessAttempt):
-        return f"{settings.AXES_FAILURE_LIMIT - obj.failures_since_start} "+_("Attempt Remaining") if \
-            obj.failures_since_start < settings.AXES_FAILURE_LIMIT else _("Locked Out")
+        return (
+            f"{settings.AXES_FAILURE_LIMIT - obj.failures_since_start} "
+            + _("Attempt Remaining")
+            if obj.failures_since_start < settings.AXES_FAILURE_LIMIT
+            else _("Locked Out")
+        )
+
 
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = (

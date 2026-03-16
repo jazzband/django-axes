@@ -20,7 +20,7 @@ def get_cool_off_threshold(request: Optional[HttpRequest] = None) -> datetime:
             "Cool off threshold can not be calculated with settings.AXES_COOLOFF_TIME set to None"
         )
 
-    attempt_time = request.axes_attempt_time
+    attempt_time = request.axes_attempt_time  # type: ignore[union-attr]
     if attempt_time is None:
         return now() - cool_off
     return attempt_time - cool_off
