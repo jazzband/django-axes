@@ -4,7 +4,7 @@ from asgiref.sync import iscoroutinefunction, markcoroutinefunction, sync_to_asy
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 
-from axes.helpers import get_lockout_response
+from axes.helpers import get_cool_off, get_lockout_response
 
 
 class AxesMiddleware:
@@ -39,6 +39,22 @@ class AxesMiddleware:
         if iscoroutinefunction(self.get_response):
             markcoroutinefunction(self)
 
+    @staticmethod
+    def _set_retry_after_header(
+        response: HttpResponse, request: HttpRequest
+    ) -> HttpResponse:
+        if not settings.AXES_ENABLE_RETRY_AFTER_HEADER:
+            return response
+
+        if settings.AXES_LOCKOUT_CALLABLE or settings.AXES_LOCKOUT_URL:
+            return response
+
+        cool_off = get_cool_off(request)
+        if cool_off is not None:
+            response["Retry-After"] = str(int(cool_off.total_seconds()))
+
+        return response
+
     def __call__(self, request: HttpRequest) -> HttpResponse:
         # Exit out to async mode, if needed
         if iscoroutinefunction(self):
@@ -49,6 +65,7 @@ class AxesMiddleware:
             if getattr(request, "axes_locked_out", None):
                 credentials = getattr(request, "axes_credentials", None)
                 response = get_lockout_response(request, response, credentials)  # type: ignore
+                response = self._set_retry_after_header(response, request)
 
         return response
 
@@ -60,6 +77,9 @@ class AxesMiddleware:
                 credentials = getattr(request, "axes_credentials", None)
                 response = await sync_to_async(
                     get_lockout_response, thread_sensitive=True
-                )(request, credentials)  # type: ignore
+                )(
+                    request, response, credentials
+                )  # type: ignore
+                response = self._set_retry_after_header(response, request)
 
         return response

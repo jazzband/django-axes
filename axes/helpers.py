@@ -461,12 +461,6 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
-def _set_retry_after_header(response: HttpResponse, request: HttpRequest) -> None:
-    cool_off = get_cool_off(request)
-    if cool_off is not None:
-        response["Retry-After"] = str(int(cool_off.total_seconds()))
-
-
 def get_lockout_response(
     request: HttpRequest,
     original_response: Optional[HttpResponse] = None,
@@ -519,15 +513,10 @@ def get_lockout_response(
         json_response["Access-Control-Allow-Headers"] = (
             "Origin, Content-Type, Accept, Authorization, x-requested-with"
         )
-        _set_retry_after_header(json_response, request)
         return json_response
 
     if settings.AXES_LOCKOUT_TEMPLATE:
-        response = render(
-            request, settings.AXES_LOCKOUT_TEMPLATE, context, status=status
-        )
-        _set_retry_after_header(response, request)
-        return response
+        return render(request, settings.AXES_LOCKOUT_TEMPLATE, context, status=status)
 
     if settings.AXES_LOCKOUT_URL:
         lockout_url = settings.AXES_LOCKOUT_URL
@@ -535,9 +524,7 @@ def get_lockout_response(
         url = f"{lockout_url}?{query_string}"
         return redirect(url)
 
-    response = HttpResponse(get_lockout_message(), status=status)
-    _set_retry_after_header(response, request)
-    return response
+    return HttpResponse(get_lockout_message(), status=status)
 
 
 def is_ip_address_in_whitelist(ip_address: str) -> bool:
