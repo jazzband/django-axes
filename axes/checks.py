@@ -6,7 +6,7 @@ from django.core.checks import (  # pylint: disable=redefined-builtin
 from django.utils.module_loading import import_string
 
 from axes.backends import AxesStandaloneBackend
-from axes.conf import settings
+from axes.conf import LockoutTier, settings
 
 
 class Messages:
@@ -26,6 +26,14 @@ class Messages:
         "AXES_LOCKOUT_PARAMETERS does not contain 'ip_address'."
         " This configuration allows attackers to bypass rate limits by rotating User-Agents or Cookies."
     )
+    LOCKOUT_TIERS_CONFLICT = (
+        "AXES_LOCKOUT_TIERS is set alongside AXES_COOLOFF_TIME."
+        " When tiers are active, AXES_COOLOFF_TIME is ignored."
+        " Remove AXES_COOLOFF_TIME to silence this warning."
+    )
+    LOCKOUT_TIERS_INVALID = (
+        "AXES_LOCKOUT_TIERS must be a list of LockoutTier instances."
+    )
 
 
 class Hints:
@@ -35,6 +43,8 @@ class Hints:
     SETTING_DEPRECATED = None
     CALLABLE_INVALID = None
     LOCKOUT_PARAMETERS_INVALID = "Add 'ip_address' to AXES_LOCKOUT_PARAMETERS."
+    LOCKOUT_TIERS_CONFLICT = "Remove AXES_COOLOFF_TIME when using AXES_LOCKOUT_TIERS."
+    LOCKOUT_TIERS_INVALID = "Use: AXES_LOCKOUT_TIERS = [LockoutTier(failures=3, cooloff=timedelta(minutes=15)), ...]"
 
 
 class Codes:
@@ -44,6 +54,8 @@ class Codes:
     SETTING_DEPRECATED = "axes.W004"
     CALLABLE_INVALID = "axes.W005"
     LOCKOUT_PARAMETERS_INVALID = "axes.W006"
+    LOCKOUT_TIERS_CONFLICT = "axes.W007"
+    LOCKOUT_TIERS_INVALID = "axes.W008"
 
 
 @register(Tags.security, Tags.caches, Tags.compatibility)
@@ -190,6 +202,41 @@ def axes_lockout_params_check(app_configs, **kwargs):  # pylint: disable=unused-
             )
 
     return warnings
+
+
+@register(Tags.security)
+def axes_lockout_tiers_check(app_configs, **kwargs):  # pylint: disable=unused-argument
+    warnings = []
+    tiers = getattr(settings, "AXES_LOCKOUT_TIERS", None)
+    if tiers is None:
+        return warnings
+
+    if not is_valid_tiers_list(tiers):
+        warnings.append(
+            Warning(
+                msg=Messages.LOCKOUT_TIERS_INVALID,
+                hint=Hints.LOCKOUT_TIERS_INVALID,
+                id=Codes.LOCKOUT_TIERS_INVALID,
+            )
+        )
+        return warnings
+
+    if getattr(settings, "AXES_COOLOFF_TIME", None) is not None:
+        warnings.append(
+            Warning(
+                msg=Messages.LOCKOUT_TIERS_CONFLICT,
+                hint=Hints.LOCKOUT_TIERS_CONFLICT,
+                id=Codes.LOCKOUT_TIERS_CONFLICT,
+            )
+        )
+
+    return warnings
+
+
+def is_valid_tiers_list(tiers) -> bool:
+    if not isinstance(tiers, (list, tuple)):
+        return False
+    return all(isinstance(t, LockoutTier) for t in tiers)
 
 
 @register

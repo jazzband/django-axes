@@ -11,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.utils.encoding import force_bytes
 from django.utils.module_loading import import_string
 
-from axes.conf import settings
+from axes.conf import LockoutTier, settings
 from axes.models import AccessBase
 
 log = getLogger(__name__)
@@ -60,8 +60,15 @@ def get_cool_off(request: Optional[HttpRequest] = None) -> Optional[timedelta]:
     offers a unified _timedelta or None_ representation of that configuration for use with the
     Axes internal implementations.
 
+    When ``AXES_LOCKOUT_TIERS`` is configured, the cooloff is resolved from the
+    matching tier based on the failure count attached to the request.
+
     :exception TypeError: if settings.AXES_COOLOFF_TIME is of wrong type.
     """
+
+    tier = resolve_tier_from_request(request)
+    if tier is not None:
+        return tier.cooloff
 
     cool_off = settings.AXES_COOLOFF_TIME
 
@@ -99,6 +106,31 @@ def get_cool_off_iso8601(delta: timedelta) -> str:
     if time_str:
         return f"P{days_str}T{time_str}"
     return f"P{days_str}"
+
+
+def get_lockout_tier(failures: int) -> Optional[LockoutTier]:
+    """Return the highest ``LockoutTier`` threshold met by *failures*."""
+    tiers = settings.AXES_LOCKOUT_TIERS
+    if not tiers:
+        return None
+    sorted_tiers = sorted(tiers, key=lambda t: t.failures)
+    matched = None
+    for tier in sorted_tiers:
+        if failures >= tier.failures:
+            matched = tier
+    return matched
+
+
+def resolve_tier_from_request(
+    request: Optional[HttpRequest],
+) -> Optional[LockoutTier]:
+    """Extract failure count from *request* and resolve the tier."""
+    if not settings.AXES_LOCKOUT_TIERS or request is None:
+        return None
+    failures = getattr(request, "axes_failures_since_start", None)
+    if failures is None:
+        return None
+    return get_lockout_tier(failures)
 
 
 def get_attempt_expiration(request: Optional[HttpRequest] = None) -> datetime:
@@ -444,6 +476,11 @@ def get_query_str(query: Type[QueryDict], max_length: int = 1024) -> str:
 
 
 def get_failure_limit(request: HttpRequest, credentials) -> int:
+    tiers = settings.AXES_LOCKOUT_TIERS
+    if tiers:
+        sorted_tiers = sorted(tiers, key=lambda t: t.failures)
+        return sorted_tiers[0].failures
+
     if callable(settings.AXES_FAILURE_LIMIT):
         return settings.AXES_FAILURE_LIMIT(  # pylint: disable=not-callable
             request, credentials
@@ -456,7 +493,7 @@ def get_failure_limit(request: HttpRequest, credentials) -> int:
 
 
 def get_lockout_message() -> str:
-    if settings.AXES_COOLOFF_TIME:
+    if settings.AXES_COOLOFF_TIME or settings.AXES_LOCKOUT_TIERS:
         return settings.AXES_COOLOFF_MESSAGE
     return settings.AXES_PERMALOCK_MESSAGE
 
@@ -488,8 +525,10 @@ def get_lockout_response(
         )
 
     status = settings.AXES_HTTP_RESPONSE_CODE
+    failures = getattr(request, "axes_failures_since_start", None) or 0
     context = {
         "failure_limit": get_failure_limit(request, credentials),
+        "failure_count": failures,
         "username": get_client_username(request, credentials) or "",
     }
 

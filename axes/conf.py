@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.functional import SimpleLazyObject
@@ -14,6 +17,12 @@ class JSONSerializableLazyObject(SimpleLazyObject):
 
     def __json__(self):
         return str(self)
+
+
+@dataclass(frozen=True, order=True)
+class LockoutTier:
+    failures: int
+    cooloff: timedelta
 
 
 # disable plugin when set to False
@@ -107,6 +116,10 @@ settings.AXES_LOCKOUT_TEMPLATE = getattr(settings, "AXES_LOCKOUT_TEMPLATE", None
 settings.AXES_LOCKOUT_URL = getattr(settings, "AXES_LOCKOUT_URL", None)
 
 settings.AXES_COOLOFF_TIME = getattr(settings, "AXES_COOLOFF_TIME", None)
+
+# Progressive lockout tiers: list of LockoutTier(failures, cooloff) instances.
+# When set, overrides AXES_FAILURE_LIMIT and AXES_COOLOFF_TIME.
+settings.AXES_LOCKOUT_TIERS = getattr(settings, "AXES_LOCKOUT_TIERS", None)
 
 settings.AXES_USE_ATTEMPT_EXPIRATION = getattr(
     settings, "AXES_USE_ATTEMPT_EXPIRATION", False
