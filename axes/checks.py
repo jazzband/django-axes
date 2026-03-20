@@ -211,7 +211,7 @@ def axes_lockout_tiers_check(app_configs, **kwargs):  # pylint: disable=unused-a
     if tiers is None:
         return warnings
 
-    if not _is_valid_tiers_list(tiers):
+    if not is_valid_tiers_list(tiers):
         warnings.append(
             Warning(
                 msg=Messages.LOCKOUT_TIERS_INVALID,
@@ -233,7 +233,7 @@ def axes_lockout_tiers_check(app_configs, **kwargs):  # pylint: disable=unused-a
     return warnings
 
 
-def _is_valid_tiers_list(tiers) -> bool:
+def is_valid_tiers_list(tiers) -> bool:
     if not isinstance(tiers, (list, tuple)):
         return False
     return all(isinstance(t, LockoutTier) for t in tiers)
