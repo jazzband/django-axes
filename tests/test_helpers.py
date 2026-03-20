@@ -18,6 +18,7 @@ from axes.helpers import (
     get_cool_off,
     get_cool_off_iso8601,
     get_lockout_response,
+    get_username_from_data,
     is_client_ip_address_blacklisted,
     is_client_ip_address_whitelisted,
     is_client_method_whitelisted,
@@ -791,6 +792,101 @@ class UsernameTestCase(AxesTestCase):
     @override_settings(AXES_USERNAME_CALLABLE="tests.test_helpers.get_username")
     def test_get_client_username_str(self):
         self.assertEqual(get_client_username(HttpRequest(), {}), "username")
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="auth-username")
+    def test_get_client_username_fallback_to_username_field_from_credentials(self):
+        """
+        Test that when AXES_USERNAME_FORM_FIELD is set to a custom value that
+        doesn't exist in credentials, we fallback to Django's USERNAME_FIELD.
+
+        This fixes https://github.com/jazzband/django-axes/issues/1159
+        """
+        expected = "test-username"
+
+        request = HttpRequest()
+        # Credentials from Django's user_login_failed signal use USERNAME_FIELD (e.g., "username")
+        # not the custom AXES_USERNAME_FORM_FIELD value
+        credentials = {"username": expected}
+
+        actual = get_client_username(request, credentials)
+
+        self.assertEqual(expected, actual)
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="auth-username")
+    def test_get_client_username_fallback_to_username_field_from_request(self):
+        """
+        Test that when AXES_USERNAME_FORM_FIELD is set to a custom value that
+        doesn't exist in request.POST, we fallback to Django's USERNAME_FIELD.
+
+        This fixes https://github.com/jazzband/django-axes/issues/1159
+        """
+        expected = "test-username"
+
+        request = HttpRequest()
+        # POST data might use Django's USERNAME_FIELD instead of custom form field
+        request.POST["username"] = expected
+
+        actual = get_client_username(request)
+
+        self.assertEqual(expected, actual)
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="auth-username")
+    def test_get_client_username_custom_field_takes_priority(self):
+        """
+        Test that AXES_USERNAME_FORM_FIELD takes priority when it exists in credentials.
+        """
+        expected = "custom-field-username"
+        fallback = "username-field-value"
+
+        request = HttpRequest()
+        credentials = {
+            "auth-username": expected,  # Custom field - should be used
+            "username": fallback,  # Django's USERNAME_FIELD - should be ignored
+        }
+
+        actual = get_client_username(request, credentials)
+
+        self.assertEqual(expected, actual)
+
+
+class GetUsernameFromDataTestCase(AxesTestCase):
+    """Unit tests for the get_username_from_data helper function."""
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="username")
+    def test_get_username_from_data_with_matching_field(self):
+        """Test that username is returned when AXES_USERNAME_FORM_FIELD matches."""
+        data = {"username": "test-user"}
+        self.assertEqual(get_username_from_data(data), "test-user")
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="custom-field")
+    def test_get_username_from_data_fallback_to_username_field(self):
+        """
+        Test that when AXES_USERNAME_FORM_FIELD doesn't exist in data,
+        we fallback to Django's USERNAME_FIELD.
+        """
+        # Django's default USERNAME_FIELD is "username"
+        data = {"username": "fallback-user"}
+        self.assertEqual(get_username_from_data(data), "fallback-user")
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="custom-field")
+    def test_get_username_from_data_custom_field_takes_priority(self):
+        """Test that AXES_USERNAME_FORM_FIELD takes priority over USERNAME_FIELD."""
+        data = {
+            "custom-field": "custom-user",
+            "username": "fallback-user",
+        }
+        self.assertEqual(get_username_from_data(data), "custom-user")
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="nonexistent")
+    def test_get_username_from_data_returns_none_when_not_found(self):
+        """Test that None is returned when username is not found in any field."""
+        data = {"other-field": "some-value"}
+        self.assertIsNone(get_username_from_data(data))
+
+    @override_settings(AXES_USERNAME_FORM_FIELD="username")
+    def test_get_username_from_data_with_empty_dict(self):
+        """Test that None is returned for empty dict."""
+        self.assertIsNone(get_username_from_data({}))
 
 
 def get_username(request, credentials: dict) -> str:
