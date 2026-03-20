@@ -132,6 +132,32 @@ def get_credentials(username: Optional[str] = None, **kwargs) -> dict:
     return credentials
 
 
+def get_username_from_data(data: dict) -> Optional[str]:
+    """
+    Extract username from a dict-like object (credentials or request data).
+
+    Tries AXES_USERNAME_FORM_FIELD first, then falls back to Django's USERNAME_FIELD
+    for compatibility with Django's user_login_failed signal.
+
+    See: https://github.com/jazzband/django-axes/issues/1159
+
+    :param data: dict-like object containing username (credentials or request.POST)
+    :return: username string or None if not found
+    """
+    username = data.get(settings.AXES_USERNAME_FORM_FIELD, None)
+    if username is None:
+        # Fallback to Django's USERNAME_FIELD for compatibility with
+        # Django's user_login_failed signal which uses USERNAME_FIELD as the key
+        username_field = get_user_model().USERNAME_FIELD
+        if username_field != str(settings.AXES_USERNAME_FORM_FIELD):
+            log.debug(
+                "Falling back to USERNAME_FIELD '%s' for data lookup",
+                username_field,
+            )
+            username = data.get(username_field, None)
+    return username
+
+
 def get_client_username(
     request: HttpRequest, credentials: Optional[dict] = None
 ) -> str:
@@ -165,37 +191,14 @@ def get_client_username(
         log.debug(
             "Using parameter credentials to get username with key settings.AXES_USERNAME_FORM_FIELD"
         )
-        username = credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
-        if username is None:
-            # Fallback to Django's USERNAME_FIELD for compatibility with
-            # Django's user_login_failed signal which uses USERNAME_FIELD as the key
-            # See: https://github.com/jazzband/django-axes/issues/1159
-            username_field = get_user_model().USERNAME_FIELD
-            if username_field != str(settings.AXES_USERNAME_FORM_FIELD):
-                log.debug(
-                    "Falling back to USERNAME_FIELD '%s' for credentials lookup",
-                    username_field,
-                )
-                username = credentials.get(username_field, None)
-        return username  # type: ignore[return-value]
+        return get_username_from_data(credentials)  # type: ignore[return-value]
 
     log.debug(
         "Using parameter request.POST to get username with key settings.AXES_USERNAME_FORM_FIELD"
     )
 
     request_data = getattr(request, "data", request.POST)
-    username = request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
-    if username is None:
-        # Fallback to Django's USERNAME_FIELD for compatibility
-        # See: https://github.com/jazzband/django-axes/issues/1159
-        username_field = get_user_model().USERNAME_FIELD
-        if username_field != str(settings.AXES_USERNAME_FORM_FIELD):
-            log.debug(
-                "Falling back to USERNAME_FIELD '%s' for request data lookup",
-                username_field,
-            )
-            username = request_data.get(username_field, None)
-    return username  # type: ignore[return-value]
+    return get_username_from_data(request_data)  # type: ignore[return-value]
 
 
 def get_client_ip_address(
