@@ -66,7 +66,7 @@ def get_cool_off(request: Optional[HttpRequest] = None) -> Optional[timedelta]:
     :exception TypeError: if settings.AXES_COOLOFF_TIME is of wrong type.
     """
 
-    tier = _resolve_tier_from_request(request)
+    tier = resolve_tier_from_request(request)
     if tier is not None:
         return tier.cooloff
 
@@ -121,7 +121,7 @@ def get_lockout_tier(failures: int) -> Optional[LockoutTier]:
     return matched
 
 
-def _resolve_tier_from_request(
+def resolve_tier_from_request(
     request: Optional[HttpRequest],
 ) -> Optional[LockoutTier]:
     """Extract failure count from *request* and resolve the tier."""
