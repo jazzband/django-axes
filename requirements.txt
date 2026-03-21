@@ -1,6 +1,6 @@
 -e .
 black==26.3.1
-coverage==7.13.4
+coverage==7.13.5
 django-ipware>=3
 mypy==1.19.1
 prospector==1.18.0
@@ -9,4 +9,4 @@ pytest-django==4.12.0
 pytest-subtests==0.15.0
 pytest==9.0.2
 sphinx_rtd_theme==3.1.0
-tox==4.49.1
+tox==4.50.1
