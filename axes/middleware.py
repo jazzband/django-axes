@@ -4,7 +4,7 @@ from asgiref.sync import iscoroutinefunction, markcoroutinefunction, sync_to_asy
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 
-from axes.helpers import get_lockout_response
+from axes.helpers import get_cool_off, get_lockout_response
 
 
 class AxesMiddleware:
@@ -39,6 +39,23 @@ class AxesMiddleware:
         if iscoroutinefunction(self.get_response):
             markcoroutinefunction(self)
 
+    @staticmethod
+    def set_retry_after_header(request: HttpRequest, response: HttpResponse) -> None:
+        if settings.AXES_ENABLE_RETRY_AFTER_HEADER:
+            cool_off = get_cool_off(request)
+            if cool_off is not None:
+                response["Retry-After"] = str(int(cool_off.total_seconds()))
+
+    def build_lockout_response(
+        self,
+        request: HttpRequest,
+        response: HttpResponse,
+        credentials,
+    ) -> HttpResponse:
+        response = get_lockout_response(request, response, credentials)  # type: ignore
+        self.set_retry_after_header(request, response)
+        return response
+
     def __call__(self, request: HttpRequest) -> HttpResponse:
         # Exit out to async mode, if needed
         if iscoroutinefunction(self):
@@ -48,7 +65,7 @@ class AxesMiddleware:
         if settings.AXES_ENABLED:
             if getattr(request, "axes_locked_out", None):
                 credentials = getattr(request, "axes_credentials", None)
-                response = get_lockout_response(request, response, credentials)  # type: ignore
+                response = self.build_lockout_response(request, response, credentials)
 
         return response
 
@@ -59,9 +76,7 @@ class AxesMiddleware:
             if getattr(request, "axes_locked_out", None):
                 credentials = getattr(request, "axes_credentials", None)
                 response = await sync_to_async(
-                    get_lockout_response, thread_sensitive=True
-                )(
-                    request, credentials
-                )  # type: ignore
+                    self.build_lockout_response, thread_sensitive=True
+                )(request, response, credentials)
 
         return response
