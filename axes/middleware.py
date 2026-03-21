@@ -42,7 +42,9 @@ class AxesMiddleware:
     @staticmethod
     def set_retry_after_header(request: HttpRequest, response: HttpResponse) -> None:
         if settings.AXES_ENABLE_RETRY_AFTER_HEADER:
-            response["Retry-After"] = str(int(get_cool_off(request).total_seconds()))
+            cool_off = get_cool_off(request)
+            if cool_off is not None:
+                response["Retry-After"] = str(int(cool_off.total_seconds()))
 
     def build_lockout_response(
         self,
@@ -75,8 +77,6 @@ class AxesMiddleware:
                 credentials = getattr(request, "axes_credentials", None)
                 response = await sync_to_async(
                     self.build_lockout_response, thread_sensitive=True
-                )(
-                    request, response, credentials
-                )
+                )(request, response, credentials)
 
         return response
