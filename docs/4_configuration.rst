@@ -91,8 +91,7 @@ The following ``settings.py`` options are available for customizing Axes behavio
 .. note::
    If ``AXES_ENABLE_RETRY_AFTER_HEADER`` is enabled and ``AXES_COOLOFF_TIME`` is configured,
    ``AxesMiddleware`` adds a ``Retry-After`` HTTP header (`RFC 7231 <https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.3>`_)
-   with the cool-off duration in seconds. This header is not added for redirects
-   (``AXES_LOCKOUT_URL``) or custom lockout responses (``AXES_LOCKOUT_CALLABLE``).
+   with the cool-off duration in seconds for lockout responses.
 
 The configuration option precedences for the access attempt monitoring are:
 

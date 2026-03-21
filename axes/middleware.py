@@ -40,19 +40,18 @@ class AxesMiddleware:
             markcoroutinefunction(self)
 
     @staticmethod
-    def _set_retry_after_header(
-        response: HttpResponse, request: HttpRequest
+    def set_retry_after_header(request: HttpRequest, response: HttpResponse) -> None:
+        if settings.AXES_ENABLE_RETRY_AFTER_HEADER:
+            response["Retry-After"] = str(int(get_cool_off(request).total_seconds()))
+
+    def build_lockout_response(
+        self,
+        request: HttpRequest,
+        response: HttpResponse,
+        credentials,
     ) -> HttpResponse:
-        if not settings.AXES_ENABLE_RETRY_AFTER_HEADER:
-            return response
-
-        if settings.AXES_LOCKOUT_CALLABLE or settings.AXES_LOCKOUT_URL:
-            return response
-
-        cool_off = get_cool_off(request)
-        if cool_off is not None:
-            response["Retry-After"] = str(int(cool_off.total_seconds()))
-
+        response = get_lockout_response(request, response, credentials)  # type: ignore
+        self.set_retry_after_header(request, response)
         return response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
@@ -64,8 +63,7 @@ class AxesMiddleware:
         if settings.AXES_ENABLED:
             if getattr(request, "axes_locked_out", None):
                 credentials = getattr(request, "axes_credentials", None)
-                response = get_lockout_response(request, response, credentials)  # type: ignore
-                response = self._set_retry_after_header(response, request)
+                response = self.build_lockout_response(request, response, credentials)
 
         return response
 
@@ -76,10 +74,9 @@ class AxesMiddleware:
             if getattr(request, "axes_locked_out", None):
                 credentials = getattr(request, "axes_credentials", None)
                 response = await sync_to_async(
-                    get_lockout_response, thread_sensitive=True
+                    self.build_lockout_response, thread_sensitive=True
                 )(
                     request, response, credentials
-                )  # type: ignore
-                response = self._set_retry_after_header(response, request)
+                )
 
         return response
