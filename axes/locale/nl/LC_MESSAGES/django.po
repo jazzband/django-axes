@@ -1,0 +1,107 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-05-27 11:46+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Dutch <nl@li.org>\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\axes\admin.py:27
+msgid "Form Data"
+msgstr "Formuliergegevens"
+
+#: .\axes\admin.py:28 .\axes\admin.py:65 .\axes\admin.py:100
+msgid "Meta Data"
+msgstr "Metagegevens"
+
+#: .\axes\conf.py:97
+msgid "Account locked: too many login attempts. Please try again later."
+msgstr "Account vergrendeld: te veel inlogpogingen. Probeer het later opnieuw."
+
+#: .\axes\conf.py:105
+msgid ""
+"Account locked: too many login attempts. Contact an admin to unlock your "
+"account."
+msgstr ""
+"Account vergrendeld: te veel inlogpogingen. Neem contact op met een "
+"beheerder om uw account te ontgrendelen."
+
+#: .\axes\models.py:6
+msgid "User Agent"
+msgstr "User Agent"
+
+#: .\axes\models.py:8
+msgid "IP Address"
+msgstr "IP-adres"
+
+#: .\axes\models.py:10
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+#: .\axes\models.py:12
+msgid "HTTP Accept"
+msgstr "HTTP-Accept"
+
+#: .\axes\models.py:14
+msgid "Path"
+msgstr "Pad"
+
+#: .\axes\models.py:16
+msgid "Attempt Time"
+msgstr "Tijdstip van poging"
+
+#: .\axes\models.py:26
+msgid "Access lock out"
+msgstr "Toegang geblokkeerd"
+
+#: .\axes\models.py:34
+msgid "access failure"
+msgstr "mislukte aanmelding"
+
+#: .\axes\models.py:35
+msgid "access failures"
+msgstr "mislukte aanmeldingen"
+
+#: .\axes\models.py:39
+msgid "GET Data"
+msgstr "GET-gegevens"
+
+#: .\axes\models.py:41
+msgid "POST Data"
+msgstr "POST-gegevens"
+
+#: .\axes\models.py:43
+msgid "Failed Logins"
+msgstr "Mislukte aanmeldingen"
+
+#: .\axes\models.py:49
+msgid "access attempt"
+msgstr "aanmeldpoging"
+
+#: .\axes\models.py:50
+msgid "access attempts"
+msgstr "aanmeldpogingen"
+
+#: .\axes\models.py:55
+msgid "Logout Time"
+msgstr "Tijdstip van uitloggen"
+
+#: .\axes\models.py:61
+msgid "access log"
+msgstr "toegangslog"
+
+#: .\axes\models.py:62
+msgid "access logs"
+msgstr "toegangslogs"
