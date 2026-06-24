@@ -139,6 +139,11 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
         self.clean_expired_user_attempts(request, credentials)
 
         username = get_client_username(request, credentials)
+        # Truncate username to fit database field max_length (255 chars).
+        # Automated scans often send usernames longer than 255 chars,
+        # which causes DataError (HTTP 500) instead of being handled gracefully.
+        if username and len(username) > 255:
+            username = username[:255]
         client_str = get_client_str(
             username,
             request.axes_ip_address,
