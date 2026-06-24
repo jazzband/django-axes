@@ -440,8 +440,19 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         count = 0
         for attempts in attempts_list:
-            _count, _ = attempts.delete()
-            count += _count
+            try:
+                _count, _ = attempts.delete()
+                count += _count
+            except Exception:
+                # If the AccessAttemptExpiration table does not exist
+                # (migration not applied), cascade delete will fail.
+                # Log a warning and continue with remaining attempts.
+                log.warning(
+                    "AXES: Failed to delete access attempt for %s. "
+                    "This may happen if the AccessAttemptExpiration "
+                    "migration has not been applied.",
+                    attempts,
+                )
         log.info("AXES: Reset %s access attempts from database.", count)
 
         return count
