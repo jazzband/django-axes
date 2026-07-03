@@ -3,7 +3,6 @@ from string import ascii_letters, digits
 from time import sleep
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.base_user import AbstractBaseUser
 from django.http import HttpRequest
 from django.test import TestCase
 from django.urls import reverse

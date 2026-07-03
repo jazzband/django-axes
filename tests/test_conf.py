@@ -1,5 +1,4 @@
 from django.test import TestCase
-from django.utils.functional import SimpleLazyObject
 
 
 class ConfTestCase(TestCase):
