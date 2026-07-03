@@ -1,4 +1,3 @@
-from platform import python_implementation
 from unittest.mock import MagicMock, patch
 from datetime import datetime, timezone as dt_timezone
 from django.test import override_settings
@@ -6,7 +5,6 @@ from django.utils import timezone
 from axes.handlers.database import AxesDatabaseHandler
 from axes.models import AccessAttempt, AccessLog, AccessFailureLog, AccessAttemptExpiration
 
-from pytest import mark
 
 from django.core.cache import cache
 from django.urls import reverse
@@ -324,7 +322,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         credentials = {"username": None, "password": "test"}
         sender = MagicMock()
         AxesProxyHandler.user_login_failed(sender, credentials, self.request)
-        attempt = AccessAttempt.objects.all()
+        AccessAttempt.objects.all()
         self.assertEqual(0, AccessAttempt.objects.count())
         log.warning.assert_called_with(
             "AXES: Username is None and username is the only one lockout parameter, new record will NOT be created."
@@ -334,7 +332,7 @@ class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
         credentials = {"username": None, "password": "test"}
         sender = MagicMock()
         AxesProxyHandler.user_login_failed(sender, credentials, self.request)
-        attempt = AccessAttempt.objects.all()
+        AccessAttempt.objects.all()
         self.assertEqual(1, AccessAttempt.objects.filter(username__isnull=True).count())
 
     def test_user_login_failed_multiple_username(self):

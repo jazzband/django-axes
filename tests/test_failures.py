@@ -1,6 +1,5 @@
 from axes.models import AccessFailureLog
 from tests.base import AxesTestCase
-from axes.helpers import get_failure_limit
 from django.test import override_settings
 
 @override_settings(AXES_ENABLE_ACCESS_FAILURE_LOG=True)

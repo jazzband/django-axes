@@ -29,7 +29,6 @@ class AppConfig(apps.AppConfig):
 
         # Only import settings, checks, and signals one time after Django has been initialized
         from axes.conf import settings
-        from axes import checks, signals
 
         # Skip startup log messages if Axes is not set to verbose
         if settings.AXES_VERBOSE:
