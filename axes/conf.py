@@ -173,6 +173,11 @@ settings.AXES_CLIENT_STR_CALLABLE = getattr(settings, "AXES_CLIENT_STR_CALLABLE"
 # set the HTTP response code given by too many requests
 settings.AXES_HTTP_RESPONSE_CODE = getattr(settings, "AXES_HTTP_RESPONSE_CODE", 429)
 
+# If True, add a Retry-After header to lockout responses when a cool off is set
+settings.AXES_ENABLE_RETRY_AFTER_HEADER = getattr(
+    settings, "AXES_ENABLE_RETRY_AFTER_HEADER", False
+)
+
 # If True, a failed login attempt during lockout will reset the cool off period
 settings.AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = getattr(
     settings, "AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT", True

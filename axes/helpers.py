@@ -498,6 +498,20 @@ def get_lockout_message() -> str:
     return settings.AXES_PERMALOCK_MESSAGE
 
 
+def set_retry_after_header(request: HttpRequest, response: HttpResponse) -> None:
+    """Set a ``Retry-After`` header on a lockout ``response``.
+
+    No-op unless ``AXES_ENABLE_RETRY_AFTER_HEADER`` is enabled and a cool-off
+    period is configured — a permanent lockout has no meaningful retry time.
+    The response is mutated in place; nothing is returned.
+    """
+    if not settings.AXES_ENABLE_RETRY_AFTER_HEADER:
+        return
+    cool_off = get_cool_off(request)
+    if cool_off is not None:
+        response["Retry-After"] = str(int(cool_off.total_seconds()))
+
+
 def get_lockout_response(
     request: HttpRequest,
     original_response: Optional[HttpResponse] = None,
@@ -543,27 +557,28 @@ def get_lockout_response(
             }
         )
 
+    response: HttpResponse
     if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
-        json_response = JsonResponse(context, status=status)
-        json_response["Access-Control-Allow-Origin"] = (
-            settings.AXES_ALLOWED_CORS_ORIGINS
-        )
-        json_response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-        json_response["Access-Control-Allow-Headers"] = (
+        response = JsonResponse(context, status=status)
+        response["Access-Control-Allow-Origin"] = settings.AXES_ALLOWED_CORS_ORIGINS
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = (
             "Origin, Content-Type, Accept, Authorization, x-requested-with"
         )
-        return json_response
-
-    if settings.AXES_LOCKOUT_TEMPLATE:
-        return render(request, settings.AXES_LOCKOUT_TEMPLATE, context, status=status)
-
-    if settings.AXES_LOCKOUT_URL:
+    elif settings.AXES_LOCKOUT_TEMPLATE:
+        response = render(
+            request, settings.AXES_LOCKOUT_TEMPLATE, context, status=status
+        )
+    elif settings.AXES_LOCKOUT_URL:
         lockout_url = settings.AXES_LOCKOUT_URL
         query_string = urlencode({"username": context["username"]})
         url = f"{lockout_url}?{query_string}"
-        return redirect(url)
+        response = redirect(url)
+    else:
+        response = HttpResponse(get_lockout_message(), status=status)
 
-    return HttpResponse(get_lockout_message(), status=status)
+    set_retry_after_header(request, response)
+    return response
 
 
 def is_ip_address_in_whitelist(ip_address: str) -> bool:
