@@ -26,6 +26,7 @@ from axes.helpers import (
     is_ip_address_in_blacklist,
     is_ip_address_in_whitelist,
     is_user_attempt_whitelisted,
+    set_retry_after_header,
     toggleable,
 )
 from axes.models import AccessAttempt
@@ -947,6 +948,48 @@ class LockoutResponseTestCase(AxesTestCase):
     def test_get_lockout_response_lockout_response(self):
         response = get_lockout_response(request=self.request)
         self.assertEqual(type(response), HttpResponse)
+
+    @override_settings(
+        AXES_COOLOFF_TIME=timedelta(seconds=120),
+        AXES_ENABLE_RETRY_AFTER_HEADER=True,
+    )
+    def test_lockout_response_sets_retry_after_header(self):
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(response["Retry-After"], "120")
+
+    @override_settings(
+        AXES_COOLOFF_TIME=timedelta(seconds=120),
+        AXES_ENABLE_RETRY_AFTER_HEADER=False,
+    )
+    def test_lockout_response_omits_retry_after_header_when_disabled(self):
+        response = get_lockout_response(request=self.request)
+        self.assertFalse(response.has_header("Retry-After"))
+
+    @override_settings(
+        AXES_COOLOFF_TIME=None,
+        AXES_ENABLE_RETRY_AFTER_HEADER=True,
+    )
+    def test_lockout_response_omits_retry_after_header_without_cool_off(self):
+        response = get_lockout_response(request=self.request)
+        self.assertFalse(response.has_header("Retry-After"))
+
+    @override_settings(
+        AXES_COOLOFF_TIME=timedelta(seconds=120),
+        AXES_ENABLE_RETRY_AFTER_HEADER=True,
+        AXES_LOCKOUT_URL="https://example.com",
+    )
+    def test_retry_after_header_set_on_redirect_lockout_response(self):
+        response = get_lockout_response(request=self.request)
+        self.assertEqual(response["Retry-After"], "120")
+
+    @override_settings(
+        AXES_COOLOFF_TIME=timedelta(seconds=90),
+        AXES_ENABLE_RETRY_AFTER_HEADER=True,
+    )
+    def test_set_retry_after_header_writes_cool_off_seconds(self):
+        response = HttpResponse()
+        set_retry_after_header(self.request, response)
+        self.assertEqual(response["Retry-After"], "90")
 
 
 def mock_get_cool_off_str(req):
