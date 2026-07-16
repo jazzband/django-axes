@@ -36,6 +36,8 @@ class AccessFailureLog(AccessBase):
 
 
 class AccessAttempt(AccessBase):
+    username = models.CharField(_("Username"), max_length=255, null=True)
+
     get_data = models.TextField(_("GET Data"))
 
     post_data = models.TextField(_("POST Data"))
