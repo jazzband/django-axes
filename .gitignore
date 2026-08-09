@@ -37,3 +37,6 @@ Thumbs.db
 # Codex/local agent files
 .agents/
 .codex/
+frontend/node_modules/
+frontend/.vite/
+npm-debug.log*

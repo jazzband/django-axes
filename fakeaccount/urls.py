@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+from django.contrib.staticfiles.views import serve as serve_static
 from django.urls import path
 
 from fakeaccountapp import views
@@ -26,4 +27,6 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', views.logout_view, name='logout'),
+    # runhttps is a development server and must serve the React build when DEBUG=False.
+    path('static/<path:path>', serve_static, {"insecure": True}),
 ]

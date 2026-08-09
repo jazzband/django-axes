@@ -12,10 +12,15 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import mimetypes
 
 from dotenv import load_dotenv
 
 from fakeaccountapp.network import get_private_ip_addresses
+
+# The Windows MIME registry can map .js to text/plain. Browsers reject that
+# content type for <script type="module">, which is used by the React build.
+mimetypes.add_type("application/javascript", ".js", strict=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

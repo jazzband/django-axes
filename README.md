@@ -7,6 +7,19 @@ Projekt Django realizuje cztery kroki:
 3. Automatyczne uruchomienie `secure_backup.py` po logowaniu tego samego uzytkownika z innego IP. Backup nie jest tworzony ponownie, jezeli aktualny dump bazy ma taki sam hash jak poprzedni.
 4. Pobranie odszyfrowanej kopii zapasowej z panelu administracyjnego pod `/admin/download-backup/`.
 
+## Frontend React
+
+Interfejs rejestracji i logowania jest zbudowany w React. Django pozostaje backendem dla sesji, CSRF, walidacji i autoryzacji. Po instalacji zależności zbuduj zasoby frontendu:
+
+```powershell
+cd frontend
+npm install
+npm run build
+cd ..
+```
+
+Wynik komendy trafia do `fakeaccountapp/static/react/` i jest serwowany przez Django. Po zmianach w `frontend/src/` uruchom ponownie `npm run build`.
+
 ## Instalacja
 
 ```powershell
@@ -27,7 +40,21 @@ Jeżeli zdecydujesz się używać SQLite, stosuj poniższą komendę.
 python manage.py migrate --database=sqlite
 ```
 
-## HTTPS i OpenSSL
+## Uruchamianie aplikacji
+
+### HTTP — szybki test w sieci lokalnej
+
+Uruchom serwer nasłuchujący na wszystkich interfejsach sieciowych:
+
+```powershell
+python manage.py runserver 0.0.0.0:8000
+```
+
+Na tym komputerze otwórz `http://127.0.0.1:8000/register/`. Na urządzeniu w tej samej prywatnej sieci Wi-Fi użyj adresu LAN komputera, na przykład `http://192.168.1.22:8000/register/`.
+
+HTTP jest przeznaczone wyłącznie do krótkich testów w zaufanej sieci. Nie używaj go z prawdziwymi hasłami ani w sieci publicznej, ponieważ dane nie są szyfrowane.
+
+### HTTPS — test z lokalnym certyfikatem
 
 Komenda tworzy lokalne CA oraz certyfikat serwera w formacie PEM zgodnym z OpenSSL:
 
@@ -39,12 +66,12 @@ Powstaja pliki:
 
 - `certs/ca.crt` - lokalny certyfikat CA, ktory trzeba dodac do zaufanych certyfikatow systemu/przegladarki, zeby strona nie byla oznaczana jako podejrzana.
 - `certs/key.pem` - klucz serwera.
-- `certs/cert.pem` - certyfikat serwera z SAN dla `localhost`, `127.0.0.1` oraz `::1`.
+- `certs/cert.pem` - certyfikat serwera z SAN dla `localhost`, `127.0.0.1`, `::1` oraz wykrytych adresów LAN.
 - `certs/openssl.cnf` - konfiguracja SAN dla OpenSSL.
 
 Jezeli `openssl.exe` jest dostepny w `PATH`, komenda uzyje OpenSSL CLI. Jezeli nie jest dostepny, uzyje fallbacku `cryptography` i wygeneruje te same pliki PEM.
 
-Uruchomienie lokalnego HTTPS:
+Uruchomienie HTTPS:
 
 ```powershell
 python manage.py runhttps

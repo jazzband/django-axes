@@ -1,93 +1,16 @@
-<!DOCTYPE html>
+{% load static %}
+<!doctype html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rejestracja</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 40px;
-        }
-
-        .container {
-            max-width: 450px;
-            margin: auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 0 12px rgba(0, 0, 0, .1);
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .field {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .errorlist {
-            color: #c62828;
-            list-style: none;
-            padding: 0;
-            margin: 5px 0;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            background: #1976d2;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .btn:hover {
-            background: #1565c0;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rejestracja | FakeAccount</title>
+  <link rel="stylesheet" href="{% static 'react/assets/index.css' %}">
 </head>
 <body>
-<div class="container">
-    <h1>Rejestracja</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-
-        <div class="field">
-            <label for="{{ form.username.id_for_label }}">Nazwa uzytkownika</label>
-            {{ form.username }}
-            {{ form.username.errors }}
-        </div>
-
-        <div class="field">
-            <label for="{{ form.password.id_for_label }}">Haslo</label>
-            {{ form.password }}
-            {{ form.password.errors }}
-        </div>
-
-        <button type="submit" class="btn">Utworz konto</button>
-    </form>
-</div>
+  <div id="root" data-page="register" data-action="{% url 'register' %}" data-login-url="{% url 'login' %}" data-register-url="{% url 'register' %}"></div>
+  <form hidden aria-hidden="true">{% csrf_token %}</form>
+  {{ form.errors.get_json_data|json_script:"form-errors" }}
+  <script type="module" src="{% static 'react/assets/app.js' %}"></script>
 </body>
 </html>

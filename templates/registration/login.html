@@ -1,17 +1,16 @@
-<!DOCTYPE html>
+{% load static %}
+<!doctype html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logowanie</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logowanie | FakeAccount</title>
+  <link rel="stylesheet" href="{% static 'react/assets/index.css' %}">
 </head>
 <body>
-    <h1>Logowanie</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Zaloguj</button>
-    </form>
-    <p><a href="{% url 'register' %}">Utworz konto</a></p>
+  <div id="root" data-page="login" data-action="{% url 'login' %}" data-login-url="{% url 'login' %}" data-register-url="{% url 'register' %}"></div>
+  <form hidden aria-hidden="true">{% csrf_token %}</form>
+  {{ form.errors.get_json_data|json_script:"form-errors" }}
+  <script type="module" src="{% static 'react/assets/app.js' %}"></script>
 </body>
 </html>

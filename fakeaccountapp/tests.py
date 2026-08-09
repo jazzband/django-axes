@@ -58,6 +58,14 @@ class RegistrationTests(TestCase):
         self.assertIn("username", form.errors)
 
 
+class ReactStaticAssetTests(TestCase):
+    def test_react_javascript_build_is_served_as_a_javascript_module(self):
+        response = self.client.get("/static/react/assets/app.js")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/javascript")
+
+
 class LoginIpSignalTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="anna", password="StrongPass123")
