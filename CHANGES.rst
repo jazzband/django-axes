@@ -2,6 +2,13 @@
 Changes
 =======
 
+Unreleased
+----------
+
+- Truncate usernames longer than 255 characters before saving failed-login records,
+  matching ``user_agent`` / ``path_info`` and avoiding ``DataError`` from scanners.
+  [DSeaStar]
+
 8.3.1 (2026-02-11)
 ------------------
 

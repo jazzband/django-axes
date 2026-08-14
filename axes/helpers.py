@@ -163,6 +163,29 @@ def get_credentials(username: Optional[str] = None, **kwargs) -> dict:
     return credentials
 
 
+# Matches AccessBase.username max_length, same pattern as get_client_user_agent.
+USERNAME_MAX_LENGTH = 255
+
+
+def _truncate_username(username: Optional[str]) -> Optional[str]:
+    """
+    Fit a username into AccessAttempt.username (CharField max_length=255).
+
+    Automated scanners often submit usernames longer than the field, which
+    previously raised DataError in AxesDatabaseHandler.user_login_failed.
+    """
+
+    if not isinstance(username, str) or len(username) <= USERNAME_MAX_LENGTH:
+        return username
+
+    log.warning(
+        "AXES: Truncating username of length %s to %s characters to fit the database field.",
+        len(username),
+        USERNAME_MAX_LENGTH,
+    )
+    return username[:USERNAME_MAX_LENGTH]
+
+
 def get_client_username(
     request: HttpRequest, credentials: Optional[dict] = None
 ) -> str:
@@ -175,6 +198,10 @@ def get_client_username(
     2. If given, use ``credentials`` and fetch username from ``AXES_USERNAME_FORM_FIELD`` (defaults to ``username``)
     3. Use request.POST and fetch username from ``AXES_USERNAME_FORM_FIELD`` (defaults to ``username``)
 
+    Usernames longer than ``AccessBase.username`` (255 characters) are truncated
+    so failed-login records can be saved. ``user_agent`` and ``path_info``
+    already apply the same limit.
+
     :param request: incoming Django ``HttpRequest`` or similar object from authentication backend or other source
     :param credentials: incoming credentials ``dict`` or similar object from authentication backend or other source
     """
@@ -183,11 +210,15 @@ def get_client_username(
         log.debug("Using settings.AXES_USERNAME_CALLABLE to get username")
 
         if callable(settings.AXES_USERNAME_CALLABLE):
-            return settings.AXES_USERNAME_CALLABLE(  # pylint: disable=not-callable
-                request, credentials
+            return _truncate_username(
+                settings.AXES_USERNAME_CALLABLE(  # pylint: disable=not-callable
+                    request, credentials
+                )
             )
         if isinstance(settings.AXES_USERNAME_CALLABLE, str):
-            return import_string(settings.AXES_USERNAME_CALLABLE)(request, credentials)
+            return _truncate_username(
+                import_string(settings.AXES_USERNAME_CALLABLE)(request, credentials)
+            )
         raise TypeError(
             "settings.AXES_USERNAME_CALLABLE needs to be a string, callable, or None."
         )
@@ -196,14 +227,16 @@ def get_client_username(
         log.debug(
             "Using parameter credentials to get username with key settings.AXES_USERNAME_FORM_FIELD"
         )
-        return credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)  # type: ignore[return-value]
+        return _truncate_username(
+            credentials.get(settings.AXES_USERNAME_FORM_FIELD, None)
+        )  # type: ignore[return-value]
 
     log.debug(
         "Using parameter request.POST to get username with key settings.AXES_USERNAME_FORM_FIELD"
     )
 
     request_data = getattr(request, "data", request.POST)
-    return request_data.get(settings.AXES_USERNAME_FORM_FIELD, None)
+    return _truncate_username(request_data.get(settings.AXES_USERNAME_FORM_FIELD, None))
 
 
 def get_client_ip_address(
