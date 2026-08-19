@@ -23,7 +23,16 @@ class GetCoolOffThresholdTestCase(AxesTestCase):
             request.axes_attempt_time = None
             threshold_none = get_cool_off_threshold(request)
 
+            threshold_no_arg = get_cool_off_threshold()
+            threshold_none_arg = get_cool_off_threshold(None)
+
+            plain_request = RequestFactory().post("/")
+            threshold_plain_request = get_cool_off_threshold(plain_request)
+
         self.assertEqual(threshold_now, threshold_none)
+        self.assertEqual(threshold_now, threshold_no_arg)
+        self.assertEqual(threshold_now, threshold_none_arg)
+        self.assertEqual(threshold_now, threshold_plain_request)
 
     @override_settings(AXES_COOLOFF_TIME=None)
     def test_get_cool_off_threshold_error(self):
