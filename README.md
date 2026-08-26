@@ -42,6 +42,7 @@ python manage.py migrate --database=sqlite
 
 ## Uruchamianie aplikacji
 
+
 ### HTTP — szybki test w sieci lokalnej
 
 Uruchom serwer nasłuchujący na wszystkich interfejsach sieciowych:
@@ -159,3 +160,20 @@ python manage.py test
 ```
 
 Test integracyjny backupu wymaga pakietu `cryptography`. Gdy pakiet nie jest zainstalowany, ten test zostanie pominiety.
+
+## Raport uzytkownikow wedlug IP
+
+Raport bazy Django uruchom z katalogu glownego:
+
+```powershell
+python scripts\report_python_users_by_ip.py
+```
+
+Mozesz podac inna baze jako pierwszy argument. Skrypt wyswietla osobno
+uzytkownikow z jednym unikalnym IP oraz tych, ktorzy logowali sie z wiecej niz
+jednego IP. Aby wygenerowac ten sam raport z PostgreSQL skonfigurowanego w
+Django (`POSTGRES_*` w `.env`), uruchom:
+
+```powershell
+python scripts\report_python_users_by_ip.py --postgres
+```
