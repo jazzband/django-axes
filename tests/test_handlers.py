@@ -538,6 +538,28 @@ class AxesCacheHandlerTestCase(AxesHandlerBaseTestCase):
         AxesProxyHandler.user_login_failed(sender, credentials, self.request)
         self.assertTrue(cache_add.called)
 
+    @patch.object(cache, "touch")
+    @patch.object(cache, "incr", side_effect=ValueError("Key 'test' not found"))
+    @patch.object(cache, "add", side_effect=[False, True])
+    def test_user_login_failed_when_key_expires_before_incr(
+        self, cache_add, cache_incr, cache_touch
+    ):
+        """A key expiring between the add and the incr must not raise.
+
+        The cool off window has elapsed by the time incr runs, so the failure
+        starts a fresh count rather than propagating the ValueError. See #1144.
+        """
+        credentials = {"username": "jane.doe", "password": "test"}
+        sender = MagicMock()
+
+        AxesProxyHandler.user_login_failed(sender, credentials, self.request)
+
+        self.assertTrue(cache_incr.called)
+        self.assertEqual(self.request.axes_failures_since_start, 1)
+        # The count is re-seeded with its timeout, so touch is not needed.
+        self.assertEqual(cache_add.call_count, 2)
+        self.assertFalse(cache_touch.called)
+
 
 @override_settings(AXES_HANDLER="axes.handlers.dummy.AxesDummyHandler")
 class AxesDummyHandlerTestCase(AxesHandlerBaseTestCase):
