@@ -120,8 +120,17 @@ class AxesCacheHandler(AbstractAxesHandler, AxesBaseHandler):
             if added:
                 failures.append(1)
             else:
-                failures.append(self.cache.incr(key=cache_key, delta=1))
-                self.cache.touch(key=cache_key, timeout=cache_timeout)
+                try:
+                    failures.append(self.cache.incr(key=cache_key, delta=1))
+                except ValueError:
+                    # The key expired between the add and the incr above, so
+                    # the cool off period has elapsed and this failure starts a
+                    # new count. Django's cache API raises ValueError when incr
+                    # is given a missing key, so this is not backend specific.
+                    self.cache.add(key=cache_key, value=1, timeout=cache_timeout)
+                    failures.append(1)
+                else:
+                    self.cache.touch(key=cache_key, timeout=cache_timeout)
 
         failures_since_start = max(failures)
         request.axes_failures_since_start = failures_since_start
