@@ -237,6 +237,22 @@ class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
     AXES_ENABLE_ACCESS_FAILURE_LOG=True,
 )
 class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
+    def test_user_login_failed_truncates_long_username(self):
+        """Scanners submitting usernames over 255 chars must not raise DataError."""
+        long_username = "x" * 300
+        self.request.POST["username"] = long_username
+        credentials = {"username": long_username}
+
+        AxesProxyHandler.user_login_failed(
+            sender=None, request=self.request, credentials=credentials
+        )
+
+        attempt = AccessAttempt.objects.get()
+        self.assertEqual(255, len(attempt.username))
+        self.assertEqual(long_username[:255], attempt.username)
+        failure = AccessFailureLog.objects.get()
+        self.assertEqual(long_username[:255], failure.username)
+
     def test_handler_reset_attempts(self):
         self.create_attempt()
         self.assertEqual(1, AxesProxyHandler.reset_attempts())

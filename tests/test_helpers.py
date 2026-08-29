@@ -795,6 +795,36 @@ class UsernameTestCase(AxesTestCase):
     def test_get_client_username_str(self):
         self.assertEqual(get_client_username(HttpRequest(), {}), "username")
 
+    def test_get_client_username_truncates_long_value(self):
+        long_username = "a" * 300
+        request = HttpRequest()
+        request.POST["username"] = long_username
+
+        actual = get_client_username(request)
+
+        self.assertEqual(255, len(actual))
+        self.assertEqual(long_username[:255], actual)
+
+    def test_get_client_username_leaves_short_value_unchanged(self):
+        request = HttpRequest()
+        request.POST["username"] = "short-name"
+
+        self.assertEqual("short-name", get_client_username(request))
+
+    def test_get_client_username_truncates_credentials(self):
+        long_username = "b" * 280
+        request = HttpRequest()
+        request.POST["username"] = "from-post"
+        credentials = {"username": long_username}
+
+        actual = get_client_username(request, credentials)
+
+        self.assertEqual(long_username[:255], actual)
+
+    def test_get_client_username_none_is_unchanged(self):
+        request = HttpRequest()
+        self.assertIsNone(get_client_username(request))
+
 
 def get_username(request, credentials: dict) -> str:
     return "username"
