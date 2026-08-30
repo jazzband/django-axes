@@ -2,6 +2,12 @@
 Changes
 =======
 
+8.3.2 (2026-08-30)
+------------------
+
+- Fix race condition in cache backend.
+  [aviseth]
+
 8.3.1 (2026-02-11)
 ------------------
 
