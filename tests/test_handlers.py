@@ -7,6 +7,8 @@ from axes.models import AccessAttempt, AccessLog, AccessFailureLog, AccessAttemp
 
 
 from django.core.cache import cache
+from django.http import HttpRequest
+from django.http.multipartparser import MultiPartParserError
 from django.urls import reverse
 from django.utils.timezone import timedelta
 
@@ -237,6 +239,29 @@ class ResetAttemptsTestCase(AxesHandlerBaseTestCase):
     AXES_ENABLE_ACCESS_FAILURE_LOG=True,
 )
 class AxesDatabaseHandlerTestCase(AxesHandlerBaseTestCase):
+    def test_handle_json_post_data(self):
+        def _raise():
+            raise MultiPartParserError("Invalid boundary in multipart: None")
+
+        class MockHttpRequest(HttpRequest):
+            POST = property(lambda self: _raise(), lambda self, value: None)
+
+        request = MockHttpRequest()
+        request.method = "POST"
+        request.META["REMOTE_ADDR"] = self.ip_address
+        request.META["HTTP_USER_AGENT"] = self.user_agent
+        request.META["PATH_INFO"] = self.path_info
+        request.content_type = "application/json"
+        request._body = b"{}"
+        sender = MagicMock()
+        AxesProxyHandler.user_login_failed(
+            sender=sender, request=request, credentials={"token": "dummy"}
+        )
+        self.assertEqual(1, AccessAttempt.objects.count())
+        self.assertIn(
+            'Could not access "request.POST"', AccessAttempt.objects.first().post_data
+        )
+
     def test_handler_reset_attempts(self):
         self.create_attempt()
         self.assertEqual(1, AxesProxyHandler.reset_attempts())
