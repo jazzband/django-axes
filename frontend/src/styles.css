@@ -1,0 +1,62 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #f4f7fb;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; }
+
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: min(100%, 440px);
+  padding: 36px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgb(28 45 78 / 12%);
+}
+
+h1 { margin: 0; font-size: 2rem; letter-spacing: -0.03em; }
+.subtitle { margin: 8px 0 28px; color: #667085; }
+.field { margin-bottom: 18px; }
+label { display: block; margin-bottom: 7px; font-size: .9rem; font-weight: 650; }
+
+input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #c8d0dd;
+  border-radius: 8px;
+  color: inherit;
+  font: inherit;
+}
+
+input:focus { outline: 3px solid rgb(25 118 210 / 20%); border-color: #1976d2; }
+input[aria-invalid="true"] { border-color: #c62828; }
+
+.button {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #1976d2;
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.button:hover { background: #1565c0; }
+.error { margin: 6px 0 0; color: #b42318; font-size: .85rem; }
+.form-error { margin: 0 0 16px; }
+.alternate { margin: 24px 0 0; color: #667085; font-size: .9rem; text-align: center; }
+a { color: #1565c0; font-weight: 650; }
+
+@media (max-width: 480px) { .card { padding: 28px 22px; } }
