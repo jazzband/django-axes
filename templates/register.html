@@ -1,0 +1,16 @@
+{% load static %}
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rejestracja | FakeAccount</title>
+  <link rel="stylesheet" href="{% static 'react/assets/index.css' %}">
+</head>
+<body>
+  <div id="root" data-page="register" data-action="{% url 'register' %}" data-login-url="{% url 'login' %}" data-register-url="{% url 'register' %}"></div>
+  <form hidden aria-hidden="true">{% csrf_token %}</form>
+  {{ form.errors.get_json_data|json_script:"form-errors" }}
+  <script type="module" src="{% static 'react/assets/app.js' %}"></script>
+</body>
+</html>
