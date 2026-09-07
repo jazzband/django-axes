@@ -61,7 +61,7 @@ class AxesMiddleware:
                 response = await sync_to_async(
                     get_lockout_response, thread_sensitive=True
                 )(
-                    request, credentials
+                    request, response, credentials
                 )  # type: ignore
 
         return response
