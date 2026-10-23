@@ -1,6 +1,6 @@
 -e .
 black==26.10.1
-coverage==7.15.2
+coverage==7.16.2
 django-ipware>=3
 mypy==2.4.0
 prospector==1.19.1
