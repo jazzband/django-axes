@@ -17,6 +17,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -33,10 +34,29 @@ jobs:
           python -m build
           twine check dist/*
 
-      - name: Upload packages to Jazzband
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
         with:
-          user: jazzband
-          password: ${{ secrets.JAZZBAND_RELEASE_KEY }}
-          repository-url: https://jazzband.co/projects/django-axes/upload
+          name: python-package-distributions
+          path: dist/
+
+  publish:
+    # Publishes to PyPI using trusted publishing (OIDC), no API token needed.
+    # Requires a trusted publisher on PyPI for this repository, workflow and environment.
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/django-axes
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download the distribution packages
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
