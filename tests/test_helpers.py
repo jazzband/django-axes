@@ -1149,6 +1149,28 @@ class AxesCleanseParamsTestCase(AxesTestCase):
         self.assertEqual("********************", cleansed["password"])
         self.assertEqual("sensitive", cleansed["other_sensitive_data"])
 
+    @override_settings(AXES_PASSWORD_FORM_FIELD="pword")
+    def test_cleanse_parameters_form_prefix(self):
+        # A form initialized with prefix="login" submits its password field
+        # as "login-pword", not "pword". This used to be left in cleartext.
+        prefixed_parameters = {
+            "login-uname": "test_user",
+            "login-pword": "test_password",
+        }
+        cleansed = cleanse_parameters(prefixed_parameters)
+        self.assertEqual("test_user", cleansed["login-uname"])
+        self.assertEqual("********************", cleansed["login-pword"])
+
+    @override_settings(AXES_SENSITIVE_PARAMETERS=["other_sensitive_data"])
+    def test_cleanse_parameters_form_prefix_sensitive_parameters(self):
+        prefixed_parameters = {
+            "form-username": "test_user",
+            "form-other_sensitive_data": "sensitive",
+        }
+        cleansed = cleanse_parameters(prefixed_parameters)
+        self.assertEqual("test_user", cleansed["form-username"])
+        self.assertEqual("********************", cleansed["form-other_sensitive_data"])
+
 
 class AxesLockoutTiersTestCase(AxesTestCase):
     SAMPLE_TIERS = [

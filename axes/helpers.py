@@ -440,6 +440,10 @@ def cleanse_parameters(params: dict) -> dict:
     parameters named in ``settings.AXES_SENSITIVE_PARAMETERS`` and
     ``settings.AXES_PASSWORD_FORM_FIELD will be cleansed.
 
+    A parameter is also cleansed if it matches one of the names above with a
+    Django form prefix attached (``prefix-fieldname``), since a prefixed
+    form submits its fields under that name rather than the bare field name.
+
     This is used to prevent passwords and similar values from
     being logged in cleartext.
     """
@@ -449,8 +453,10 @@ def cleanse_parameters(params: dict) -> dict:
 
     if sensitive_parameters:
         cleansed = params.copy()
-        for param in sensitive_parameters:
-            if param in cleansed:
+        for param in cleansed:
+            if param in sensitive_parameters or any(
+                param.endswith(f"-{sensitive}") for sensitive in sensitive_parameters
+            ):
                 cleansed[param] = "********************"
         return cleansed
     return params
