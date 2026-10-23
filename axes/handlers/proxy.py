@@ -32,7 +32,7 @@ class AxesProxyHandler(AbstractAxesHandler, AxesBaseHandler):
     Refer to axes.handlers.proxy.AxesProxyHandler for default implementation.
     """
 
-    implementation = None  # type: AxesHandler
+    implementation: Optional[AxesHandler] = None
 
     @classmethod
     def get_implementation(cls, force: bool = False) -> AxesHandler:
