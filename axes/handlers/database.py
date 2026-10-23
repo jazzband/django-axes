@@ -5,6 +5,7 @@ from django.db import router, transaction
 from django.db.models import F, Q, QuerySet, Sum, Value
 from django.db.models.functions import Concat
 from django.http import HttpRequest
+from django.http.multipartparser import MultiPartParserError
 from django.utils import timezone
 
 from axes.attempts import get_cool_off_threshold
@@ -163,7 +164,10 @@ class AxesDatabaseHandler(AbstractAxesHandler, AxesBaseHandler):
 
         # This replaces null byte chars that crash saving failures.
         get_data = get_query_str(request.GET).replace("\0", "0x00")
-        post_data = get_query_str(request.POST).replace("\0", "0x00")
+        try:
+            post_data = get_query_str(request.POST).replace("\0", "0x00")
+        except MultiPartParserError as ex:
+            post_data = f'Could not access "request.POST": {ex.__class__.__name__}: {ex}'
 
         if self.is_whitelisted(request, credentials):
             log.info("AXES: Login failed from whitelisted client %s.", client_str)
